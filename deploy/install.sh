@@ -97,7 +97,8 @@ fi
 
 echo "==> nginx"
 if command -v nginx >/dev/null; then
-  if ! grep -rqs "127.0.0.1:8000" /etc/nginx/sites-enabled /etc/nginx/conf.d; then
+  # -R يتبع الروابط الرمزية في sites-enabled
+  if ! grep -Rqs "127.0.0.1:8000" /etc/nginx/sites-enabled /etc/nginx/conf.d; then
     echo "تنبيه: لا يوجد proxy_pass إلى 127.0.0.1:8000 في إعدادات nginx؛ انظر deploy/nginx.conf.example" >&2
   fi
   nginx -t && systemctl reload nginx
