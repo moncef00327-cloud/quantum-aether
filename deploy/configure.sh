@@ -3,7 +3,18 @@
 #   bash /var/www/quantum_saas/deploy/configure.sh
 # المدخلات السرية مخفية: لا تظهر على الشاشة ولا تدخل سجل الأوامر.
 # يكتشف تلقائياً هل حساب PayPal في وضع live أم sandbox.
+# مع --stdin يقرأ ثلاثة أسطر بدل الأسئلة: Client ID، السر، كلمة مرور الإدارة (السطر الفارغ = بدون تغيير)،
+# وهذا ما تستخدمه نافذة deploy/configure-paypal.ps1 على Windows.
 set -euo pipefail
+
+FROM_STDIN=""
+[ "${1:-}" = "--stdin" ] && FROM_STDIN=1
+
+trim() {
+  local value="${1//$'\r'/}"
+  value="${value#"${value%%[![:space:]]*}"}"
+  printf '%s' "${value%"${value##*[![:space:]]}"}"
+}
 
 ENV_FILE=/etc/quantum_saas.env
 APP_DIR=/var/www/quantum_saas
@@ -16,10 +27,19 @@ set -a
 . "$ENV_FILE"
 set +a
 
-read -r -p "PayPal Client ID [${PAYPAL_CLIENT_ID:0:12}...] (Enter = بدون تغيير): " new_id
+new_id="" new_secret="" admin_password=""
+if [ -n "$FROM_STDIN" ]; then
+  IFS= read -r new_id || true
+  IFS= read -r new_secret || true
+  IFS= read -r admin_password || true
+else
+  read -r -p "PayPal Client ID [${PAYPAL_CLIENT_ID:0:12}...] (Enter = بدون تغيير): " new_id
+  read -r -s -p "PayPal Secret (Enter = بدون تغيير): " new_secret
+  echo
+fi
+new_id="$(trim "$new_id")"
+new_secret="$(trim "$new_secret")"
 PAYPAL_CLIENT_ID="${new_id:-$PAYPAL_CLIENT_ID}"
-read -r -s -p "PayPal Secret (Enter = بدون تغيير): " new_secret
-echo
 PAYPAL_CLIENT_SECRET="${new_secret:-$PAYPAL_CLIENT_SECRET}"
 
 if [ -n "$PAYPAL_CLIENT_SECRET" ]; then
@@ -40,8 +60,11 @@ if [ -n "$PAYPAL_CLIENT_SECRET" ]; then
   echo "PayPal: الحساب يعمل في وضع $PAYPAL_ENV"
 fi
 
-read -r -s -p "كلمة مرور لوحة الإدارة /admin (Enter = بدون تغيير): " admin_password
-echo
+if [ -z "$FROM_STDIN" ]; then
+  read -r -s -p "كلمة مرور لوحة الإدارة /admin (Enter = بدون تغيير): " admin_password
+  echo
+fi
+admin_password="${admin_password//$'\r'/}"
 if [ -n "$admin_password" ]; then
   QS_ADMIN_PASSWORD_HASH="$(printf '%s' "$admin_password" | "$APP_DIR/.venv/bin/python" -c \
     'import sys; from werkzeug.security import generate_password_hash; print(generate_password_hash(sys.stdin.read()))')"
