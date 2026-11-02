@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>Quantum Vulnerability Scanner</title>
+<script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+<h1>فحص الثغرات بعد-الكمية</h1>
+<form id="checkout-form" action="/create-checkout-session" method="POST">
+  <label>حجم المفتاح (bits):</label>
+  <input type="number" name="key_size" value="2048" min="1024" step="1024">
+  <button type="submit">فحص ودفع 49$</button>
+</form>
+<p id="status"></p>
+<script>
+  var stripe = Stripe("pk_live_51UGk8KEB8XsbvH99wLBnFmrFx7fd5v8p9kd6RiwxvP6M38nTFhygjvciHqJBDqy0PKKssYTPyutgPsZwdS0DCcSQ00zcAk8UxO");
+</script>
+</body>
+</html>

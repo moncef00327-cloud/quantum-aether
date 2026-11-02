@@ -1,0 +1,39 @@
+openapi: 3.0.3
+info:
+  title: Universal Quantum-Bio Post-Quantum Cryptography (PQC) Scanner API
+  description: Autonomous API designed for AI Agents to detect cryptographic vulnerabilities against Shor quantum algorithm, compute real hardware decay (IBM ibm_marrakesh), and execute automated Stripe billing sessions ($49 USD).
+  version: 1.0.0-2026
+servers:
+  - url: http://YOUR_VULTR_SERVER_IP
+    description: Production Live Cloud Server on Vultr
+paths:
+  /create-checkout-session:
+    post:
+      summary: Automated Stripe Checkout Session for AI Agents
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                key_size:
+                  type: string
+                  default: "2048"
+      responses:
+        "303":
+          description: Dynamic redirect to localized global Stripe payment page.
+        "500":
+          description: Internal gateway error.
+  /payment-success:
+    get:
+      summary: Autonomous Post-Payment Callback
+      parameters:
+        - name: session_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Payment confirmed. Programmatic delivery of PQC report and 79132 DNA base pairs.
