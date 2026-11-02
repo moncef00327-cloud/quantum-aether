@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}" dir="{{ t.dir }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ t.brand }}{% endblock %}</title>
+  <meta name="description" content="{{ t.hero_sub }}">
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap header-row">
+      <a class="brand" href="{{ url_for('site.index', lang=lang) }}">⚛ {{ t.brand }}</a>
+      <nav>
+        <a href="{{ url_for('site.index', lang=lang) }}">{{ t.nav_scan }}</a>
+        <a href="{{ url_for('site.research', lang=lang) }}">{{ t.nav_research }}</a>
+        <a href="{{ url_for('site.openapi') }}">{{ t.nav_api }}</a>
+        <a class="lang" href="{{ request.path }}?lang={{ other_lang }}">{{ t.other_lang }}</a>
+      </nav>
+    </div>
+  </header>
+  <main class="wrap">
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="wrap site-footer">
+    <p>{{ t.privacy }}</p>
+    <p>© {{ t.brand }} · ather-quatum.cloud</p>
+  </footer>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

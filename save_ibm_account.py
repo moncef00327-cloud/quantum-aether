@@ -1,4 +1,4 @@
-"""حفظ اعتماد IBM Quantum محلياً دون إظهار الرمز أو تسجيله.
+r"""حفظ اعتماد IBM Quantum محلياً دون إظهار الرمز أو تسجيله.
 
 الاستخدام:
     .\.venv\Scripts\python.exe save_ibm_account.py
@@ -18,7 +18,8 @@ def main() -> int:
     print("ألصق رمز API ثم اضغط Enter (لن يظهر شيء أثناء اللصق).")
     print("اتركه فارغاً للخروج.\n")
 
-    token = getpass("IBM API token: ").strip()
+    # الرمز المنسوخ أحياناً يأتي محاطاً بعلامات تنصيص أو أقواس فترفضه مكتبة IBM؛ نزيلها.
+    token = getpass("IBM API token: ").strip().strip("\"'{}<>").strip()
     if not token:
         print("لم يُدخل أي رمز. تم الإلغاء.")
         return 1

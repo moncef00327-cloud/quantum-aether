@@ -1,207 +1,408 @@
-from flask import Flask, render_template_string, jsonify, request, redirect
-import pandas as pd
+# quantum_saas_app.py
+# تطبيق الويب: فحص جاهزية HTTPS لما بعد الكم (مجاني) + تقرير كامل مدفوع عبر PayPal،
+# والدفع يُتحقق منه على الخادم مع PayPal قبل فتح التقرير.
+#
+# التشغيل المحلي:  python quantum_saas_app.py   ثم افتح http://127.0.0.1:5000
+# الإنتاج: gunicorn quantum_saas_app:app خلف nginx (انظر مجلد deploy/)
+import datetime as dt
+import functools
+import glob
+import hashlib
+import hmac
+import json
+import logging
 import os
-import time
+import secrets
 
-app = Flask(__name__)
+import requests
+from flask import (Blueprint, Flask, Response, abort, current_app, g, jsonify, redirect,
+                   render_template, request, url_for)
+from werkzeug.middleware.proxy_fix import ProxyFix
+from werkzeug.security import check_password_hash
 
-PAYPAL_CLIENT_ID = "BAA9XULdxpQX54xlR5T2qj9mQyMRk8P0Tdn4KMBW98BruBpaAUwhOIG-l_29RhutQ_5Ec859jTd9lc4yL0"
-DATA_FILE = "quantum_saas_sales.csv"
+import bio_archive_report
+import dna_encode
+import i18n
+import quantum_vuln_scanner
+import sales_db
+from paypal_client import PayPalClient, PayPalError, verify_capture
 
-TEXTS = {
-    "ar": {
-        "title": "نظام فحص الثغرات الكمومية",
-        "sub": "مراقبة حية للمبيعات التلقائية، وعمليات فحص الثغرات، والربط ببوابة الدفع",
-        "scans": "إجمالي عمليات الفحص",
-        "paid": "العمليات المدفوعة",
-        "rev": "صافي الأرباح التلقائية (USD)",
-        "pay_title": "دفع آمن عبر باي بال والبطاقات الائتمانية",
-        "pay_sub": "احصل على تقرير الجاهزية المقاوم للكم مع ملحق الأرشفة الحيوية (79,132 قاعدة DNA).",
-        "price": "$49.00 USD",
-        "pay_now": "الدفع الآن",
-        "table_h": ["التوقيت", "معرف المهمة", "حجم المفتاح", "المبلغ", "الحالة"]
-    },
-    "en": {
-        "title": "Quantum Vulnerability Scanner - Admin Dashboard",
-        "sub": "Live monitoring of automated sales, PQC vulnerability scans, and Stripe/PayPal telemetry.",
-        "scans": "Total Scans",
-        "paid": "Paid Operations",
-        "rev": "Total Automated Revenue (USD)",
-        "pay_title": "Secure Payment via PayPal & Credit Cards",
-        "pay_sub": "Get the Post-Quantum readiness report with bio-archived DNA configuration (79,132 base pairs).",
-        "price": "$49.00 USD",
-        "pay_now": "Pay Now",
-        "table_h": ["Timestamp", "Job ID", "Key Size", "Amount", "Status"]
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+log = logging.getLogger("quantum_saas")
+bp = Blueprint("site", __name__)
+
+
+def _config_from_env():
+    env = os.environ.get
+    return {
+        "DATA_DIR": env("QS_DATA_DIR", os.path.join(BASE_DIR, "instance")),
+        "PUBLIC_URL": env("QS_PUBLIC_URL", "").rstrip("/"),
+        "HASH_SALT": env("QS_HASH_SALT", ""),
+        "ADMIN_PASSWORD_HASH": env("QS_ADMIN_PASSWORD_HASH", ""),
+        "PRICE": env("QS_PRICE", "49.00"),
+        "CURRENCY": env("QS_CURRENCY", "USD"),
+        "SCANS_PER_HOUR": int(env("QS_SCANS_PER_HOUR", "10")),
+        "GLOBAL_SCANS_PER_HOUR": int(env("QS_GLOBAL_SCANS_PER_HOUR", "300")),
+        "TRUSTED_PROXIES": int(env("QS_TRUSTED_PROXIES", "1")),
+        "PAYPAL_CLIENT_ID": env("PAYPAL_CLIENT_ID", ""),
+        "PAYPAL_CLIENT_SECRET": env("PAYPAL_CLIENT_SECRET", ""),
+        "PAYPAL_ENV": env("PAYPAL_ENV", "live"),
     }
-}
 
-def init_sales_log():
-    if not os.path.exists(DATA_FILE):
-        pd.DataFrame(columns=["Timestamp", "JobID", "KeySize", "Amount", "PaymentStatus"]).to_csv(DATA_FILE, index=False, encoding="utf-8")
 
-@app.route("/")
-def dashboard():
-    init_sales_log()
-    df = pd.read_csv(DATA_FILE)
-    total = len(df)
-    paid = df[df["PaymentStatus"] == "Paid"]
-    rev = paid["Amount"].sum() if len(paid) else 0
-    lang = "ar" if "ar" in request.headers.get("Accept-Language", "") else "en"
-    t = TEXTS[lang]
+def create_app(overrides=None, scanner=None, paypal=None):
+    app = Flask(__name__)
+    app.config.update(_config_from_env())
+    app.config.update(overrides or {})
+    if not app.config["HASH_SALT"]:
+        app.config["HASH_SALT"] = secrets.token_hex(16)
+    proxies = app.config["TRUSTED_PROXIES"]
+    if proxies:
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=proxies, x_proto=proxies, x_host=proxies)
+    if paypal is None and app.config["PAYPAL_CLIENT_ID"] and app.config["PAYPAL_CLIENT_SECRET"]:
+        paypal = PayPalClient(app.config["PAYPAL_CLIENT_ID"], app.config["PAYPAL_CLIENT_SECRET"], app.config["PAYPAL_ENV"])
+    app.extensions["scanner"] = scanner or quantum_vuln_scanner.scan
+    app.extensions["paypal"] = paypal
+    app.register_blueprint(bp)
+    return app
 
-    dashboard_template = """
-    <!DOCTYPE html>
-    <html lang="{{ lang }}" dir="{{ 'rtl' if lang=='ar' else 'ltr' }}">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Quantum SaaS Dashboard</title>
-        <script src="https://www.paypal.com/sdk/js?client-id={{ client_id }}&currency=USD"></script>
-        <style>
-            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0f172a; color: #f8fafc; margin: 0; padding: 0; }
-            .container { max-width: 1100px; margin: 0 auto; padding: 30px 20px; }
-            .header { background-color: #1e293b; padding: 25px; border-radius: 12px; border-bottom: 4px solid #38bdf8; margin-bottom: 30px; }
-            .header h1 { margin: 0; color: #f8fafc; font-size: 28px; }
-            .header p { color: #94a3b8; margin: 5px 0 0 0; font-size: 15px; }
-            .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 30px; }
-            .stat-card { background-color: #1e293b; padding: 25px; border-radius: 12px; text-align: center; border: 1px solid #334155; }
-            .stat-card h3 { margin: 0 0 12px 0; color: #94a3b8; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; }
-            .stat-card .value { font-size: 36px; font-weight: bold; color: #38bdf8; }
-            .stat-card .revenue { color: #4ade80; }
-            .pay-section { background-color: #1e293b; padding: 30px; border-radius: 12px; border: 1px solid #334155; margin-bottom: 30px; }
-            .pay-section h2 { color: #38bdf8; margin-top: 0; margin-bottom: 10px; font-size: 22px; }
-            .pay-section p { color: #94a3b8; font-size: 15px; margin-bottom: 20px; line-height: 1.6; }
-            .price { color: #4ade80; font-size: 28px; font-weight: bold; margin: 20px 0; }
-            table { width: 100%; border-collapse: collapse; background-color: #1e293b; border-radius: 12px; overflow: hidden; margin-top: 20px; }
-            th, td { padding: 15px; text-align: {{ 'right' if lang=='ar' else 'left' }}; border-bottom: 1px solid #334155; }
-            th { background-color: #334155; color: #f8fafc; font-weight: 600; }
-            .status-paid { color: #4ade80; font-weight: bold; }
-            .status-pending { color: #f59e0b; }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <div class="header">
-                <h1>{{ title }}</h1>
-                <p>{{ sub }}</p>
-            </div>
 
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <h3>{{ scans }}</h3>
-                    <div class="value">{{ total }}</div>
-                </div>
-                <div class="stat-card">
-                    <h3>{{ paid_label }}</h3>
-                    <div class="value">{{ paid_count }}</div>
-                </div>
-                <div class="stat-card">
-                    <h3>{{ rev }}</h3>
-                    <div class="value revenue">$ {{ total_revenue }}</div>
-                </div>
-            </div>
+# ---------------------------------------------------------------- أدوات مشتركة
 
-            <div class="pay-section">
-                <h2>{{ pay_title }}</h2>
-                <p>{{ pay_sub }}</p>
-                <div class="price">{{ price }}</div>
-                <div id="paypal-button-container"></div>
-            </div>
+def db():
+    if "db" not in g:
+        os.makedirs(current_app.config["DATA_DIR"], exist_ok=True)
+        g.db = sales_db.connect(os.path.join(current_app.config["DATA_DIR"], "quantum_saas.db"))
+    return g.db
 
-            <h3 style="margin-top: 30px; color: #94a3b8;">سجل العمليات</h3>
-            <table>
-                <thead>
-                    <tr>
-                        {% for h in table_headers %}
-                        <th>{{ h }}</th>
-                        {% endfor %}
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for index, row in df.iterrows() %}
-                    <tr>
-                        <td>{{ row['Timestamp'] }}</td>
-                        <td><code>{{ row['JobID'] }}</code></td>
-                        <td>{{ row['KeySize'] }} bits</td>
-                        <td>${{ row['Amount'] }}</td>
-                        <td class="{{ 'status-paid' if row['PaymentStatus']=='Paid' else 'status-pending' }}">{{ row['PaymentStatus'] }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
 
-        <script>
-            paypal.Buttons({
-                style: {
-                    layout: 'vertical',
-                    color: 'gold',
-                    shape: 'rect',
-                    label: 'paypal'
-                },
-                createOrder: function(data, actions) {
-                    return actions.order.create({
-                        purchase_units: [{ amount: { value: '49.00' } }]
-                    });
-                },
-                onApprove: function(data, actions) {
-                    return actions.order.capture().then(function(details) {
-                        window.location.href = "/payment-success?order_id=" + data.orderID;
-                    });
-                },
-                onError: function(err) {
-                    console.error(err);
-                    alert('حدث خطأ أثناء الدفع. يرجى المحاولة مرة أخرى.');
-                }
-            }).render('#paypal-button-container');
-        </script>
-    </body>
-    </html>
-    """
+@bp.teardown_app_request
+def _close_db(_exc):
+    conn = g.pop("db", None)
+    if conn is not None:
+        conn.close()
 
-    return render_template_string(dashboard_template,
-        lang=lang,
-        title=t["title"],
-        sub=t["sub"],
-        scans=t["scans"],
-        paid_label=t["paid"],
-        rev=t["rev"],
-        total=total,
-        paid_count=len(paid),
-        total_revenue=rev,
-        pay_title=t["pay_title"],
-        pay_sub=t["pay_sub"],
-        price=t["price"],
-        table_headers=t["table_h"],
-        df=df,
-        client_id=PAYPAL_CLIENT_ID
+
+def current_lang():
+    lang = request.args.get("lang")
+    if lang in i18n.TEXTS:
+        return lang
+    return request.accept_languages.best_match(["en", "ar"]) or "en"
+
+
+def texts():
+    return i18n.TEXTS[current_lang()]
+
+
+@bp.app_context_processor
+def _inject():
+    lang = current_lang()
+    return {"t": i18n.TEXTS[lang], "lang": lang, "other_lang": "en" if lang == "ar" else "ar"}
+
+
+def public_base():
+    return current_app.config["PUBLIC_URL"] or request.url_root.rstrip("/")
+
+
+def client_hash():
+    salt = current_app.config["HASH_SALT"].encode()
+    return hmac.new(salt, (request.remote_addr or "").encode(), hashlib.sha256).hexdigest()[:32]
+
+
+def payments_enabled():
+    return current_app.extensions["paypal"] is not None
+
+
+def is_api_request():
+    return request.path.startswith("/api/")
+
+
+def perform_scan(raw_domain):
+    conn, chash = db(), client_hash()
+    since = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    cfg = current_app.config
+    if (sales_db.count_attempts_since(conn, since, chash) >= cfg["SCANS_PER_HOUR"]
+            or sales_db.count_attempts_since(conn, since) >= cfg["GLOBAL_SCANS_PER_HOUR"]):
+        abort(429)
+    sales_db.record_attempt(conn, chash)
+    result = current_app.extensions["scanner"](raw_domain)
+    scan_id = secrets.token_urlsafe(9)
+    sales_db.create_scan(conn, scan_id, secrets.token_urlsafe(32), result, chash)
+    return scan_id, result
+
+
+def scan_summary(scan_id, result):
+    kx, cert = result["key_exchange"], result["certificate"]
+    return {
+        "scan_id": scan_id,
+        "domain": result["domain"],
+        "grade": result["grade"],
+        "scanned_at": result["scanned_at"],
+        "tls_version": kx.get("version") or cert.get("negotiated_version"),
+        "key_exchange_group": kx.get("group"),
+        "post_quantum_key_exchange": bool(kx.get("pq")),
+        "certificate_key": f"{cert.get('key_algorithm')}-{cert.get('key_bits')}",
+        "certificate_valid": bool(cert.get("verified")),
+        "findings_in_full_report": len(result["findings"]),
+        "scan_url": public_base() + url_for(".scan_page", scan_id=scan_id),
+        "full_report_price": {"amount": current_app.config["PRICE"], "currency": current_app.config["CURRENCY"]},
+    }
+
+
+def report_url(scan):
+    return url_for(".report", token=scan["report_token"], lang=current_lang())
+
+
+def paid_scan_or_404(token):
+    scan = sales_db.get_scan_by_report_token(db(), token)
+    if not scan or not sales_db.is_scan_paid(db(), scan["id"]):
+        abort(404)
+    return scan
+
+
+def _load_results(pattern):
+    loaded = []
+    for path in sorted(glob.glob(os.path.join(BASE_DIR, "results", pattern))):
+        with open(path, encoding="utf-8") as f:
+            loaded.append(json.load(f))
+    return loaded
+
+
+@functools.lru_cache(maxsize=1)
+def research_data():
+    experiments = _load_results("ghz_*.json")
+    # نعرض قياسات الدقة من العتاد الحقيقي فقط؛ المحاكاة تبقى في المستودع للتوثيق.
+    fidelity_runs = _load_results("fidelity_ghz_hardware_*.json")
+    dna_stats = None
+    sequence_path = os.path.join(BASE_DIR, bio_archive_report.DEFAULT_SEQUENCE)
+    if os.path.exists(sequence_path):
+        with open(sequence_path, encoding="ascii") as f:
+            dna_stats = dna_encode.sequence_stats("".join(line for line in f.read().splitlines() if not line.startswith(">")))
+    return experiments, fidelity_runs, dna_stats
+
+
+# ---------------------------------------------------------------- الصفحات
+
+@bp.get("/")
+def index():
+    return render_template("index.html", error=None, domain="")
+
+
+@bp.post("/scan")
+def scan_form():
+    raw = request.form.get("domain", "")
+    try:
+        scan_id, _ = perform_scan(raw)
+    except quantum_vuln_scanner.ScanError as exc:
+        return render_template("index.html", error=texts()["errors"].get(exc.code, str(exc)), domain=raw), 400
+    return redirect(url_for(".scan_page", scan_id=scan_id, lang=current_lang()), code=303)
+
+
+@bp.get("/scan/<scan_id>")
+def scan_page(scan_id):
+    scan = sales_db.get_scan(db(), scan_id) or abort(404)
+    cfg = current_app.config
+    return render_template(
+        "scan.html", scan=scan, r=scan["result"], paid=sales_db.is_scan_paid(db(), scan_id),
+        payments_enabled=payments_enabled(), paypal_client_id=cfg["PAYPAL_CLIENT_ID"],
+        price=cfg["PRICE"], currency=cfg["CURRENCY"],
     )
 
-@app.route("/create-checkout-session", methods=["POST"])
-def checkout():
-    init_sales_log()
-    df = pd.read_csv(DATA_FILE)
-    new_row = {
-        "Timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
-        "JobID": "job_" + str(int(time.time())),
-        "KeySize": request.form.get("key_size", "2048"),
-        "Amount": 49.00,
-        "PaymentStatus": "Pending"
-    }
-    df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
-    df.to_csv(DATA_FILE, index=False, encoding="utf-8")
-    return redirect("/payment-success?order_id=" + str(int(time.time())), code=303)
 
-@app.route("/payment-success")
-def success():
-    order_id = request.args.get("order_id")
-    df = pd.read_csv(DATA_FILE)
-    if not df.empty:
-        idx = df[df["PaymentStatus"] == "Pending"].index
-        if len(idx):
-            df.loc[idx[-1], "PaymentStatus"] = "Paid"
-            df.to_csv(DATA_FILE, index=False, encoding="utf-8")
-    return "<h3>Payment successful! Your quantum report is being processed.</h3>"
+@bp.get("/report/<token>")
+def report(token):
+    scan = paid_scan_or_404(token)
+    lang = current_lang()
+    findings = [dict(f, text=i18n.finding_text(f, lang)) for f in scan["result"]["findings"]]
+    return render_template("report.html", scan=scan, r=scan["result"], findings=findings,
+                           remediation=i18n.REMEDIATION, token=token)
+
+
+@bp.get("/report/<token>/dna.txt")
+def report_dna(token):
+    scan = paid_scan_or_404(token)
+    payload = json.dumps(scan["result"], ensure_ascii=False, indent=2).encode("utf-8")
+    name = f"pqc-report-{scan['domain']}.json"
+    return Response(bio_archive_report.to_fasta(name, payload), mimetype="text/plain",
+                    headers={"Content-Disposition": f'attachment; filename="{name}.fasta.txt"'})
+
+
+@bp.get("/research")
+def research():
+    experiments, fidelity_runs, dna_stats = research_data()
+    return render_template("research.html", experiments=experiments, fidelity_runs=fidelity_runs, dna_stats=dna_stats)
+
+
+@bp.get("/admin")
+def admin():
+    password_hash = current_app.config["ADMIN_PASSWORD_HASH"]
+    if not password_hash:
+        abort(404)
+    auth = request.authorization
+    if not (auth and auth.username == "admin" and check_password_hash(password_hash, auth.password or "")):
+        return Response(status=401, headers={"WWW-Authenticate": 'Basic realm="Quantum Aether admin", charset="UTF-8"'})
+    conn = db()
+    return render_template("admin.html", stats=sales_db.stats(conn),
+                           orders=sales_db.recent_orders(conn), scans=sales_db.recent_scans(conn))
+
+
+# ---------------------------------------------------------------- API
+
+@bp.post("/api/scan")
+def api_scan():
+    data = request.get_json(silent=True) or {}
+    try:
+        scan_id, result = perform_scan(str(data.get("domain", "")))
+    except quantum_vuln_scanner.ScanError as exc:
+        return jsonify(error=exc.code, message=str(exc)), 400
+    return jsonify(scan_summary(scan_id, result)), 201
+
+
+@bp.get("/api/scan/<scan_id>")
+def api_scan_get(scan_id):
+    scan = sales_db.get_scan(db(), scan_id)
+    if not scan:
+        return jsonify(error="scan_not_found"), 404
+    return jsonify(scan_summary(scan_id, scan["result"]))
+
+
+@bp.post("/api/paypal/orders")
+def paypal_create_order():
+    paypal = current_app.extensions["paypal"]
+    if paypal is None:
+        return jsonify(error="payments_disabled"), 503
+    data = request.get_json(silent=True) or {}
+    conn = db()
+    scan = sales_db.get_scan(conn, str(data.get("scan_id", "")))
+    if not scan:
+        return jsonify(error="scan_not_found"), 404
+    if sales_db.is_scan_paid(conn, scan["id"]):
+        return jsonify(error="already_paid"), 409
+    cfg = current_app.config
+    try:
+        order = paypal.create_order(scan["id"], cfg["PRICE"], cfg["CURRENCY"],
+                                    f"Post-quantum readiness report: {scan['domain']}")
+    except (PayPalError, requests.RequestException) as exc:
+        log.warning("PayPal create order failed: %s", exc)
+        return jsonify(error="paypal_unavailable"), 502
+    sales_db.create_order(conn, order["id"], scan["id"], cfg["PRICE"], cfg["CURRENCY"])
+    return jsonify(id=order["id"]), 201
+
+
+@bp.post("/api/paypal/orders/<order_id>/capture")
+def paypal_capture_order(order_id):
+    paypal = current_app.extensions["paypal"]
+    if paypal is None:
+        return jsonify(error="payments_disabled"), 503
+    conn = db()
+    row = sales_db.get_order(conn, order_id)
+    if not row:  # طلب لم ينشئه خادمنا (مثلاً بمبلغ مختلف من المتصفح): مرفوض
+        return jsonify(error="order_not_found"), 404
+    scan = sales_db.get_scan(conn, row["scan_id"])
+    if row["status"] == "COMPLETED":
+        return jsonify(status="COMPLETED", report_url=report_url(scan))
+    try:
+        order = paypal.capture_order(order_id)
+    except PayPalError as exc:
+        if exc.issue == "INSTRUMENT_DECLINED":
+            return jsonify(error="INSTRUMENT_DECLINED"), 422
+        if exc.issue != "ORDER_ALREADY_CAPTURED":
+            log.warning("PayPal capture failed for %s: %s (%s)", order_id, exc, exc.issue)
+            return jsonify(error="capture_failed"), 502
+        try:
+            order = paypal.get_order(order_id)
+        except (PayPalError, requests.RequestException):
+            return jsonify(error="paypal_unavailable"), 502
+    except requests.RequestException:
+        return jsonify(error="paypal_unavailable"), 502
+    status, capture_id = verify_capture(order, scan["id"], row["amount"], row["currency"])
+    sales_db.update_order(conn, order_id, status, capture_id)
+    if status == "COMPLETED":
+        return jsonify(status=status, report_url=report_url(scan))
+    if status == "PENDING":
+        return jsonify(status=status), 202
+    log.error("PayPal capture for %s did not match the expected amount/reference", order_id)
+    return jsonify(error="verification_failed"), 402
+
+
+# ---------------------------------------------------------------- ملفات للاكتشاف والصحة
+
+@bp.get("/healthz")
+def healthz():
+    return jsonify(status="ok", payments=payments_enabled())
+
+
+@bp.get("/favicon.ico")
+def favicon():
+    return current_app.send_static_file("favicon.svg")
+
+
+@bp.get("/robots.txt")
+def robots():
+    body = ("User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /report/\nDisallow: /api/paypal/\n\n"
+            f"Sitemap: {public_base()}/sitemap.xml\n")
+    return Response(body, mimetype="text/plain")
+
+
+@bp.get("/sitemap.xml")
+def sitemap():
+    base = public_base()
+    urls = [f"{base}/?lang=en", f"{base}/?lang=ar", f"{base}/research?lang=en", f"{base}/research?lang=ar"]
+    body = ('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+            + "".join(f"  <url><loc>{u.replace('&', '&amp;')}</loc></url>\n" for u in urls) + "</urlset>\n")
+    return Response(body, mimetype="application/xml")
+
+
+@bp.get("/openapi.yaml")
+def openapi():
+    with open(os.path.join(BASE_DIR, "openapi.yaml"), encoding="utf-8") as f:
+        return Response(f.read().replace("{{PUBLIC_URL}}", public_base()), mimetype="application/yaml")
+
+
+@bp.get("/llms.txt")
+def llms_txt():
+    return Response(render_template("llms.txt", base=public_base(), price=current_app.config["PRICE"]),
+                    mimetype="text/plain")
+
+
+@bp.after_app_request
+def _security_headers(response):
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    if request.path.startswith(("/report/", "/admin")):
+        # رابط التقرير يحمل مفتاح الوصول: لا نخزنه ولا نرسله في Referer ولا نسمح بالفهرسة.
+        response.headers["Cache-Control"] = "no-store"
+        response.headers["Referrer-Policy"] = "no-referrer"
+        response.headers["X-Robots-Tag"] = "noindex"
+        response.headers["Content-Security-Policy"] = ("default-src 'self'; img-src 'self' data:; "
+                                                       "frame-ancestors 'none'; base-uri 'none'; form-action 'self'")
+    return response
+
+
+def _error(status, key):
+    if is_api_request():
+        return jsonify(error=key), status
+    return render_template("error.html", message=texts()[key]), status
+
+
+@bp.app_errorhandler(404)
+def _not_found(_e):
+    return _error(404, "not_found")
+
+
+@bp.app_errorhandler(429)
+def _rate_limited(_e):
+    return _error(429, "rate_limited")
+
+
+@bp.app_errorhandler(500)
+def _server_error(_e):
+    return _error(500, "server_error")
+
+
+app = create_app()
 
 if __name__ == "__main__":
-    app.run(port=5000, debug=True)
+    logging.basicConfig(level=logging.INFO)
+    app.run(host="127.0.0.1", port=5000, debug=os.environ.get("FLASK_DEBUG") == "1")
