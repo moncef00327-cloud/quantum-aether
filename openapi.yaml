@@ -77,6 +77,46 @@ paths:
               schema: { $ref: "#/components/schemas/Error" }
         "429":
           description: Too many scans from this client in the last hour.
+  /api/v1/orders:
+    post:
+      summary: Buy the full report for a scan — returns a PayPal approval link
+      description: >
+        Creates a PayPal order for the scan's full report. Open approve_url (the payer, or an agent the
+        payer authorized in PayPal, approves it). PayPal then returns to this site, which captures and
+        verifies the payment automatically; afterwards GET status_url returns report_url.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [scan_id]
+              properties:
+                scan_id: { type: string }
+      responses:
+        "201":
+          description: Order created.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Order" }
+        "404": { description: Unknown scan. }
+        "409": { description: The report for this scan is already paid. }
+        "503": { description: Payments are not configured. }
+  /api/v1/orders/{order_id}:
+    get:
+      summary: Order status; includes report_url once the payment is captured
+      parameters:
+        - name: order_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Order status.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OrderStatus" }
+        "404": { description: Unknown order. }
   /api/scan/{scan_id}:
     get:
       summary: Fetch the summary of an earlier scan
@@ -117,6 +157,22 @@ components:
           properties:
             amount: { type: string, example: "49.00" }
             currency: { type: string, example: USD }
+    Order:
+      type: object
+      properties:
+        order_id: { type: string }
+        approve_url: { type: string, format: uri }
+        status_url: { type: string, format: uri }
+        amount: { type: string, example: "49.00" }
+        currency: { type: string, example: USD }
+    OrderStatus:
+      type: object
+      properties:
+        order_id: { type: string }
+        status: { type: string, enum: [CREATED, PENDING, COMPLETED, FAILED] }
+        amount: { type: string }
+        currency: { type: string }
+        report_url: { type: string, format: uri, description: Present when status is COMPLETED. }
     KeySizeAssessment:
       type: object
       properties:

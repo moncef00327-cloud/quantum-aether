@@ -52,7 +52,7 @@ class PayPalClient:
                               issue=details[0].get("issue") or payload.get("name"))
         return payload
 
-    def create_order(self, reference_id, amount, currency, description):
+    def create_order(self, reference_id, amount, currency, description, return_url=None, cancel_url=None):
         body = {
             "intent": "CAPTURE",
             "purchase_units": [{
@@ -62,6 +62,15 @@ class PayPalClient:
                 "amount": {"currency_code": currency, "value": amount},
             }],
         }
+        if return_url:
+            # طلب برابط موافقة (payer-action): يفتحه المشتري أو وكيله، ثم يعيده PayPal إلى return_url.
+            body["payment_source"] = {"paypal": {"experience_context": {
+                "return_url": return_url,
+                "cancel_url": cancel_url or return_url,
+                "user_action": "PAY_NOW",
+                "shipping_preference": "NO_SHIPPING",
+                "brand_name": "Quantum Aether",
+            }}}
         return self._request("POST", "/v2/checkout/orders", json=body, request_id=f"create-{reference_id}-{int(time.time())}")
 
     def capture_order(self, order_id):

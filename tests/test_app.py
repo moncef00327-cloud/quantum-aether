@@ -43,10 +43,12 @@ class FakePayPal:
         self.capture_amount = "49.00"
         self.capture_error = None
 
-    def create_order(self, reference_id, amount, currency, description):
+    def create_order(self, reference_id, amount, currency, description, return_url=None, cancel_url=None):
         order_id = f"ORDER{len(self.orders) + 1}"
         self.orders[order_id] = reference_id
-        return {"id": order_id, "status": "CREATED"}
+        self.last_return_url = return_url
+        links = [{"rel": "payer-action", "href": f"https://www.paypal.com/checkoutnow?token={order_id}"}] if return_url else []
+        return {"id": order_id, "status": "PAYER_ACTION_REQUIRED" if return_url else "CREATED", "links": links}
 
     def capture_order(self, order_id):
         if self.capture_error:
@@ -210,6 +212,33 @@ class PaymentTests(AppTestCase):
         page = client.get(f"/scan/{scan_id}?lang=en").get_data(as_text=True)
         self.assertIn("Payments are currently unavailable", page)
         self.assertNotIn("paypal.com/sdk", page)
+
+
+class AgentPaymentTests(AppTestCase):
+    def test_agent_gets_approval_link_then_return_unlocks_report(self):
+        scan = self.scan()
+        created = self.client.post("/api/v1/orders", json={"scan_id": scan["scan_id"]})
+        self.assertEqual(created.status_code, 201)
+        order = created.get_json()
+        self.assertIn("checkoutnow?token=", order["approve_url"])
+        self.assertEqual(self.paypal.last_return_url, "http://localhost/paypal/return")
+        self.assertNotIn("report_url", self.client.get(f"/api/v1/orders/{order['order_id']}").get_json())
+
+        back = self.client.get(f"/paypal/return?token={order['order_id']}&PayerID=TESTPAYER")
+        self.assertEqual(back.status_code, 303)
+        self.assertIn("/report/", back.headers["Location"])
+
+        status = self.client.get(f"/api/v1/orders/{order['order_id']}").get_json()
+        self.assertEqual(status["status"], "COMPLETED")
+        self.assertEqual(self.client.get(status["report_url"]).status_code, 200)
+
+    def test_return_with_unknown_or_bad_payment(self):
+        self.assertEqual(self.client.get("/paypal/return?token=FOREIGN").status_code, 404)
+        scan = self.scan()
+        order = self.client.post("/api/v1/orders", json={"scan_id": scan["scan_id"]}).get_json()
+        self.paypal.capture_amount = "1.00"
+        self.assertEqual(self.client.get(f"/paypal/return?token={order['order_id']}").status_code, 400)
+        self.assertEqual(self.client.get(f"/api/v1/orders/{order['order_id']}").get_json()["status"], "FAILED")
 
 
 class AdminTests(AppTestCase):

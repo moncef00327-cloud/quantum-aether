@@ -278,7 +278,8 @@ def key_size_assessment(key_size):
         "scan_your_domain": {"method": "POST", "url": public_base() + url_for(".api_v1_quantum_scan"),
                              "body": {"domain": "example.com"}},
         "full_report": {"price": cfg["PRICE"], "currency": cfg["CURRENCY"],
-                        "how": "Scan a domain, then pay on its scan page with PayPal; a person approves the payment."},
+                        "how": "Scan a domain, then POST /api/v1/orders with its scan_id to get a PayPal approval "
+                               "link; once the payer approves it, the report link appears at the order's status_url."},
     }
 
 
@@ -328,40 +329,116 @@ def paypal_create_order():
     return jsonify(id=order["id"]), 201
 
 
-@bp.post("/api/paypal/orders/<order_id>/capture")
-def paypal_capture_order(order_id):
+def capture_and_record(order_id):
+    """يلتقط طلب PayPal أنشأه خادمنا ويتحقق منه ويسجله. يعيد (النتيجة، الفحص)."""
     paypal = current_app.extensions["paypal"]
     if paypal is None:
-        return jsonify(error="payments_disabled"), 503
+        return "DISABLED", None
     conn = db()
     row = sales_db.get_order(conn, order_id)
     if not row:  # طلب لم ينشئه خادمنا (مثلاً بمبلغ مختلف من المتصفح): مرفوض
-        return jsonify(error="order_not_found"), 404
+        return "NOT_FOUND", None
     scan = sales_db.get_scan(conn, row["scan_id"])
     if row["status"] == "COMPLETED":
-        return jsonify(status="COMPLETED", report_url=report_url(scan))
+        return "COMPLETED", scan
     try:
         order = paypal.capture_order(order_id)
     except PayPalError as exc:
         if exc.issue == "INSTRUMENT_DECLINED":
-            return jsonify(error="INSTRUMENT_DECLINED"), 422
+            return "INSTRUMENT_DECLINED", scan
         if exc.issue != "ORDER_ALREADY_CAPTURED":
             log.warning("PayPal capture failed for %s: %s (%s)", order_id, exc, exc.issue)
-            return jsonify(error="capture_failed"), 502
+            return "CAPTURE_FAILED", scan
         try:
             order = paypal.get_order(order_id)
         except (PayPalError, requests.RequestException):
-            return jsonify(error="paypal_unavailable"), 502
+            return "UNAVAILABLE", scan
     except requests.RequestException:
-        return jsonify(error="paypal_unavailable"), 502
+        return "UNAVAILABLE", scan
     status, capture_id = verify_capture(order, scan["id"], row["amount"], row["currency"])
     sales_db.update_order(conn, order_id, status, capture_id)
-    if status == "COMPLETED":
-        return jsonify(status=status, report_url=report_url(scan))
-    if status == "PENDING":
-        return jsonify(status=status), 202
-    log.error("PayPal capture for %s did not match the expected amount/reference", order_id)
-    return jsonify(error="verification_failed"), 402
+    if status == "FAILED":
+        log.error("PayPal capture for %s did not match the expected amount/reference", order_id)
+        return "VERIFICATION_FAILED", scan
+    return status, scan
+
+
+CAPTURE_ERRORS = {
+    "DISABLED": ("payments_disabled", 503),
+    "NOT_FOUND": ("order_not_found", 404),
+    "INSTRUMENT_DECLINED": ("INSTRUMENT_DECLINED", 422),
+    "CAPTURE_FAILED": ("capture_failed", 502),
+    "UNAVAILABLE": ("paypal_unavailable", 502),
+    "VERIFICATION_FAILED": ("verification_failed", 402),
+}
+
+
+@bp.post("/api/paypal/orders/<order_id>/capture")
+def paypal_capture_order(order_id):
+    outcome, scan = capture_and_record(order_id)
+    if outcome == "COMPLETED":
+        return jsonify(status=outcome, report_url=report_url(scan))
+    if outcome == "PENDING":
+        return jsonify(status=outcome), 202
+    error, code = CAPTURE_ERRORS[outcome]
+    return jsonify(error=error), code
+
+
+# ---------------------------------------------------------------- دفع الوكلاء (رابط موافقة PayPal)
+
+@bp.post("/api/v1/orders")
+def api_v1_create_order():
+    """ينشئ طلب PayPal ويعيد رابط الموافقة؛ بعد الموافقة يعيد PayPal المشتري إلى /paypal/return فيُلتقط الدفع."""
+    paypal = current_app.extensions["paypal"]
+    if paypal is None:
+        return jsonify(error="payments_disabled"), 503
+    data = request.get_json(silent=True) or {}
+    conn = db()
+    scan = sales_db.get_scan(conn, str(data.get("scan_id", "")))
+    if not scan:
+        return jsonify(error="scan_not_found"), 404
+    if sales_db.is_scan_paid(conn, scan["id"]):
+        return jsonify(error="already_paid"), 409
+    cfg, base = current_app.config, public_base()
+    try:
+        order = paypal.create_order(scan["id"], cfg["PRICE"], cfg["CURRENCY"],
+                                    f"Post-quantum readiness report: {scan['domain']}",
+                                    return_url=base + url_for(".paypal_return"),
+                                    cancel_url=base + url_for(".scan_page", scan_id=scan["id"]))
+    except (PayPalError, requests.RequestException) as exc:
+        log.warning("PayPal create order failed: %s", exc)
+        return jsonify(error="paypal_unavailable"), 502
+    approve_url = next((link["href"] for link in order.get("links", [])
+                        if link.get("rel") in ("payer-action", "approve")), None)
+    if not approve_url:
+        return jsonify(error="paypal_unavailable"), 502
+    sales_db.create_order(conn, order["id"], scan["id"], cfg["PRICE"], cfg["CURRENCY"])
+    return jsonify(order_id=order["id"], approve_url=approve_url,
+                   status_url=base + url_for(".api_v1_order_status", order_id=order["id"]),
+                   amount=cfg["PRICE"], currency=cfg["CURRENCY"]), 201
+
+
+@bp.get("/api/v1/orders/<order_id>")
+def api_v1_order_status(order_id):
+    row = sales_db.get_order(db(), order_id)
+    if not row:
+        return jsonify(error="order_not_found"), 404
+    body = {"order_id": order_id, "status": row["status"], "amount": row["amount"], "currency": row["currency"]}
+    if row["status"] == "COMPLETED":
+        scan = sales_db.get_scan(db(), row["scan_id"])
+        body["report_url"] = public_base() + url_for(".report", token=scan["report_token"])
+    return jsonify(body)
+
+
+@bp.get("/paypal/return")
+def paypal_return():
+    outcome, scan = capture_and_record(request.args.get("token", ""))
+    if outcome == "COMPLETED":
+        return redirect(report_url(scan), code=303)
+    if outcome == "NOT_FOUND":
+        abort(404)
+    message = texts()["pay_pending" if outcome == "PENDING" else "pay_error"]
+    return render_template("error.html", message=message), 202 if outcome == "PENDING" else 400
 
 
 # ---------------------------------------------------------------- ملفات للاكتشاف والصحة
