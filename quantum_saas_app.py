@@ -31,6 +31,10 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 log = logging.getLogger("quantum_saas")
 bp = Blueprint("site", __name__)
 
+# زواحف الذكاء الاصطناعي مذكورة صراحة؛ كلها في مجموعة واحدة مع "*" لتنطبق عليها قواعد الحجب نفسها.
+AI_CRAWLERS = ["GPTBot", "ChatGPT-User", "OAI-SearchBot", "ClaudeBot", "Claude-User", "Claude-SearchBot",
+               "anthropic-ai", "PerplexityBot", "Perplexity-User", "Google-Extended", "Bingbot", "cohere-ai"]
+
 
 def _config_from_env():
     env = os.environ.get
@@ -258,6 +262,41 @@ def api_scan():
     return jsonify(scan_summary(scan_id, result)), 201
 
 
+def key_size_assessment(key_size):
+    cfg = current_app.config
+    return {
+        "key_size_bits": key_size,
+        "algorithm": "RSA",
+        "classical_security": "weak" if key_size < 2048 else "acceptable",
+        "quantum_vulnerable": True,
+        "quantum_note": "Shor's algorithm breaks RSA and elliptic-curve keys of any size; a larger key does not give "
+                        "quantum safety. What protects recorded traffic is a post-quantum key exchange.",
+        "published_estimate": "RSA-2048: under one million noisy physical qubits in under a week (Gidney, 2025). "
+                              "No current quantum computer is close to that.",
+        "recommended_action": "Enable hybrid post-quantum key exchange X25519MLKEM768 (ML-KEM, FIPS 203) on your TLS "
+                              "servers; plan ML-DSA (FIPS 204) certificates once CAs support them.",
+        "scan_your_domain": {"method": "POST", "url": public_base() + url_for(".api_v1_quantum_scan"),
+                             "body": {"domain": "example.com"}},
+        "full_report": {"price": cfg["PRICE"], "currency": cfg["CURRENCY"],
+                        "how": "Scan a domain, then pay on its scan page with PayPal; a person approves the payment."},
+    }
+
+
+@bp.post("/api/v1/quantum-scan")
+def api_v1_quantum_scan():
+    """واجهة الوكلاء: domain يجري فحصاً حقيقياً، وkey_size وحده يعيد تقييماً لحجم المفتاح دون فحص."""
+    data = request.get_json(silent=True) or {}
+    if data.get("domain"):
+        return api_scan()
+    try:
+        key_size = int(data.get("key_size", 2048))
+    except (TypeError, ValueError):
+        return jsonify(error="invalid_key_size"), 400
+    if not 512 <= key_size <= 16384:
+        return jsonify(error="invalid_key_size"), 400
+    return jsonify(key_size_assessment(key_size))
+
+
 @bp.get("/api/scan/<scan_id>")
 def api_scan_get(scan_id):
     scan = sales_db.get_scan(db(), scan_id)
@@ -339,7 +378,8 @@ def favicon():
 
 @bp.get("/robots.txt")
 def robots():
-    body = ("User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /report/\nDisallow: /api/paypal/\n\n"
+    agents = "".join(f"User-agent: {name}\n" for name in [*AI_CRAWLERS, "*"])
+    body = (agents + "Allow: /\nDisallow: /admin\nDisallow: /report/\nDisallow: /api/paypal/\n\n"
             f"Sitemap: {public_base()}/sitemap.xml\n")
     return Response(body, mimetype="text/plain")
 

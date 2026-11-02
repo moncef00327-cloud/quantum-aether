@@ -37,6 +37,46 @@ paths:
               schema: { $ref: "#/components/schemas/Error" }
         "429":
           description: Too many scans from this client in the last hour.
+  /api/v1/quantum-scan:
+    post:
+      summary: Agent endpoint — real domain scan, or an honest assessment of an RSA key size
+      description: >
+        With `domain`, runs the same real scan as POST /api/scan (rate limited).
+        With only `key_size`, returns what that key size means against classical and quantum attackers;
+        no network scan is made. Shor's algorithm breaks RSA and ECC of any size.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                domain:
+                  type: string
+                  example: example.com
+                key_size:
+                  type: integer
+                  default: 2048
+                  minimum: 512
+                  maximum: 16384
+      responses:
+        "200":
+          description: Key-size assessment (request had only key_size).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/KeySizeAssessment" }
+        "201":
+          description: Domain scanned (request had domain).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ScanSummary" }
+        "400":
+          description: Invalid domain or key size.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "429":
+          description: Too many scans from this client in the last hour.
   /api/scan/{scan_id}:
     get:
       summary: Fetch the summary of an earlier scan
@@ -77,10 +117,22 @@ components:
           properties:
             amount: { type: string, example: "49.00" }
             currency: { type: string, example: USD }
+    KeySizeAssessment:
+      type: object
+      properties:
+        key_size_bits: { type: integer }
+        algorithm: { type: string, example: RSA }
+        classical_security: { type: string, enum: [weak, acceptable] }
+        quantum_vulnerable: { type: boolean }
+        quantum_note: { type: string }
+        published_estimate: { type: string }
+        recommended_action: { type: string }
+        scan_your_domain: { type: object }
+        full_report: { type: object }
     Error:
       type: object
       properties:
         error:
           type: string
-          enum: [invalid_domain, private_address, dns_failure, connect_failure, tls_failure]
+          enum: [invalid_domain, private_address, dns_failure, connect_failure, tls_failure, invalid_key_size]
         message: { type: string }

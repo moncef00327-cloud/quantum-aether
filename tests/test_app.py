@@ -127,6 +127,27 @@ class ApiTests(AppTestCase):
         self.assertFalse(summary["post_quantum_key_exchange"])
         self.assertEqual(self.client.get(f"/api/scan/{summary['scan_id']}").get_json()["domain"], "example.com")
 
+    def test_agent_endpoint_scans_a_domain(self):
+        response = self.client.post("/api/v1/quantum-scan", json={"domain": "example.com"})
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.get_json()["grade"], "B")
+
+    def test_agent_endpoint_key_size_is_honest(self):
+        body = self.client.post("/api/v1/quantum-scan", json={"key_size": 4096}).get_json()
+        self.assertTrue(body["quantum_vulnerable"])
+        self.assertEqual(body["classical_security"], "acceptable")
+        self.assertNotIn("quantum_break_time_seconds", body)
+        weak = self.client.post("/api/v1/quantum-scan", json={"key_size": 1024}).get_json()
+        self.assertEqual(weak["classical_security"], "weak")
+        self.assertEqual(self.client.post("/api/v1/quantum-scan", json={"key_size": "big"}).status_code, 400)
+
+    def test_robots_names_ai_crawlers_and_keeps_private_paths_blocked(self):
+        robots = self.client.get("/robots.txt").get_data(as_text=True)
+        group, _, _ = robots.partition("\n\n")
+        for agent in ("GPTBot", "ClaudeBot", "PerplexityBot", "*"):
+            self.assertIn(f"User-agent: {agent}\n", group)
+        self.assertIn("Disallow: /admin", group)
+
     def test_rate_limit_counts_failed_attempts(self):
         self.client.post("/api/scan", json={"domain": "localhost"})
         self.scan()
