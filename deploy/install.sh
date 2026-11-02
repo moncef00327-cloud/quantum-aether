@@ -81,6 +81,7 @@ echo "==> systemd"
 install -m 644 "$APP_DIR/deploy/quantum_saas.service" "/etc/systemd/system/$SERVICE.service"
 systemctl daemon-reload
 systemctl enable "$SERVICE" >/dev/null 2>&1
+systemctl reset-failed "$SERVICE" >/dev/null 2>&1 || true
 systemctl restart "$SERVICE"
 
 echo "==> فحص الصحة"
