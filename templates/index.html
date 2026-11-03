@@ -27,6 +27,11 @@
 </section>
 
 <section class="card">
+  <h2>{{ t.limits_title }}</h2>
+  <ul>{% for item in t.limits_items %}<li>{{ item }}</li>{% endfor %}</ul>
+</section>
+
+<section class="card">
   <h2>{{ t.pricing_title }}</h2>
   <div class="grid-2">
     <div class="price-box">
@@ -36,6 +41,7 @@
     <div class="price-box highlight">
       <h3>{{ t.paid_title }} <span class="tag">$49</span></h3>
       <ul class="ticks">{% for item in t.paid_items %}<li>{{ item }}</li>{% endfor %}</ul>
+      <p><a href="{{ url_for('site.sample_report', lang=lang if lang != 'de' else 'en') }}">{{ t.sample_link }} →</a></p>
     </div>
   </div>
   <p class="notice"><a href="{{ url_for('site.monitoring', lang=lang) }}">{{ t.mon_cta_home }} →</a></p>

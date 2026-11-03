@@ -1,0 +1,54 @@
+{
+ "domain": "github.com",
+ "ip": "20.26.156.215",
+ "port": 443,
+ "scanned_at": "2026-11-03T08:58:57+00:00",
+ "scanner_version": "2.0",
+ "key_exchange": {
+  "pq_hello_ok": true,
+  "pq_hello_error": null,
+  "error": null,
+  "version": "TLSv1.3",
+  "cipher": "TLS_AES_128_GCM_SHA256",
+  "group": "x25519",
+  "pq": false,
+  "hrr": false,
+  "kx": "TLS1.3"
+ },
+ "certificate": {
+  "verified": true,
+  "verify_error": null,
+  "key_algorithm": "ECDSA",
+  "key_bits": 256,
+  "curve": "secp256r1",
+  "signature_algorithm": "ecdsa-with-SHA256",
+  "subject": "github.com",
+  "issuer": "Sectigo Limited",
+  "not_after": "2027-01-27T23:59:59+00:00",
+  "days_left": 85,
+  "san_count": 2,
+  "sans": [
+   "github.com",
+   "www.github.com"
+  ],
+  "negotiated_version": "TLSv1.3",
+  "negotiated_cipher": "TLS_AES_128_GCM_SHA256"
+ },
+ "grade": "B",
+ "findings": [
+  {
+   "code": "KX_CLASSICAL",
+   "status": "warning",
+   "params": {
+    "group": "x25519"
+   }
+  },
+  {
+   "code": "CERT_SHOR_VULNERABLE",
+   "status": "info",
+   "params": {
+    "algorithm": "ECDSA-256"
+   }
+  }
+ ]
+}

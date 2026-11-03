@@ -412,7 +412,7 @@ class AdminExclusionAndSeoTest(unittest.TestCase):
         self.assertIn('xmlns:xhtml="http://www.w3.org/1999/xhtml"', body)
         self.assertIn('<xhtml:link rel="alternate" hreflang="x-default" href="https://ather-quatum.cloud/guides?lang=en"/>', body)
         self.assertIn("https://ather-quatum.cloud/impressum?lang=de", body)
-        self.assertEqual(body.count("<url>"), 3 * 3 + 2 * (2 + 3) + 2 * 3)  # 3 صفحات بثلاث لغات، 5 بلغتين، 3 قانونية
+        self.assertEqual(body.count("<url>"), 3 * 3 + 2 * (3 + 3) + 2 * 3)  # 3 صفحات بثلاث لغات، 6 بلغتين، 3 قانونية
 
     def test_robots_points_to_sitemap(self):
         self.assertIn("Sitemap: https://ather-quatum.cloud/sitemap.xml",

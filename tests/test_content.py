@@ -33,5 +33,21 @@ class ContentPagesTest(unittest.TestCase):
             self.assertIn(f"/guides/{slug}?lang=en", body)
 
 
+    def test_sample_report_is_public_full_report(self):
+        for lang in ("en", "ar"):
+            body = self.client.get(f"/sample-report?lang={lang}").get_data(as_text=True)
+            self.assertIn("github.com", body)
+            self.assertNotIn("noindex", body)
+            self.assertIn("X25519MLKEM768", body)  # خطوات الإصلاح ظاهرة
+            self.assertNotIn("DNA", body)
+        self.assertIn("/sample-report?lang=en", self.client.get("/sitemap.xml").get_data(as_text=True))
+
+    def test_home_states_scan_limits_and_links_sample(self):
+        body = self.client.get("/?lang=en").get_data(as_text=True)
+        self.assertIn("What this scan does not cover", body)
+        self.assertIn("/sample-report", body)
+        self.assertNotIn("DNA", body)
+
+
 if __name__ == "__main__":
     unittest.main()

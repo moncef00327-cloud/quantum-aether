@@ -263,6 +263,24 @@ def report(token):
                            remediation=i18n.REMEDIATION, token=token)
 
 
+SAMPLE_FILE = os.path.join(BASE_DIR, "data", "sample_report.json")
+
+
+@functools.lru_cache(maxsize=1)
+def sample_result():
+    with open(SAMPLE_FILE, encoding="utf-8") as f:
+        return json.load(f)
+
+
+@bp.get("/sample-report")
+def sample_report():
+    """تقرير كامل حقيقي (فحص github.com) يُعرض كما يصل للمشتري، ليرى الزائر ما يدفع مقابله."""
+    r = sample_result()
+    findings = [dict(f, text=i18n.finding_text(f, current_lang())) for f in r["findings"]]
+    return render_template("report.html", scan=None, r=r, findings=findings, remediation=i18n.REMEDIATION,
+                           token=None, sample=True)
+
+
 @bp.get("/report/<token>/dna.txt")
 def report_dna(token):
     scan = paid_scan_or_404(token)
@@ -803,6 +821,7 @@ def sitemap():
 
     site_langs, de_langs, legal_langs = ("en", "ar"), ("en", "ar", "de"), legal.LANGS
     pages = [("/", template_date("index.html"), de_langs), ("/monitoring", template_date("monitoring.html"), de_langs),
+             ("/sample-report", sample_result()["scanned_at"][:10], site_langs),
              ("/research", template_date("research.html"), site_langs),
              ("/guides", max(g["updated"] for g in guides.GUIDES.values()), site_langs),
              ("/study/top-1000-post-quantum-tls", study_data()["scanned_on"], de_langs)]

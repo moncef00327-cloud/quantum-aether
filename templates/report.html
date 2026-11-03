@@ -1,8 +1,15 @@
 {% extends "base.html" %}
 {% set kx = r.key_exchange %}{% set cert = r.certificate %}
-{% block title %}{{ t.report_title }} · {{ r.domain }}{% endblock %}
-{% block head %}<meta name="robots" content="noindex">{% endblock %}
+{% block title %}{% if sample %}{{ t.sample_title }}{% else %}{{ t.report_title }}{% endif %} · {{ r.domain }}{% endblock %}
+{% block head %}{% if not sample %}<meta name="robots" content="noindex">{% endif %}{% endblock %}
 {% block content %}
+{% if sample %}
+<section class="card notice no-print">
+  <h2>{{ t.sample_title }}</h2>
+  <p>{{ t.sample_banner.format(date=r.scanned_at[:10]) }}</p>
+  <p><a class="button-link" href="{{ url_for('site.index', lang=lang) }}">{{ t.sample_buy }}</a></p>
+</section>
+{% endif %}
 <section class="card result-head">
   <div class="grade grade-{{ r.grade }}">{{ r.grade }}</div>
   <div>
@@ -60,8 +67,7 @@
 </section>
 
 <section class="card">
-  <h2>{{ t.dna_title }}</h2>
-  <p>{{ t.dna_body }}</p>
-  <p><a class="button-link no-print" href="{{ url_for('site.report_dna', token=token) }}">{{ t.dna_download }}</a></p>
+  <h2>{{ t.limits_title }}</h2>
+  <ul>{% for item in t.limits_items %}<li>{{ item }}</li>{% endfor %}</ul>
 </section>
 {% endblock %}
