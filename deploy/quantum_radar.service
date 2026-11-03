@@ -1,0 +1,19 @@
+[Unit]
+Description=Quantum Aether interest radar (daily digest of public post-quantum TLS discussions)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=quantum
+Group=quantum
+WorkingDirectory=/var/www/quantum_saas
+EnvironmentFile=/etc/quantum_saas.env
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/var/www/quantum_saas/.venv/bin/python3 radar_job.py
+TimeoutStartSec=15min
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/quantum_saas
