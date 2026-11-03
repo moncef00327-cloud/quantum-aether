@@ -5,6 +5,7 @@
 
 P = '<mark class="placeholder">[{}]</mark>'
 OWNER = "Omer Alsaloum"
+EMAIL = '<a href="mailto:sajad.vip56@gmail.com">sajad.vip56@gmail.com</a>'
 
 PAGES = {
     "impressum": {
@@ -14,7 +15,7 @@ PAGES = {
 <p>Angaben gemäß § 5 E-Commerce-Gesetz (ECG), § 14 Unternehmensgesetzbuch (UGB), § 63 Gewerbeordnung (GewO) und Offenlegung gemäß § 25 Mediengesetz (MedienG).</p>
 <h2>Medieninhaber und Diensteanbieter</h2>
 <p>{OWNER}<br>{P.format("Anschrift: Straße, Hausnummer, PLZ, Ort, Österreich")}</p>
-<p>E-Mail: {P.format("E-Mail-Adresse")}<br>Telefon: {P.format("Telefonnummer (optional)")}</p>
+<p>E-Mail: {EMAIL}<br>Telefon: {P.format("Telefonnummer (optional)")}</p>
 <h2>Unternehmensangaben</h2>
 <ul>
 <li>Unternehmensgegenstand: IT-Dienstleistungen; Betrieb eines Online-Dienstes zur Prüfung der Post-Quanten-Bereitschaft von TLS-Verbindungen</li>
@@ -34,7 +35,7 @@ PAGES = {
 <p>Information pursuant to § 5 Austrian E-Commerce Act (ECG), § 14 Austrian Commercial Code (UGB), § 63 Trade Act (GewO) and disclosure pursuant to § 25 Media Act (MedienG).</p>
 <h2>Media owner and service provider</h2>
 <p>{OWNER}<br>{P.format("Address: street, number, postcode, town, Austria")}</p>
-<p>Email: {P.format("Email address")}<br>Phone: {P.format("Phone number (optional)")}</p>
+<p>Email: {EMAIL}<br>Phone: {P.format("Phone number (optional)")}</p>
 <h2>Business details</h2>
 <ul>
 <li>Business purpose: IT services; operation of an online service that checks the post-quantum readiness of TLS connections</li>
@@ -55,7 +56,7 @@ PAGES = {
             "title": "Datenschutzerklärung",
             "body": f"""
 <h2>1. Verantwortlicher</h2>
-<p>{OWNER}, {P.format("Anschrift")}, E-Mail: {P.format("E-Mail-Adresse")}</p>
+<p>{OWNER}, {P.format("Anschrift")}, E-Mail: {EMAIL}</p>
 
 <h2>2. Hosting</h2>
 <p>Die Website läuft auf einem Server der The Constant Company, LLC („Vultr“, USA) im Rechenzentrum London, Vereinigtes Königreich. Für das Vereinigte Königreich besteht ein Angemessenheitsbeschluss der EU-Kommission. Auftragsverarbeitungsvertrag nach Art. 28 DSGVO: {P.format("bitte bestätigen, dass der Vultr-AVV/DPA akzeptiert wurde")}.</p>
@@ -82,7 +83,7 @@ PAGES = {
 <p>E-Mails (Zugangslink, Benachrichtigungen) versenden wir über Resend, Inc., USA. Dabei werden E-Mail-Adresse und Nachrichteninhalt übermittelt. Grundlage der Übermittlung in die USA: {P.format("bitte prüfen: Zertifizierung nach dem EU-US Data Privacy Framework oder Standardvertragsklauseln")}.</p>
 
 <h2>10. Ihre Rechte</h2>
-<p>Sie haben das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit und Widerspruch. Schreiben Sie dazu an {P.format("E-Mail-Adresse")}. Sie können sich außerdem bei der Österreichischen Datenschutzbehörde beschweren: Barichgasse 40-42, 1030 Wien, <a href="https://www.dsb.gv.at" rel="nofollow">www.dsb.gv.at</a>.</p>
+<p>Sie haben das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit und Widerspruch. Schreiben Sie dazu an {EMAIL}. Sie können sich außerdem bei der Österreichischen Datenschutzbehörde beschweren: Barichgasse 40-42, 1030 Wien, <a href="https://www.dsb.gv.at" rel="nofollow">www.dsb.gv.at</a>.</p>
 
 <p class="muted small">Stand: November 2026</p>
 """,
@@ -91,7 +92,7 @@ PAGES = {
             "title": "Privacy policy",
             "body": f"""
 <h2>1. Controller</h2>
-<p>{OWNER}, {P.format("Address")}, email: {P.format("Email address")}</p>
+<p>{OWNER}, {P.format("Address")}, email: {EMAIL}</p>
 
 <h2>2. Hosting</h2>
 <p>The website runs on a server of The Constant Company, LLC ("Vultr", USA) in a London data centre, United Kingdom. The United Kingdom is covered by an EU Commission adequacy decision. Data processing agreement under Art. 28 GDPR: {P.format("please confirm the Vultr DPA has been accepted")}.</p>
@@ -118,7 +119,7 @@ PAGES = {
 <p>Emails (access link, alerts) are sent through Resend, Inc., USA, which receives the email address and message content. Basis for the transfer to the USA: {P.format("please verify: EU-US Data Privacy Framework certification or standard contractual clauses")}.</p>
 
 <h2>10. Your rights</h2>
-<p>You have the right of access, rectification, erasure, restriction of processing, data portability and objection. Write to {P.format("Email address")}. You may also lodge a complaint with the Austrian Data Protection Authority: Barichgasse 40-42, 1030 Vienna, <a href="https://www.dsb.gv.at" rel="nofollow">www.dsb.gv.at</a>.</p>
+<p>You have the right of access, rectification, erasure, restriction of processing, data portability and objection. Write to {EMAIL}. You may also lodge a complaint with the Austrian Data Protection Authority: Barichgasse 40-42, 1030 Vienna, <a href="https://www.dsb.gv.at" rel="nofollow">www.dsb.gv.at</a>.</p>
 
 <p class="muted small">Last updated: November 2026. In case of doubt the German version applies.</p>
 """,
@@ -150,7 +151,7 @@ PAGES = {
 <p>Das Abonnement läuft auf unbestimmte Zeit und wird monatlich im Voraus abgerechnet. Es kann jederzeit im Kunden-Dashboard oder im PayPal-Konto gekündigt werden; die Überwachung endet mit der Kündigung, weitere Abbuchungen erfolgen nicht.</p>
 
 <h2>6. Rücktrittsrecht für Verbraucher</h2>
-<p>Verbraucher im Sinne des KSchG können von einem im Fernabsatz geschlossenen Vertrag binnen 14 Tagen ab Vertragsschluss ohne Angabe von Gründen zurücktreten (§ 11 FAGG). Die Erklärung ist an {P.format("E-Mail-Adresse")} zu richten. Beim <strong>vollständigen Bericht</strong> (digitaler Inhalt) erlischt das Rücktrittsrecht, wenn der Verbraucher vor der Zahlung ausdrücklich zugestimmt hat, dass der Bericht sofort bereitgestellt wird, und zur Kenntnis genommen hat, dass er dadurch sein Rücktrittsrecht verliert (§ 18 Abs. 1 Z 11 FAGG); diese Zustimmung wird beim Kauf durch ein Ankreuzfeld eingeholt und gespeichert. Beim <strong>Abonnement</strong> beginnt die Überwachung auf ausdrücklichen Wunsch des Verbrauchers sofort; bei einem Rücktritt innerhalb der Frist ist für die bis dahin erbrachten Leistungen ein anteiliges Entgelt zu zahlen (§ 16 FAGG).</p>
+<p>Verbraucher im Sinne des KSchG können von einem im Fernabsatz geschlossenen Vertrag binnen 14 Tagen ab Vertragsschluss ohne Angabe von Gründen zurücktreten (§ 11 FAGG). Die Erklärung ist an {EMAIL} zu richten. Beim <strong>vollständigen Bericht</strong> (digitaler Inhalt) erlischt das Rücktrittsrecht, wenn der Verbraucher vor der Zahlung ausdrücklich zugestimmt hat, dass der Bericht sofort bereitgestellt wird, und zur Kenntnis genommen hat, dass er dadurch sein Rücktrittsrecht verliert (§ 18 Abs. 1 Z 11 FAGG); diese Zustimmung wird beim Kauf durch ein Ankreuzfeld eingeholt und gespeichert. Beim <strong>Abonnement</strong> beginnt die Überwachung auf ausdrücklichen Wunsch des Verbrauchers sofort; bei einem Rücktritt innerhalb der Frist ist für die bis dahin erbrachten Leistungen ein anteiliges Entgelt zu zahlen (§ 16 FAGG).</p>
 
 <h2>7. Gewährleistung und Haftung</h2>
 <p>Gegenüber Verbrauchern gilt die gesetzliche Gewährleistung. Der Anbieter haftet nur für Vorsatz und grobe Fahrlässigkeit; dies gilt nicht für Personenschäden. Die Prüfergebnisse dienen der Information; für Entscheidungen auf ihrer Grundlage und für Folgeschäden wird gegenüber Unternehmern keine Haftung übernommen.</p>
@@ -192,7 +193,7 @@ PAGES = {
 <p>The subscription runs for an indefinite period and is billed monthly in advance. It can be cancelled at any time in the customer dashboard or in the PayPal account; monitoring ends with the cancellation and no further charges are made.</p>
 
 <h2>6. Right of withdrawal for consumers</h2>
-<p>Consumers within the meaning of the Austrian Consumer Protection Act may withdraw from a distance contract within 14 days of its conclusion without giving reasons (§ 11 FAGG). The withdrawal must be sent to {P.format("Email address")}. For the <strong>full report</strong> (digital content), the right of withdrawal expires if, before paying, the consumer expressly agreed that the report is delivered immediately and acknowledged losing the right of withdrawal (§ 18(1)(11) FAGG); this consent is collected with a checkbox at purchase and stored. For the <strong>subscription</strong>, monitoring starts immediately at the consumer's express request; on withdrawal within the period a proportionate amount is payable for the services provided until then (§ 16 FAGG).</p>
+<p>Consumers within the meaning of the Austrian Consumer Protection Act may withdraw from a distance contract within 14 days of its conclusion without giving reasons (§ 11 FAGG). The withdrawal must be sent to {EMAIL}. For the <strong>full report</strong> (digital content), the right of withdrawal expires if, before paying, the consumer expressly agreed that the report is delivered immediately and acknowledged losing the right of withdrawal (§ 18(1)(11) FAGG); this consent is collected with a checkbox at purchase and stored. For the <strong>subscription</strong>, monitoring starts immediately at the consumer's express request; on withdrawal within the period a proportionate amount is payable for the services provided until then (§ 16 FAGG).</p>
 
 <h2>7. Warranty and liability</h2>
 <p>Statutory warranty applies to consumers. The provider is liable only for intent and gross negligence; this does not apply to personal injury. Scan results are for information; towards businesses no liability is accepted for decisions based on them or for consequential damages.</p>
