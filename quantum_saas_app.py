@@ -494,7 +494,24 @@ def compare():
 @bp.get("/api/v1/scan")
 def api_v1_scan_get():
     """فحص عبر GET ليسهل على أدوات سطر الأوامر والوكلاء: /api/v1/scan?domain=example.com
-    مع ?format=text يعيد نصاً ملوّناً للطرفية (ANSI)."""
+    مع ?format=text يعيد نصاً ملوّناً للطرفية (ANSI).
+    مع ?max_age=N (ساعات، حتى 720) يعيد آخر نتيجة محفوظة أحدث من N ساعة بدل فحص جديد؛ تستعمله إضافة
+    WordPress حتى لا تصطدم مواقع الاستضافة المشتركة (عنوان IP واحد) بحدّ الفحوص."""
+    try:
+        max_age = max(0, min(int(request.args.get("max_age", 0)), 720))
+    except ValueError:
+        max_age = 0
+    if max_age and request.args.get("format") != "text":
+        try:
+            domain = quantum_vuln_scanner.normalize_domain(request.args.get("domain", ""))
+        except quantum_vuln_scanner.ScanError as exc:
+            return jsonify(error=exc.code, message=str(exc)), 400
+        since = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(hours=max_age)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        cached = sales_db.latest_scan_for_domain(db(), domain, since)
+        if cached:
+            body = dict(scan_summary(cached["id"], cached["result"]), cached=True,
+                        report_hint=public_base() + url_for(".scan_page", scan_id=cached["id"]))
+            return jsonify(body)
     try:
         scan_id, result = perform_scan(request.args.get("domain", ""))
     except quantum_vuln_scanner.ScanError as exc:
@@ -503,7 +520,8 @@ def api_v1_scan_get():
         return jsonify(error=exc.code, message=str(exc)), 400
     if request.args.get("format") == "text":
         return Response(terminal_report(result), mimetype="text/plain; charset=utf-8")
-    body = dict(scan_summary(scan_id, result), report_hint=public_base() + url_for(".scan_page", scan_id=scan_id))
+    body = dict(scan_summary(scan_id, result), cached=False,
+                report_hint=public_base() + url_for(".scan_page", scan_id=scan_id))
     return jsonify(body)
 
 

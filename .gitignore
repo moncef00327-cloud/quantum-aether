@@ -10,3 +10,4 @@ instance/
 *.env
 
 tests/__pycache__/
+wordpress-plugin/*.zip

@@ -76,6 +76,16 @@ class ViralFeaturesTest(unittest.TestCase):
         self.assertIn("harvest-now-decrypt-later", text)
         self.assertIn("example.com", text)
 
+    def test_get_scan_max_age_reuses_recent_result(self):
+        first = self.client.get("/api/v1/scan?domain=example.com").get_json()
+        self.assertFalse(first["cached"])
+        again = self.client.get("/api/v1/scan?domain=example.com&max_age=168").get_json()
+        self.assertTrue(again["cached"])
+        self.assertEqual(again["scan_id"], first["scan_id"])
+        fresh = self.client.get("/api/v1/scan?domain=example.com").get_json()   # بلا max_age: فحص جديد
+        self.assertNotEqual(fresh["scan_id"], first["scan_id"])
+        self.assertEqual(self.client.get("/api/v1/scan?domain=not a domain&max_age=24").status_code, 400)
+
     def test_get_scan_bad_domain(self):
         self.assertEqual(self.client.get("/api/v1/scan?domain=").status_code, 400)
         self.assertEqual(self.client.get("/api/v1/scan?domain=x y&format=text").status_code, 400)
