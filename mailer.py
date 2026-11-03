@@ -9,9 +9,10 @@ log = logging.getLogger("quantum_saas.mail")
 
 
 class Mailer:
-    def __init__(self, api_key, sender, timeout=15, session=None):
+    def __init__(self, api_key, sender, reply_to="", timeout=15, session=None):
         self.api_key = api_key
         self.sender = sender
+        self.reply_to = reply_to
         self.timeout = timeout
         self.http = session or requests.Session()
 
@@ -27,6 +28,8 @@ class Mailer:
         body = {"from": self.sender, "to": [to], "subject": subject, "text": text}
         if html:
             body["html"] = html
+        if self.reply_to:
+            body["reply_to"] = self.reply_to  # ردود العملاء تصل إلى صاحب الموقع
         try:
             response = self.http.post("https://api.resend.com/emails", json=body, timeout=self.timeout,
                                       headers={"Authorization": f"Bearer {self.api_key}"})

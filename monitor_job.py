@@ -16,7 +16,7 @@ from paypal_client import SUBSCRIPTION_LIVE_STATUSES, PayPalError
 log = logging.getLogger("quantum_saas.monitor_job")
 
 
-def sync_subscriptions(conn, paypal):
+def sync_subscriptions(conn, paypal, mailer=None, owner=""):
     """يوقف الحسابات التي ألغيت أو عُلّقت في PayPal (مثلاً من حساب المشترك أو لفشل الدفع)."""
     if paypal is None:
         return
@@ -28,7 +28,11 @@ def sync_subscriptions(conn, paypal):
             continue  # لا نوقف أحداً بسبب عطل مؤقت في PayPal
         if status not in SUBSCRIPTION_LIVE_STATUSES:
             log.info("account %s: PayPal status %s, deactivating", account["id"], status)
-            monitor_db.set_status(conn, account["id"], status if status in ("CANCELLED", "SUSPENDED", "EXPIRED") else "SUSPENDED")
+            new_status = status if status in ("CANCELLED", "SUSPENDED", "EXPIRED") else "SUSPENDED"
+            monitor_db.set_status(conn, account["id"], new_status)
+            if mailer is not None:
+                monitor.notify_owner(mailer, owner, f"Subscription {new_status.lower()} in PayPal", account,
+                                     f"PayPal status: {status}")
 
 
 def send_alerts(conn, account, mailer, base_url):
@@ -47,7 +51,7 @@ def run(app):
     cfg = app.config
     conn = sales_db.connect(os.path.join(cfg["DATA_DIR"], "quantum_saas.db"))
     try:
-        sync_subscriptions(conn, app.extensions["paypal"])
+        sync_subscriptions(conn, app.extensions["paypal"], app.extensions["mailer"], cfg["OWNER_EMAIL"])
         accounts = conn.execute("SELECT * FROM monitor_accounts WHERE status = 'ACTIVE'").fetchall()
         base_url = cfg["PUBLIC_URL"] or "https://ather-quatum.cloud"
         total_domains = total_alerts = 0

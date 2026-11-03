@@ -60,6 +60,8 @@ def _config_from_env():
         "PAYPAL_PLAN_BUSINESS": env("PAYPAL_PLAN_BUSINESS", ""),
         "RESEND_API_KEY": env("RESEND_API_KEY", ""),
         "MAIL_FROM": env("QS_MAIL_FROM", ""),
+        "OWNER_EMAIL": env("QS_OWNER_EMAIL", ""),
+        "REPLY_TO": env("QS_REPLY_TO", ""),
     }
 
 
@@ -76,7 +78,8 @@ def create_app(overrides=None, scanner=None, paypal=None, mailer=None):
         paypal = PayPalClient(app.config["PAYPAL_CLIENT_ID"], app.config["PAYPAL_CLIENT_SECRET"], app.config["PAYPAL_ENV"])
     app.extensions["scanner"] = scanner or quantum_vuln_scanner.scan
     app.extensions["paypal"] = paypal
-    app.extensions["mailer"] = mailer or Mailer(app.config["RESEND_API_KEY"], app.config["MAIL_FROM"])
+    app.extensions["mailer"] = mailer or Mailer(app.config["RESEND_API_KEY"], app.config["MAIL_FROM"],
+                                                     app.config["REPLY_TO"])
     app.register_blueprint(bp)
     return app
 
@@ -583,7 +586,10 @@ def monitor_activate():
     token = monitor_db.rotate_token(conn, account["id"])  # الرمز يُكشف مرة واحدة فقط، هنا
     url = dashboard_url(token, account["lang"])
     subject, text = monitor.welcome_email(account, url)
-    current_app.extensions["mailer"].send(account["email"], subject, text)
+    mailer = current_app.extensions["mailer"]
+    mailer.send(account["email"], subject, text)
+    monitor.notify_owner(mailer, current_app.config["OWNER_EMAIL"], "New subscription",
+                         dict(account, subscription_id=subscription_id))
     return jsonify(dashboard_url=url)
 
 
@@ -674,6 +680,8 @@ def monitor_cancel(token):
         log.warning("PayPal cancel failed for %s: %s", account["id"], exc)
         return _back(token, "cancel_failed")
     monitor_db.set_status(db(), account["id"], "CANCELLED")
+    monitor.notify_owner(current_app.extensions["mailer"], current_app.config["OWNER_EMAIL"],
+                         "Cancelled by customer", account)
     return _back(token, "cancelled")
 
 

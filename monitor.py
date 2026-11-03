@@ -128,5 +128,26 @@ def welcome_email(account, dashboard_url):
             "Add your domains there. We scan them daily and email you when anything changes.")
 
 
+def owner_email(event, account, detail=""):
+    """رسالة لصاحب الموقع عند اشتراك جديد أو إلغاء أو توقف."""
+    plan = PLANS[account["plan"]]
+    subject = f"[Quantum Aether] {event}: {plan['name']} ${plan['price']} — {account['email']}"
+    text = "\n".join([
+        f"Event: {event}",
+        f"Customer: {account['email']}",
+        f"Plan: {plan['name']} (${plan['price']}/month, up to {plan['domains']} domains)",
+        f"Account: {account['id']}",
+        f"PayPal subscription: {account.get('subscription_id') or '-'}",
+        *( [f"Detail: {detail}"] if detail else [] ),
+    ])
+    return subject, text
+
+
+def notify_owner(mailer, owner, event, account, detail=""):
+    if owner:
+        subject, text = owner_email(event, account, detail)
+        mailer.send(owner, subject, text)
+
+
 def normalize(raw):
     return quantum_vuln_scanner.normalize_domain(raw)

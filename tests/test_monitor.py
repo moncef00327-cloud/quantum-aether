@@ -65,7 +65,7 @@ class MonitoringTest(unittest.TestCase):
         self.scanner, self.paypal, self.mailer = FakeScanner(), FakePayPal(), FakeMailer()
         self.app = quantum_saas_app.create_app(
             {"TESTING": True, "DATA_DIR": self.tmp, "PUBLIC_URL": "https://example.test",
-             "PAYPAL_CLIENT_ID": "cid", **PLAN_IDS},
+             "PAYPAL_CLIENT_ID": "cid", "OWNER_EMAIL": "owner@example.com", **PLAN_IDS},
             scanner=self.scanner, paypal=self.paypal, mailer=self.mailer)
         self.client = self.app.test_client()
 
@@ -113,8 +113,10 @@ class MonitoringTest(unittest.TestCase):
         token = self.token_from(r)
         with self.conn() as c:
             self.assertEqual(monitor_db.get_account(c, account_id)["status"], "ACTIVE")
-        self.assertEqual(len(self.mailer.sent), 1)
+        self.assertEqual([m[0] for m in self.mailer.sent], ["ops@example.com", "owner@example.com"])
         self.assertIn(token, self.mailer.sent[0][2])
+        self.assertIn("New subscription", self.mailer.sent[1][1])
+        self.assertNotIn(token, self.mailer.sent[1][2])  # رابط العميل السري لا يصل لصاحب الموقع
         self.assertEqual(self.client.get(f"/monitor/{token}").status_code, 200)
 
     def test_activation_rejects_wrong_plan_or_inactive(self):
@@ -166,6 +168,8 @@ class MonitoringTest(unittest.TestCase):
         token = self.token_from(r)
         self.client.post(f"/monitor/{token}/cancel")
         self.assertEqual(self.paypal.cancelled, [f"I-{account_id}"])
+        self.assertIn("Cancelled by customer", self.mailer.sent[-1][1])
+        self.assertEqual(self.mailer.sent[-1][0], "owner@example.com")
         r = self.client.post(f"/monitor/{token}/domains", data={"domains": "a.example.com"})
         self.assertIn("n=inactive", r.headers["Location"])
 
@@ -183,7 +187,7 @@ class MonitoringTest(unittest.TestCase):
         self.assertEqual(self.mailer.sent, [])
         r = self.client.post("/monitoring/login", data={"email": "OPS@example.com"})
         self.assertEqual(r.status_code, 303)
-        self.assertEqual(len(self.mailer.sent), 1)
+        self.assertEqual([m[0] for m in self.mailer.sent], ["ops@example.com"])
 
     # ------------------------------------------------------------ المهمة اليومية والتنبيهات
 
@@ -214,6 +218,8 @@ class MonitoringTest(unittest.TestCase):
         monitor_job.run(self.app)
         with self.conn() as c:
             self.assertEqual(monitor_db.get_account(c, account_id)["status"], "SUSPENDED")
+        self.assertIn("suspended", self.mailer.sent[-1][1])
+        self.assertEqual(self.mailer.sent[-1][0], "owner@example.com")
 
     def test_cert_alert_fires_once_per_threshold(self):
         prev = {"grade": "A", "pq": 1, "days_left": 20, "error": None}
@@ -226,3 +232,23 @@ class MonitoringTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class MailerTest(unittest.TestCase):
+    def test_reply_to_is_sent_to_resend(self):
+        import mailer as mailer_module
+
+        class Session:
+            def post(self, url, json, timeout, headers):
+                self.body = json
+
+                class R:
+                    status_code = 200
+                    text = ""
+                return R()
+
+        session = Session()
+        m = mailer_module.Mailer("key", "QA <a@example.com>", "owner@example.com", session=session)
+        self.assertTrue(m.send("c@example.com", "s", "t"))
+        self.assertEqual(session.body["reply_to"], "owner@example.com")
+        self.assertFalse(mailer_module.Mailer("", "x").send("c@example.com", "s", "t"))
