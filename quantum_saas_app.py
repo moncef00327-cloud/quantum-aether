@@ -739,10 +739,18 @@ def robots():
 @bp.get("/sitemap.xml")
 def sitemap():
     base = public_base()
-    paths = ["/", "/monitoring", "/research", "/guides", "/study/top-1000-post-quantum-tls"] + [f"/guides/{slug}" for slug in guides.GUIDES]
-    urls = [f"{base}{p}?lang={lang}" for p in paths for lang in ("en", "ar")]
+    def template_date(name):  # تاريخ آخر تعديل حقيقي لقالب الصفحة
+        mtime = os.path.getmtime(os.path.join(BASE_DIR, "templates", name))
+        return dt.datetime.fromtimestamp(mtime, dt.timezone.utc).date().isoformat()
+
+    pages = [("/", template_date("index.html")), ("/monitoring", template_date("monitoring.html")),
+             ("/research", template_date("research.html")), ("/guides", max(g["updated"] for g in guides.GUIDES.values())),
+             ("/study/top-1000-post-quantum-tls", study_data()["scanned_on"])]
+    pages += [(f"/guides/{slug}", g["updated"]) for slug, g in guides.GUIDES.items()]
+    entries = [(f"{base}{p}?lang={lang}", day) for p, day in pages for lang in ("en", "ar")]
     body = ('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-            + "".join(f"  <url><loc>{u.replace('&', '&amp;')}</loc></url>\n" for u in urls) + "</urlset>\n")
+            + "".join(f"  <url><loc>{u.replace('&', '&amp;')}</loc><lastmod>{day}</lastmod></url>\n" for u, day in entries)
+            + "</urlset>\n")
     return Response(body, mimetype="application/xml")
 
 
