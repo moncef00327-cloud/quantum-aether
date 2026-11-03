@@ -1,5 +1,5 @@
 === Quantum Ready – Post-Quantum TLS Check ===
-Contributors: quantumaether
+Contributors: omersalloum
 Tags: security, ssl, tls, https, site health
 Requires at least: 6.0
 Tested up to: 7.1
