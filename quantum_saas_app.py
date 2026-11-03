@@ -448,9 +448,10 @@ def known_result_for(domain):
     scan = sales_db.latest_scan_for_domain(db(), domain, since)
     if scan:
         r = scan["result"]
-        return ({"domain": domain, "grade": r["grade"], "group": r["key_exchange"].get("group"),
-                 "tls": r["key_exchange"].get("version") or r["certificate"].get("negotiated_version"),
-                 "pq": bool(r["key_exchange"].get("pq")), "scanned_at": r["scanned_at"]}, "scan")
+        tls = r["key_exchange"].get("version") or r["certificate"].get("negotiated_version")
+        return ({"domain": domain, "grade": r["grade"], "group": r["key_exchange"].get("group"), "tls": tls,
+                 "pq": bool(r["key_exchange"].get("pq")), "unsure": adoption.is_unsure(r["key_exchange"], tls),
+                 "scanned_at": r["scanned_at"]}, "scan")
     site = study_by_domain().get(domain)
     if site:
         return (dict(site, scanned_at=study_data()["scanned_on"]), "study")
@@ -467,7 +468,7 @@ def site_page(domain):
     summary, source = known_result_for(domain)
     jsonld = None
     if summary:
-        pq = "yes" if summary["pq"] else "no"
+        pq = "yes" if summary["pq"] else ("undetermined" if summary.get("unsure") else "no")
         jsonld = [{"@context": "https://schema.org", "@type": "WebPage",
                    "name": f"{domain} — post-quantum TLS readiness",
                    "url": public_base() + url_for(".site_page", domain=domain),

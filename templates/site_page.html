@@ -18,7 +18,7 @@
   <table class="kv" dir="ltr">
     <tr><th>Grade</th><td>{{ summary.grade }}</td></tr>
     <tr><th>Key exchange</th><td>{{ summary.group or "—" }}</td></tr>
-    <tr><th>Post-quantum</th><td>{{ "yes" if summary.pq else "no (classical)" }}</td></tr>
+    <tr><th>Post-quantum</th><td>{{ "yes" if summary.pq else ("undetermined (probe blocked, rescan)" if summary.unsure else "no (classical)") }}</td></tr>
     <tr><th>TLS</th><td>{{ summary.tls or "—" }}</td></tr>
   </table>
   <p class="muted small">

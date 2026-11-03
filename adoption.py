@@ -58,9 +58,13 @@ def init(conn):
     conn.executescript(SCHEMA)
     cols = {r[1] for r in conn.execute("PRAGMA table_info(adoption_results)")}
     with conn:
-        for name, kind in (("ip", "TEXT"), ("asn", "INTEGER"), ("as_name", "TEXT")):
+        for name, kind in (("ip", "TEXT"), ("asn", "INTEGER"), ("as_name", "TEXT"),
+                           ("unsure", "INTEGER NOT NULL DEFAULT 0")):
             if name not in cols:
                 conn.execute(f"ALTER TABLE adoption_results ADD COLUMN {name} {kind}")
+        mcols = {r[1] for r in conn.execute("PRAGMA table_info(adoption_monthly)")}
+        if "unsure" not in mcols:
+            conn.execute("ALTER TABLE adoption_monthly ADD COLUMN unsure INTEGER NOT NULL DEFAULT 0")
 
 
 # ---------------------------------------------------------------- الأسابيع
@@ -144,22 +148,35 @@ def _summary_of(result, asn_lookup=None):
     cert = result.get("certificate") or {}
     ip = result.get("ip")
     asn, as_name = asn_lookup(ip) if (asn_lookup and ip) else (None, None)
+    tls = kx.get("version") or cert.get("negotiated_version")
     return {"ok": 1, "grade": result.get("grade"), "grp": kx.get("group"),
-            "tls": kx.get("version") or cert.get("negotiated_version"), "pq": 1 if kx.get("pq") else 0,
+            "tls": tls, "pq": 1 if kx.get("pq") else 0, "unsure": 1 if is_unsure(kx, tls) else 0,
             "ip": ip, "asn": asn, "as_name": as_name}
 
 
-EMPTY = {"ok": 0, "grade": None, "grp": None, "tls": None, "pq": 0, "ip": None, "asn": None, "as_name": None}
+def is_unsure(kx, tls):
+    """True when the key-exchange probe could not tell us the group (e.g. a firewall reset our
+    ClientHello) and the server speaks TLS 1.3, so post-quantum support is unknown. TLS 1.2-only
+    servers cannot negotiate ML-KEM, so those stay a definite «no»."""
+    return not kx.get("group") and not kx.get("pq") and tls != "TLSv1.2"
+
+
+EMPTY = {"ok": 0, "grade": None, "grp": None, "tls": None, "pq": 0, "unsure": 0, "ip": None, "asn": None, "as_name": None}
+
+
+def measured(row):
+    """Answered and with a known post-quantum status: the only rows that count in percentages."""
+    return bool(row["ok"]) and not row.get("unsure")
 
 
 def record(conn, week, target, result, scanned_at, asn_lookup=None):
     """يحفظ نتيجة نطاق لأسبوع. result قاموس نتيجة الفحص، أو None إن لم يُجب. لا يُثبّت المعاملة."""
     s = _summary_of(result, asn_lookup) if result else EMPTY
     conn.execute(
-        "INSERT OR REPLACE INTO adoption_results (week, domain, rank, sector, ok, grade, grp, tls, pq, scanned_at, ip, asn, as_name) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT OR REPLACE INTO adoption_results (week, domain, rank, sector, ok, grade, grp, tls, pq, scanned_at, ip, asn, as_name, unsure) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (week, target["domain"], target.get("rank"), target.get("sector"), s["ok"], s["grade"], s["grp"], s["tls"],
-         s["pq"], scanned_at, s["ip"], s["asn"], s["as_name"]))
+         s["pq"], scanned_at, s["ip"], s["asn"], s["as_name"], s["unsure"]))
 
 
 def seed_from_study(conn, raw_path=RAW_STUDY_FILE):
@@ -214,10 +231,10 @@ def run_month(conn, scanner, targets, day=None, workers=32, asn_lookup=None, bat
     for target, result in _scan_all(scanner, targets, workers):
         s = _summary_of(result, asn_lookup) if result else EMPTY
         conn.execute(
-            "INSERT OR REPLACE INTO adoption_monthly (month, domain, rank, ok, grade, grp, pq, asn, as_name, scanned_at) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT OR REPLACE INTO adoption_monthly (month, domain, rank, ok, grade, grp, pq, asn, as_name, scanned_at, unsure) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (month, target["domain"], target.get("rank"), s["ok"], s["grade"], s["grp"], s["pq"], s["asn"], s["as_name"],
-             dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")))
+             dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"), s["unsure"]))
         answered += 1 if result else 0
         done += 1
         if done % batch == 0:
@@ -250,7 +267,8 @@ def rows_for(conn, week):
 def timeline(conn, limit=TIMELINE_WEEKS):
     """نسبة التبنّي أسبوعياً على الأكبر 1000 وحدها، حتى تبقى الأرقام قابلة للمقارنة."""
     cur = conn.execute(
-        "SELECT week, SUM(ok) AS reachable, SUM(CASE WHEN ok = 1 AND pq = 1 THEN 1 ELSE 0 END) AS pq "
+        "SELECT week, SUM(CASE WHEN ok = 1 AND unsure = 0 THEN 1 ELSE 0 END) AS reachable, "
+        "SUM(CASE WHEN ok = 1 AND unsure = 0 AND pq = 1 THEN 1 ELSE 0 END) AS pq "
         "FROM adoption_results WHERE rank IS NOT NULL AND rank <= ? GROUP BY week ORDER BY week", (TIMELINE_RANK,))
     points = []
     for r in cur:
@@ -265,8 +283,8 @@ def tier_stats(rows, top):
     tier = [r for r in rows if r["rank"] is not None and r["rank"] <= top]
     if not tier or max(r["rank"] for r in tier) < top * 0.9:
         return None
-    reachable = sum(1 for r in tier if r["ok"])
-    pq = sum(1 for r in tier if r["ok"] and r["pq"])
+    reachable = sum(1 for r in tier if measured(r))
+    pq = sum(1 for r in tier if measured(r) and r["pq"])
     return {"top": top, "reachable": reachable, "pq": pq, "pct": round(100 * pq / reachable, 1) if reachable else 0.0}
 
 
@@ -274,13 +292,13 @@ def providers(conn, min_sites=PROVIDER_MIN_SITES, limit=30):
     """جاهزية كل شبكة (استضافة/CDN): من آخر فحص شهري إن وُجد، وإلا من آخر أسبوع."""
     month = conn.execute("SELECT MAX(month) FROM adoption_monthly").fetchone()[0]
     if month:
-        source, label = ("SELECT asn, as_name, pq FROM adoption_monthly WHERE month = ? AND ok = 1 AND asn IS NOT NULL",
+        source, label = ("SELECT asn, as_name, pq FROM adoption_monthly WHERE month = ? AND ok = 1 AND unsure = 0 AND asn IS NOT NULL",
                          (month,)), month
     else:
         all_weeks = weeks(conn)
         if not all_weeks:
             return None
-        source, label = ("SELECT asn, as_name, pq FROM adoption_results WHERE week = ? AND ok = 1 AND asn IS NOT NULL",
+        source, label = ("SELECT asn, as_name, pq FROM adoption_results WHERE week = ? AND ok = 1 AND unsure = 0 AND asn IS NOT NULL",
                          (all_weeks[-1],)), all_weeks[-1]
     counts = {}
     for asn, name, pq in conn.execute(*source):
@@ -304,7 +322,7 @@ def changes(previous, current):
     adopted, dropped, regraded = [], [], []
     for row in current:
         before = prev.get(row["domain"])
-        if not before or not before["ok"] or not row["ok"]:
+        if not before or not measured(before) or not measured(row):
             continue
         if row["pq"] and not before["pq"]:
             adopted.append(dict(row, grade_before=before["grade"], grp_before=before["grp"]))
@@ -333,10 +351,11 @@ def snapshot(conn, watchlists=None):
     for key, sector in watchlists.items():
         members = [dict(r, pq_since=since.get(r["domain"]) if r["pq"] else None)
                    for r in current if r["sector"] == key]
-        members.sort(key=lambda r: (not r["ok"], not r["pq"], r["domain"]))
+        members.sort(key=lambda r: (not r["ok"], bool(r.get("unsure")), not r["pq"], r["domain"]))
         sectors.append({"key": key, "labels": sector.get("labels", {}), "rows": members,
-                        "reachable": sum(1 for r in members if r["ok"]),
-                        "pq": sum(1 for r in members if r["ok"] and r["pq"])})
+                        "reachable": sum(1 for r in members if measured(r)),
+                        "pq": sum(1 for r in members if measured(r) and r["pq"]),
+                        "unsure": sum(1 for r in members if r["ok"] and r.get("unsure"))})
     return {
         "week": week, "week_start": week_monday(week).isoformat(), "previous_week": previous_week,
         "scanned_at": max((r["scanned_at"] for r in current), default=""),
@@ -347,7 +366,7 @@ def snapshot(conn, watchlists=None):
     }
 
 
-EXPORT_FIELDS = ["week", "domain", "rank", "sector", "ok", "grade", "grp", "tls", "pq", "asn", "as_name", "scanned_at"]
+EXPORT_FIELDS = ["week", "domain", "rank", "sector", "ok", "grade", "grp", "tls", "pq", "unsure", "asn", "as_name", "scanned_at"]
 
 
 def to_csv(rows):

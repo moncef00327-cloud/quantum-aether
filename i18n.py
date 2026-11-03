@@ -760,12 +760,12 @@ TEXTS["en"].update({
 TEXTS["ar"].update({
     "hero_tagline": "في 10 ثوانٍ، اعرف هل يستخدم موقعك التشفير المقاوم للحوسبة الكمومية. مجاناً وبلا حساب.",
     "try_label": "جرّب:",
-    "trust_bar": "فحصنا أكبر 712 موقعاً · بيانات مفتوحة · مجاناً بلا حساب",
+    "trust_bar": "نفحص أكبر 10,000 موقع كل أسبوع · بيانات مفتوحة · مجاناً بلا حساب",
 })
 TEXTS["en"].update({
     "hero_tagline": "In 10 seconds, find out if your HTTPS already uses post-quantum encryption. Free, no sign-up.",
     "try_label": "Try:",
-    "trust_bar": "We scanned the top 712 sites · open dataset · free, no account",
+    "trust_bar": "We scan the top 10,000 sites every week · open dataset · free, no account",
 })
 
 TEXTS["de"] = dict(TEXTS["en"])
@@ -936,7 +936,7 @@ TEXTS["de"].update({
 TEXTS["de"].update({
     "hero_tagline": "In 10 Sekunden sehen, ob Ihr HTTPS schon quantenresistent verschlüsselt ist. Kostenlos, ohne Anmeldung.",
     "try_label": "Beispiel:",
-    "trust_bar": "Wir haben die Top-712-Websites geprüft · offener Datensatz · kostenlos, ohne Konto",
+    "trust_bar": "Wir prüfen jede Woche die Top-10.000-Websites · offener Datensatz · kostenlos, ohne Konto",
 })
 
 LANG_NAMES = {"en": "English", "ar": "العربية", "de": "Deutsch"}
@@ -972,6 +972,8 @@ TEXTS["en"].update({
     "adoption_status_since": "since {week}",
     "adoption_status_off": "Not yet enabled",
     "adoption_status_noanswer": "No HTTPS answer",
+    "adoption_status_unsure": "Undetermined, will be rescanned",
+    "adoption_unsure_count": "{n} undetermined (not counted)",
     "adoption_method_title": "Methodology and limits",
     "adoption_method": "Each hostname gets two connections to port 443 from a single server: one offering X25519MLKEM768 "
                        "plus X25519 as Chrome does, and one ordinary TLS connection to read the certificate. Nothing else is "
@@ -1013,6 +1015,8 @@ TEXTS["ar"].update({
     "adoption_status_since": "منذ {week}",
     "adoption_status_off": "لم يُفعَّل بعد",
     "adoption_status_noanswer": "لا إجابة عبر HTTPS",
+    "adoption_status_unsure": "غير محسوم، يُعاد فحصه",
+    "adoption_unsure_count": "{n} غير محسوم (لا يُحتسب)",
     "adoption_method_title": "المنهجية والحدود",
     "adoption_method": "لكل اسم موقع نجري اتصالين بالمنفذ 443 من خادم واحد: الأول يعرض X25519MLKEM768 مع X25519 كما يفعل "
                        "Chrome، والثاني اتصال TLS عادي لقراءة الشهادة. لا نرسل شيئاً آخر ولا نحاول أي اختراق. النتائج من "
@@ -1055,6 +1059,8 @@ TEXTS["de"].update({
     "adoption_status_since": "seit {week}",
     "adoption_status_off": "Noch nicht aktiviert",
     "adoption_status_noanswer": "Keine HTTPS-Antwort",
+    "adoption_status_unsure": "Unklar, wird erneut geprüft",
+    "adoption_unsure_count": "{n} unklar (nicht gezählt)",
     "adoption_method_title": "Methodik und Grenzen",
     "adoption_method": "Für jeden Hostnamen bauen wir von einem einzigen Server aus zwei Verbindungen zu Port 443 auf: eine "
                        "mit X25519MLKEM768 und X25519 wie Chrome und eine gewöhnliche TLS-Verbindung zum Lesen des "
@@ -1081,6 +1087,7 @@ TEXTS["en"].update({
     "adoption_provider_col": "Network",
     "adoption_sites_col": "Sites",
     "adoption_enabled_col": "Enabled",
+    "adoption_pct_col": "% enabled",
     "scanning_link": "How we scan, and how to opt out →",
     "scanning_title": "About our scans",
     "scanning_lead": "Quantum Aether measures how many public websites already use post-quantum key exchange. If you saw TLS connections "
@@ -1107,6 +1114,7 @@ TEXTS["ar"].update({
     "adoption_provider_col": "الشبكة",
     "adoption_sites_col": "المواقع",
     "adoption_enabled_col": "مفعّل",
+    "adoption_pct_col": "% مفعّل",
     "scanning_link": "كيف نفحص، وكيف تطلب الاستبعاد ←",
     "scanning_title": "عن فحوصاتنا",
     "scanning_lead": "يقيس الأثير الكمومي عدد المواقع العامة التي تستخدم تبادل مفاتيح مقاوماً للكم. إن رأيت اتصالات TLS من خادمنا في "
@@ -1132,6 +1140,7 @@ TEXTS["de"].update({
     "adoption_provider_col": "Netz",
     "adoption_sites_col": "Websites",
     "adoption_enabled_col": "Aktiviert",
+    "adoption_pct_col": "% aktiviert",
     "scanning_link": "Wie wir prüfen und wie Sie sich ausnehmen lassen →",
     "scanning_title": "Über unsere Prüfungen",
     "scanning_lead": "Quantum Aether misst, wie viele öffentliche Websites bereits Post-Quanten-Schlüsselaustausch nutzen. Wenn Sie "

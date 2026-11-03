@@ -73,7 +73,7 @@
   <h2>{{ t.adoption_providers_title }}</h2>
   <p class="muted">{{ t.adoption_providers_note.format(sites=s.providers.sites, period=iso(s.providers.period)) }}</p>
   <table class="data" dir="ltr">
-    <tr><th>{{ t.adoption_provider_col }}</th><th>{{ t.adoption_sites_col }}</th><th>{{ t.adoption_enabled_col }}</th><th></th></tr>
+    <tr><th>{{ t.adoption_provider_col }}</th><th>{{ t.adoption_sites_col }}</th><th>{{ t.adoption_enabled_col }}</th><th>{{ t.adoption_pct_col }}</th></tr>
     {% for p in s.providers.rows %}<tr><td>{{ p.name or "?" }} <span class="muted small">AS{{ p.asn }}</span></td>
       <td>{{ p.reachable }}</td><td>{{ p.pq }}</td>
       <td><span class="{{ 'pq-on' if p.pct >= 50 else 'pq-off' }}">{{ p.pct }}%</span></td></tr>{% endfor %}
@@ -91,15 +91,16 @@
 <section class="card">
   <h3>{{ sector.labels[lang] or sector.labels.en or sector.key }}</h3>
   {% if sector.rows %}
-  <p class="muted">{{ t.adoption_enabled_of.format(pq=sector.pq, reachable=sector.reachable) }}</p>
+  <p class="muted">{{ t.adoption_enabled_of.format(pq=sector.pq, reachable=sector.reachable) }}{% if sector.unsure %} · {{ t.adoption_unsure_count.format(n=sector.unsure) }}{% endif %}</p>
   <table class="data" dir="ltr">
     <tr><th>{{ t.host_col }}</th><th>{{ t.adoption_status_col }}</th><th>{{ t.grade_col }}</th><th>{{ t.group_col }}</th></tr>
     {% for r in sector.rows %}<tr><td>{{ host_link(r.domain) }}</td>
       <td>{% if not r.ok %}<span class="muted">{{ t.adoption_status_noanswer }}</span>
+          {% elif r.unsure %}<span class="muted">{{ t.adoption_status_unsure }}</span>
           {% elif r.pq %}<span class="pq-on">{{ t.adoption_status_on }}</span>{% if r.pq_since %} <span class="muted small">{{ t.adoption_status_since.format(week=iso(r.pq_since)) }}</span>{% endif %}
           {% else %}<span class="pq-off">{{ t.adoption_status_off }}</span>{% endif %}</td>
-      <td>{% if r.ok %}<span class="grade-chip grade-{{ r.grade }}">{{ r.grade }}</span>{% endif %}</td>
-      <td>{% if r.ok %}<code>{{ r.grp or "?" }}</code>{% endif %}</td></tr>{% endfor %}
+      <td>{% if r.ok and not r.unsure %}<span class="grade-chip grade-{{ r.grade }}">{{ r.grade }}</span>{% endif %}</td>
+      <td>{% if r.ok and not r.unsure %}<code>{{ r.grp or r.tls or "?" }}</code>{% endif %}</td></tr>{% endfor %}
   </table>
   {% endif %}
 </section>

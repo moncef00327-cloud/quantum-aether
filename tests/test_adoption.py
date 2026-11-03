@@ -151,6 +151,28 @@ class TrackerTests(unittest.TestCase):
         self.assertEqual([p["week"] for p in data["timeline"]], ["2026-W45", "2026-W46"])
         self.assertEqual(data["license"], "CC BY 4.0")
 
+    def test_blocked_probe_is_undetermined_not_published_as_off(self):
+        # Firewall resets our ClientHello, the certificate handshake still says TLS 1.3: PQ status is unknown.
+        blocked = dict(RESULT, domain="www.bundesbank.de", grade="B")
+        blocked["key_exchange"] = {"pq_hello_ok": False, "error": "[Errno 104] Connection reset by peer"}
+        blocked["certificate"] = dict(RESULT["certificate"], negotiated_version="TLSv1.3")
+        self.scanner.overrides = {"www.bundesbank.de": blocked}
+        adoption_job.run(self.app, day=NEXT_MONDAY, workers=4, asn_lookup=None)
+        with self.conn() as c:
+            rows = adoption.rows_for(c, "2026-W46")
+            snap = adoption.snapshot(c)
+        row = next(r for r in rows if r["domain"] == "www.bundesbank.de")
+        self.assertEqual((row["ok"], row["pq"], row["unsure"]), (1, 0, 1))
+        self.assertNotIn("www.bundesbank.de", [r["domain"] for r in snap["changes"]["dropped"]])
+        bank = next(sec for sec in snap["sectors"] if any(r["domain"] == "www.bundesbank.de" for r in sec["rows"]))
+        self.assertEqual(bank["unsure"], 1)
+        self.assertEqual(bank["reachable"], sum(1 for r in bank["rows"] if r["ok"]) - 1)
+        for lang, text in (("en", "Undetermined, will be rescanned"), ("ar", "غير محسوم، يُعاد فحصه")):
+            body = self.client.get(f"/adoption?lang={lang}").get_data(as_text=True)
+            bank_row = body.split("www.bundesbank.de</a>")[1].split("</tr>")[0]
+            self.assertIn(text, bank_row)
+            self.assertNotIn(adoption_texts(lang)["adoption_status_off"], bank_row)
+
     def test_scanning_page(self):
         for lang in ("en", "ar", "de"):
             body = self.client.get(f"/scanning?lang={lang}").get_data(as_text=True)
@@ -202,6 +224,13 @@ class ScaleAndProviderTests(unittest.TestCase):
         self.assertFalse(prov["monthly"])
         self.assertEqual(adoption.tier_stats(adoption.rows_for(self.conn, "2026-W46"), 60)["pct"], 50.0)
         self.assertIsNone(adoption.tier_stats(adoption.rows_for(self.conn, "2026-W46"), 10000))  # لم يُفحص هذا العدد
+
+    def test_is_unsure_only_for_unknown_group_on_tls13(self):
+        self.assertTrue(adoption.is_unsure({"error": "reset"}, "TLSv1.3"))
+        self.assertTrue(adoption.is_unsure({"error": "reset"}, None))
+        self.assertFalse(adoption.is_unsure({"error": "reset"}, "TLSv1.2"))  # TLS 1.2 cannot do ML-KEM
+        self.assertFalse(adoption.is_unsure({"group": "x25519", "pq": False}, "TLSv1.3"))
+        self.assertFalse(adoption.is_unsure({"group": "X25519MLKEM768", "pq": True}, "TLSv1.3"))
 
     def test_monthly_run_feeds_providers_and_timeline_stays_top1000(self):
         targets = [{"domain": f"m{i}.test", "rank": 5000 + i, "sector": None} for i in range(25)]
