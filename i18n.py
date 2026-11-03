@@ -687,6 +687,30 @@ TEXTS["en"].update({
     "compare_button": "Compare",
 })
 
+
+TEXTS["ar"].update({
+    "ladder_title": "الفحص هو الجزء السهل",
+    "ladder_sub": "أي أداة مجانية، ونحن منها، تقول لك «نعم أو لا» مرة واحدة. الصعب أن تُصلح الخلل وأن يبقى مُصلحاً مع تغيّر خوادمك وشبكات CDN والمتصفحات.",
+    "ladder_step1_h": "افحص — مجاناً",
+    "ladder_step1_b": "درجة موقعك في 10 ثوانٍ، نفس الفحص العام الذي تجريه أي أداة.",
+    "ladder_step2_h": "أصلِح — تقرير $49",
+    "ladder_step2_b": "خطوات إصلاح دقيقة لـ nginx وApache وCaddy وCloudflare، لا مجرد درجة.",
+    "ladder_step3_h": "ابقَ آمناً — مراقبة يومية",
+    "ladder_step3_b": "نفحص كل نطاقاتك يومياً ونراسلك فور فقدان التبادل المقاوم للكم، أو هبوط الدرجة، أو اقتراب انتهاء شهادة. من 29$ شهرياً — وهذا ما لا تقدّمه أدوات الفحص اللحظي.",
+    "ladder_cta": "ابدأ المراقبة اليومية ←",
+})
+TEXTS["en"].update({
+    "ladder_title": "The scan is the easy part",
+    "ladder_sub": "Every free checker — ours included — tells you yes or no, once. The hard part is fixing it, and keeping it fixed as your servers, CDNs and browsers change.",
+    "ladder_step1_h": "Scan — free",
+    "ladder_step1_b": "Grade your TLS in 10 seconds, the same public check any free tool runs.",
+    "ladder_step2_h": "Fix — the $49 report",
+    "ladder_step2_b": "Exact remediation for nginx, Apache, Caddy and Cloudflare, not just a grade.",
+    "ladder_step3_h": "Stay safe — daily monitoring",
+    "ladder_step3_b": "We scan all your domains every day and email you the moment post-quantum key exchange drops, a grade falls, or a certificate nears expiry. From $29/month — the thing one-off checkers do not do.",
+    "ladder_cta": "Start daily monitoring →",
+})
+
 TEXTS["de"] = dict(TEXTS["en"])
 TEXTS["de"].update({
     "dir": "ltr",
@@ -813,6 +837,19 @@ TEXTS["de"].update({
     "compare_sub": "Zwei Websites nebeneinander prüfen und das Ergebnis teilen.",
     "compare_vs": "gegen",
     "compare_button": "Vergleichen",
+})
+
+
+TEXTS["de"].update({
+    "ladder_title": "Das Prüfen ist der einfache Teil",
+    "ladder_sub": "Jedes kostenlose Prüftool, auch unseres, sagt einmal Ja oder Nein. Schwierig ist, den Mangel zu beheben und behoben zu halten, während sich Server, CDNs und Browser ändern.",
+    "ladder_step1_h": "Prüfen — kostenlos",
+    "ladder_step1_b": "Ihre TLS-Note in 10 Sekunden, dieselbe öffentliche Prüfung, die jedes kostenlose Tool macht.",
+    "ladder_step2_h": "Beheben — der 49-$-Bericht",
+    "ladder_step2_b": "Konkrete Behebung für nginx, Apache, Caddy und Cloudflare, nicht nur eine Note.",
+    "ladder_step3_h": "Sicher bleiben — tägliche Überwachung",
+    "ladder_step3_b": "Wir prüfen alle Ihre Domains täglich und mailen Ihnen sofort, wenn der quantenresistente Schlüsselaustausch wegfällt, die Note sinkt oder ein Zertifikat abläuft. Ab 29 $/Monat — genau das, was einmalige Prüftools nicht leisten.",
+    "ladder_cta": "Tägliche Überwachung starten →",
 })
 
 LANG_NAMES = {"en": "English", "ar": "العربية", "de": "Deutsch"}
