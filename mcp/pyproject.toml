@@ -1,0 +1,16 @@
+[project]
+name = "quantum-aether-mcp"
+version = "1.0.0"
+description = "MCP server for Quantum Aether — check post-quantum TLS readiness from any AI assistant."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+keywords = ["mcp", "post-quantum", "tls", "mlkem", "x25519mlkem768", "security", "ai-tools"]
+dependencies = ["mcp>=1.2.0"]
+
+[project.scripts]
+quantum-aether-mcp = "quantum_aether_mcp.server:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
