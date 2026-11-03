@@ -5,8 +5,8 @@
 
 P = '<mark class="placeholder">[{}]</mark>'
 OWNER = "Omer Alsaloum"
-ADDRESS = P.format("Straßenname") + " 11/12, 5280 Braunau am Inn, Österreich"
-ADDRESS_EN = P.format("street name") + " 11/12, 5280 Braunau am Inn, Austria"
+ADDRESS = "Sparkaßen 11/12, 5280 Braunau am Inn, Österreich"
+ADDRESS_EN = "Sparkaßen 11/12, 5280 Braunau am Inn, Austria"
 EMAIL = '<a href="mailto:sajad.vip56@gmail.com">sajad.vip56@gmail.com</a>'
 
 PAGES = {
@@ -14,18 +14,15 @@ PAGES = {
         "de": {
             "title": "Impressum",
             "body": f"""
-<p>Angaben gemäß § 5 E-Commerce-Gesetz (ECG), § 14 Unternehmensgesetzbuch (UGB), § 63 Gewerbeordnung (GewO) und Offenlegung gemäß § 25 Mediengesetz (MedienG).</p>
+<p>Angaben gemäß § 5 E-Commerce-Gesetz (ECG) und Offenlegung gemäß § 25 Mediengesetz (MedienG).</p>
 <h2>Medieninhaber und Diensteanbieter</h2>
 <p>{OWNER}<br>{ADDRESS}</p>
-<p>E-Mail: {EMAIL}<br>Telefon: {P.format("Telefonnummer (optional)")}</p>
+<p>E-Mail: {EMAIL}</p>
 <h2>Unternehmensangaben</h2>
 <ul>
 <li>Unternehmensgegenstand: IT-Dienstleistungen; Betrieb eines Online-Dienstes zur Prüfung der Post-Quanten-Bereitschaft von TLS-Verbindungen</li>
-<li>UID-Nummer: {P.format("UID-Nummer, falls vorhanden")}</li>
-<li>Firmenbuchnummer und Firmenbuchgericht: {P.format("falls im Firmenbuch eingetragen")}</li>
-<li>Gewerbebehörde: {P.format("zuständige Bezirkshauptmannschaft bzw. Magistrat")}</li>
-<li>Kammerzugehörigkeit: {P.format("Wirtschaftskammer / Landeskammer, falls Gewerbe angemeldet")}</li>
-<li>Anwendbare berufsrechtliche Vorschriften: Gewerbeordnung, abrufbar unter <a href="https://www.ris.bka.gv.at" rel="nofollow">www.ris.bka.gv.at</a></li>
+<li>Umsatzsteuer: Kleinunternehmer gemäß § 6 Abs. 1 Z 27 UStG; keine UID-Nummer</li>
+<li>Nicht im Firmenbuch eingetragen</li>
 </ul>
 <h2>Blattlinie (§ 25 Abs. 4 MedienG)</h2>
 <p>Information über Post-Quanten-Kryptographie und TLS-Sicherheit sowie Angebot eines Prüf- und Überwachungsdienstes.</p>
@@ -34,18 +31,15 @@ PAGES = {
         "en": {
             "title": "Imprint (Impressum)",
             "body": f"""
-<p>Information pursuant to § 5 Austrian E-Commerce Act (ECG), § 14 Austrian Commercial Code (UGB), § 63 Trade Act (GewO) and disclosure pursuant to § 25 Media Act (MedienG).</p>
+<p>Information pursuant to § 5 Austrian E-Commerce Act (ECG) and disclosure pursuant to § 25 Media Act (MedienG).</p>
 <h2>Media owner and service provider</h2>
 <p>{OWNER}<br>{ADDRESS_EN}</p>
-<p>Email: {EMAIL}<br>Phone: {P.format("Phone number (optional)")}</p>
+<p>Email: {EMAIL}</p>
 <h2>Business details</h2>
 <ul>
 <li>Business purpose: IT services; operation of an online service that checks the post-quantum readiness of TLS connections</li>
-<li>VAT ID (UID): {P.format("VAT ID, if any")}</li>
-<li>Company register number and court: {P.format("if registered in the Firmenbuch")}</li>
-<li>Supervisory trade authority: {P.format("competent district authority or municipal office")}</li>
-<li>Chamber membership: {P.format("Austrian Economic Chamber / regional chamber, if a trade is registered")}</li>
-<li>Applicable professional regulations: Austrian Trade Act (Gewerbeordnung), available at <a href="https://www.ris.bka.gv.at" rel="nofollow">www.ris.bka.gv.at</a></li>
+<li>VAT: small business under § 6(1)(27) UStG; no VAT ID</li>
+<li>Not registered in the company register (Firmenbuch)</li>
 </ul>
 <h2>Editorial policy (§ 25(4) MedienG)</h2>
 <p>Information about post-quantum cryptography and TLS security, and a scanning and monitoring service.</p>
@@ -144,7 +138,7 @@ PAGES = {
 <p>Die Prüfung ist eine technische Momentaufnahme von einem Messpunkt aus. Sie ersetzt kein vollständiges Sicherheitsaudit.</p>
 
 <h2>3. Preise und Zahlung</h2>
-<p>Alle Preise in US-Dollar. {P.format("Umsatzsteuer-Hinweis, z. B. „inkl. 20 % USt.“ oder „Kleinunternehmer gemäß § 6 Abs. 1 Z 27 UStG, keine USt.“")}. Die Zahlung erfolgt über PayPal (auch mit Kredit- oder Debitkarte).</p>
+<p>Alle Preise in US-Dollar. Gemäß § 6 Abs. 1 Z 27 UStG (Kleinunternehmerregelung) wird keine Umsatzsteuer berechnet. Die Zahlung erfolgt über PayPal (auch mit Kredit- oder Debitkarte).</p>
 
 <h2>4. Vertragsschluss</h2>
 <p>Der Vertrag über den Bericht kommt mit der von PayPal bestätigten Zahlung zustande. Der Abonnementvertrag kommt mit der Aktivierung des Abonnements bei PayPal zustande.</p>
@@ -186,7 +180,7 @@ PAGES = {
 <p>A scan is a technical snapshot from a single vantage point. It does not replace a full security audit.</p>
 
 <h2>3. Prices and payment</h2>
-<p>All prices in US dollars. {P.format("VAT note, e.g. 'incl. 20% VAT' or 'small business under § 6(1)(27) UStG, no VAT charged'")}. Payment is made through PayPal (including credit or debit card).</p>
+<p>All prices in US dollars. No VAT is charged under the Austrian small-business exemption (§ 6(1)(27) UStG). Payment is made through PayPal (including credit or debit card).</p>
 
 <h2>4. Conclusion of contract</h2>
 <p>The contract for a report is concluded when PayPal confirms the payment. The subscription contract is concluded when the subscription is activated at PayPal.</p>
