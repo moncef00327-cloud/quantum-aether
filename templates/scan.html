@@ -33,7 +33,7 @@
   {% elif payments_enabled %}
     <p>{{ t.buy_sub }} <strong>{{ t.save_link }}</strong></p>
     <p class="consent"><label><input type="checkbox" id="consent">
-      {{ t.consent_report }} (<a href="{{ url_for('site.legal_page', slug='agb', lang=legal_lang) }}" target="_blank">{{ t.legal_terms }}</a>)</label></p>
+      {{ t.consent_report }} — <a href="{{ url_for('site.legal_page', slug='agb', lang=legal_lang) }}" target="_blank">{{ t.legal_terms }}</a></label></p>
     <div id="paypal-button-container" data-scan-id="{{ scan.id }}" data-msg-consent="{{ t.consent_missing }}"
          data-msg-error="{{ t.pay_error }}" data-msg-pending="{{ t.pay_pending }}"></div>
     <p id="pay-message" class="form-error" role="status"></p>
