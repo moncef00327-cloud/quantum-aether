@@ -83,6 +83,11 @@ systemctl daemon-reload
 systemctl enable "$SERVICE" >/dev/null 2>&1
 systemctl reset-failed "$SERVICE" >/dev/null 2>&1 || true
 systemctl restart "$SERVICE"
+# المهمة الأسبوعية لصفحة /adoption (تعيد فحص الأكبر 1000 وقوائم المراقبة كل يوم اثنين).
+install -m 644 "$APP_DIR/deploy/quantum_adoption.service" /etc/systemd/system/quantum_adoption.service
+install -m 644 "$APP_DIR/deploy/quantum_adoption.timer" /etc/systemd/system/quantum_adoption.timer
+systemctl daemon-reload
+systemctl enable --now quantum_adoption.timer >/dev/null 2>&1
 
 echo "==> فحص الصحة"
 healthy=""

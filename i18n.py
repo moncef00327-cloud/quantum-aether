@@ -658,7 +658,8 @@ TEXTS["en"]["scanbox_title"] = "Scan your site now, free"
 
 # ---------------------------------------------------------------- الألمانية (Sie)
 # متاحة للصفحة الرئيسية والدراسة وصفحة الشركات فقط؛ أي نص غير مترجم هنا يبقى بالإنجليزية.
-DE_ENDPOINTS = {"site.index", "site.scan_form", "site.study", "site.monitoring", "site.monitor_login"}
+DE_ENDPOINTS = {"site.index", "site.scan_form", "site.study", "site.monitoring", "site.monitor_login",
+                "site.adoption_page"}
 
 TEXTS["ar"].update({
     "copy": "نسخ", "copied": "تم النسخ ✓",
@@ -939,3 +940,131 @@ TEXTS["de"].update({
 })
 
 LANG_NAMES = {"en": "English", "ar": "العربية", "de": "Deutsch"}
+
+
+# ---------------------------------------------------------------- متتبّع التبنّي الأسبوعي (/adoption)
+
+TEXTS["en"].update({
+    "nav_adoption": "Tracker",
+    "adoption_title": "Post-quantum TLS adoption tracker",
+    "adoption_lead": "Every Monday we re-scan the Tranco top 1,000 and watchlists for Germany, Austria and Switzerland. "
+                     "Week {week} (from {date}): {pq} of the {reachable} top sites that answered ({pct}%) negotiate the "
+                     "hybrid X25519MLKEM768 key exchange.",
+    "adoption_stat_pct": "Top sites with post-quantum key exchange",
+    "adoption_stat_delta": "Change vs previous week",
+    "adoption_stat_switched": "Switched this week",
+    "adoption_stat_lost": "Lost it this week",
+    "adoption_pp": "pp",
+    "adoption_first_week": "This is the first week on record (the published study). The first week-over-week comparison "
+                           "appears after the next Monday scan.",
+    "adoption_timeline": "Weekly share of top sites with post-quantum key exchange",
+    "adoption_switched_title": "Switched to post-quantum key exchange this week",
+    "adoption_switched_none": "No site switched this week.",
+    "adoption_lost_title": "Stopped negotiating post-quantum key exchange this week",
+    "adoption_lost_none": "No site lost it this week.",
+    "adoption_regraded_title": "Other grade changes",
+    "adoption_before": "Before",
+    "adoption_after": "Now",
+    "adoption_sectors_title": "Watchlists: Germany, Austria, Switzerland",
+    "adoption_sectors_note": "Hostnames as visitors reach them. Every list is checked each Monday.",
+    "adoption_enabled_of": "{pq} of {reachable} enabled",
+    "adoption_status_on": "Enabled",
+    "adoption_status_since": "since {week}",
+    "adoption_status_off": "Not yet enabled",
+    "adoption_status_noanswer": "No HTTPS answer",
+    "adoption_method_title": "Methodology and limits",
+    "adoption_method": "Each hostname gets two connections to port 443 from a single server: one offering X25519MLKEM768 "
+                       "plus X25519 as Chrome does, and one ordinary TLS connection to read the certificate. Nothing else is "
+                       "sent and nothing is attempted. Results come from one vantage point at scan time; behind a CDN we see "
+                       "the visitor-to-CDN connection, not the CDN-to-origin one. \"Not yet enabled\" describes the key "
+                       "exchange only; it is not a judgement of a site's overall security.",
+    "adoption_correction": "Spotted an error, or want a hostname added or removed? Contact us via the",
+    "adoption_download": "Open data (CC BY 4.0):",
+    "adoption_link": "Weekly adoption tracker →",
+    "adoption_week_col": "Week",
+    "adoption_status_col": "Status",
+    "host_col": "Hostname",
+})
+
+TEXTS["ar"].update({
+    "nav_adoption": "المتتبّع",
+    "adoption_title": "متتبّع تبنّي TLS المقاوم للكم",
+    "adoption_lead": "كل يوم اثنين نعيد فحص أكبر 1000 نطاق في قائمة Tranco وقوائم مراقبة لألمانيا والنمسا وسويسرا. "
+                     "الأسبوع {week} (من {date}): {pq} من أصل {reachable} موقعاً كبيراً أجاب ({pct}%) تتفق على تبادل "
+                     "المفاتيح الهجين X25519MLKEM768.",
+    "adoption_stat_pct": "المواقع الكبرى بتبادل مفاتيح مقاوم للكم",
+    "adoption_stat_delta": "التغيّر عن الأسبوع السابق",
+    "adoption_stat_switched": "انتقلت هذا الأسبوع",
+    "adoption_stat_lost": "فقدته هذا الأسبوع",
+    "adoption_pp": "نقطة",
+    "adoption_first_week": "هذا أول أسبوع مسجّل (بيانات الدراسة المنشورة). تظهر أول مقارنة أسبوعية بعد فحص يوم الاثنين القادم.",
+    "adoption_timeline": "النسبة الأسبوعية للمواقع الكبرى التي تستخدم تبادل مفاتيح مقاوماً للكم",
+    "adoption_switched_title": "انتقلت إلى تبادل المفاتيح المقاوم للكم هذا الأسبوع",
+    "adoption_switched_none": "لم ينتقل أي موقع هذا الأسبوع.",
+    "adoption_lost_title": "توقفت عن تبادل المفاتيح المقاوم للكم هذا الأسبوع",
+    "adoption_lost_none": "لم يفقده أي موقع هذا الأسبوع.",
+    "adoption_regraded_title": "تغيّرات أخرى في الدرجة",
+    "adoption_before": "قبل",
+    "adoption_after": "الآن",
+    "adoption_sectors_title": "قوائم المراقبة: ألمانيا والنمسا وسويسرا",
+    "adoption_sectors_note": "أسماء المواقع كما يصلها الزوار. تُفحص كل قائمة كل يوم اثنين.",
+    "adoption_enabled_of": "{pq} من {reachable} مفعّل",
+    "adoption_status_on": "مفعّل",
+    "adoption_status_since": "منذ {week}",
+    "adoption_status_off": "لم يُفعَّل بعد",
+    "adoption_status_noanswer": "لا إجابة عبر HTTPS",
+    "adoption_method_title": "المنهجية والحدود",
+    "adoption_method": "لكل اسم موقع نجري اتصالين بالمنفذ 443 من خادم واحد: الأول يعرض X25519MLKEM768 مع X25519 كما يفعل "
+                       "Chrome، والثاني اتصال TLS عادي لقراءة الشهادة. لا نرسل شيئاً آخر ولا نحاول أي اختراق. النتائج من "
+                       "نقطة رصد واحدة وقت الفحص، وخلف CDN نرى الاتصال بين الزائر والـ CDN لا بين الـ CDN والخادم الأصلي. "
+                       "«لم يُفعَّل بعد» يصف تبادل المفاتيح وحده، وليس حكماً على أمان الموقع عموماً.",
+    "adoption_correction": "وجدت خطأً أو تريد إضافة موقع أو حذفه؟ تواصل معنا عبر صفحة",
+    "adoption_download": "بيانات مفتوحة (CC BY 4.0):",
+    "adoption_link": "متتبّع التبنّي الأسبوعي ←",
+    "adoption_week_col": "الأسبوع",
+    "adoption_status_col": "الحالة",
+    "host_col": "اسم الموقع",
+})
+
+TEXTS["de"].update({
+    "nav_adoption": "Tracker",
+    "adoption_title": "Post-Quanten-TLS: Wochen-Tracker",
+    "adoption_lead": "Jeden Montag prüfen wir die 1.000 größten Domains der Tranco-Liste sowie Beobachtungslisten für "
+                     "Deutschland, Österreich und die Schweiz erneut. Woche {week} (ab {date}): {pq} der {reachable} "
+                     "erreichbaren Top-Websites ({pct} %) vereinbaren den hybriden Schlüsselaustausch X25519MLKEM768.",
+    "adoption_stat_pct": "Top-Websites mit Post-Quanten-Schlüsselaustausch",
+    "adoption_stat_delta": "Veränderung zur Vorwoche",
+    "adoption_stat_switched": "Diese Woche umgestellt",
+    "adoption_stat_lost": "Diese Woche verloren",
+    "adoption_pp": "Pp.",
+    "adoption_first_week": "Dies ist die erste erfasste Woche (die veröffentlichte Studie). Der erste Wochenvergleich "
+                           "erscheint nach dem nächsten Montagsscan.",
+    "adoption_timeline": "Wöchentlicher Anteil der Top-Websites mit Post-Quanten-Schlüsselaustausch",
+    "adoption_switched_title": "Diese Woche auf Post-Quanten-Schlüsselaustausch umgestellt",
+    "adoption_switched_none": "Diese Woche hat keine Website umgestellt.",
+    "adoption_lost_title": "Diese Woche kein Post-Quanten-Schlüsselaustausch mehr",
+    "adoption_lost_none": "Diese Woche hat ihn keine Website verloren.",
+    "adoption_regraded_title": "Weitere Notenänderungen",
+    "adoption_before": "Vorher",
+    "adoption_after": "Jetzt",
+    "adoption_sectors_title": "Beobachtungslisten: Deutschland, Österreich, Schweiz",
+    "adoption_sectors_note": "Hostnamen so, wie Besucher sie aufrufen. Jede Liste wird jeden Montag geprüft.",
+    "adoption_enabled_of": "{pq} von {reachable} aktiviert",
+    "adoption_status_on": "Aktiviert",
+    "adoption_status_since": "seit {week}",
+    "adoption_status_off": "Noch nicht aktiviert",
+    "adoption_status_noanswer": "Keine HTTPS-Antwort",
+    "adoption_method_title": "Methodik und Grenzen",
+    "adoption_method": "Für jeden Hostnamen bauen wir von einem einzigen Server aus zwei Verbindungen zu Port 443 auf: eine "
+                       "mit X25519MLKEM768 und X25519 wie Chrome und eine gewöhnliche TLS-Verbindung zum Lesen des "
+                       "Zertifikats. Sonst wird nichts gesendet und nichts versucht. Die Ergebnisse stammen von einem "
+                       "Messpunkt zum Zeitpunkt der Prüfung; hinter einem CDN sehen wir die Verbindung Besucher–CDN, nicht "
+                       "CDN–Ursprungsserver. „Noch nicht aktiviert“ beschreibt nur den Schlüsselaustausch und ist kein "
+                       "Urteil über die Sicherheit der Website insgesamt.",
+    "adoption_correction": "Fehler entdeckt, oder soll ein Hostname aufgenommen bzw. entfernt werden? Kontakt über das",
+    "adoption_download": "Offene Daten (CC BY 4.0):",
+    "adoption_link": "Wöchentlicher Adoptions-Tracker →",
+    "adoption_week_col": "Woche",
+    "adoption_status_col": "Status",
+    "host_col": "Hostname",
+})

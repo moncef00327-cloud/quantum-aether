@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% set lead = t.adoption_lead.format(week=iso(s.week), date=iso(s.week_start), pq=s.pq, reachable=s.reachable, pct=s.pct) %}
+{% block title %}{{ t.adoption_title }} · {{ s.week }} · {{ t.brand }}{% endblock %}
+{% block description %}{{ lead }}{% endblock %}
+{% block head %}
+<script type="application/ld+json">{{ {"@context": "https://schema.org", "@type": "Dataset", "name": t.adoption_title, "description": lead, "dateModified": s.week_start, "temporalCoverage": s.timeline[0].date ~ "/" ~ s.week_start, "license": "https://creativecommons.org/licenses/by/4.0/", "isAccessibleForFree": true, "creator": {"@type": "Organization", "name": "Quantum Aether", "url": url_for('site.index', _external=True)}, "distribution": [{"@type": "DataDownload", "encodingFormat": "application/json", "contentUrl": url_for('site.adoption_json', _external=True)}, {"@type": "DataDownload", "encodingFormat": "text/csv", "contentUrl": url_for('site.adoption_csv', _external=True)}]} | tojson }}</script>
+{% endblock %}
+{% macro host_link(domain) %}<a href="{{ url_for('site.site_page', domain=domain, lang=lang) }}">{{ domain }}</a>{% endmacro %}
+{% macro change_table(rows) %}
+  <table class="data" dir="ltr">
+    <tr><th>{{ t.rank }}</th><th>{{ t.host_col }}</th><th>{{ t.adoption_before }}</th><th>{{ t.adoption_after }}</th></tr>
+    {% for r in rows %}<tr><td>{{ r.rank or "–" }}</td><td>{{ host_link(r.domain) }}</td>
+      <td><span class="grade-chip grade-{{ r.grade_before }}">{{ r.grade_before }}</span> <code>{{ r.grp_before or "?" }}</code></td>
+      <td><span class="grade-chip grade-{{ r.grade }}">{{ r.grade }}</span> <code>{{ r.grp or "?" }}</code></td></tr>{% endfor %}
+  </table>
+{% endmacro %}
+{% block content %}
+<section class="card">
+  <h1>{{ t.adoption_title }}</h1>
+  <p>{{ lead }}</p>
+</section>
+
+<section class="stats">
+  <div class="card stat"><h3>{{ t.adoption_stat_pct }}</h3><p class="value">{{ s.pct }}%</p></div>
+  {% if s.changes %}
+  {% if s.delta_pp is not none %}
+  <div class="card stat"><h3>{{ t.adoption_stat_delta }}</h3>
+    <p class="value" dir="ltr">{{ "%+.1f"|format(s.delta_pp) }} {{ t.adoption_pp }}</p></div>
+  {% endif %}
+  <div class="card stat"><h3>{{ t.adoption_stat_switched }}</h3><p class="value pq-on">{{ s.changes.adopted|length }}</p></div>
+  <div class="card stat"><h3>{{ t.adoption_stat_lost }}</h3><p class="value pq-off">{{ s.changes.dropped|length }}</p></div>
+  {% endif %}
+</section>
+
+{% if not s.changes %}
+<section class="card"><p class="notice">{{ t.adoption_first_week }}</p></section>
+{% endif %}
+
+<section class="card">
+  <h2>{{ t.adoption_timeline }}</h2>
+  <div class="bars weeks" dir="ltr">
+    {% for p in s.timeline %}
+    <div class="bar-row"><span class="muted small">{{ p.week }}</span>
+      <div class="bar"><span style="width: {{ p.pct }}%"></span></div>
+      <span class="bar-value">{{ p.pct }}%</span></div>
+    {% endfor %}
+  </div>
+</section>
+
+{% if s.changes %}
+<section class="card">
+  <h2>{{ t.adoption_switched_title }}</h2>
+  {% if s.changes.adopted %}{{ change_table(s.changes.adopted) }}{% else %}<p class="muted">{{ t.adoption_switched_none }}</p>{% endif %}
+</section>
+<section class="card">
+  <h2>{{ t.adoption_lost_title }}</h2>
+  {% if s.changes.dropped %}{{ change_table(s.changes.dropped) }}{% else %}<p class="muted">{{ t.adoption_lost_none }}</p>{% endif %}
+</section>
+{% if s.changes.regraded %}
+<section class="card">
+  <h2>{{ t.adoption_regraded_title }}</h2>
+  {{ change_table(s.changes.regraded) }}
+</section>
+{% endif %}
+{% endif %}
+
+{% set filled = s.sectors | selectattr("rows") | list %}
+{% if filled %}
+<section class="card">
+  <h2>{{ t.adoption_sectors_title }}</h2>
+  <p class="muted">{{ t.adoption_sectors_note }}</p>
+</section>
+{% for sector in filled %}
+<section class="card">
+  <h3>{{ sector.labels[lang] or sector.labels.en or sector.key }}</h3>
+  {% if sector.rows %}
+  <p class="muted">{{ t.adoption_enabled_of.format(pq=sector.pq, reachable=sector.reachable) }}</p>
+  <table class="data" dir="ltr">
+    <tr><th>{{ t.host_col }}</th><th>{{ t.adoption_status_col }}</th><th>{{ t.grade_col }}</th><th>{{ t.group_col }}</th></tr>
+    {% for r in sector.rows %}<tr><td>{{ host_link(r.domain) }}</td>
+      <td>{% if not r.ok %}<span class="muted">{{ t.adoption_status_noanswer }}</span>
+          {% elif r.pq %}<span class="pq-on">{{ t.adoption_status_on }}</span>{% if r.pq_since %} <span class="muted small">{{ t.adoption_status_since.format(week=iso(r.pq_since)) }}</span>{% endif %}
+          {% else %}<span class="pq-off">{{ t.adoption_status_off }}</span>{% endif %}</td>
+      <td>{% if r.ok %}<span class="grade-chip grade-{{ r.grade }}">{{ r.grade }}</span>{% endif %}</td>
+      <td>{% if r.ok %}<code>{{ r.grp or "?" }}</code>{% endif %}</td></tr>{% endfor %}
+  </table>
+  {% endif %}
+</section>
+{% endfor %}
+{% endif %}
+
+{% include "_scan_box.html" %}
+
+<section class="card">
+  <h2>{{ t.adoption_method_title }}</h2>
+  <p>{{ t.adoption_method }}</p>
+  <p>{{ t.adoption_correction }} <a href="{{ url_for('site.legal_page', slug='impressum', lang=legal_lang) }}">{{ t.legal_imprint }}</a>.</p>
+  <p class="small">{{ t.adoption_download }}
+    <a href="{{ url_for('site.adoption_json') }}">JSON</a> ·
+    <a href="{{ url_for('site.adoption_csv') }}">CSV</a> ·
+    <a href="{{ url_for('site.study', lang=lang) }}">{{ t.study_title }}</a></p>
+</section>
+{% endblock %}

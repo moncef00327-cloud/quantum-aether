@@ -22,6 +22,7 @@ from flask import (Blueprint, Flask, Response, abort, current_app, g, jsonify, r
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.security import check_password_hash
 
+import adoption
 import bio_archive_report
 import crypto_pay
 import dna_encode
@@ -131,7 +132,7 @@ def current_lang():
 
 
 # الصفحات التي لها نسخة ألمانية فعلية (لمبدّل اللغة وhreflang وخريطة الموقع).
-DE_PAGES = {"site.index", "site.study", "site.monitoring"}
+DE_PAGES = {"site.index", "site.study", "site.monitoring", "site.adoption_page"}
 
 
 def texts():
@@ -387,6 +388,47 @@ def study_json():
     return current_app.response_class(json.dumps(study_data(), ensure_ascii=False), mimetype="application/json")
 
 
+# ---------------------------------------------------------------- متتبّع التبنّي الأسبوعي (/adoption)
+
+def adoption_snapshot():
+    """لقطة آخر أسبوع. قبل أول تشغيل للمهمة الأسبوعية نزرع أول أسبوع من بيانات الدراسة المنشورة."""
+    snap = adoption.snapshot(db())
+    if snap is None:
+        adoption.seed_from_study(db())
+        snap = adoption.snapshot(db())
+    return snap
+
+
+def _open_data(response):
+    response.headers["Cache-Control"] = "public, max-age=3600"
+    response.headers["Access-Control-Allow-Origin"] = "*"  # بيانات مفتوحة (CC BY 4.0)
+    return response
+
+
+@bp.get("/adoption")
+def adoption_page():
+    # في العربية نعزل اتجاه رمز الأسبوع (Unicode isolate) حتى لا ينقلب «2026-W46» إلى «W46-2026»
+    iso = (lambda value: f"\u2066{value}\u2069") if current_lang() == "ar" else str
+    return render_template("adoption.html", s=adoption_snapshot(), iso=iso)
+
+
+@bp.get("/adoption.json")
+def adoption_json():
+    snap = adoption_snapshot()
+    body = dict(snap, license="CC BY 4.0", source=public_base() + url_for(".adoption_page"),
+                method="Two TLS connections to port 443 per hostname from one vantage point; "
+                       "pq = the server negotiated X25519MLKEM768 with a Chrome-like ClientHello.")
+    return _open_data(current_app.response_class(json.dumps(body, ensure_ascii=False), mimetype="application/json"))
+
+
+@bp.get("/adoption.csv")
+def adoption_csv():
+    snap = adoption_snapshot()
+    response = Response(adoption.to_csv(snap["rows"]), mimetype="text/csv")
+    response.headers["Content-Disposition"] = f'inline; filename="pq-adoption-{snap["week"]}.csv"'
+    return _open_data(response)
+
+
 # ---------------------------------------------------------------- صفحة لكل نطاق + المقارنة + CLI
 
 def study_by_domain():
@@ -617,6 +659,8 @@ def capture_and_record(order_id):
     except PayPalError as exc:
         if exc.issue == "INSTRUMENT_DECLINED":
             return "INSTRUMENT_DECLINED", scan
+        if exc.issue == "ORDER_NOT_APPROVED":  # المشتري لم يوافق بعد في PayPal: ليس عطلاً في PayPal
+            return "NOT_APPROVED", scan
         if exc.issue != "ORDER_ALREADY_CAPTURED":
             log.warning("PayPal capture failed for %s: %s (%s)", order_id, exc, exc.issue)
             return "CAPTURE_FAILED", scan
@@ -640,6 +684,7 @@ CAPTURE_ERRORS = {
     "DISABLED": ("payments_disabled", 503),
     "NOT_FOUND": ("order_not_found", 404),
     "INSTRUMENT_DECLINED": ("INSTRUMENT_DECLINED", 422),
+    "NOT_APPROVED": ("order_not_approved", 409),
     "CAPTURE_FAILED": ("capture_failed", 502),
     "UNAVAILABLE": ("paypal_unavailable", 502),
     "VERIFICATION_FAILED": ("verification_failed", 402),
@@ -902,7 +947,12 @@ def monitor_activate():
         return jsonify(error="already_activated"), 409
     try:
         subscription = paypal.get_subscription(subscription_id)
-    except (PayPalError, requests.RequestException) as exc:
+    except PayPalError as exc:
+        if exc.status == 404:  # رقم اشتراك غير موجود في PayPal: خطأ من الطلب لا عطل في PayPal
+            return jsonify(error="subscription_not_found"), 404
+        log.warning("PayPal subscription lookup failed for %s: %s", subscription_id, exc)
+        return jsonify(error="paypal_unavailable"), 502
+    except requests.RequestException as exc:
         log.warning("PayPal subscription lookup failed for %s: %s", subscription_id, exc)
         return jsonify(error="paypal_unavailable"), 502
     status = verify_subscription(subscription, plan_ids()[account["plan"]], account["id"])
@@ -1085,6 +1135,9 @@ def sitemap():
              ("/research", template_date("research.html"), site_langs),
              ("/guides", max(g["updated"] for g in guides.GUIDES.values()), site_langs),
              ("/study/top-1000-post-quantum-tls", study_data()["scanned_on"], de_langs)]
+    adoption_weeks = adoption.weeks(db())
+    pages.append(("/adoption", adoption.week_monday(adoption_weeks[-1]).isoformat() if adoption_weeks
+                  else study_data()["scanned_on"], de_langs))
     pages += [(f"/guides/{slug}", g["updated"], site_langs) for slug, g in guides.GUIDES.items()]
     pages.append(("/compare", template_date("compare.html"), site_langs))
     study_day = study_data()["scanned_on"]
@@ -1149,6 +1202,14 @@ def feed():
     ]
     for slug, g in guides.GUIDES.items():
         entries.append((f"{base}/guides/{slug}", g["updated"], g["en"]["title"], g["en"]["description"]))
+    snap = adoption.snapshot(db())
+    if snap:  # مدخل جديد كل أسبوع (المعرّف يتضمن الأسبوع) فيظهر في القارئات كخبر جديد
+        moved = snap["changes"]
+        detail = (f" {len(moved['adopted'])} switched to post-quantum key exchange and {len(moved['dropped'])} lost it this week."
+                  if moved else "")
+        entries.append((f"{base}/adoption#{snap['week']}", snap["week_start"],
+                        f"Post-quantum TLS adoption, week {snap['week']}",
+                        f"{snap['pq']} of {snap['reachable']} top sites ({snap['pct']}%) negotiate X25519MLKEM768.{detail}"))
     updated = day_to_iso(max(e[1] for e in entries))
     items = []
     for url, day, title, summary in entries:

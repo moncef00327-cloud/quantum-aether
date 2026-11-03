@@ -19,7 +19,7 @@
     {% if error %}<p class="form-error" role="alert">{{ error }}</p>{% endif %}
     <p class="form-busy" hidden>{{ t.scanning }}</p>
   </form>
-  <p class="trustbar">{{ t.trust_bar }}</p>
+  <p class="trustbar"><a href="{{ url_for('site.adoption_page', lang=lang) }}">{{ t.trust_bar }}</a></p>
 </section>
 
 <section class="card ladder">

@@ -16,7 +16,7 @@
   <label for="sub-email">{{ t.mon_email_label }}</label>
   <div class="scan-row"><input id="sub-email" type="email" autocomplete="email" dir="ltr" placeholder="you@company.com" required></div>
   <p class="consent"><label><input type="checkbox" id="consent">
-    {{ t.consent_subscription }} — <a href="{{ url_for('site.legal_page', slug='agb', lang=legal_lang) }}" target="_blank">{{ t.legal_terms }}</a></label></p>
+    <span>{{ t.consent_subscription }} (<a href="{{ url_for('site.legal_page', slug='agb', lang=legal_lang) }}" target="_blank">{{ t.legal_terms }}</a>)</span></label></p>
   <p class="muted">{{ t.mon_choose }}</p>
   {% endif %}
   <div class="grid-2">

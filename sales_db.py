@@ -5,6 +5,7 @@ import json
 import sqlite3
 from decimal import Decimal
 
+import adoption
 import analytics_db
 import monitor_db
 
@@ -48,6 +49,7 @@ def connect(path: str) -> sqlite3.Connection:
     conn.executescript(SCHEMA)
     monitor_db.init(conn)
     analytics_db.init(conn)
+    adoption.init(conn)
     _migrate(conn)
     return conn
 
