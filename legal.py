@@ -5,6 +5,8 @@
 
 P = '<mark class="placeholder">[{}]</mark>'
 OWNER = "Omer Alsaloum"
+ADDRESS = P.format("Straßenname") + " 11/12, 5280 Braunau am Inn, Österreich"
+ADDRESS_EN = P.format("street name") + " 11/12, 5280 Braunau am Inn, Austria"
 EMAIL = '<a href="mailto:sajad.vip56@gmail.com">sajad.vip56@gmail.com</a>'
 
 PAGES = {
@@ -14,7 +16,7 @@ PAGES = {
             "body": f"""
 <p>Angaben gemäß § 5 E-Commerce-Gesetz (ECG), § 14 Unternehmensgesetzbuch (UGB), § 63 Gewerbeordnung (GewO) und Offenlegung gemäß § 25 Mediengesetz (MedienG).</p>
 <h2>Medieninhaber und Diensteanbieter</h2>
-<p>{OWNER}<br>{P.format("Anschrift: Straße, Hausnummer, PLZ, Ort, Österreich")}</p>
+<p>{OWNER}<br>{ADDRESS}</p>
 <p>E-Mail: {EMAIL}<br>Telefon: {P.format("Telefonnummer (optional)")}</p>
 <h2>Unternehmensangaben</h2>
 <ul>
@@ -34,7 +36,7 @@ PAGES = {
             "body": f"""
 <p>Information pursuant to § 5 Austrian E-Commerce Act (ECG), § 14 Austrian Commercial Code (UGB), § 63 Trade Act (GewO) and disclosure pursuant to § 25 Media Act (MedienG).</p>
 <h2>Media owner and service provider</h2>
-<p>{OWNER}<br>{P.format("Address: street, number, postcode, town, Austria")}</p>
+<p>{OWNER}<br>{ADDRESS_EN}</p>
 <p>Email: {EMAIL}<br>Phone: {P.format("Phone number (optional)")}</p>
 <h2>Business details</h2>
 <ul>
@@ -56,7 +58,7 @@ PAGES = {
             "title": "Datenschutzerklärung",
             "body": f"""
 <h2>1. Verantwortlicher</h2>
-<p>{OWNER}, {P.format("Anschrift")}, E-Mail: {EMAIL}</p>
+<p>{OWNER}, {ADDRESS}, E-Mail: {EMAIL}</p>
 
 <h2>2. Hosting</h2>
 <p>Die Website läuft auf einem Server der The Constant Company, LLC („Vultr“, USA) im Rechenzentrum London, Vereinigtes Königreich. Für das Vereinigte Königreich besteht ein Angemessenheitsbeschluss der EU-Kommission. Auftragsverarbeitungsvertrag nach Art. 28 DSGVO: {P.format("bitte bestätigen, dass der Vultr-AVV/DPA akzeptiert wurde")}.</p>
@@ -92,7 +94,7 @@ PAGES = {
             "title": "Privacy policy",
             "body": f"""
 <h2>1. Controller</h2>
-<p>{OWNER}, {P.format("Address")}, email: {EMAIL}</p>
+<p>{OWNER}, {ADDRESS_EN}, email: {EMAIL}</p>
 
 <h2>2. Hosting</h2>
 <p>The website runs on a server of The Constant Company, LLC ("Vultr", USA) in a London data centre, United Kingdom. The United Kingdom is covered by an EU Commission adequacy decision. Data processing agreement under Art. 28 GDPR: {P.format("please confirm the Vultr DPA has been accepted")}.</p>
@@ -163,7 +165,7 @@ PAGES = {
 <p>Siehe <a href="/datenschutz?lang=de">Datenschutzerklärung</a>.</p>
 
 <h2>10. Anwendbares Recht und Gerichtsstand</h2>
-<p>Es gilt österreichisches Recht unter Ausschluss des UN-Kaufrechts und der Verweisungsnormen. Gegenüber Verbrauchern bleiben zwingende Schutzbestimmungen ihres Wohnsitzstaates unberührt. Gerichtsstand für Unternehmer ist {P.format("Ort des zuständigen Gerichts")}.</p>
+<p>Es gilt österreichisches Recht unter Ausschluss des UN-Kaufrechts und der Verweisungsnormen. Gegenüber Verbrauchern bleiben zwingende Schutzbestimmungen ihres Wohnsitzstaates unberührt. Gerichtsstand für Unternehmer ist Braunau am Inn.</p>
 
 <p class="muted small">Stand: November 2026</p>
 """,
@@ -205,7 +207,7 @@ PAGES = {
 <p>See the <a href="/datenschutz?lang=en">privacy policy</a>.</p>
 
 <h2>10. Governing law and jurisdiction</h2>
-<p>Austrian law applies, excluding the UN Convention on Contracts for the International Sale of Goods and conflict-of-law rules. Mandatory consumer protection rules of the consumer's country of residence remain unaffected. Place of jurisdiction for businesses: {P.format("town of the competent court")}.</p>
+<p>Austrian law applies, excluding the UN Convention on Contracts for the International Sale of Goods and conflict-of-law rules. Mandatory consumer protection rules of the consumer's country of residence remain unaffected. Place of jurisdiction for businesses: Braunau am Inn.</p>
 
 <p class="muted small">Last updated: November 2026. In case of doubt the German version applies.</p>
 """,
