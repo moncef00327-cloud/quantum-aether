@@ -461,6 +461,12 @@ TEXTS["ar"].update({
         "cancel_failed": "تعذّر الإلغاء الآن عبر PayPal. حاول لاحقاً أو ألغه من حسابك في PayPal.",
     },
     "mon_cta_home": "للشركات: مراقبة يومية لعدة نطاقات مع تنبيهات بالبريد، من 29$ شهرياً",
+    "badge_title": "اعرض جاهزيتك على موقعك",
+    "badge_sub": "انسخ هذا الكود في موقعك لعرض الشارة. تتحدث تلقائياً حسب آخر فحص خلال 30 يوماً.",
+    "admin_subs_active": "اشتراكات فعّالة",
+    "admin_mrr": "الدخل الشهري المتكرر",
+    "admin_churned": "ملغاة أو موقوفة",
+    "admin_subs_title": "المشتركون",
 })
 
 TEXTS["en"].update({
@@ -518,4 +524,10 @@ TEXTS["en"].update({
         "cancel_failed": "Could not cancel through PayPal right now. Try again later or cancel it in your PayPal account.",
     },
     "mon_cta_home": "For teams: daily monitoring of many domains with email alerts, from $29/month",
+    "badge_title": "Show your readiness on your site",
+    "badge_sub": "Paste this code into your site to display the badge. It updates from your latest scan within 30 days.",
+    "admin_subs_active": "Active subscriptions",
+    "admin_mrr": "Monthly recurring revenue",
+    "admin_churned": "Cancelled or suspended",
+    "admin_subs_title": "Subscribers",
 })

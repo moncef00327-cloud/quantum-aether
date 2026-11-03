@@ -72,6 +72,13 @@ def get_scan_by_report_token(conn, token):
     return _scan_from_row(conn.execute("SELECT * FROM scans WHERE report_token = ?", (token,)).fetchone())
 
 
+def latest_scan_for_domain(conn, domain, since_iso):
+    """آخر فحص لنطاق منذ تاريخ معيّن (للشارة)، أو None."""
+    row = conn.execute("SELECT * FROM scans WHERE domain = ? AND created_at >= ? ORDER BY created_at DESC LIMIT 1",
+                       (domain, since_iso)).fetchone()
+    return _scan_from_row(row)
+
+
 def record_attempt(conn, client_hash):
     """كل محاولة فحص تُحسب، حتى الفاشلة، كي لا يُستعمل الخادم لإجراء اتصالات بلا حد."""
     with conn:

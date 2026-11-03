@@ -202,7 +202,7 @@ def research_data():
 
 @bp.get("/")
 def index():
-    return render_template("index.html", error=None, domain="")
+    return render_template("index.html", error=None, domain=request.args.get("domain", "")[:253])
 
 
 @bp.post("/scan")
@@ -304,7 +304,8 @@ def admin():
         return Response(status=401, headers={"WWW-Authenticate": 'Basic realm="Quantum Aether admin", charset="UTF-8"'})
     conn = db()
     return render_template("admin.html", stats=sales_db.stats(conn),
-                           orders=sales_db.recent_orders(conn), scans=sales_db.recent_scans(conn))
+                           orders=sales_db.recent_orders(conn), scans=sales_db.recent_scans(conn),
+                           subs=monitor_db.stats(conn, monitor.PLANS), accounts=monitor_db.recent_accounts(conn))
 
 
 # ---------------------------------------------------------------- API
@@ -683,6 +684,45 @@ def monitor_cancel(token):
     monitor.notify_owner(current_app.extensions["mailer"], current_app.config["OWNER_EMAIL"],
                          "Cancelled by customer", account)
     return _back(token, "cancelled")
+
+
+# ---------------------------------------------------------------- شارة قابلة للتضمين
+
+BADGE_MAX_AGE_DAYS = 30
+BADGE_STYLE = {
+    "A": ("#16a34a", "A · ML-KEM"),
+    "B": ("#0284c7", "B · classical"),
+    "C": ("#d97706", "C · no TLS 1.3"),
+    "F": ("#dc2626", "F"),
+    None: ("#64748b", "not scanned"),
+}
+
+
+def badge_svg(grade):
+    color, value = BADGE_STYLE.get(grade, BADGE_STYLE[None])
+    label = "post-quantum TLS"
+    lw, vw = 7 * len(label) + 12, 7 * len(value) + 14  # تقدير عرض النص بخط 11px
+    w = lw + vw
+    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="20" role="img" aria-label="{label}: {value}">
+<title>{label}: {value}</title>
+<rect width="{lw}" height="20" fill="#1e293b"/><rect x="{lw}" width="{vw}" height="20" fill="{color}"/>
+<g fill="#fff" font-family="Verdana,DejaVu Sans,sans-serif" font-size="11" text-anchor="middle">
+<text x="{lw / 2}" y="14">{label}</text><text x="{lw + vw / 2}" y="14">{value}</text></g></svg>"""
+
+
+@bp.get("/badge/<domain>.svg")
+def badge(domain):
+    """شارة تعرض درجة آخر فحص للنطاق (خلال 30 يوماً). لا تُجري فحصاً جديداً حتى لا تُستغل لإغراق الخادم."""
+    try:
+        domain = quantum_vuln_scanner.normalize_domain(domain)
+    except quantum_vuln_scanner.ScanError:
+        abort(404)
+    since = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=BADGE_MAX_AGE_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    scan = sales_db.latest_scan_for_domain(db(), domain, since)
+    response = Response(badge_svg(scan["grade"] if scan else None), mimetype="image/svg+xml")
+    response.headers["Cache-Control"] = "public, max-age=86400"
+    response.headers["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'"
+    return response
 
 
 @bp.get("/robots.txt")

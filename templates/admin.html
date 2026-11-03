@@ -10,6 +10,28 @@
     <p class="value ok">{% for cur, amount in stats.revenue.items() %}{{ amount }} {{ cur }}{% else %}0{% endfor %}</p></div>
 </section>
 
+<section class="stats">
+  <div class="card stat"><h3>{{ t.admin_subs_active }}</h3><p class="value">{{ subs.active_total }}</p>
+    <p class="muted small" dir="ltr">{% for plan, n in subs.active.items() %}{{ plan }}: {{ n }} {% endfor %}</p></div>
+  <div class="card stat"><h3>{{ t.admin_mrr }}</h3><p class="value ok" dir="ltr">${{ subs.mrr }}</p></div>
+  <div class="card stat"><h3>{{ t.admin_churned }}</h3><p class="value">{{ subs.churned }}</p></div>
+</section>
+
+<section class="card">
+  <h2>{{ t.admin_subs_title }}</h2>
+  {% if accounts %}
+  <table class="data">
+    <thead><tr><th>{{ t.date }}</th><th>Email</th><th>{{ t.dash_plan }}</th><th>{{ t.dash_status }}</th><th>{{ t.dash_domains_title }}</th></tr></thead>
+    <tbody>
+    {% for a in accounts %}
+      <tr><td dir="ltr">{{ a.created_at }}</td><td dir="ltr">{{ a.email }}</td><td>{{ a.plan }}</td>
+          <td class="{{ 'ok' if a.status == 'ACTIVE' else 'warn' }}">{{ a.status }}</td><td>{{ a.domains }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<p class="muted">—</p>{% endif %}
+</section>
+
 <section class="card">
   <h2>{{ t.orders_title }}</h2>
   <table class="data">

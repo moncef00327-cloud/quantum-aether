@@ -166,6 +166,18 @@ def mark_alerts_sent(conn, alert_ids):
         conn.executemany("UPDATE monitor_alerts SET emailed = 1 WHERE id = ?", [(i,) for i in alert_ids])
 
 
-def stats(conn):
-    rows = conn.execute("SELECT plan, status, COUNT(*) AS n FROM monitor_accounts GROUP BY plan, status").fetchall()
+def stats(conn, plans):
+    """عدد المشتركين الفعّالين لكل خطة والدخل الشهري المتكرر المتوقع (MRR)."""
+    rows = conn.execute("SELECT plan, COUNT(*) AS n FROM monitor_accounts WHERE status = 'ACTIVE' GROUP BY plan").fetchall()
+    active = {r["plan"]: r["n"] for r in rows}
+    mrr = sum(float(plans[p]["price"]) * n for p, n in active.items() if p in plans)
+    cancelled = conn.execute("SELECT COUNT(*) FROM monitor_accounts WHERE status IN ('CANCELLED', 'SUSPENDED', 'EXPIRED')").fetchone()[0]
+    return {"active": active, "active_total": sum(active.values()), "mrr": f"{mrr:.2f}", "churned": cancelled}
+
+
+def recent_accounts(conn, limit=50):
+    rows = conn.execute(
+        "SELECT a.id, a.email, a.plan, a.status, a.created_at, a.updated_at,"
+        " (SELECT COUNT(*) FROM monitor_domains d WHERE d.account_id = a.id) AS domains"
+        " FROM monitor_accounts a WHERE a.status != 'PENDING' ORDER BY a.created_at DESC LIMIT ?", (limit,)).fetchall()
     return [dict(r) for r in rows]

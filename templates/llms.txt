@@ -31,3 +31,7 @@
 ## Monitoring subscription (for teams)
 
 - {{ base }}/monitoring — daily scans of up to 10 domains ($29/month) or 100 domains ($99/month) with email alerts when post-quantum key exchange is lost, a grade changes, or a certificate nears expiry. Billed monthly through PayPal; cancel any time.
+
+## Badge
+
+- {{ base }}/badge/{domain}.svg — embeddable SVG badge showing a domain's latest grade from the last 30 days (grey "not scanned" otherwise). Link it to {{ base }}/?domain={domain}.

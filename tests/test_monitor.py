@@ -252,3 +252,47 @@ class MailerTest(unittest.TestCase):
         self.assertTrue(m.send("c@example.com", "s", "t"))
         self.assertEqual(session.body["reply_to"], "owner@example.com")
         self.assertFalse(mailer_module.Mailer("", "x").send("c@example.com", "s", "t"))
+
+
+class BadgeAndAdminTest(unittest.TestCase):
+    def setUp(self):
+        from werkzeug.security import generate_password_hash
+        self.tmp = tempfile.mkdtemp()
+        self.app = quantum_saas_app.create_app(
+            {"TESTING": True, "DATA_DIR": self.tmp, "ADMIN_PASSWORD_HASH": generate_password_hash("pw"),
+             "PAYPAL_CLIENT_ID": "cid", **PLAN_IDS},
+            scanner=lambda raw: result_for(quantum_vuln_scanner.normalize_domain(raw)),
+            paypal=FakePayPal(), mailer=FakeMailer())
+        self.client = self.app.test_client()
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp)
+
+    def test_badge_unscanned_then_graded(self):
+        r = self.client.get("/badge/example.com.svg")
+        self.assertEqual(r.mimetype, "image/svg+xml")
+        self.assertIn("not scanned", r.get_data(as_text=True))
+        self.client.post("/api/scan", json={"domain": "example.com"})
+        body = self.client.get("/badge/example.com.svg").get_data(as_text=True)
+        self.assertIn("A · ML-KEM", body)
+        self.assertEqual(self.client.get("/badge/localhost.svg").status_code, 404)
+
+    def test_scan_page_offers_badge_for_grade_a(self):
+        scan_url = self.client.post("/api/scan", json={"domain": "example.com"}).get_json()["scan_url"]
+        body = self.client.get(scan_url.split("example.test")[-1].replace("http://localhost", "")).get_data(as_text=True)
+        self.assertIn("/badge/example.com.svg", body)
+
+    def test_index_prefills_domain(self):
+        self.assertIn('value="example.com"', self.client.get("/?domain=example.com").get_data(as_text=True))
+
+    def test_admin_shows_mrr(self):
+        import base64
+        with closing(sales_db.connect(os.path.join(self.tmp, "quantum_saas.db"))) as c:
+            a, _ = monitor_db.create_account(c, "x@example.com", "business", "en")
+            monitor_db.set_status(c, a, "ACTIVE", "I-1")
+            b, _ = monitor_db.create_account(c, "y@example.com", "starter", "en")
+            monitor_db.set_status(c, b, "ACTIVE", "I-2")
+        auth = {"Authorization": "Basic " + base64.b64encode(b"admin:pw").decode()}
+        body = self.client.get("/admin?lang=en", headers=auth).get_data(as_text=True)
+        self.assertIn("$128.00", body)
+        self.assertIn("y@example.com", body)

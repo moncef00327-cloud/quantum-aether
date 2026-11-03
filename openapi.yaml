@@ -117,6 +117,20 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/OrderStatus" }
         "404": { description: Unknown order. }
+  /badge/{domain}.svg:
+    get:
+      summary: Embeddable SVG badge with the domain's latest grade (scans from the last 30 days; never triggers a scan)
+      operationId: getBadge
+      parameters:
+        - name: domain
+          in: path
+          required: true
+          schema: {type: string, example: example.com}
+      responses:
+        "200":
+          description: SVG badge (grey "not scanned" if there is no recent scan)
+          content:
+            image/svg+xml: {}
   /api/scan/{scan_id}:
     get:
       summary: Fetch the summary of an earlier scan
