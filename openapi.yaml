@@ -1,0 +1,194 @@
+openapi: 3.0.3
+info:
+  title: Quantum Aether — Post-Quantum TLS Readiness Scanner
+  description: >
+    Free API that checks whether an HTTPS server negotiates the hybrid post-quantum key exchange
+    X25519MLKEM768 (ML-KEM, FIPS 203), and summarizes its TLS version and certificate.
+    The full report (remediation steps, certificate details) is sold separately through a
+    PayPal checkout on the scan page; payment is approved by a person in the PayPal window.
+  version: 2.0.0
+servers:
+  - url: "{{PUBLIC_URL}}"
+paths:
+  /api/scan:
+    post:
+      summary: Scan a public domain (free, rate limited per client)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [domain]
+              properties:
+                domain:
+                  type: string
+                  example: example.com
+      responses:
+        "201":
+          description: Scan completed.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ScanSummary" }
+        "400":
+          description: The domain could not be scanned.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "429":
+          description: Too many scans from this client in the last hour.
+  /api/v1/quantum-scan:
+    post:
+      summary: Agent endpoint — real domain scan, or an honest assessment of an RSA key size
+      description: >
+        With `domain`, runs the same real scan as POST /api/scan (rate limited).
+        With only `key_size`, returns what that key size means against classical and quantum attackers;
+        no network scan is made. Shor's algorithm breaks RSA and ECC of any size.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                domain:
+                  type: string
+                  example: example.com
+                key_size:
+                  type: integer
+                  default: 2048
+                  minimum: 512
+                  maximum: 16384
+      responses:
+        "200":
+          description: Key-size assessment (request had only key_size).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/KeySizeAssessment" }
+        "201":
+          description: Domain scanned (request had domain).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ScanSummary" }
+        "400":
+          description: Invalid domain or key size.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "429":
+          description: Too many scans from this client in the last hour.
+  /api/v1/orders:
+    post:
+      summary: Buy the full report for a scan — returns a PayPal approval link
+      description: >
+        Creates a PayPal order for the scan's full report. Open approve_url (the payer, or an agent the
+        payer authorized in PayPal, approves it). PayPal then returns to this site, which captures and
+        verifies the payment automatically; afterwards GET status_url returns report_url.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [scan_id]
+              properties:
+                scan_id: { type: string }
+      responses:
+        "201":
+          description: Order created.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Order" }
+        "404": { description: Unknown scan. }
+        "409": { description: The report for this scan is already paid. }
+        "503": { description: Payments are not configured. }
+  /api/v1/orders/{order_id}:
+    get:
+      summary: Order status; includes report_url once the payment is captured
+      parameters:
+        - name: order_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Order status.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OrderStatus" }
+        "404": { description: Unknown order. }
+  /api/scan/{scan_id}:
+    get:
+      summary: Fetch the summary of an earlier scan
+      parameters:
+        - name: scan_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Scan summary.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ScanSummary" }
+        "404":
+          description: Unknown scan.
+components:
+  schemas:
+    ScanSummary:
+      type: object
+      properties:
+        scan_id: { type: string }
+        domain: { type: string }
+        grade:
+          type: string
+          enum: [A, B, C, F]
+          description: A = TLS 1.3 with post-quantum hybrid key exchange; B = TLS 1.3 classical; C = no TLS 1.3; F = critical issue.
+        scanned_at: { type: string, format: date-time }
+        tls_version: { type: string, example: TLSv1.3 }
+        key_exchange_group: { type: string, example: X25519MLKEM768 }
+        post_quantum_key_exchange: { type: boolean }
+        certificate_key: { type: string, example: ECDSA-256 }
+        certificate_valid: { type: boolean }
+        findings_in_full_report: { type: integer }
+        scan_url: { type: string, format: uri }
+        full_report_price:
+          type: object
+          properties:
+            amount: { type: string, example: "49.00" }
+            currency: { type: string, example: USD }
+    Order:
+      type: object
+      properties:
+        order_id: { type: string }
+        approve_url: { type: string, format: uri }
+        status_url: { type: string, format: uri }
+        amount: { type: string, example: "49.00" }
+        currency: { type: string, example: USD }
+    OrderStatus:
+      type: object
+      properties:
+        order_id: { type: string }
+        status: { type: string, enum: [CREATED, PENDING, COMPLETED, FAILED] }
+        amount: { type: string }
+        currency: { type: string }
+        report_url: { type: string, format: uri, description: Present when status is COMPLETED. }
+    KeySizeAssessment:
+      type: object
+      properties:
+        key_size_bits: { type: integer }
+        algorithm: { type: string, example: RSA }
+        classical_security: { type: string, enum: [weak, acceptable] }
+        quantum_vulnerable: { type: boolean }
+        quantum_note: { type: string }
+        published_estimate: { type: string }
+        recommended_action: { type: string }
+        scan_your_domain: { type: object }
+        full_report: { type: object }
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          enum: [invalid_domain, private_address, dns_failure, connect_failure, tls_failure, invalid_key_size]
+        message: { type: string }

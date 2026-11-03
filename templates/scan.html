@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% set kx = r.key_exchange %}{% set cert = r.certificate %}
+{% block title %}{{ r.domain }} · {{ t.result_title }}{% endblock %}
+{% block head %}<meta name="robots" content="noindex">{% endblock %}
+{% block content %}
+<section class="card result-head">
+  <div class="grade grade-{{ r.grade }}" aria-label="{{ t.grade }} {{ r.grade }}">{{ r.grade }}</div>
+  <div>
+    <p class="muted">{{ t.result_title }}</p>
+    <h1 dir="ltr" class="domain">{{ r.domain }}</h1>
+    <p class="grade-text">{{ t.grades[r.grade] }}</p>
+    <p class="muted small">{{ t.scanned_at }}: <span dir="ltr">{{ r.scanned_at }}</span></p>
+  </div>
+</section>
+
+<section class="card">
+  <h2>{{ t.summary_title }}</h2>
+  <table class="kv">
+    <tr><th>{{ t.tls_version }}</th><td dir="ltr">{{ kx.version or cert.negotiated_version }}</td></tr>
+    <tr><th>{{ t.key_exchange }}</th>
+        <td><span dir="ltr">{{ kx.group or "—" }}</span> ·
+          {% if kx.pq %}<span class="ok">{{ t.pq_yes }}</span>{% else %}<span class="warn">{{ t.pq_no }}</span>{% endif %}</td></tr>
+    <tr><th>{{ t.certificate }}</th><td dir="ltr">{{ cert.key_algorithm }}-{{ cert.key_bits }}</td></tr>
+    <tr><th>{{ t.findings_count }}</th><td>{{ r.findings | length }}</td></tr>
+  </table>
+</section>
+
+<section class="card buy" id="buy">
+  <h2>{{ t.buy_title }} — ${{ price }}</h2>
+  <ul class="ticks">{% for item in t.paid_items %}<li>{{ item }}</li>{% endfor %}</ul>
+  {% if paid %}
+    <p class="notice">{{ t.already_paid }}</p>
+  {% elif payments_enabled %}
+    <p>{{ t.buy_sub }} <strong>{{ t.save_link }}</strong></p>
+    <div id="paypal-button-container" data-scan-id="{{ scan.id }}"
+         data-msg-error="{{ t.pay_error }}" data-msg-pending="{{ t.pay_pending }}"></div>
+    <p id="pay-message" class="form-error" role="status"></p>
+  {% else %}
+    <p class="notice">{{ t.payments_off }}</p>
+  {% endif %}
+</section>
+
+<p><a class="button-link" href="{{ url_for('site.index', lang=lang) }}">{{ t.scan_again }}</a></p>
+{% endblock %}
+{% block scripts %}
+{% if payments_enabled and not paid %}
+<script src="https://www.paypal.com/sdk/js?client-id={{ paypal_client_id | urlencode }}&currency={{ currency }}&intent=capture"></script>
+<script src="{{ url_for('static', filename='checkout.js') }}"></script>
+{% endif %}
+{% endblock %}

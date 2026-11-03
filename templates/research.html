@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}{{ t.research_title }} · {{ t.brand }}{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>{{ t.research_title }}</h1>
+  <p>{{ t.research_intro }}</p>
+</section>
+
+{% for exp in experiments %}
+{% set total = exp.counts.values() | sum %}
+{% set population = (exp.counts.get("000", 0) + exp.counts.get("111", 0)) / total * 100 %}
+<section class="card">
+  <h2 dir="ltr">GHZ · {{ exp.backend }}</h2>
+  <table class="kv">
+    <tr><th>{{ t.backend_label }}</th><td dir="ltr">{{ exp.backend }}</td></tr>
+    <tr><th>{{ t.job_label }}</th><td dir="ltr"><code>{{ exp.job_id }}</code></td></tr>
+    <tr><th>{{ t.shots_label }}</th><td>{{ total }}</td></tr>
+    <tr><th>{{ t.population_label }}</th><td><strong>{{ "%.2f" | format(population) }}%</strong></td></tr>
+    {% if exp.get("fidelity") is not none %}
+    <tr><th>{{ t.fidelity_label }}</th><td><strong>{{ "%.2f" | format(exp.fidelity * 100) }}%</strong></td></tr>
+    {% endif %}
+    <tr><th>{{ t.source_label }}</th><td>{{ exp.source }}</td></tr>
+  </table>
+  <p class="muted small">{{ t.population_note }}</p>
+  <h3>{{ t.counts_title }}</h3>
+  <div class="bars" dir="ltr">
+    {% for state, count in exp.counts | dictsort %}
+    <div class="bar-row">
+      <code>{{ state }}</code>
+      <div class="bar"><span style="width: {{ (count / total * 100) | round(1) }}%"></span></div>
+      <span class="bar-value">{{ count }}</span>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endfor %}
+
+{% for run in fidelity_runs %}
+<section class="card">
+  <h2>{{ t.fidelity_label }}</h2>
+  <table class="kv">
+    <tr><th>{{ t.backend_label }}</th><td dir="ltr">{{ run.backend }}</td></tr>
+    <tr><th>{{ t.job_label }}</th><td dir="ltr"><code>{{ run.job_id }}</code></td></tr>
+    <tr><th>{{ t.fidelity_label }}</th><td><strong>{{ "%.2f" | format(run.fidelity * 100) }}%</strong></td></tr>
+  </table>
+</section>
+{% endfor %}
+
+{% if dna_stats %}
+<section class="card">
+  <h2>{{ t.dna_research_title }}</h2>
+  <p>{{ t.dna_research_body }}</p>
+  <table class="kv">
+    <tr><th>{{ t.bases }}</th><td>{{ "{:,}".format(dna_stats.bases) }}</td></tr>
+    <tr><th>{{ t.gc }}</th><td>{{ dna_stats.gc_percent }}%</td></tr>
+    <tr><th>{{ t.homopolymer }}</th><td>{{ dna_stats.max_homopolymer }}</td></tr>
+  </table>
+</section>
+{% endif %}
+{% endblock %}

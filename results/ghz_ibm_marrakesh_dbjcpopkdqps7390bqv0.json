@@ -1,0 +1,19 @@
+{
+  "experiment": "GHZ, 3 qubits: h(0), cx(0,2), cx(2,1), measure all",
+  "backend": "ibm_marrakesh",
+  "job_id": "dbjcpopkdqps7390bqv0",
+  "date": "2026-11-01",
+  "shots": 1024,
+  "counts": {
+    "000": 503,
+    "001": 12,
+    "010": 5,
+    "011": 1,
+    "100": 1,
+    "101": 8,
+    "110": 11,
+    "111": 483
+  },
+  "fidelity": null,
+  "source": "Counts recorded in real_quantum_histogram.png and quantum_research_report.md; re-fetch from IBM with: python real_quantum.py --fetch dbjcpopkdqps7390bqv0"
+}

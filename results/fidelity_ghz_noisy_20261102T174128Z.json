@@ -1,0 +1,18 @@
+{
+  "mode": "noisy",
+  "backend": "AerSimulator + FakeMarrakesh noise model",
+  "job_id": null,
+  "date": "20261102T174128Z",
+  "note": "gate and decoherence noise only: the Estimator computes expectation values directly, so readout errors are not included",
+  "expectations": {
+    "III": 0.9999999999999993,
+    "ZZI": 0.9979350677008267,
+    "IZZ": 0.9957371107094145,
+    "ZIZ": 0.9963929668952412,
+    "XXX": 0.9959011500603487,
+    "XYY": -0.9952455801699673,
+    "YXY": -0.9956177346176902,
+    "YYX": -0.9955288896740573
+  },
+  "fidelity": 0.9965448124784432
+}

@@ -1,0 +1,7 @@
+# Quantum experiments, notebook and GUI (local machine; not needed on the server)
+qiskit==2.6.1
+qiskit-aer==0.18.2
+qiskit-ibm-runtime==0.51.0
+matplotlib==3.11.2
+numpy==2.5.4
+ipykernel==7.4.0

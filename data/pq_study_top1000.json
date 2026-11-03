@@ -1,0 +1,5771 @@
+{
+ "scanned_on": "2026-11-03",
+ "list": "Tranco top 1M, list ID GQ38K",
+ "list_url": "https://tranco-list.eu/list/GQ38K/1000000",
+ "total": 1000,
+ "reachable": 712,
+ "unreachable": 288,
+ "pq": 425,
+ "grades": {
+  "A": 422,
+  "B": 169,
+  "C": 99,
+  "F": 22
+ },
+ "groups": [
+  [
+   "X25519MLKEM768",
+   425
+  ],
+  [
+   "x25519",
+   211
+  ],
+  [
+   "secp256r1",
+   60
+  ],
+  [
+   "secp384r1",
+   12
+  ],
+  [
+   "?",
+   4
+  ]
+ ],
+ "versions": [
+  [
+   "TLSv1.3",
+   603
+  ],
+  [
+   "TLSv1.2",
+   109
+  ]
+ ],
+ "cert_keys": [
+  [
+   "RSA-2048",
+   435
+  ],
+  [
+   "ECDSA-256",
+   256
+  ],
+  [
+   "RSA-4096",
+   13
+  ],
+  [
+   "ECDSA-384",
+   7
+  ],
+  [
+   "RSA-3072",
+   1
+  ]
+ ],
+ "pq_hello_rejected": 0,
+ "cert_invalid": 19,
+ "top100_reachable": 73,
+ "top100_pq": 45,
+ "sites": [
+  {
+   "rank": 1,
+   "domain": "google.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 2,
+   "domain": "cloudflare.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 4,
+   "domain": "amazonaws.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 5,
+   "domain": "facebook.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 6,
+   "domain": "fbcdn.net",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 7,
+   "domain": "gstatic.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 8,
+   "domain": "googleapis.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 9,
+   "domain": "microsoft.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 10,
+   "domain": "youtube.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 13,
+   "domain": "apple.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 14,
+   "domain": "instagram.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 16,
+   "domain": "twitter.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 17,
+   "domain": "linkedin.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 18,
+   "domain": "mail.ru",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 19,
+   "domain": "azure.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 20,
+   "domain": "triplinkintl.com",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 23,
+   "domain": "googlevideo.com",
+   "grade": "F",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 25,
+   "domain": "googletagmanager.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 27,
+   "domain": "appsflyersdk.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 29,
+   "domain": "dzen.ru",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 30,
+   "domain": "amazon.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 32,
+   "domain": "office.com",
+   "grade": "B",
+   "group": "secp384r1",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 33,
+   "domain": "live.com",
+   "grade": "B",
+   "group": "secp384r1",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 34,
+   "domain": "github.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 35,
+   "domain": "sharepoint.com",
+   "grade": "B",
+   "group": "secp384r1",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 38,
+   "domain": "wikipedia.org",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 39,
+   "domain": "fastly.net",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 42,
+   "domain": "cloud.microsoft",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 43,
+   "domain": "netflix.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 44,
+   "domain": "whatsapp.net",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 46,
+   "domain": "bing.com",
+   "grade": "B",
+   "group": "secp384r1",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 47,
+   "domain": "x.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 48,
+   "domain": "googleusercontent.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 50,
+   "domain": "youtu.be",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 51,
+   "domain": "doubleclick.net",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 53,
+   "domain": "pinterest.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 54,
+   "domain": "googlesyndication.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 55,
+   "domain": "icloud.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 56,
+   "domain": "gandi.net",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 57,
+   "domain": "windows.net",
+   "grade": "F",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 58,
+   "domain": "cloudflare.net",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 59,
+   "domain": "myfritz.net",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 60,
+   "domain": "goo.gl",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 62,
+   "domain": "tiktok.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 63,
+   "domain": "adobe.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 64,
+   "domain": "zoom.us",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 65,
+   "domain": "wordpress.org",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 67,
+   "domain": "whatsapp.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 68,
+   "domain": "googledomains.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 70,
+   "domain": "yahoo.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 72,
+   "domain": "skype.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 73,
+   "domain": "wa.me",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 74,
+   "domain": "digicert.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 77,
+   "domain": "opera.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 78,
+   "domain": "spotify.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 79,
+   "domain": "roblox.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 81,
+   "domain": "workers.dev",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 82,
+   "domain": "amazonvideo.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 83,
+   "domain": "tiktokv.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 84,
+   "domain": "b-cdn.net",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 85,
+   "domain": "epicgames.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 86,
+   "domain": "baidu.com",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 87,
+   "domain": "ntp.org",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 88,
+   "domain": "vimeo.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 89,
+   "domain": "blogspot.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 90,
+   "domain": "qq.com",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 93,
+   "domain": "nginx.org",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 94,
+   "domain": "mozilla.org",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 95,
+   "domain": "yandex.net",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 96,
+   "domain": "msn.com",
+   "grade": "B",
+   "group": "secp384r1",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 98,
+   "domain": "f5.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 99,
+   "domain": "wordpress.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 100,
+   "domain": "t.me",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 101,
+   "domain": "nginx.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 102,
+   "domain": "sentry.io",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 105,
+   "domain": "reddit.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 106,
+   "domain": "lencr.org",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 109,
+   "domain": "ui.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 110,
+   "domain": "europa.eu",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 113,
+   "domain": "chatgpt.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 114,
+   "domain": "yandex.ru",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 115,
+   "domain": "intuit.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 118,
+   "domain": "t-online.de",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 119,
+   "domain": "bit.ly",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 120,
+   "domain": "aliyuncs.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 121,
+   "domain": "ipify.org",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 122,
+   "domain": "samsung.com",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 125,
+   "domain": "registrar-servers.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 126,
+   "domain": "okcdn.ru",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 127,
+   "domain": "skybridge.click",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 130,
+   "domain": "openai.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 131,
+   "domain": "office365.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 132,
+   "domain": "android.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 134,
+   "domain": "dropbox.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 135,
+   "domain": "github.io",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 136,
+   "domain": "outlook.com",
+   "grade": "B",
+   "group": "secp384r1",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 137,
+   "domain": "adobe.io",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 138,
+   "domain": "cloudflare-dns.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 139,
+   "domain": "windows.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 140,
+   "domain": "nih.gov",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 142,
+   "domain": "apache.org",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 143,
+   "domain": "nic.ru",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 145,
+   "domain": "webex.com",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 146,
+   "domain": "discord.gg",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 149,
+   "domain": "vk.ru",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 152,
+   "domain": "archive.org",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 154,
+   "domain": "forms.gle",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 156,
+   "domain": "crashlytics.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 157,
+   "domain": "vk.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 158,
+   "domain": "snapchat.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 159,
+   "domain": "tumblr.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 161,
+   "domain": "godaddy.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 162,
+   "domain": "nytimes.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 165,
+   "domain": "reg.ru",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 166,
+   "domain": "trbcdn.net",
+   "grade": "F",
+   "group": "secp384r1",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 167,
+   "domain": "gravatar.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 168,
+   "domain": "ubuntu.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 169,
+   "domain": "telegram.org",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 171,
+   "domain": "shopify.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 172,
+   "domain": "samsungcloud.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 173,
+   "domain": "kaspersky.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 175,
+   "domain": "paypal.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 176,
+   "domain": "example.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 177,
+   "domain": "telekom.net",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 178,
+   "domain": "google-analytics.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 179,
+   "domain": "pages.dev",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 180,
+   "domain": "flickr.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 181,
+   "domain": "scorecardresearch.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 184,
+   "domain": "astrumu.io",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 186,
+   "domain": "w3.org",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 187,
+   "domain": "discord.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 188,
+   "domain": "creativecommons.org",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 189,
+   "domain": "meraki.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 191,
+   "domain": "ebay.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 192,
+   "domain": "cnn.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 193,
+   "domain": "comcast.net",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 194,
+   "domain": "unity3d.com",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 195,
+   "domain": "soundcloud.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 197,
+   "domain": "theguardian.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 198,
+   "domain": "pki.goog",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 200,
+   "domain": "youtube-nocookie.com",
+   "grade": "F",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 202,
+   "domain": "vkuserphoto.ru",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 203,
+   "domain": "quickconnect.to",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 204,
+   "domain": "medium.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 205,
+   "domain": "stripe.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 206,
+   "domain": "forter.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 207,
+   "domain": "mts.ru",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 208,
+   "domain": "afternic.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 210,
+   "domain": "doi.org",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 212,
+   "domain": "app-measurement.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 213,
+   "domain": "oracle.com",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 214,
+   "domain": "firefox-portal-detection.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 219,
+   "domain": "criteo.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 220,
+   "domain": "bbc.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 221,
+   "domain": "skyhigh.cloud",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 222,
+   "domain": "publicnode.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 223,
+   "domain": "xiaomi.com",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 225,
+   "domain": "hcaptcha.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 228,
+   "domain": "wikimedia.org",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 229,
+   "domain": "ailawandorder.com",
+   "grade": "F",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 230,
+   "domain": "forbes.com",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 231,
+   "domain": "twitch.tv",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 232,
+   "domain": "sciencedirect.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 233,
+   "domain": "researchgate.net",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 234,
+   "domain": "applovin.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 235,
+   "domain": "weather.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 236,
+   "domain": "mit.edu",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 237,
+   "domain": "nist.gov",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 238,
+   "domain": "roku.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 239,
+   "domain": "bbc.co.uk",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 241,
+   "domain": "namecheap.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 244,
+   "domain": "cpanel.net",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 245,
+   "domain": "amplitude.com",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 248,
+   "domain": "t.co",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 249,
+   "domain": "cisco.com",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 251,
+   "domain": "sourceforge.net",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 253,
+   "domain": "arubanetworks.com",
+   "grade": "F",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 255,
+   "domain": "adtrafficquality.google",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 256,
+   "domain": "icanhazip.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 259,
+   "domain": "dnsmadeeasy.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 260,
+   "domain": "hubspot.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 263,
+   "domain": "imdb.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 264,
+   "domain": "linktr.ee",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 266,
+   "domain": "alidns.com",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 267,
+   "domain": "who.int",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 268,
+   "domain": "brave.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 270,
+   "domain": "googleblog.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 277,
+   "domain": "googleadservices.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 278,
+   "domain": "ibm.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 281,
+   "domain": "datadoghq.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 283,
+   "domain": "canva.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 284,
+   "domain": "reuters.com",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 286,
+   "domain": "hp.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 287,
+   "domain": "launchpad.net",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 288,
+   "domain": "gamepass.com",
+   "grade": "F",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 289,
+   "domain": "app-analytics-services.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 290,
+   "domain": "booking.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 292,
+   "domain": "telegram.me",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 293,
+   "domain": "tinyurl.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 294,
+   "domain": "www.gov.uk",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 295,
+   "domain": "nature.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 297,
+   "domain": "steampowered.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 298,
+   "domain": "myshopify.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 300,
+   "domain": "salesforce.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 301,
+   "domain": "ip-api.com",
+   "grade": "F",
+   "group": "?",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 303,
+   "domain": "slack.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 305,
+   "domain": "launchdarkly.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 306,
+   "domain": "miui.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 308,
+   "domain": "springer.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 309,
+   "domain": "alibaba.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 316,
+   "domain": "avast.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 318,
+   "domain": "grammarly.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 319,
+   "domain": "vungle.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 322,
+   "domain": "telecid.ru",
+   "grade": "F",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 324,
+   "domain": "autodesk.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 325,
+   "domain": "cloudflareinsights.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 326,
+   "domain": "debian.org",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 328,
+   "domain": "weibo.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 329,
+   "domain": "harvard.edu",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 330,
+   "domain": "wiley.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 331,
+   "domain": "amazon.co.uk",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 332,
+   "domain": "onelink.me",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 333,
+   "domain": "pubmatic.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 334,
+   "domain": "rubiconproject.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 335,
+   "domain": "anthropic.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 336,
+   "domain": "ok.ru",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 337,
+   "domain": "etsy.com",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 338,
+   "domain": "mi.com",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 339,
+   "domain": "unisys.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 340,
+   "domain": "gmail.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 341,
+   "domain": "clarity.ms",
+   "grade": "F",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 342,
+   "domain": "zendesk.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 344,
+   "domain": "casalemedia.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 345,
+   "domain": "php.net",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 347,
+   "domain": "naver.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 348,
+   "domain": "tp-link.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 349,
+   "domain": "smartadserver.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 351,
+   "domain": "bilibili.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 352,
+   "domain": "ea.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 353,
+   "domain": "espn.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 355,
+   "domain": "trustpilot.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 356,
+   "domain": "gnu.org",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 357,
+   "domain": "branch.io",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 358,
+   "domain": "browser-intake-datadoghq.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 359,
+   "domain": "weebly.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 360,
+   "domain": "aliyun.com",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 361,
+   "domain": "dell.com",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 362,
+   "domain": "checkpoint.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 363,
+   "domain": "nvidia.com",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 364,
+   "domain": "tradingview.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 365,
+   "domain": "cdc.gov",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 366,
+   "domain": "un.org",
+   "grade": "F",
+   "group": "?",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 367,
+   "domain": "paloaltonetworks.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 368,
+   "domain": "cm.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 369,
+   "domain": "dotomi.com",
+   "grade": "F",
+   "group": "?",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 371,
+   "domain": "globo.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 372,
+   "domain": "google.cn",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 373,
+   "domain": "wsj.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 375,
+   "domain": "opendns.com",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 377,
+   "domain": "gitlab.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 379,
+   "domain": "tagomi.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 380,
+   "domain": "dns.google",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 381,
+   "domain": "nasa.gov",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 382,
+   "domain": "amazon.de",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 384,
+   "domain": "stanford.edu",
+   "grade": "F",
+   "group": "?",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 385,
+   "domain": "issuu.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 386,
+   "domain": "bloomberg.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 387,
+   "domain": "live-video.net",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 388,
+   "domain": "bsky.app",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 390,
+   "domain": "okta.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 391,
+   "domain": "adnxs.com",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 392,
+   "domain": "washingtonpost.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 394,
+   "domain": "wps.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 398,
+   "domain": "netease.com",
+   "grade": "F",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 399,
+   "domain": "plesk.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 400,
+   "domain": "cookiedatabase.org",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 403,
+   "domain": "name.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 404,
+   "domain": "go.com",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 406,
+   "domain": "amazontrust.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 407,
+   "domain": "xboxlive.com",
+   "grade": "F",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 408,
+   "domain": "yandex.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 410,
+   "domain": "dynatrace.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 415,
+   "domain": "sberbank.ru",
+   "grade": "F",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 416,
+   "domain": "claude.ai",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 418,
+   "domain": "calendly.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 423,
+   "domain": "duckduckgo.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 424,
+   "domain": "163.com",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 425,
+   "domain": "netflix.net",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 427,
+   "domain": "atlassian.net",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 428,
+   "domain": "line.me",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 429,
+   "domain": "indeed.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 430,
+   "domain": "aol.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 431,
+   "domain": "substack.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 432,
+   "domain": "expireddomains.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 433,
+   "domain": "unsplash.com",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 434,
+   "domain": "steamcommunity.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 436,
+   "domain": "temu.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 438,
+   "domain": "adobe.net",
+   "grade": "F",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 440,
+   "domain": "centinel-analytica.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 441,
+   "domain": "drom.ru",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 442,
+   "domain": "telekom.de",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 446,
+   "domain": "dailymotion.com",
+   "grade": "B",
+   "group": "secp256r1",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 448,
+   "domain": "chatgpt.site",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 449,
+   "domain": "netangels.ru",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 452,
+   "domain": "pushy.io",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 453,
+   "domain": "netcraze.io",
+   "grade": "B",
+   "group": "secp256r1",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 454,
+   "domain": "intel.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 455,
+   "domain": "statsigapi.net",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 456,
+   "domain": "hostgator.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 458,
+   "domain": "dropcatch.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 459,
+   "domain": "arxiv.org",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 460,
+   "domain": "inmobi.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 461,
+   "domain": "taobao.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 462,
+   "domain": "eye4.cn",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 463,
+   "domain": "g.page",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 464,
+   "domain": "yahoo.co.jp",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 465,
+   "domain": "pixabay.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 466,
+   "domain": "lijit.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 467,
+   "domain": "ampproject.org",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 468,
+   "domain": "bluehost.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 469,
+   "domain": "duolingo.com",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 470,
+   "domain": "run.app",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 473,
+   "domain": "prodregistryv2.org",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 474,
+   "domain": "mcafee.com",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 475,
+   "domain": "speedtest.net",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 477,
+   "domain": "aliexpress.com",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 479,
+   "domain": "featureassets.org",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 480,
+   "domain": "businessinsider.com",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 481,
+   "domain": "walmart.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 482,
+   "domain": "shein.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 483,
+   "domain": "cnbc.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 485,
+   "domain": "goodreads.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 486,
+   "domain": "wp.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 487,
+   "domain": "fandom.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 488,
+   "domain": "taboola.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 491,
+   "domain": "ietf.org",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 494,
+   "domain": "amazon.co.jp",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 496,
+   "domain": "trendmicro.com",
+   "grade": "B",
+   "group": "secp384r1",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 497,
+   "domain": "xiaomi.net",
+   "grade": "F",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 498,
+   "domain": "selectel.ru",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 499,
+   "domain": "scribd.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 500,
+   "domain": "mzstatic.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 501,
+   "domain": "quora.com",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 502,
+   "domain": "statista.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 503,
+   "domain": "eventbrite.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 505,
+   "domain": "teamviewer.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 508,
+   "domain": "sina.com.cn",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 509,
+   "domain": "foxnews.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 510,
+   "domain": "braze.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 511,
+   "domain": "charter.net",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 512,
+   "domain": "addtoany.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 514,
+   "domain": "npr.org",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 516,
+   "domain": "playstation.com",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 517,
+   "domain": "dyndns.org",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 518,
+   "domain": "blogger.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 520,
+   "domain": "indiatimes.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 521,
+   "domain": "google.de",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 522,
+   "domain": "markmonitor.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 523,
+   "domain": "crpt.ru",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 525,
+   "domain": "share.google",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 526,
+   "domain": "amzn.to",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 527,
+   "domain": "openstreetmap.org",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 528,
+   "domain": "tplinkcloud.com",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 529,
+   "domain": "google.com.hk",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 530,
+   "domain": "noaa.gov",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 531,
+   "domain": "behance.net",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 532,
+   "domain": "oraclecloud.com",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 535,
+   "domain": "timeweb.ru",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 538,
+   "domain": "docker.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 540,
+   "domain": "shop.app",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 541,
+   "domain": "withgoogle.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 542,
+   "domain": "adsafeprotected.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 543,
+   "domain": "openx.net",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 544,
+   "domain": "trueconf.net",
+   "grade": "F",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 545,
+   "domain": "mysql.com",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 546,
+   "domain": "visualstudio.com",
+   "grade": "B",
+   "group": "secp384r1",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 547,
+   "domain": "capcut.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 548,
+   "domain": "0xrpc.io",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 550,
+   "domain": "supercell.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 551,
+   "domain": "appsflyer.com",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 552,
+   "domain": "klaviyo.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 553,
+   "domain": "ft.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 554,
+   "domain": "stackoverflow.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 555,
+   "domain": "mozilla.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 558,
+   "domain": "force.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 559,
+   "domain": "uol.com.br",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 560,
+   "domain": "firefox.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 561,
+   "domain": "tandfonline.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 562,
+   "domain": "slideshare.net",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 563,
+   "domain": "ddnss.de",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 564,
+   "domain": "oup.com",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 565,
+   "domain": "adriver.ru",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 566,
+   "domain": "sohu.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 567,
+   "domain": "fast.com",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 569,
+   "domain": "discord.media",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 570,
+   "domain": "cornell.edu",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 572,
+   "domain": "cloudns.net",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 573,
+   "domain": "icloud-content.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 577,
+   "domain": "wired.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 579,
+   "domain": "tripadvisor.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 581,
+   "domain": "dreamhost.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 583,
+   "domain": "time.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 584,
+   "domain": "threads.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 585,
+   "domain": "mediatek.com",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 586,
+   "domain": "juicyscore.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 588,
+   "domain": "mega.co.nz",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 589,
+   "domain": "eset.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 591,
+   "domain": "ivi.ru",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 592,
+   "domain": "newrelic.com",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 593,
+   "domain": "deviantart.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 594,
+   "domain": "ca.gov",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 595,
+   "domain": "wildberries.ru",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 596,
+   "domain": "jquery.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 597,
+   "domain": "squarespace.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 599,
+   "domain": "rakuten.co.jp",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 600,
+   "domain": "atlassian.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 601,
+   "domain": "360yield.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 602,
+   "domain": "media.net",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 603,
+   "domain": "ezvizlife.com",
+   "grade": "F",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 604,
+   "domain": "3lift.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 605,
+   "domain": "telefonica.de",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 609,
+   "domain": "dailymail.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 610,
+   "domain": "free.fr",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 611,
+   "domain": "digitalocean.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 612,
+   "domain": "vercel.app",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 613,
+   "domain": "wix.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 614,
+   "domain": "adsrvr.org",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 615,
+   "domain": "target.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 616,
+   "domain": "ieee.org",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 617,
+   "domain": "aboutads.info",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 623,
+   "domain": "mdpi.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 624,
+   "domain": "usatoday.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 626,
+   "domain": "sagepub.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 627,
+   "domain": "unesco.org",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 629,
+   "domain": "sophos.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 630,
+   "domain": "usercontent.goog",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 631,
+   "domain": "telegraph.co.uk",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 632,
+   "domain": "berkeley.edu",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 633,
+   "domain": "nintendo.com",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 635,
+   "domain": "hotjar.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 636,
+   "domain": "techcrunch.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 639,
+   "domain": "amazon.fr",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 640,
+   "domain": "ikea.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 641,
+   "domain": "flurry.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 642,
+   "domain": "doubleverify.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 643,
+   "domain": "avito.ru",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 644,
+   "domain": "accuweather.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 645,
+   "domain": "amazon.ca",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 647,
+   "domain": "gosuslugi.ru",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 648,
+   "domain": "merriam-webster.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 650,
+   "domain": "onetrust.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 651,
+   "domain": "verisign.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 654,
+   "domain": "mobile.de",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 655,
+   "domain": "intercom.io",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 656,
+   "domain": "jotform.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 659,
+   "domain": "telephony.goog",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 660,
+   "domain": "ups.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 662,
+   "domain": "service.gov.uk",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 663,
+   "domain": "meta.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 667,
+   "domain": "stackadapt.com",
+   "grade": "B",
+   "group": "secp384r1",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 668,
+   "domain": "optimizely.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 669,
+   "domain": "iso.org",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 670,
+   "domain": "loc.gov",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 671,
+   "domain": "box.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 674,
+   "domain": "amazon.in",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 676,
+   "domain": "ring.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 677,
+   "domain": "nike.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 678,
+   "domain": "elpais.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 679,
+   "domain": "redhat.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 680,
+   "domain": "translate.goog",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 681,
+   "domain": "primevideo.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 682,
+   "domain": "shalltry.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 685,
+   "domain": "bitrix24.ru",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 687,
+   "domain": "britannica.com",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 688,
+   "domain": "2gis.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 689,
+   "domain": "surveymonkey.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 691,
+   "domain": "cambridge.org",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 692,
+   "domain": "sharethrough.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 694,
+   "domain": "xhamster.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 695,
+   "domain": "palmplaystore.com",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 698,
+   "domain": "kick.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 699,
+   "domain": "lemonde.fr",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 701,
+   "domain": "yelp.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 703,
+   "domain": "anydesk.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 704,
+   "domain": "cbsnews.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 705,
+   "domain": "maricopa.gov",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 706,
+   "domain": "uber.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 709,
+   "domain": "conviva.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 710,
+   "domain": "bandcamp.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 711,
+   "domain": "ovh.net",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 712,
+   "domain": "fb.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 714,
+   "domain": "stripchat.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 716,
+   "domain": "binance.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 717,
+   "domain": "amazon.es",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 718,
+   "domain": "reverse.it",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 720,
+   "domain": "fda.gov",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 721,
+   "domain": "certcenter.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 722,
+   "domain": "bugsnag.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 723,
+   "domain": "itch.io",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 725,
+   "domain": "fontawesome.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 726,
+   "domain": "ya.ru",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 727,
+   "domain": "dailymail.co.uk",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 728,
+   "domain": "360.cn",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 729,
+   "domain": "rustore.ru",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 730,
+   "domain": "outbrain.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 731,
+   "domain": "eeroup.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 733,
+   "domain": "pinimg.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 735,
+   "domain": "hihonorcloud.com",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 736,
+   "domain": "perplexity.ai",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 737,
+   "domain": "hugedomains.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 739,
+   "domain": "amazon.it",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 740,
+   "domain": "alipaydns.com",
+   "grade": "F",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 741,
+   "domain": "cookielaw.org",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 742,
+   "domain": "rfc-editor.org",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 743,
+   "domain": "quantserve.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 744,
+   "domain": "linode.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 746,
+   "domain": "gumgum.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 747,
+   "domain": "asus.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 748,
+   "domain": "independent.co.uk",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 749,
+   "domain": "mediafire.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 751,
+   "domain": "cnet.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 752,
+   "domain": "globalsign.com",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 753,
+   "domain": "deepl.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 756,
+   "domain": "shopee.co.id",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 757,
+   "domain": "bild.de",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 758,
+   "domain": "creativecdn.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 760,
+   "domain": "python.org",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 762,
+   "domain": "viber.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 763,
+   "domain": "ngenix.net",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 764,
+   "domain": "craigslist.org",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 765,
+   "domain": "wb.ru",
+   "grade": "B",
+   "group": "secp384r1",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 766,
+   "domain": "homedepot.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 768,
+   "domain": "livejournal.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 769,
+   "domain": "google.co.uk",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 770,
+   "domain": "yieldmo.com",
+   "grade": "B",
+   "group": "secp384r1",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 771,
+   "domain": "g.co",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 772,
+   "domain": "imgsmail.ru",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 774,
+   "domain": "mailchimp.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 776,
+   "domain": "wpguardian.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 777,
+   "domain": "wpguardian.io",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 778,
+   "domain": "uk.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 779,
+   "domain": "supabase.co",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 782,
+   "domain": "mlb.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 783,
+   "domain": "nikkei.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 784,
+   "domain": "bestbuy.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 785,
+   "domain": "imgur.com",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 787,
+   "domain": "welt.de",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 788,
+   "domain": "wattpad.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 791,
+   "domain": "webempresa.eu",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 793,
+   "domain": "shopee.com.br",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 794,
+   "domain": "zoho.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 795,
+   "domain": "marriott.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 796,
+   "domain": "mckinsey.com",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 797,
+   "domain": "zillow.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 798,
+   "domain": "apnews.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 800,
+   "domain": "sedo.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 801,
+   "domain": "moloco.com",
+   "grade": "B",
+   "group": "secp256r1",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 805,
+   "domain": "ameblo.jp",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 807,
+   "domain": "lenovo.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 809,
+   "domain": "airbnb.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 810,
+   "domain": "adjust.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 811,
+   "domain": "recaptcha.net",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 812,
+   "domain": "prnewswire.com",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 813,
+   "domain": "rakuten.com",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 814,
+   "domain": "discordapp.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 817,
+   "domain": "wp.pl",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 818,
+   "domain": "google.com.br",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 819,
+   "domain": "fiverr.com",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 820,
+   "domain": "disneyplus.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 822,
+   "domain": "netlify.app",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 823,
+   "domain": "allegro.pl",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 824,
+   "domain": "erome.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 825,
+   "domain": "fbsbx.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 826,
+   "domain": "people.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 827,
+   "domain": "ted.com",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 830,
+   "domain": "onlyfans.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 831,
+   "domain": "33across.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 832,
+   "domain": "statuspage.io",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 834,
+   "domain": "spiegel.de",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 835,
+   "domain": "mixpanel.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 837,
+   "domain": "zoom.com",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 838,
+   "domain": "agora.io",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 839,
+   "domain": "usps.com",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 840,
+   "domain": "usda.gov",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 841,
+   "domain": "a-mo.net",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 842,
+   "domain": "liftoff.io",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 843,
+   "domain": "flipkart.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 844,
+   "domain": "life360.com",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 845,
+   "domain": "teads.tv",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 846,
+   "domain": "vivo.com.cn",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 847,
+   "domain": "focus.de",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 848,
+   "domain": "auth0.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 851,
+   "domain": "appspot.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 852,
+   "domain": "discogs.com",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 853,
+   "domain": "arcgis.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 854,
+   "domain": "stackexchange.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 855,
+   "domain": "academia.edu",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 856,
+   "domain": "seznam.cz",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 857,
+   "domain": "adform.net",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 858,
+   "domain": "ebay.de",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 859,
+   "domain": "px-cloud.net",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 860,
+   "domain": "amazon.co.za",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 861,
+   "domain": "chess.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 862,
+   "domain": "me.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 863,
+   "domain": "xvideos.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 864,
+   "domain": "theverge.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 867,
+   "domain": "www.gov.br",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 868,
+   "domain": "frontiersin.org",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 869,
+   "domain": "amazon.com.br",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 870,
+   "domain": "agoda.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 873,
+   "domain": "vivoglobal.com",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 874,
+   "domain": "synology.com",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 875,
+   "domain": "deloitte.com",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 876,
+   "domain": "parklogic.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 877,
+   "domain": "pexels.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 878,
+   "domain": "unpkg.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 879,
+   "domain": "digitaloceanspaces.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 881,
+   "domain": "ebay.co.uk",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 882,
+   "domain": "daum.net",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 883,
+   "domain": "cursor.sh",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 884,
+   "domain": "biblegateway.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 887,
+   "domain": "myspace.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 888,
+   "domain": "onetag-sys.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 890,
+   "domain": "cloudinary.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 891,
+   "domain": "pikabu.ru",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 892,
+   "domain": "readthedocs.io",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 893,
+   "domain": "unrulymedia.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 894,
+   "domain": "worldbank.org",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 895,
+   "domain": "appcenter.ms",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 896,
+   "domain": "mercadolivre.com.br",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 897,
+   "domain": "poki.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 898,
+   "domain": "nbcnews.com",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 899,
+   "domain": "no-ip.com",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 900,
+   "domain": "pendo.io",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 901,
+   "domain": "wyzecam.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 902,
+   "domain": "kleinanzeigen.de",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 903,
+   "domain": "pornhub.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 904,
+   "domain": "bankofamerica.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 907,
+   "domain": "hbr.org",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 908,
+   "domain": "porkbun.com",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 910,
+   "domain": "epa.gov",
+   "grade": "B",
+   "group": "secp256r1",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 911,
+   "domain": "allaboutcookies.org",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 912,
+   "domain": "princeton.edu",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 913,
+   "domain": "figma.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 914,
+   "domain": "lg.com",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 915,
+   "domain": "fwmrm.net",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 916,
+   "domain": "latimes.com",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 917,
+   "domain": "disqus.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 918,
+   "domain": "smilewanted.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 919,
+   "domain": "coupang.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 920,
+   "domain": "otto.de",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 921,
+   "domain": "consultant.ru",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 922,
+   "domain": "networkadvertising.org",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 923,
+   "domain": "service-now.com",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 925,
+   "domain": "spamhaus.org",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 926,
+   "domain": "mayoclinic.org",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 928,
+   "domain": "tailscale.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 929,
+   "domain": "seedtag.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 930,
+   "domain": "xiaohongshu.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 931,
+   "domain": "hostgator.com.br",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 932,
+   "domain": "qualtrics.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 933,
+   "domain": "amazonalexa.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 934,
+   "domain": "patreon.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 935,
+   "domain": "sknt.ru",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 936,
+   "domain": "note.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 939,
+   "domain": "repubblica.it",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 940,
+   "domain": "classlink.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 941,
+   "domain": "genius.com",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 942,
+   "domain": "state.gov",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 943,
+   "domain": "manutouch.com.cn",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 944,
+   "domain": "nexusmods.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 945,
+   "domain": "cootlogix.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 946,
+   "domain": "flashtalking.com",
+   "grade": "F",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 947,
+   "domain": "eu-1-id5-sync.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 948,
+   "domain": "youku.com",
+   "grade": "C",
+   "group": "x25519",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 950,
+   "domain": "character.ai",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 952,
+   "domain": "odoo.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 953,
+   "domain": "bund.de",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 956,
+   "domain": "mercadolibre.com.ar",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 957,
+   "domain": "amazon.com.au",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 958,
+   "domain": "jetbrains.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 960,
+   "domain": "chaturbate.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 961,
+   "domain": "instructure.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 964,
+   "domain": "corriere.it",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 965,
+   "domain": "ancestry.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 966,
+   "domain": "docker.io",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 967,
+   "domain": "onet.pl",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 968,
+   "domain": "washington.edu",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 969,
+   "domain": "eporner.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 971,
+   "domain": "curseforge.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 972,
+   "domain": "hm.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 973,
+   "domain": "buydomains.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 974,
+   "domain": "lowes.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 975,
+   "domain": "huffpost.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 976,
+   "domain": "app-ads-services.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 978,
+   "domain": "change.org",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 979,
+   "domain": "ys7.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 982,
+   "domain": "xnxx.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 984,
+   "domain": "mailchi.mp",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 985,
+   "domain": "trendyol.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 986,
+   "domain": "xhamster46.desi",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 988,
+   "domain": "jd.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 989,
+   "domain": "caixa.gov.br",
+   "grade": "B",
+   "group": "secp256r1",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 990,
+   "domain": "pbs.org",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 991,
+   "domain": "ahacdn.me",
+   "grade": "C",
+   "group": "secp256r1",
+   "tls": "TLSv1.2",
+   "pq": false
+  },
+  {
+   "rank": 993,
+   "domain": "cdnvideo.ru",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 995,
+   "domain": "umich.edu",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 996,
+   "domain": "sofascore.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 997,
+   "domain": "singular.net",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 998,
+   "domain": "btloader.com",
+   "grade": "A",
+   "group": "X25519MLKEM768",
+   "tls": "TLSv1.3",
+   "pq": true
+  },
+  {
+   "rank": 999,
+   "domain": "mikrotik.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  },
+  {
+   "rank": 1000,
+   "domain": "amemv.com",
+   "grade": "B",
+   "group": "x25519",
+   "tls": "TLSv1.3",
+   "pq": false
+  }
+ ]
+}

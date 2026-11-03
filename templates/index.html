@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <h1>{{ t.hero_title }}</h1>
+  <p class="lead">{{ t.hero_sub }}</p>
+  <form class="scan-form" method="post" action="{{ url_for('site.scan_form', lang=lang) }}" data-busy="{{ t.scanning }}">
+    <label for="domain">{{ t.domain_label }}</label>
+    <div class="scan-row">
+      <input id="domain" name="domain" type="text" inputmode="url" autocomplete="url" dir="ltr"
+             placeholder="example.com" value="{{ domain }}" required maxlength="253">
+      <button type="submit">{{ t.scan_button }}</button>
+    </div>
+    {% if error %}<p class="form-error" role="alert">{{ error }}</p>{% endif %}
+    <p class="form-busy" hidden>{{ t.scanning }}</p>
+  </form>
+</section>
+
+<section class="grid-2">
+  <div class="card">
+    <h2>{{ t.checks_title }}</h2>
+    <ul class="ticks">{% for item in t.checks %}<li>{{ item }}</li>{% endfor %}</ul>
+  </div>
+  <div class="card">
+    <h2>{{ t.how_title }}</h2>
+    <p>{{ t.how_body }}</p>
+  </div>
+</section>
+
+<section class="card">
+  <h2>{{ t.pricing_title }}</h2>
+  <div class="grid-2">
+    <div class="price-box">
+      <h3>{{ t.free_title }} <span class="tag">$0</span></h3>
+      <ul class="ticks">{% for item in t.free_items %}<li>{{ item }}</li>{% endfor %}</ul>
+    </div>
+    <div class="price-box highlight">
+      <h3>{{ t.paid_title }} <span class="tag">$49</span></h3>
+      <ul class="ticks">{% for item in t.paid_items %}<li>{{ item }}</li>{% endfor %}</ul>
+    </div>
+  </div>
+</section>
+{% endblock %}

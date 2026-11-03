@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}{{ t.study_title }} · {{ t.brand }}{% endblock %}
+{% block description %}{{ t.study_lead.format(date=d.scanned_on, reachable=d.reachable, pq=d.pq, pct=pct) }}{% endblock %}
+{% block head %}
+<script type="application/ld+json">{{ {"@context": "https://schema.org", "@type": "Dataset", "name": t.study_title, "description": t.study_lead.format(date=d.scanned_on, reachable=d.reachable, pq=d.pq, pct=pct), "datePublished": d.scanned_on, "license": "https://creativecommons.org/licenses/by/4.0/", "creator": {"@type": "Organization", "name": "Quantum Aether"}, "distribution": {"@type": "DataDownload", "encodingFormat": "application/json", "contentUrl": url_for('site.study_json', _external=True)}} | tojson }}</script>
+{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>{{ t.study_title }}</h1>
+  <p>{{ t.study_lead.format(date=d.scanned_on, reachable=d.reachable, pq=d.pq, pct=pct) }}</p>
+</section>
+
+<section class="stats">
+  <div class="card stat"><h3>{{ t.study_reachable }}</h3><p class="value" dir="ltr">{{ d.reachable }} / {{ d.total }}</p></div>
+  <div class="card stat"><h3>{{ t.study_pq }}</h3><p class="value">{{ pct }}%</p></div>
+  <div class="card stat"><h3>{{ t.study_top100 }}</h3><p class="value" dir="ltr">{{ d.top100_pq }} / {{ d.top100_reachable }}</p></div>
+</section>
+
+<section class="grid-2">
+  <div class="card">
+    <h2>{{ t.study_grades }}</h2>
+    <div class="bars" dir="ltr">
+      {% for grade, n in d.grades.items() %}
+      <div class="bar-row"><span class="grade-chip grade-{{ grade }}">{{ grade }}</span>
+        <div class="bar"><span style="width: {{ (n / d.reachable * 100) | round(1) }}%"></span></div>
+        <span class="bar-value">{{ n }}</span></div>
+      {% endfor %}
+    </div>
+    <p class="muted small">A = TLS 1.3 + X25519MLKEM768 · B = TLS 1.3 · C = TLS 1.2 · F = invalid cert / legacy</p>
+  </div>
+  <div class="card">
+    <h2>{{ t.study_groups }}</h2>
+    <table class="kv" dir="ltr">
+      {% for group, n in d.groups %}<tr><th><code>{{ group }}</code></th><td>{{ n }}</td></tr>{% endfor %}
+    </table>
+  </div>
+</section>
+
+{% if notable %}
+<section class="card">
+  <h2>{{ t.study_notable }}</h2>
+  <p class="muted">{{ t.study_notable_note }}</p>
+  <table class="data" dir="ltr">
+    <tr><th>{{ t.rank }}</th><th>{{ t.domain_col }}</th><th>{{ t.grade_col }}</th><th>{{ t.group_col }}</th><th>TLS</th></tr>
+    {% for s in notable %}<tr><td>{{ s.rank }}</td><td>{{ s.domain }}</td><td>{{ s.grade }}</td><td><code>{{ s.group }}</code></td><td>{{ s.tls }}</td></tr>{% endfor %}
+  </table>
+</section>
+{% endif %}
+
+<section class="card">
+  <h2>{{ t.study_certs }}</h2>
+  <table class="kv" dir="ltr">
+    {% for key, n in d.cert_keys %}<tr><th>{{ key }}</th><td>{{ n }}</td></tr>{% endfor %}
+  </table>
+</section>
+
+<section class="card">
+  <h2>{{ t.study_method_title }}</h2>
+  <p>{{ t.study_method }}</p>
+  <p class="small">Tranco: <a href="{{ d.list_url }}" rel="nofollow">{{ d.list }}</a> · <a href="{{ url_for('site.study_json') }}">{{ t.study_download }}</a> · CC BY 4.0</p>
+  <p><a class="button-link" href="{{ url_for('site.index', lang=lang) }}">{{ t.scan_cta }}</a></p>
+</section>
+
+<section class="card">
+  <details>
+    <summary><strong>{{ t.study_full_table }} ({{ d.reachable }})</strong></summary>
+    <table class="data" dir="ltr">
+      <tr><th>{{ t.rank }}</th><th>{{ t.domain_col }}</th><th>{{ t.grade_col }}</th><th>{{ t.group_col }}</th><th>TLS</th></tr>
+      {% for s in d.sites %}<tr><td>{{ s.rank }}</td><td>{{ s.domain }}</td><td>{{ s.grade }}</td><td><code>{{ s.group }}</code></td><td>{{ s.tls }}</td></tr>{% endfor %}
+    </table>
+  </details>
+</section>
+{% endblock %}

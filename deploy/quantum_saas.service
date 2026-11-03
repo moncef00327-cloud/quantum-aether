@@ -1,0 +1,29 @@
+[Unit]
+Description=Quantum Aether post-quantum TLS scanner (Flask/gunicorn)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=quantum
+Group=quantum
+WorkingDirectory=/var/www/quantum_saas
+EnvironmentFile=/etc/quantum_saas.env
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/var/www/quantum_saas/.venv/bin/gunicorn --workers 3 --threads 4 --timeout 60 --bind 127.0.0.1:8000 --access-logfile - quantum_saas_app:app
+Restart=always
+RestartSec=3
+
+# تقليل الصلاحيات: الكود للقراءة فقط، والكتابة مسموحة في مجلد البيانات وحده.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/quantum_saas
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+
+[Install]
+WantedBy=multi-user.target

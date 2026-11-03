@@ -1,0 +1,29 @@
+# Quantum Aether — post-quantum TLS readiness scanner
+
+> Checks whether an HTTPS server negotiates the hybrid post-quantum key exchange X25519MLKEM768 (ML-KEM, FIPS 203) used by Chrome and Firefox, and reports TLS version and certificate details. Free summary; full report with remediation steps costs ${{ price }} via PayPal.
+
+## Free API
+
+- `POST {{ base }}/api/scan` with JSON `{"domain": "example.com"}` returns a summary: grade (A/B/C/F), TLS version, negotiated key-exchange group, whether it is post-quantum, certificate key, number of findings. Rate limited per client.
+- `GET {{ base }}/api/scan/{scan_id}` returns the same summary later.
+- `POST {{ base }}/api/v1/quantum-scan` is the agent endpoint: `{"domain": "example.com"}` runs the same real scan; `{"key_size": 2048}` alone returns an honest assessment of that RSA key size (no network scan). Any RSA or ECC key size is breakable by Shor's algorithm; key exchange is what needs upgrading.
+- Buying the full report (${{ price }}): `POST {{ base }}/api/v1/orders` with `{"scan_id": "..."}` returns a PayPal `approve_url` and a `status_url`. After the payer (or an agent the payer authorized in PayPal) approves, the site captures and verifies the payment automatically, and `GET status_url` returns `report_url`.
+- OpenAPI description: {{ base }}/openapi.yaml
+
+## Grades
+
+- A: TLS 1.3 with hybrid post-quantum key exchange.
+- B: TLS 1.3 with classical key exchange only (exposed to harvest-now-decrypt-later).
+- C: no TLS 1.3.
+- F: invalid certificate, legacy TLS, static RSA key exchange or RSA below 2048 bits.
+
+## Research
+
+- {{ base }}/research — a 3-qubit GHZ circuit run on IBM Quantum hardware (ibm_marrakesh) and a research report archived as digital DNA with Reed-Solomon error correction.
+
+## Guides and data
+
+- {{ base }}/study/top-1000-post-quantum-tls — scan of the Tranco top 1,000 domains (November 2026): share that negotiate X25519MLKEM768, grade distribution, full per-domain table. Raw data: {{ base }}/study/top-1000-post-quantum-tls.json (CC BY 4.0).
+- {{ base }}/guides/enable-x25519mlkem768-nginx — enable post-quantum TLS on nginx (OpenSSL 3.5+) and verify it.
+- {{ base }}/guides/post-quantum-tls-apache-caddy-haproxy-cloudflare — the same for Apache, Caddy, HAProxy and Cloudflare.
+- {{ base }}/guides/harvest-now-decrypt-later — why key exchange must be upgraded before certificates.

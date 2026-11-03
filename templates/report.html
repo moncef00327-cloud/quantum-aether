@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% set kx = r.key_exchange %}{% set cert = r.certificate %}
+{% block title %}{{ t.report_title }} · {{ r.domain }}{% endblock %}
+{% block head %}<meta name="robots" content="noindex">{% endblock %}
+{% block content %}
+<section class="card result-head">
+  <div class="grade grade-{{ r.grade }}">{{ r.grade }}</div>
+  <div>
+    <p class="muted">{{ t.report_title }}</p>
+    <h1 dir="ltr" class="domain">{{ r.domain }}</h1>
+    <p class="grade-text">{{ t.grades[r.grade] }}</p>
+    <p class="muted small">{{ t.scanned_at }}: <span dir="ltr">{{ r.scanned_at }}</span> · IP <span dir="ltr">{{ r.ip }}</span></p>
+  </div>
+  <button type="button" class="print-button no-print">{{ t.print }}</button>
+</section>
+
+<section class="card">
+  <h2>{{ t.findings_title }}</h2>
+  {% for f in findings %}
+  <article class="finding status-{{ f.status }}">
+    <h3><span class="badge">{{ t.status_names[f.status] }}</span> {{ f.text[0] }}</h3>
+    <p>{{ f.text[1] }}</p>
+  </article>
+  {% endfor %}
+</section>
+
+{% if not kx.pq %}
+<section class="card">
+  <h2>{{ t.remediation_title }}</h2>
+  <p>{{ t.remediation_intro }}</p>
+  {% for name, snippet in remediation %}
+  <h3 dir="ltr">{{ name }}</h3>
+  <pre dir="ltr"><code>{{ snippet }}</code></pre>
+  {% endfor %}
+  <p>{{ t.verify_after }}</p>
+</section>
+{% endif %}
+
+<section class="card">
+  <h2>{{ t.details_title }}</h2>
+  <table class="kv" dir="ltr">
+    <tr><th>TLS (probe)</th><td>{{ kx.version or "—" }}</td></tr>
+    <tr><th>Key exchange group</th><td>{{ kx.group or "—" }}{% if kx.hrr %} (HelloRetryRequest){% endif %}</td></tr>
+    <tr><th>Cipher suite (probe)</th><td>{{ kx.cipher or "—" }}</td></tr>
+    <tr><th>Post-quantum ClientHello accepted</th><td>{{ kx.pq_hello_ok }}</td></tr>
+    <tr><th>TLS (standard handshake)</th><td>{{ cert.negotiated_version }} · {{ cert.negotiated_cipher }}</td></tr>
+    <tr><th>Certificate key</th><td>{{ cert.key_algorithm }}-{{ cert.key_bits }}{% if cert.curve %} ({{ cert.curve }}){% endif %}</td></tr>
+    <tr><th>Signature algorithm</th><td>{{ cert.signature_algorithm }}</td></tr>
+    <tr><th>Subject / Issuer</th><td>{{ cert.subject }} / {{ cert.issuer }}</td></tr>
+    <tr><th>Valid until</th><td>{{ cert.not_after }} ({{ cert.days_left }} days)</td></tr>
+    <tr><th>Chain verified</th><td>{{ cert.verified }}{% if cert.verify_error %} — {{ cert.verify_error }}{% endif %}</td></tr>
+    <tr><th>SANs ({{ cert.san_count }})</th><td>{{ cert.sans | join(", ") }}</td></tr>
+    <tr><th>Scanner</th><td>v{{ r.scanner_version }}</td></tr>
+  </table>
+</section>
+
+<section class="card">
+  <h2>{{ t.context_title }}</h2>
+  <ul>{% for item in t.context_items %}<li>{{ item }}</li>{% endfor %}</ul>
+</section>
+
+<section class="card">
+  <h2>{{ t.dna_title }}</h2>
+  <p>{{ t.dna_body }}</p>
+  <p><a class="button-link no-print" href="{{ url_for('site.report_dna', token=token) }}">{{ t.dna_download }}</a></p>
+</section>
+{% endblock %}

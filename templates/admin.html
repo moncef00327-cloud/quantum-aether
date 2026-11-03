@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}{{ t.admin_title }} · {{ t.brand }}{% endblock %}
+{% block head %}<meta name="robots" content="noindex">{% endblock %}
+{% block content %}
+<h1>{{ t.admin_title }}</h1>
+<section class="stats">
+  <div class="card stat"><h3>{{ t.total_scans }}</h3><p class="value">{{ stats.scans }}</p></div>
+  <div class="card stat"><h3>{{ t.paid_orders }}</h3><p class="value">{{ stats.paid_orders }}</p></div>
+  <div class="card stat"><h3>{{ t.revenue }}</h3>
+    <p class="value ok">{% for cur, amount in stats.revenue.items() %}{{ amount }} {{ cur }}{% else %}0{% endfor %}</p></div>
+</section>
+
+<section class="card">
+  <h2>{{ t.orders_title }}</h2>
+  <table class="data">
+    <thead><tr><th>{{ t.date }}</th><th>{{ t.domain }}</th><th>PayPal order</th><th>{{ t.amount }}</th><th>{{ t.status }}</th></tr></thead>
+    <tbody>
+    {% for o in orders %}
+      <tr><td dir="ltr">{{ o.created_at }}</td><td dir="ltr">{{ o.domain }}</td><td dir="ltr"><code>{{ o.order_id }}</code></td>
+          <td dir="ltr">{{ o.amount }} {{ o.currency }}</td>
+          <td class="{{ 'ok' if o.status == 'COMPLETED' else 'warn' }}">{{ o.status }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="card">
+  <h2>{{ t.scans_title }}</h2>
+  <table class="data">
+    <thead><tr><th>{{ t.date }}</th><th>{{ t.domain }}</th><th>{{ t.grade }}</th></tr></thead>
+    <tbody>
+    {% for s in scans %}
+      <tr><td dir="ltr">{{ s.created_at }}</td>
+          <td dir="ltr"><a href="{{ url_for('site.scan_page', scan_id=s.id, lang=lang) }}">{{ s.domain }}</a></td>
+          <td><span class="grade-chip grade-{{ s.grade }}">{{ s.grade }}</span></td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

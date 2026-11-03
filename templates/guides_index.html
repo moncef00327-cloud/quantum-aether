@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}{{ t.guides_title }} · {{ t.brand }}{% endblock %}
+{% block description %}{{ t.guides_intro }}{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>{{ t.guides_title }}</h1>
+  <p>{{ t.guides_intro }}</p>
+</section>
+<section class="card">
+  <h2><a href="{{ url_for('site.study', lang=lang) }}">{{ t.study_title }}</a></h2>
+</section>
+{% for slug, g in items %}
+<section class="card">
+  <h2><a href="{{ url_for('site.guide', slug=slug, lang=lang) }}">{{ g.title }}</a></h2>
+  <p class="muted">{{ g.description }}</p>
+</section>
+{% endfor %}
+{% endblock %}
