@@ -60,6 +60,9 @@ def _migrate(conn):
             conn.execute("ALTER TABLE scans ADD COLUMN is_test INTEGER NOT NULL DEFAULT 0")
             conn.execute("UPDATE scans SET is_test = 1")  # كل ما سبق الإطلاق اختبارات
     cols = {r[1] for r in conn.execute("PRAGMA table_info(orders)")}
+    if "email" not in cols:
+        with conn:
+            conn.execute("ALTER TABLE orders ADD COLUMN email TEXT")
     if "consent_at" not in cols:
         with conn:
             conn.execute("ALTER TABLE orders ADD COLUMN consent_at TEXT")
@@ -129,11 +132,12 @@ def count_attempts_since(conn, since_iso, client_hash=None):
     return row[0]
 
 
-def create_order(conn, order_id, scan_id, amount, currency, consent_at=None, is_test=False):
+def create_order(conn, order_id, scan_id, amount, currency, consent_at=None, is_test=False, email=None):
     """consent_at: وقت موافقة المشتري الصريحة على التسليم الفوري وفقدان حق التراجع (§ 18 FAGG)."""
     with conn:
-        conn.execute("INSERT INTO orders (order_id, scan_id, status, amount, currency, consent_at, is_test)"
-                     " VALUES (?, ?, 'CREATED', ?, ?, ?, ?)", (order_id, scan_id, amount, currency, consent_at, int(is_test)))
+        conn.execute("INSERT INTO orders (order_id, scan_id, status, amount, currency, consent_at, is_test, email)"
+                     " VALUES (?, ?, 'CREATED', ?, ?, ?, ?, ?)",
+                     (order_id, scan_id, amount, currency, consent_at, int(is_test), email))
 
 
 def get_order(conn, order_id):

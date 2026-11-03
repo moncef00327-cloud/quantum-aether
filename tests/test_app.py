@@ -12,6 +12,17 @@ import quantum_vuln_scanner
 import sales_db
 from paypal_client import PayPalError
 
+class FakeMailer:
+    enabled = True
+
+    def __init__(self):
+        self.sent = []
+
+    def send(self, to, subject, text, html=None):
+        self.sent.append((to, subject, text))
+        return True
+
+
 RESULT = {
     "domain": "example.com",
     "ip": "93.184.215.14",
@@ -56,6 +67,7 @@ class FakePayPal:
         return {
             "id": order_id,
             "status": "COMPLETED",
+            "payer": {"email_address": "buyer@example.com"},
             "purchase_units": [{
                 "reference_id": self.orders[order_id],
                 "payments": {"captures": [{"id": "CAP-" + order_id, "status": "COMPLETED",
@@ -256,6 +268,30 @@ class AdminTests(AppTestCase):
         page = self.client.get("/admin?lang=en", headers={"Authorization": f"Basic {good}"}).get_data(as_text=True)
         self.assertIn("49.00 USD", page)
         self.assertIn("Awaiting payment", page)
+
+
+
+class ReceiptEmailTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self.mailer = FakeMailer()
+        self.app = quantum_saas_app.create_app(
+            {"DATA_DIR": self.tmp, "TESTING": True, "TRUSTED_PROXIES": 0, "PUBLIC_URL": "https://ather-quatum.cloud",
+             "PAYPAL_CLIENT_ID": "c"}, scanner=fake_scanner, paypal=FakePayPal(), mailer=self.mailer)
+        self.client = self.app.test_client()
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp)
+
+    def test_paypal_purchase_emails_receipt_to_payer(self):
+        sid = self.client.post("/api/scan", json={"domain": "example.com"}).get_json()["scan_id"]
+        oid = self.client.post("/api/paypal/orders", json={"scan_id": sid, "consent": True}).get_json()["id"]
+        r = self.client.post(f"/api/paypal/orders/{oid}/capture")
+        self.assertEqual(r.get_json()["status"], "COMPLETED")
+        receipt = [m for m in self.mailer.sent if m[0] == "buyer@example.com"]
+        self.assertEqual(len(receipt), 1)
+        self.assertIn("example.com", receipt[0][1])
+        self.assertIn("/report/", receipt[0][2])  # رابط التقرير في الإيصال
 
 
 if __name__ == "__main__":

@@ -150,6 +150,20 @@ class CryptoPaymentTest(unittest.TestCase):
         r = self.client.post(f"/api/crypto/orders/{o['order_id']}/verify", json={"tx_hash": TX})
         self.assertEqual(r.status_code, 502)
 
+    def test_crypto_purchase_emails_receipt_when_email_given(self):
+        o = self.order(email="payer@wallet.test").get_json()
+        self.chain.pay(TX, self.units(o["amount"]), block=900)
+        self.chain.latest = 1100
+        r = self.client.post(f"/api/crypto/orders/{o['order_id']}/verify", json={"tx_hash": TX})
+        self.assertEqual(r.get_json()["status"], "COMPLETED")
+        receipt = [m for m in self.mailer.sent if m[0] == "payer@wallet.test"]
+        self.assertEqual(len(receipt), 1)
+        self.assertIn("example.com", receipt[0][1])
+        self.assertIn("USDT", receipt[0][2])
+
+    def test_crypto_rejects_bad_email(self):
+        self.assertEqual(self.order(email="not-an-email").status_code, 400)
+
     def test_agent_api_alias(self):
         r = self.client.post("/api/v1/crypto/orders", json={"scan_id": self.scan_id, "network": "arbitrum-usdc",
                                                              "consent_immediate_delivery": True})

@@ -20,7 +20,8 @@
       fetch("/api/crypto/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ scan_id: box.dataset.scanId, network: button.dataset.network, consent: true })
+        body: JSON.stringify({ scan_id: box.dataset.scanId, network: button.dataset.network, consent: true,
+                               email: (box.querySelector(".crypto-email") || {}).value || "" })
       }).then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
         .then(function (res) {
           if (!res.ok) { say(res.d.error === "already_paid" ? null : msgs.choose_failed); if (res.d.error === "already_paid") location.reload(); return; }

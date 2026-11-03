@@ -202,6 +202,32 @@ def cancel_email(account, monitoring_url):
     return bodies[_lang(account)]
 
 
+def report_receipt_email(lang, domain, amount, currency, report_url, order_id):
+    """تأكيد/إيصال شراء التقرير على وسيط دائم (§ 7 FAGG)، بلغة المشتري."""
+    lang = lang if lang in ("en", "ar", "de") else "en"
+    bodies = {
+        "ar": (f"الأثير الكمومي: تأكيد شراء تقرير {domain}",
+               f"شكراً لشرائك. تم استلام الدفعة: {amount} {currency}.\n\n"
+               f"تقريرك الكامل لجاهزية {domain} لما بعد الكم:\n{report_url}\n"
+               "(احفظ هذا الرابط؛ هو وصولك إلى التقرير.)\n\n"
+               f"رقم العملية: {order_id}\n\n"
+               "تؤكّد هذه الرسالة إتمام العقد. لأي سؤال، ردّ عليها."),
+        "de": (f"Quantum Aether: Kaufbestätigung – Bericht für {domain}",
+               f"Vielen Dank für Ihren Kauf. Zahlung erhalten: {amount} {currency}.\n\n"
+               f"Ihr vollständiger Post-Quantum-Bericht für {domain}:\n{report_url}\n"
+               "(Bewahren Sie diesen Link auf; er ist Ihr Zugang zum Bericht.)\n\n"
+               f"Bestellnummer: {order_id}\n\n"
+               "Diese E-Mail bestätigt den Vertragsabschluss. Bei Fragen antworten Sie einfach."),
+        "en": (f"Quantum Aether: payment confirmed — report for {domain}",
+               f"Thank you for your purchase. Payment received: {amount} {currency}.\n\n"
+               f"Your full post-quantum readiness report for {domain}:\n{report_url}\n"
+               "(Keep this link; it is your access to the report.)\n\n"
+               f"Order: {order_id}\n\n"
+               "This email confirms your contract. Any questions, just reply."),
+    }
+    return bodies[lang]
+
+
 def owner_email(event, account, detail=""):
     """رسالة لصاحب الموقع عند اشتراك جديد أو إلغاء أو توقف."""
     plan = PLANS[account["plan"]]

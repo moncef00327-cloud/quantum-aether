@@ -440,6 +440,7 @@ TEXTS["ar"].update({
     "crypto_copy": "نسخ",
     "crypto_warning": "أرسل على هذه الشبكة فقط وبهذا المبلغ بالضبط (الكسر العشري يعرّف دفعتك). "
                       "الإرسال على شبكة أخرى أو بعملة أخرى قد يضيع المبلغ. رسوم الشبكة على المرسل.",
+    "crypto_email_label": "بريدك لإرسال إيصال الشراء (اختياري):",
     "crypto_tx_label": "بعد الإرسال، الصق رقم المعاملة (Transaction hash / TxID):",
     "crypto_verify": "تحقق وافتح التقرير",
     "crypto_msgs": {
@@ -465,6 +466,7 @@ TEXTS["en"].update({
     "crypto_copy": "Copy",
     "crypto_warning": "Use this network only and this exact amount (the decimals identify your payment). "
                       "Sending on another network or another token may lose the funds. Network fees are paid by the sender.",
+    "crypto_email_label": "Email for your purchase receipt (optional):",
     "crypto_tx_label": "After sending, paste the transaction hash (TxID):",
     "crypto_verify": "Verify and open the report",
     "crypto_msgs": {

@@ -45,6 +45,8 @@
          data-msg="{{ t.crypto_msgs | tojson | forceescape }}">
       <h3>{{ t.crypto_title }}</h3>
       <p class="small">{{ t.crypto_sub }}</p>
+      <p><label>{{ t.crypto_email_label }}<br>
+        <input type="email" class="crypto-email" dir="ltr" autocomplete="email" placeholder="you@example.com"></label></p>
       <p>{% for key, net in crypto_networks.items() %}
         <button type="button" class="crypto-choose" data-network="{{ key }}">{{ net.token }} · {{ net.chain }}</button>
       {% endfor %}</p>

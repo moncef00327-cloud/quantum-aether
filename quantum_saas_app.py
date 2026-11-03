@@ -579,6 +579,18 @@ def paypal_create_order():
     return jsonify(id=order["id"]), 201
 
 
+def send_report_receipt(scan, amount, currency, order_id, email):
+    """يرسل إيصال/تأكيد شراء التقرير بلغة المشتري. فشل البريد لا يوقف شيئاً."""
+    if not email:
+        return
+    mailer = current_app.extensions["mailer"]
+    if not mailer.enabled:
+        return
+    report_abs = public_base() + url_for(".report", token=scan["report_token"])
+    subject, text = monitor.report_receipt_email(current_lang(), scan["domain"], amount, currency, report_abs, order_id)
+    mailer.send(email, subject, text)
+
+
 def capture_and_record(order_id):
     """يلتقط طلب PayPal أنشأه خادمنا ويتحقق منه ويسجله. يعيد (النتيجة، الفحص)."""
     paypal = current_app.extensions["paypal"]
@@ -607,6 +619,8 @@ def capture_and_record(order_id):
         return "UNAVAILABLE", scan
     status, capture_id = verify_capture(order, scan["id"], row["amount"], row["currency"])
     sales_db.update_order(conn, order_id, status, capture_id)
+    if status == "COMPLETED" and not row["is_test"]:
+        send_report_receipt(scan, row["amount"], row["currency"], order_id, (order.get("payer") or {}).get("email_address"))
     if status == "FAILED":
         log.error("PayPal capture for %s did not match the expected amount/reference", order_id)
         return "VERIFICATION_FAILED", scan
@@ -728,9 +742,12 @@ def crypto_create_order():
         return jsonify(error="already_paid"), 409
     net = networks[key]
     amount = str(crypto_pay.unique_amount(current_app.config["PRICE"], sales_db.open_amounts(conn, net["token"])))
+    email = str(data.get("email", "")).strip() or None
+    if email and not EMAIL_RE.match(email):
+        return jsonify(error="invalid_email"), 400
     order_id = f"cx-{key}-{secrets.token_urlsafe(9)}"
     sales_db.create_order(conn, order_id, scan["id"], amount, net["token"], consent_at=now_iso(),
-                          is_test=is_admin_visitor())
+                          is_test=is_admin_visitor(), email=email)
     return jsonify(_crypto_order_body(order_id, key, net, amount)), 201
 
 
@@ -771,6 +788,8 @@ def crypto_verify(order_id):
         sales_db.update_order(conn, order_id, "COMPLETED", tx_hash)
     except sales_db.sqlite3.IntegrityError:
         return jsonify(error="tx_already_used"), 409
+    if not row["is_test"]:
+        send_report_receipt(scan, row["amount"], row["currency"], order_id, row["email"])
     owner = current_app.config["OWNER_EMAIL"]
     if owner and not row["is_test"]:
         current_app.extensions["mailer"].send(
