@@ -48,7 +48,7 @@ Check on every deploy that your site still negotiates post-quantum TLS:
     require-post-quantum: true
 ```
 
-Details: [`github-action/README.md`](github-action/README.md).
+Details: [`github-action/README.md`](github-action/README.md) · [GitHub Marketplace](https://github.com/marketplace/actions/post-quantum-tls-check-quantum-aether)
 
 ## Guides
 
