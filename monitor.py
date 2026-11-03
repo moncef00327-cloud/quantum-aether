@@ -130,9 +130,33 @@ def _lang(account):
 
 
 def welcome_email(account, dashboard_url):
-    """رسالة شكر وترحيب عند تفعيل الاشتراك، بلغة العميل."""
+    """رسالة شكر وترحيب عند تفعيل الاشتراك، بلغة العميل. خطة الشركات (Business) بنبرة رسمية."""
     plan = PLANS[account["plan"]]
     name, domains = plan["name"], plan["domains"]
+    business = account["plan"] == "business"
+    lang = _lang(account)
+    if business:
+        bodies = {
+            "ar": ("الأثير الكمومي: اشتراك مراقبة الشركات فعّال",
+                   f"نشكر لكم اختيار الأثير الكمومي لحماية نطاقات مؤسستكم. تم تفعيل خطة {name} (حتى {domains} نطاقاً).\n\n"
+                   f"لوحة التحكم (شاركوها مع فريق الأمن لديكم فقط؛ هذا الرابط هو مفتاح الحساب):\n{dashboard_url}\n\n"
+                   "أضيفوا نطاقات مؤسستكم من اللوحة. نفحصها جميعاً يومياً ونخطر هذا العنوان فور أي تغيّر: "
+                   "فقدان التبادل المقاوم للكم، أو انخفاض الدرجة، أو اقتراب انتهاء شهادة.\n\n"
+                   "للاستفسارات المتعلقة بالفوترة أو التهيئة، يُرجى الرد على هذه الرسالة."),
+            "de": ("Quantum Aether: Ihre Business-Überwachung ist aktiv",
+                   f"Vielen Dank, dass Sie Quantum Aether für Ihr Unternehmen gewählt haben. Ihr Tarif {name} ist aktiv (bis zu {domains} Domains).\n\n"
+                   f"Dashboard (nur mit Ihrem Sicherheitsteam teilen; dieser Link ist der Schlüssel zum Konto):\n{dashboard_url}\n\n"
+                   "Fügen Sie dort die Domains Ihres Unternehmens hinzu. Wir prüfen sie täglich und benachrichtigen diese Adresse sofort "
+                   "bei jeder Änderung: Wegfall des quantenresistenten Schlüsselaustauschs, schlechtere Note oder ablaufendes Zertifikat.\n\n"
+                   "Bei Fragen zu Abrechnung oder Einrichtung antworten Sie bitte auf diese E-Mail."),
+            "en": ("Quantum Aether: your Business monitoring is active",
+                   f"Thank you for choosing Quantum Aether for your organization. Your {name} plan is active (up to {domains} domains).\n\n"
+                   f"Dashboard (share it only with your security team; this link is the key to the account):\n{dashboard_url}\n\n"
+                   "Add your organization's domains there. We scan all of them every day and notify this address the moment anything changes: "
+                   "post-quantum key exchange lost, a lower grade, or a certificate nearing expiry.\n\n"
+                   "For billing or onboarding questions, please reply to this email."),
+        }
+        return bodies[lang]
     bodies = {
         "ar": ("الأثير الكمومي: شكراً لك، اشتراك المراقبة فعّال",
                f"شكراً لاشتراكك في الأثير الكمومي. تم تفعيل خطة {name} (حتى {domains} نطاقاً).\n\n"
@@ -153,7 +177,7 @@ def welcome_email(account, dashboard_url):
                "post-quantum key exchange lost, a lower grade, or a certificate nearing expiry.\n\n"
                "You can cancel anytime from the dashboard. Any questions, just reply to this email."),
     }
-    return bodies[_lang(account)]
+    return bodies[lang]
 
 
 def cancel_email(account, monitoring_url):

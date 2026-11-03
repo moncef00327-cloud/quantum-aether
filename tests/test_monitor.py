@@ -202,6 +202,13 @@ class MonitoringTest(unittest.TestCase):
         # لغة غير مدعومة ترجع للإنجليزية
         acc = {"plan": "starter", "lang": "fr", "email": "c@x.test", "id": "a", "subscription_id": "I"}
         self.assertIn("thank you", monitor.welcome_email(acc, "u")[1].lower())
+        # خطة الشركات بنبرة رسمية
+        biz = {"ar": "مؤسست", "en": "organization", "de": "Unternehmen"}
+        for lang, word in biz.items():
+            acc = {"plan": "business", "lang": lang, "email": "it@corp.test", "id": "b", "subscription_id": "I-b"}
+            body = monitor.welcome_email(acc, "https://x/monitor/T")[1]
+            self.assertIn(word, body)
+            self.assertIn("100", body)  # حتى 100 نطاق
 
     def test_dashboard_is_private(self):
         _, r = self.subscribe()
