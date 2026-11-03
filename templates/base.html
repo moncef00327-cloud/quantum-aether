@@ -6,6 +6,16 @@
   <title>{% block title %}{{ t.brand }}{% endblock %}</title>
   <meta name="description" content="{% block description %}{{ t.hero_sub }}{% endblock %}">
   <meta name="google-site-verification" content="lomNrWcm6STSBOBFYRuatxcSN8DGmceimGw_y79Sc7o">
+  <meta property="og:site_name" content="{{ t.brand }}">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="{{ self.title() }}">
+  <meta property="og:description" content="{{ self.description() }}">
+  <meta property="og:url" content="{{ request.url }}">
+  <meta property="og:locale" content="{{ 'ar_AR' if lang == 'ar' else 'de_DE' if lang == 'de' else 'en_US' }}">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="{{ self.title() }}">
+  <meta name="twitter:description" content="{{ self.description() }}">
+  <link rel="alternate" type="application/atom+xml" title="{{ t.brand }}" href="{{ url_for('site.feed') }}">
   {% block alternates %}
   <link rel="canonical" href="{{ request.base_url }}?lang={{ lang }}">
   {% for l in page_langs %}<link rel="alternate" hreflang="{{ l }}" href="{{ request.base_url }}?lang={{ l }}">

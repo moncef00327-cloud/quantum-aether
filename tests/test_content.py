@@ -49,5 +49,19 @@ class ContentPagesTest(unittest.TestCase):
         self.assertNotIn("DNA", body)
 
 
+    def test_atom_feed_and_opengraph(self):
+        import xml.dom.minidom
+        feed = self.client.get("/feed.xml")
+        self.assertEqual(feed.status_code, 200)
+        xml.dom.minidom.parseString(feed.get_data(as_text=True))
+        self.assertIn("<entry>", feed.get_data(as_text=True))
+        home = self.client.get("/?lang=en").get_data(as_text=True)
+        self.assertIn('property="og:title"', home)
+        self.assertIn('name="twitter:card"', home)
+        self.assertIn('application/atom+xml', home)
+        self.assertIn("/feed.xml", self.client.get("/robots.txt").get_data(as_text=True))
+
+
+
 if __name__ == "__main__":
     unittest.main()

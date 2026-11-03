@@ -1067,7 +1067,8 @@ def robots():
     agents = "".join(f"User-agent: {name}\n" for name in [*AI_CRAWLERS, "*"])
     body = (agents + "Allow: /\nDisallow: /admin\nDisallow: /report/\nDisallow: /api/paypal/\nDisallow: /monitor/\nDisallow: /api/monitor/\n\n"
             f"Sitemap: {public_base()}/sitemap.xml\n"
-            f"# AI agents: machine-readable summary and API at {public_base()}/llms.txt\n")
+            f"# AI agents: machine-readable summary and API at {public_base()}/llms.txt\n"
+            f"# Content feed (Atom): {public_base()}/feed.xml\n")
     return Response(body, mimetype="text/plain")
 
 
@@ -1128,6 +1129,48 @@ def indexnow_key(key):
 def openapi():
     with open(os.path.join(BASE_DIR, "openapi.yaml"), encoding="utf-8") as f:
         return Response(f.read().replace("{{PUBLIC_URL}}", public_base()), mimetype="application/yaml")
+
+
+@bp.get("/feed.xml")
+def feed():
+    """خلاصة Atom للمحتوى (الدراسة والأدلة) ليكتشفها الزواحف والمجمّعات ومساعدات الذكاء بسرعة."""
+    base = public_base()
+
+    def esc(t):
+        return (t or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+    def day_to_iso(d):
+        return f"{d}T00:00:00Z"
+
+    entries = [
+        (f"{base}/study/top-1000-post-quantum-tls", study_data()["scanned_on"],
+         "Post-quantum TLS in the top 1,000 sites",
+         "Open dataset: share of the Tranco top 1,000 that negotiate X25519MLKEM768, with per-domain results."),
+    ]
+    for slug, g in guides.GUIDES.items():
+        entries.append((f"{base}/guides/{slug}", g["updated"], g["en"]["title"], g["en"]["description"]))
+    updated = day_to_iso(max(e[1] for e in entries))
+    items = []
+    for url, day, title, summary in entries:
+        items.append(
+            "  <entry>\n"
+            f"    <title>{esc(title)}</title>\n"
+            f'    <link href="{esc(url)}"/>\n'
+            f"    <id>{esc(url)}</id>\n"
+            f"    <updated>{day_to_iso(day)}</updated>\n"
+            f"    <summary>{esc(summary)}</summary>\n"
+            "  </entry>\n")
+    body = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<feed xmlns="http://www.w3.org/2005/Atom">\n'
+        "  <title>Quantum Aether — post-quantum TLS</title>\n"
+        f'  <link href="{base}/"/>\n'
+        f'  <link rel="self" href="{base}/feed.xml"/>\n'
+        f"  <id>{base}/</id>\n"
+        f"  <updated>{updated}</updated>\n"
+        "  <author><name>Quantum Aether</name></author>\n"
+        + "".join(items) + "</feed>\n")
+    return Response(body, mimetype="application/atom+xml")
 
 
 @bp.get("/llms.txt")
