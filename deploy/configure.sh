@@ -72,9 +72,13 @@ fi
 
 tmp="$(mktemp)"
 chmod 600 "$tmp"
-for key in QS_PUBLIC_URL QS_DATA_DIR QS_HASH_SALT QS_TRUSTED_PROXIES PAYPAL_CLIENT_ID PAYPAL_CLIENT_SECRET PAYPAL_ENV QS_ADMIN_PASSWORD_HASH; do
+managed="QS_PUBLIC_URL QS_DATA_DIR QS_HASH_SALT QS_TRUSTED_PROXIES PAYPAL_CLIENT_ID PAYPAL_CLIENT_SECRET PAYPAL_ENV QS_ADMIN_PASSWORD_HASH"
+for key in $managed; do
   printf "%s='%s'\n" "$key" "${!key:-}" >> "$tmp"
 done
+# بقية الإعدادات (خطط الاشتراك، البريد، ...) تُنسخ كما هي دون تغيير.
+grep -vE "^($(echo "$managed" | tr ' ' '|'))=" "$ENV_FILE" | grep -E '^[A-Z_]+=' >> "$tmp" || true
+cp -p "$ENV_FILE" "$ENV_FILE.bak-$(date +%Y%m%d%H%M%S)"
 mv "$tmp" "$ENV_FILE"
 chown root:root "$ENV_FILE"
 chmod 600 "$ENV_FILE"
