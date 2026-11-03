@@ -657,6 +657,36 @@ TEXTS["en"]["scanbox_title"] = "Scan your site now, free"
 # ---------------------------------------------------------------- الألمانية (Sie)
 # متاحة للصفحة الرئيسية والدراسة وصفحة الشركات فقط؛ أي نص غير مترجم هنا يبقى بالإنجليزية.
 DE_ENDPOINTS = {"site.index", "site.scan_form", "site.study", "site.monitoring", "site.monitor_login"}
+
+TEXTS["ar"].update({
+    "copy": "نسخ", "copied": "تم النسخ ✓",
+    "nav_compare": "قارن",
+    "site_title": "جاهزية TLS لما بعد الكم",
+    "site_meta": "هل يستخدم {domain} تبادل المفاتيح الهجين المقاوم للحوسبة الكمومية؟ النتيجة وطريقة الإصلاح.",
+    "site_source_scan": "من فحص حيّ بتاريخ",
+    "site_source_study": "من دراستنا لأكبر 1000 موقع ({date}). افحص الآن لأحدث نتيجة.",
+    "site_unknown": "لم نفحص {domain} بعد. افحصه الآن مجاناً.",
+    "site_scan_cta": "افحص هذا الموقع الآن مجاناً",
+    "compare_title": "قارن موقعين",
+    "compare_sub": "افحص موقعين جنباً إلى جنب وشارك النتيجة.",
+    "compare_vs": "مقابل",
+    "compare_button": "قارن",
+})
+TEXTS["en"].update({
+    "copy": "Copy", "copied": "Copied ✓",
+    "nav_compare": "Compare",
+    "site_title": "Post-quantum TLS readiness",
+    "site_meta": "Does {domain} use hybrid post-quantum key exchange? Grade and how to fix it.",
+    "site_source_scan": "From a live scan on",
+    "site_source_study": "From our top-1000 study ({date}). Scan now for the latest result.",
+    "site_unknown": "We have not scanned {domain} yet. Scan it now for free.",
+    "site_scan_cta": "Scan this site now for free",
+    "compare_title": "Compare two sites",
+    "compare_sub": "Scan two sites side by side and share the result.",
+    "compare_vs": "vs",
+    "compare_button": "Compare",
+})
+
 TEXTS["de"] = dict(TEXTS["en"])
 TEXTS["de"].update({
     "dir": "ltr",
@@ -774,6 +804,15 @@ TEXTS["de"].update({
     "legal_imprint": "Impressum",
     "legal_privacy": "Datenschutz",
     "legal_terms": "AGB",
+})
+
+TEXTS["de"].update({
+    "copy": "Kopieren", "copied": "Kopiert ✓",
+    "nav_compare": "Vergleichen",
+    "compare_title": "Zwei Websites vergleichen",
+    "compare_sub": "Zwei Websites nebeneinander prüfen und das Ergebnis teilen.",
+    "compare_vs": "gegen",
+    "compare_button": "Vergleichen",
 })
 
 LANG_NAMES = {"en": "English", "ar": "العربية", "de": "Deutsch"}

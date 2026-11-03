@@ -66,15 +66,21 @@
   {% endif %}
 </section>
 
-{% if r.grade == "A" %}
 <section class="card">
   <h2>{{ t.badge_title }}</h2>
   <p>{{ t.badge_sub }}</p>
-  <p><img src="{{ url_for('site.badge', domain=r.domain) }}" alt="post-quantum TLS: A"></p>
-  {% set badge_html = '<a href="' ~ url_for('site.index', domain=r.domain, _external=True) ~ '"><img src="' ~ url_for('site.badge', domain=r.domain, _external=True) ~ '" alt="Post-quantum TLS grade by Quantum Aether"></a>' %}
-  <pre dir="ltr"><code>{{ badge_html }}</code></pre>
+  <p><img src="{{ url_for('site.badge', domain=r.domain) }}" alt="post-quantum TLS: {{ r.grade }}"></p>
+  <div class="snippet">
+    <div class="snippet-head"><span>HTML</span>
+      <button type="button" class="copy-btn" data-copy="#badge-html" data-done="{{ t.copied }}">{{ t.copy }}</button></div>
+    <pre id="badge-html" dir="ltr"><code>{{ badge.html }}</code></pre>
+  </div>
+  <div class="snippet">
+    <div class="snippet-head"><span>Markdown (README)</span>
+      <button type="button" class="copy-btn" data-copy="#badge-md" data-done="{{ t.copied }}">{{ t.copy }}</button></div>
+    <pre id="badge-md" dir="ltr"><code>{{ badge.markdown }}</code></pre>
+  </div>
 </section>
-{% endif %}
 
 <p><a class="button-link" href="{{ url_for('site.index', lang=lang) }}">{{ t.scan_again }}</a></p>
 {% endblock %}

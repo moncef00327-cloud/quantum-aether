@@ -14,7 +14,19 @@
       if (busy) busy.hidden = false;
     });
   });
-  var printButton = document.querySelector(".print-button");
+  // أزرار النسخ: data-copy يشير إلى عنصر، والنص يُنسخ إلى الحافظة.
+  document.querySelectorAll(".copy-btn").forEach(function (button) {
+    button.addEventListener("click", function () {
+      var target = document.querySelector(button.dataset.copy);
+      if (!target || !navigator.clipboard) return;
+      navigator.clipboard.writeText(target.textContent.trim()).then(function () {
+        var original = button.textContent;
+        button.textContent = button.dataset.done || "✓";
+        setTimeout(function () { button.textContent = original; }, 1500);
+      });
+    });
+  });
+    var printButton = document.querySelector(".print-button");
   if (printButton) {
     printButton.addEventListener("click", function () { window.print(); });
   }

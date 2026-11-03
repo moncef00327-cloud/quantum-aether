@@ -148,3 +148,14 @@ mark.placeholder { background: var(--warn); color: var(--bg); border-radius: 4px
 .consent { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
 .consent label { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
 .consent input { margin-top: 5px; flex: 0 0 auto; width: 18px; height: 18px; }
+
+/* أكواد التضمين وأزرار النسخ */
+.snippet { margin: .75rem 0; }
+.snippet-head { display: flex; justify-content: space-between; align-items: center;
+  font-size: .85rem; color: var(--muted, #64748b); margin-bottom: .25rem; }
+.copy-btn { font-size: .8rem; padding: .2rem .6rem; cursor: pointer; }
+/* المقارنة */
+.compare-form { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.compare-form input { flex: 1 1 12rem; }
+.compare-form .vs { color: var(--muted, #64748b); }
+.compare-cards .grade { margin-inline-end: .75rem; }

@@ -255,7 +255,7 @@ def scan_page(scan_id):
     return render_template(
         "scan.html", scan=scan, r=scan["result"], paid=sales_db.is_scan_paid(db(), scan_id),
         payments_enabled=payments_enabled(), paypal_client_id=cfg["PAYPAL_CLIENT_ID"],
-        crypto_networks=crypto_pay.enabled_networks(cfg),
+        crypto_networks=crypto_pay.enabled_networks(cfg), badge=badge_snippets(scan["result"]["domain"]),
         price=cfg["PRICE"], currency=cfg["CURRENCY"],
     )
 
@@ -357,6 +357,95 @@ def study():
 @bp.get("/study/top-1000-post-quantum-tls.json")
 def study_json():
     return current_app.response_class(json.dumps(study_data(), ensure_ascii=False), mimetype="application/json")
+
+
+# ---------------------------------------------------------------- صفحة لكل نطاق + المقارنة + CLI
+
+def study_by_domain():
+    return {s["domain"]: s for s in study_data()["sites"]}
+
+
+def known_result_for(domain):
+    """نتيجة معروفة للنطاق دون إجراء فحص جديد: آخر فحص خلال 30 يوماً، وإلا بيانات الدراسة.
+    يعيد (ملخص، المصدر) أو (None, None)."""
+    since = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=BADGE_MAX_AGE_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    scan = sales_db.latest_scan_for_domain(db(), domain, since)
+    if scan:
+        r = scan["result"]
+        return ({"domain": domain, "grade": r["grade"], "group": r["key_exchange"].get("group"),
+                 "tls": r["key_exchange"].get("version") or r["certificate"].get("negotiated_version"),
+                 "pq": bool(r["key_exchange"].get("pq")), "scanned_at": r["scanned_at"]}, "scan")
+    site = study_by_domain().get(domain)
+    if site:
+        return (dict(site, scanned_at=study_data()["scanned_on"]), "study")
+    return (None, None)
+
+
+@bp.get("/site/<domain>")
+def site_page(domain):
+    """صفحة عامة قابلة للفهرسة لكل نطاق: تعرض ما نعرفه عنه وتدعو لفحص حيّ. لا تُجري فحصاً."""
+    try:
+        domain = quantum_vuln_scanner.normalize_domain(domain)
+    except quantum_vuln_scanner.ScanError:
+        abort(404)
+    summary, source = known_result_for(domain)
+    return render_template("site_page.html", domain=domain, summary=summary, source=source,
+                           snippets=badge_snippets(domain) if summary else None)
+
+
+@bp.get("/compare")
+def compare():
+    """مقارنة موقعين جنباً إلى جنب. الفحص حيّ ومحدود بنفس حد الفحوصات."""
+    a = (request.args.get("a") or "").strip()
+    b = (request.args.get("b") or "").strip()
+    results, error = {}, None
+    if a and b:
+        pair = {}
+        for key, raw in (("a", a), ("b", b)):
+            try:
+                _, result = perform_scan(raw)
+                pair[key] = result
+            except quantum_vuln_scanner.ScanError as exc:
+                pair[key] = {"error": texts()["errors"].get(exc.code, str(exc)), "domain": raw}
+        results = pair
+    return render_template("compare.html", a=a, b=b, results=results, error=error)
+
+
+@bp.get("/api/v1/scan")
+def api_v1_scan_get():
+    """فحص عبر GET ليسهل على أدوات سطر الأوامر والوكلاء: /api/v1/scan?domain=example.com
+    مع ?format=text يعيد نصاً ملوّناً للطرفية (ANSI)."""
+    try:
+        scan_id, result = perform_scan(request.args.get("domain", ""))
+    except quantum_vuln_scanner.ScanError as exc:
+        if request.args.get("format") == "text":
+            return Response(f"error: {exc}\n", mimetype="text/plain"), 400
+        return jsonify(error=exc.code, message=str(exc)), 400
+    if request.args.get("format") == "text":
+        return Response(terminal_report(result), mimetype="text/plain; charset=utf-8")
+    body = dict(scan_summary(scan_id, result), report_hint=public_base() + url_for(".scan_page", scan_id=scan_id))
+    return jsonify(body)
+
+
+def terminal_report(result):
+    kx, cert = result["key_exchange"], result["certificate"]
+    g = result["grade"]
+    color = {"A": "32", "B": "36", "C": "33", "F": "31"}.get(g, "0")
+    pq = "yes (hybrid ML-KEM)" if kx.get("pq") else "NO — classical, harvest-now-decrypt-later risk"
+    base = current_app.config["PUBLIC_URL"] or "https://ather-quatum.cloud"
+    lines = [
+        "",
+        f"  Quantum Aether — post-quantum TLS scan",
+        f"  domain        {result['domain']}",
+        f"  grade         \033[1;{color}m{g}\033[0m",
+        f"  key exchange  {kx.get('group') or '-'}",
+        f"  post-quantum  {pq}",
+        f"  TLS           {kx.get('version') or cert.get('negotiated_version') or '-'}",
+        f"  certificate   {cert.get('key_algorithm')}-{cert.get('key_bits')}",
+        f"  full report   {base}/?domain={result['domain']}  (${current_app.config['PRICE']})",
+        "",
+    ]
+    return "\n".join(lines)
 
 
 @bp.get("/admin")
@@ -878,6 +967,15 @@ BADGE_STYLE = {
 }
 
 
+def badge_snippets(domain):
+    """أكواد تضمين الشارة: HTML وMarkdown، يستعملها قالب صفحة النتيجة وصفحة النطاق."""
+    page = url_for(".index", domain=domain, _external=True)
+    img = url_for(".badge", domain=domain, _external=True)
+    alt = "Post-quantum TLS grade by Quantum Aether"
+    return {"html": f'<a href="{page}"><img src="{img}" alt="{alt}"></a>',
+            "markdown": f"[![{alt}]({img})]({page})"}
+
+
 def badge_svg(grade):
     color, value = BADGE_STYLE.get(grade, BADGE_STYLE[None])
     label = "post-quantum TLS"
@@ -927,6 +1025,10 @@ def sitemap():
              ("/guides", max(g["updated"] for g in guides.GUIDES.values()), site_langs),
              ("/study/top-1000-post-quantum-tls", study_data()["scanned_on"], de_langs)]
     pages += [(f"/guides/{slug}", g["updated"], site_langs) for slug, g in guides.GUIDES.items()]
+    pages.append(("/compare", template_date("compare.html"), site_langs))
+    study_day = study_data()["scanned_on"]
+    by_domain = study_by_domain()
+    pages += [(f"/site/{d}", study_day, site_langs) for d in STUDY_NOTABLE if d in by_domain]
     legal_date = os.path.getmtime(os.path.join(BASE_DIR, "legal.py"))
     legal_day = dt.datetime.fromtimestamp(legal_date, dt.timezone.utc).date().isoformat()
     pages += [(f"/{slug}", legal_day, legal_langs) for slug in legal.PAGES]

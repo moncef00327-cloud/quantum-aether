@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}{{ domain }} — {{ t.site_title }}{% endblock %}
+{% block description %}{{ t.site_meta.format(domain=domain) }}{% endblock %}
+{% block head %}{% if not summary %}<meta name="robots" content="noindex">{% endif %}{% endblock %}
+{% block content %}
+<section class="card result-head">
+  {% if summary %}<div class="grade grade-{{ summary.grade }}">{{ summary.grade }}</div>{% endif %}
+  <div>
+    <p class="muted">{{ t.site_title }}</p>
+    <h1 dir="ltr" class="domain">{{ domain }}</h1>
+    {% if summary %}<p class="grade-text">{{ t.grades[summary.grade] }}</p>{% endif %}
+  </div>
+</section>
+
+{% if summary %}
+<section class="card">
+  <table class="kv" dir="ltr">
+    <tr><th>Grade</th><td>{{ summary.grade }}</td></tr>
+    <tr><th>Key exchange</th><td>{{ summary.group or "—" }}</td></tr>
+    <tr><th>Post-quantum</th><td>{{ "yes" if summary.pq else "no (classical)" }}</td></tr>
+    <tr><th>TLS</th><td>{{ summary.tls or "—" }}</td></tr>
+  </table>
+  <p class="muted small">
+    {% if source == "scan" %}{{ t.site_source_scan }} <span dir="ltr">{{ summary.scanned_at }}</span>
+    {% else %}{{ t.site_source_study.format(date=summary.scanned_at) }}{% endif %}
+  </p>
+</section>
+
+<section class="card">
+  <h2>{{ t.badge_title }}</h2>
+  <p><img src="{{ url_for('site.badge', domain=domain) }}" alt="post-quantum TLS: {{ summary.grade }}"></p>
+  <div class="snippet">
+    <div class="snippet-head"><span>Markdown</span>
+      <button type="button" class="copy-btn" data-copy="#sp-md" data-done="{{ t.copied }}">{{ t.copy }}</button></div>
+    <pre id="sp-md" dir="ltr"><code>{{ snippets.markdown }}</code></pre>
+  </div>
+</section>
+{% else %}
+<section class="card"><p>{{ t.site_unknown.format(domain=domain) }}</p></section>
+{% endif %}
+
+<section class="card buy">
+  <form method="post" action="{{ url_for('site.scan_form') }}" data-busy>
+    <input type="hidden" name="lang" value="{{ lang }}">
+    <input type="hidden" name="domain" value="{{ domain }}">
+    <button type="submit">{{ t.site_scan_cta }}</button>
+    <span class="form-busy" hidden>{{ t.scanning }}</span>
+  </form>
+</section>
+{% endblock %}

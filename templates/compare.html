@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}{{ t.compare_title }}{% endblock %}
+{% block description %}{{ t.compare_sub }}{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>{{ t.compare_title }}</h1>
+  <p>{{ t.compare_sub }}</p>
+  <form method="get" action="{{ url_for('site.compare') }}" class="compare-form" data-busy>
+    <input type="hidden" name="lang" value="{{ lang }}">
+    <input name="a" type="text" dir="ltr" inputmode="url" autocomplete="off" placeholder="yoursite.com"
+           value="{{ a }}" required>
+    <span class="vs">{{ t.compare_vs }}</span>
+    <input name="b" type="text" dir="ltr" inputmode="url" autocomplete="off" placeholder="competitor.com"
+           value="{{ b }}" required>
+    <button type="submit">{{ t.compare_button }}</button>
+    <span class="form-busy" hidden>{{ t.scanning }}</span>
+  </form>
+</section>
+
+{% if results %}
+<section class="grid-2 compare-cards">
+  {% for key in ["a", "b"] %}{% set r = results[key] %}
+  <div class="card">
+    {% if r.error %}
+      <h2 dir="ltr">{{ r.domain }}</h2>
+      <p class="form-error">{{ r.error }}</p>
+    {% else %}
+      <div class="result-head">
+        <div class="grade grade-{{ r.grade }}">{{ r.grade }}</div>
+        <div><h2 dir="ltr" class="domain">{{ r.domain }}</h2>
+          <p class="grade-text">{{ t.grades[r.grade] }}</p></div>
+      </div>
+      <table class="kv" dir="ltr">
+        <tr><th>Key exchange</th><td>{{ r.key_exchange.group or "—" }}</td></tr>
+        <tr><th>Post-quantum</th><td>{{ "yes" if r.key_exchange.pq else "no" }}</td></tr>
+        <tr><th>TLS</th><td>{{ r.key_exchange.version or r.certificate.negotiated_version or "—" }}</td></tr>
+        <tr><th>Certificate</th><td>{{ r.certificate.key_algorithm }}-{{ r.certificate.key_bits }}</td></tr>
+      </table>
+      <p><a href="{{ url_for('site.index', domain=r.domain, lang=lang) }}">{{ t.site_scan_cta }} →</a></p>
+    {% endif %}
+  </div>
+  {% endfor %}
+</section>
+{% endif %}
+{% endblock %}
