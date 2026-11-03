@@ -141,3 +141,6 @@ details summary { cursor: pointer; }
 .link-button { background: none; color: var(--muted); padding: 4px 6px; font-weight: 400; text-decoration: underline; }
 .link-button.danger { color: var(--bad); }
 .paypal-sub { margin-top: 12px; min-height: 40px; }
+
+mark.placeholder { background: var(--warn); color: var(--bg); border-radius: 4px; padding: 0 4px; }
+.legal-links a { color: var(--muted); }

@@ -477,6 +477,11 @@ TEXTS["ar"].update({
     "adm_sources": "مصادر الزوار",
     "adm_source": "المصدر",
     "adm_pages": "أكثر الصفحات زيارة",
+    "adm_self_excluded": "زياراتك وفحوصاتك أنت (المدير) مستثناة من كل الإحصاءات على هذا المتصفح لمدة سنة منذ آخر دخول للوحة. كل ما سُجل قبل 3 نوفمبر 2026 معلَّم كاختبار.",
+    "adm_test": "(اختبار)",
+    "legal_imprint": "بيانات الناشر (Impressum)",
+    "legal_privacy": "الخصوصية",
+    "legal_terms": "الشروط",
 })
 
 TEXTS["en"].update({
@@ -550,4 +555,9 @@ TEXTS["en"].update({
     "adm_sources": "Traffic sources",
     "adm_source": "Source",
     "adm_pages": "Top pages",
+    "adm_self_excluded": "Your own visits and scans (admin) are excluded from all statistics in this browser for one year after your last dashboard login. Everything recorded before 3 November 2026 is marked as a test.",
+    "adm_test": "(test)",
+    "legal_imprint": "Imprint",
+    "legal_privacy": "Privacy",
+    "legal_terms": "Terms",
 })

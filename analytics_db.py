@@ -56,14 +56,14 @@ def record(conn, day, path, referrer, visitor, is_bot):
 
 def summary(conn, since_day):
     q = lambda sql, *a: [dict(r) for r in conn.execute(sql, (since_day, *a)).fetchall()]
-    humans = "is_bot = 0 AND day >= ?"
+    humans = "is_bot = 0 AND is_test = 0 AND day >= ?"
     return {
         "daily": q(f"SELECT day, COUNT(*) AS views, COUNT(DISTINCT visitor) AS visitors FROM pageviews"
                    f" WHERE {humans} GROUP BY day ORDER BY day DESC"),
         "referrers": q(f"SELECT referrer, COUNT(DISTINCT visitor || day) AS visitors FROM pageviews"
                        f" WHERE {humans} AND referrer != '(internal)' GROUP BY referrer ORDER BY visitors DESC LIMIT 15"),
         "pages": q(f"SELECT path, COUNT(*) AS views FROM pageviews WHERE {humans} GROUP BY path ORDER BY views DESC LIMIT 15"),
-        "bots": conn.execute("SELECT COUNT(*) FROM pageviews WHERE is_bot = 1 AND day >= ?", (since_day,)).fetchone()[0],
+        "bots": conn.execute("SELECT COUNT(*) FROM pageviews WHERE is_bot = 1 AND is_test = 0 AND day >= ?", (since_day,)).fetchone()[0],
         "funnel": {
             "visitors": conn.execute(f"SELECT COUNT(DISTINCT visitor || day) FROM pageviews WHERE {humans}", (since_day,)).fetchone()[0],
             "scan_pages": conn.execute(f"SELECT COUNT(DISTINCT visitor || day) FROM pageviews WHERE {humans} AND path = '/scan/*'", (since_day,)).fetchone()[0],

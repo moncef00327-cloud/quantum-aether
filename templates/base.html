@@ -5,9 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}{{ t.brand }}{% endblock %}</title>
   <meta name="description" content="{% block description %}{{ t.hero_sub }}{% endblock %}">
+  {% block alternates %}
   <link rel="canonical" href="{{ request.base_url }}?lang={{ lang }}">
   <link rel="alternate" hreflang="en" href="{{ request.base_url }}?lang=en">
   <link rel="alternate" hreflang="ar" href="{{ request.base_url }}?lang=ar">
+  <link rel="alternate" hreflang="x-default" href="{{ request.base_url }}?lang=en">
+  {% endblock %}
   <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   {% block head %}{% endblock %}
@@ -32,6 +35,11 @@
   </main>
   <footer class="wrap site-footer">
     <p>{{ t.privacy }}</p>
+    <p class="legal-links">
+      <a href="{{ url_for('site.legal_page', slug='impressum', lang=legal_lang) }}">{{ t.legal_imprint }}</a> ·
+      <a href="{{ url_for('site.legal_page', slug='datenschutz', lang=legal_lang) }}">{{ t.legal_privacy }}</a> ·
+      <a href="{{ url_for('site.legal_page', slug='agb', lang=legal_lang) }}">{{ t.legal_terms }}</a>
+    </p>
     <p>© {{ t.brand }} · ather-quatum.cloud</p>
   </footer>
   <script src="{{ url_for('static', filename='app.js') }}"></script>

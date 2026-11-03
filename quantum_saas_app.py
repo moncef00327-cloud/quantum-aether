@@ -25,6 +25,7 @@ import bio_archive_report
 import dna_encode
 import analytics_db
 import guides
+import legal
 import monitor
 import monitor_db
 import i18n
@@ -115,11 +116,25 @@ def texts():
 @bp.app_context_processor
 def _inject():
     lang = current_lang()
-    return {"t": i18n.TEXTS[lang], "lang": lang, "other_lang": "en" if lang == "ar" else "ar"}
+    return {"t": i18n.TEXTS[lang], "lang": lang, "other_lang": "en" if lang == "ar" else "ar",
+            "legal_lang": "en"}
 
 
 def public_base():
     return current_app.config["PUBLIC_URL"] or request.url_root.rstrip("/")
+
+
+ADMIN_COOKIE = "qa_admin"
+
+
+def admin_cookie_value():
+    """قيمة موقّعة بملح الخادم: لا يمكن تخمينها، وتُستعمل فقط لاستبعاد زيارات المدير من الإحصاءات."""
+    return hmac.new(current_app.config["HASH_SALT"].encode(), b"admin-visitor", hashlib.sha256).hexdigest()
+
+
+def is_admin_visitor():
+    value = request.cookies.get(ADMIN_COOKIE, "")
+    return bool(value) and hmac.compare_digest(value, admin_cookie_value())
 
 
 def client_hash():
@@ -145,7 +160,7 @@ def perform_scan(raw_domain):
     sales_db.record_attempt(conn, chash)
     result = current_app.extensions["scanner"](raw_domain)
     scan_id = secrets.token_urlsafe(9)
-    sales_db.create_scan(conn, scan_id, secrets.token_urlsafe(32), result, chash)
+    sales_db.create_scan(conn, scan_id, secrets.token_urlsafe(32), result, chash, is_test=is_admin_visitor())
     return scan_id, result
 
 
@@ -266,6 +281,19 @@ def study_data():
         return json.load(f)
 
 
+# ---------------------------------------------------------------- الصفحات القانونية (النمسا)
+
+@bp.get("/<any(impressum, datenschutz, agb):slug>")
+def legal_page(slug):
+    lang = request.args.get("lang")
+    lang = lang if lang in legal.LANGS else (request.accept_languages.best_match(list(legal.LANGS)) or "de")
+    other = "en" if lang == "de" else "de"
+    # الصفحة بالألمانية أو الإنجليزية: نمرر لغة القالب صراحة فتتجاوز لغة الموقع (عربي/إنجليزي).
+    t = dict(i18n.TEXTS["en"], dir="ltr", other_lang="English" if lang == "de" else "Deutsch")
+    return render_template("legal.html", page=legal.PAGES[slug][lang], t=t, lang=lang, other_lang=other,
+                           legal_lang=lang)
+
+
 @bp.get("/guides")
 def guides_index():
     lang = current_lang()
@@ -304,11 +332,15 @@ def admin():
     if not (auth and auth.username == "admin" and check_password_hash(password_hash, auth.password or "")):
         return Response(status=401, headers={"WWW-Authenticate": 'Basic realm="Quantum Aether admin", charset="UTF-8"'})
     conn = db()
-    return render_template("admin.html", stats=sales_db.stats(conn),
+    response = current_app.make_response(render_template("admin.html", stats=sales_db.stats(conn),
                            orders=sales_db.recent_orders(conn), scans=sales_db.recent_scans(conn),
                            subs=monitor_db.stats(conn, monitor.PLANS), accounts=monitor_db.recent_accounts(conn),
                            traffic=analytics_db.summary(conn, (dt.date.today() - dt.timedelta(days=13)).isoformat()),
-                           scans_daily=sales_db.scans_per_day(conn, (dt.date.today() - dt.timedelta(days=13)).isoformat()))
+                           scans_daily=sales_db.scans_per_day(conn, (dt.date.today() - dt.timedelta(days=13)).isoformat())))
+    # كوكي دائم لسنة: كل زيارات هذا المتصفح لا تُحسب في الإحصاءات.
+    response.set_cookie(ADMIN_COOKIE, admin_cookie_value(), max_age=365 * 24 * 3600, httponly=True,
+                        secure=request.is_secure, samesite="Lax")
+    return response
 
 
 # ---------------------------------------------------------------- API
@@ -743,14 +775,30 @@ def sitemap():
         mtime = os.path.getmtime(os.path.join(BASE_DIR, "templates", name))
         return dt.datetime.fromtimestamp(mtime, dt.timezone.utc).date().isoformat()
 
-    pages = [("/", template_date("index.html")), ("/monitoring", template_date("monitoring.html")),
-             ("/research", template_date("research.html")), ("/guides", max(g["updated"] for g in guides.GUIDES.values())),
-             ("/study/top-1000-post-quantum-tls", study_data()["scanned_on"])]
-    pages += [(f"/guides/{slug}", g["updated"]) for slug, g in guides.GUIDES.items()]
-    entries = [(f"{base}{p}?lang={lang}", day) for p, day in pages for lang in ("en", "ar")]
-    body = ('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-            + "".join(f"  <url><loc>{u.replace('&', '&amp;')}</loc><lastmod>{day}</lastmod></url>\n" for u, day in entries)
-            + "</urlset>\n")
+    site_langs, legal_langs = ("en", "ar"), legal.LANGS
+    pages = [("/", template_date("index.html"), site_langs), ("/monitoring", template_date("monitoring.html"), site_langs),
+             ("/research", template_date("research.html"), site_langs),
+             ("/guides", max(g["updated"] for g in guides.GUIDES.values()), site_langs),
+             ("/study/top-1000-post-quantum-tls", study_data()["scanned_on"], site_langs)]
+    pages += [(f"/guides/{slug}", g["updated"], site_langs) for slug, g in guides.GUIDES.items()]
+    legal_date = os.path.getmtime(os.path.join(BASE_DIR, "legal.py"))
+    legal_day = dt.datetime.fromtimestamp(legal_date, dt.timezone.utc).date().isoformat()
+    pages += [(f"/{slug}", legal_day, legal_langs) for slug in legal.PAGES]
+
+    def esc(u):
+        return u.replace("&", "&amp;")
+
+    parts = []
+    for path, day, langs in pages:
+        default = "de" if langs == legal_langs else "en"
+        alternates = "".join(f'<xhtml:link rel="alternate" hreflang="{alt}" href="{esc(f"{base}{path}?lang={alt}")}"/>'
+                             for alt in langs)
+        alternates += f'<xhtml:link rel="alternate" hreflang="x-default" href="{esc(f"{base}{path}?lang={default}")}"/>'
+        for lang in langs:
+            parts.append(f"  <url><loc>{esc(f'{base}{path}?lang={lang}')}</loc><lastmod>{day}</lastmod>{alternates}</url>\n")
+    body = ('<?xml version="1.0" encoding="UTF-8"?>\n'
+            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n'
+            + "".join(parts) + "</urlset>\n")
     return Response(body, mimetype="application/xml")
 
 
@@ -786,7 +834,7 @@ def _track_pageview(response):
     if request.method != "GET" or response.status_code != 200 or response.mimetype != "text/html":
         return response
     path = analytics_db.normalize_path(request.path)
-    if path is None:
+    if path is None or is_admin_visitor():
         return response
     try:
         day = dt.date.today().isoformat()

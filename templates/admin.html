@@ -10,6 +10,7 @@
   <div class="card stat"><h3>{{ t.adm_pricing_views }}</h3><p class="value">{{ traffic.funnel.monitoring_page }}</p></div>
 </section>
 <p class="muted small">{{ t.adm_window }} · {{ t.adm_bots }}: {{ traffic.bots }}</p>
+<p class="notice small">{{ t.adm_self_excluded }}</p>
 
 <section class="grid-2">
   <div class="card">
@@ -85,7 +86,7 @@
     {% for s in scans %}
       <tr><td dir="ltr">{{ s.created_at }}</td>
           <td dir="ltr"><a href="{{ url_for('site.scan_page', scan_id=s.id, lang=lang) }}">{{ s.domain }}</a></td>
-          <td><span class="grade-chip grade-{{ s.grade }}">{{ s.grade }}</span></td></tr>
+          <td><span class="grade-chip grade-{{ s.grade }}">{{ s.grade }}</span>{% if s.is_test %} <span class="muted small">{{ t.adm_test }}</span>{% endif %}</td></tr>
     {% endfor %}
     </tbody>
   </table>

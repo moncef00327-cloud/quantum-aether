@@ -47,14 +47,30 @@ def connect(path: str) -> sqlite3.Connection:
     conn.executescript(SCHEMA)
     monitor_db.init(conn)
     analytics_db.init(conn)
+    _migrate(conn)
     return conn
 
 
-def create_scan(conn, scan_id, report_token, result, client_hash):
+def _migrate(conn):
+    """ترحيلات صغيرة للقواعد الموجودة: أعمدة أضيفت بعد الإطلاق."""
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(scans)")}
+    if "is_test" not in cols:
+        with conn:
+            conn.execute("ALTER TABLE scans ADD COLUMN is_test INTEGER NOT NULL DEFAULT 0")
+            conn.execute("UPDATE scans SET is_test = 1")  # كل ما سبق الإطلاق اختبارات
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(pageviews)")}
+    if "is_test" not in cols:
+        with conn:
+            conn.execute("ALTER TABLE pageviews ADD COLUMN is_test INTEGER NOT NULL DEFAULT 0")
+            conn.execute("UPDATE pageviews SET is_test = 1")
+
+
+def create_scan(conn, scan_id, report_token, result, client_hash, is_test=False):
     with conn:
         conn.execute(
-            "INSERT INTO scans (id, report_token, domain, grade, result_json, client_hash) VALUES (?, ?, ?, ?, ?, ?)",
-            (scan_id, report_token, result["domain"], result["grade"], json.dumps(result, ensure_ascii=False), client_hash),
+            "INSERT INTO scans (id, report_token, domain, grade, result_json, client_hash, is_test) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (scan_id, report_token, result["domain"], result["grade"], json.dumps(result, ensure_ascii=False), client_hash,
+             int(is_test)),
         )
 
 
@@ -123,7 +139,7 @@ def is_scan_paid(conn, scan_id):
 
 
 def stats(conn):
-    scans = conn.execute("SELECT COUNT(*) FROM scans").fetchone()[0]
+    scans = conn.execute("SELECT COUNT(*) FROM scans WHERE is_test = 0").fetchone()[0]
     paid = conn.execute("SELECT amount, currency FROM orders WHERE status = 'COMPLETED'").fetchall()
     revenue = {}
     for row in paid:
@@ -141,11 +157,11 @@ def recent_orders(conn, limit=50):
 
 def scans_per_day(conn, since_day):
     rows = conn.execute("SELECT substr(created_at, 1, 10) AS day, COUNT(*) AS n FROM scans"
-                        " WHERE created_at >= ? GROUP BY day ORDER BY day DESC", (since_day,)).fetchall()
+                        " WHERE created_at >= ? AND is_test = 0 GROUP BY day ORDER BY day DESC", (since_day,)).fetchall()
     return {r["day"]: r["n"] for r in rows}
 
 
 def recent_scans(conn, limit=50):
-    rows = conn.execute("SELECT id, domain, grade, created_at FROM scans ORDER BY created_at DESC LIMIT ?",
+    rows = conn.execute("SELECT id, domain, grade, created_at, is_test FROM scans ORDER BY created_at DESC LIMIT ?",
                         (limit,)).fetchall()
     return [dict(r) for r in rows]

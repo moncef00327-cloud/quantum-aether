@@ -326,3 +326,93 @@ class AnalyticsTest(unittest.TestCase):
             rows = c.execute("SELECT path, referrer, is_bot FROM pageviews ORDER BY rowid").fetchall()
         self.assertEqual([tuple(r) for r in rows],
                          [("/", "news.ycombinator.com", 0), ("/guides", "(internal)", 0), ("/", "(direct)", 1)])
+
+
+class AdminExclusionAndSeoTest(unittest.TestCase):
+    def setUp(self):
+        import base64
+        from werkzeug.security import generate_password_hash
+        self.tmp = tempfile.mkdtemp()
+        self.app = quantum_saas_app.create_app(
+            {"TESTING": True, "DATA_DIR": self.tmp, "PUBLIC_URL": "https://ather-quatum.cloud",
+             "ADMIN_PASSWORD_HASH": generate_password_hash("pw"), "HASH_SALT": "salt"},
+            scanner=lambda raw: result_for(quantum_vuln_scanner.normalize_domain(raw)), paypal=None, mailer=FakeMailer())
+        self.auth = {"Authorization": "Basic " + base64.b64encode(b"admin:pw").decode()}
+        self.browser = {"User-Agent": "Mozilla/5.0 Firefox/140"}
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp)
+
+    def db(self):
+        return closing(sales_db.connect(os.path.join(self.tmp, "quantum_saas.db")))
+
+    def test_admin_cookie_excludes_visits_and_scans(self):
+        admin = self.app.test_client()
+        r = admin.get("/admin", headers=self.auth)
+        cookie = r.headers["Set-Cookie"]
+        self.assertIn("qa_admin=", cookie)
+        self.assertIn("HttpOnly", cookie)
+        self.assertIn("Max-Age=31536000", cookie)
+        admin.get("/", headers=self.browser)
+        admin.get("/monitoring", headers=self.browser)
+        admin.post("/api/scan", json={"domain": "example.com"})
+        visitor = self.app.test_client()
+        visitor.get("/", headers=self.browser)
+        visitor.post("/api/scan", json={"domain": "example.org"})
+        with self.db() as c:
+            self.assertEqual(c.execute("SELECT COUNT(*) FROM pageviews").fetchone()[0], 1)
+            self.assertEqual(sales_db.stats(c)["scans"], 1)
+            self.assertEqual(c.execute("SELECT is_test FROM scans WHERE domain = 'example.com'").fetchone()[0], 1)
+        body = admin.get("/admin?lang=en", headers=self.auth).get_data(as_text=True)
+        self.assertIn("excluded from all statistics", body)
+
+    def test_forged_cookie_is_ignored(self):
+        client = self.app.test_client()
+        client.set_cookie("qa_admin", "forged")
+        client.get("/", headers=self.browser)
+        with self.db() as c:
+            self.assertEqual(c.execute("SELECT COUNT(*) FROM pageviews").fetchone()[0], 1)
+
+    def test_migration_marks_existing_rows_as_tests(self):
+        import sqlite3
+        path = os.path.join(self.tmp, "old.db")
+        old = sqlite3.connect(path)
+        old.executescript(sales_db.SCHEMA)
+        old.execute("INSERT INTO scans (id, report_token, domain, grade, result_json, client_hash) VALUES ('s','t','a.com','A','{}','h')")
+        old.commit(); old.close()
+        with closing(sales_db.connect(path)) as c:
+            self.assertEqual(c.execute("SELECT is_test FROM scans").fetchone()[0], 1)
+            self.assertEqual(sales_db.stats(c)["scans"], 0)
+
+    def test_hreflang_on_pages(self):
+        body = self.app.test_client().get("/guides?lang=ar").get_data(as_text=True)
+        for lang in ("en", "ar", "x-default"):
+            self.assertIn(f'hreflang="{lang}"', body)
+        self.assertIn('hreflang="x-default" href="http://localhost/guides?lang=en"', body)
+
+    def test_legal_pages_in_both_languages_with_placeholders(self):
+        client = self.app.test_client()
+        for slug in ("impressum", "datenschutz", "agb"):
+            for lang in ("de", "en"):
+                r = client.get(f"/{slug}?lang={lang}")
+                self.assertEqual(r.status_code, 200, (slug, lang))
+                body = r.get_data(as_text=True)
+                self.assertIn('class="placeholder"', body)
+                self.assertIn(f'<html lang="{lang}" dir="ltr">', body)
+                self.assertIn('hreflang="de"', body)
+        home = client.get("/?lang=ar").get_data(as_text=True)
+        for slug in ("impressum", "datenschutz", "agb"):
+            self.assertIn(f"/{slug}?lang=en", home)
+
+    def test_sitemap_has_xhtml_alternates(self):
+        import xml.dom.minidom
+        body = self.app.test_client().get("/sitemap.xml").get_data(as_text=True)
+        xml.dom.minidom.parseString(body)
+        self.assertIn('xmlns:xhtml="http://www.w3.org/1999/xhtml"', body)
+        self.assertIn('<xhtml:link rel="alternate" hreflang="x-default" href="https://ather-quatum.cloud/guides?lang=en"/>', body)
+        self.assertIn("https://ather-quatum.cloud/impressum?lang=de", body)
+        self.assertEqual(body.count("<url>"), 2 * (5 + 3) + 2 * 3)
+
+    def test_robots_points_to_sitemap(self):
+        self.assertIn("Sitemap: https://ather-quatum.cloud/sitemap.xml",
+                      self.app.test_client().get("/robots.txt").get_data(as_text=True))
