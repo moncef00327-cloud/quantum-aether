@@ -26,6 +26,15 @@
       });
     });
   });
+    // أمثلة قابلة للنقر: تملأ الخانة وتبدأ الفحص بنقرة واحدة.
+  document.querySelectorAll(".example-link").forEach(function (link) {
+    link.addEventListener("click", function () {
+      var form = document.querySelector(".scan-form");
+      if (!form) return;
+      form.querySelector('input[name="domain"]').value = link.dataset.domain;
+      if (form.requestSubmit) form.requestSubmit(); else form.submit();
+    });
+  });
     var printButton = document.querySelector(".print-button");
   if (printButton) {
     printButton.addEventListener("click", function () { window.print(); });

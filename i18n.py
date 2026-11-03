@@ -753,6 +753,18 @@ TEXTS["en"].update({
     "share_text": "{domain} scored {grade} on post-quantum TLS readiness. Check your site with Quantum Aether",
 })
 
+
+TEXTS["ar"].update({
+    "hero_tagline": "في 10 ثوانٍ، اعرف هل يستخدم موقعك التشفير المقاوم للحوسبة الكمومية. مجاناً وبلا حساب.",
+    "try_label": "جرّب:",
+    "trust_bar": "فحصنا أكبر 712 موقعاً · بيانات مفتوحة · مجاناً بلا حساب",
+})
+TEXTS["en"].update({
+    "hero_tagline": "In 10 seconds, find out if your HTTPS already uses post-quantum encryption. Free, no sign-up.",
+    "try_label": "Try:",
+    "trust_bar": "We scanned the top 712 sites · open dataset · free, no account",
+})
+
 TEXTS["de"] = dict(TEXTS["en"])
 TEXTS["de"].update({
     "dir": "ltr",
@@ -915,6 +927,13 @@ TEXTS["de"].update({
 TEXTS["de"].update({
     "share_title": "Ergebnis teilen",
     "share_text": "{domain} erreichte Note {grade} bei der quantenresistenten TLS-Prüfung. Prüfen Sie Ihre Website mit Quantum Aether",
+})
+
+
+TEXTS["de"].update({
+    "hero_tagline": "In 10 Sekunden sehen, ob Ihr HTTPS schon quantenresistent verschlüsselt ist. Kostenlos, ohne Anmeldung.",
+    "try_label": "Beispiel:",
+    "trust_bar": "Wir haben die Top-712-Websites geprüft · offener Datensatz · kostenlos, ohne Konto",
 })
 
 LANG_NAMES = {"en": "English", "ar": "العربية", "de": "Deutsch"}

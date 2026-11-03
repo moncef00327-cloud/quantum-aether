@@ -177,3 +177,10 @@ html[dir="rtl"] .ladder .steps li { padding: .75rem 2.5rem .75rem 0; }
 .faq details:first-of-type { border-top: 0; }
 .faq summary { cursor: pointer; font-weight: 600; }
 .faq details p { margin: .5rem 0 0; color: var(--muted, #475569); }
+
+/* أمثلة قابلة للنقر + شريط الثقة */
+.try { margin: .5rem 0 0; font-size: .9rem; color: var(--muted, #64748b); }
+.example-link { background: none; border: 0; padding: 0 .15rem; color: #2563eb; cursor: pointer;
+  font: inherit; text-decoration: underline; }
+.example-link:hover { color: #1d4ed8; }
+.trustbar { margin-top: 1rem; font-size: .85rem; color: var(--muted, #64748b); text-align: center; }

@@ -4,17 +4,22 @@
 {% block content %}
 <section class="hero">
   <h1>{{ t.hero_title }}</h1>
-  <p class="lead">{{ t.hero_sub }}</p>
+  <p class="lead">{{ t.hero_tagline }}</p>
   <form class="scan-form" method="post" action="{{ url_for('site.scan_form', lang=lang) }}" data-busy="{{ t.scanning }}">
     <label for="domain">{{ t.domain_label }}</label>
     <div class="scan-row">
       <input id="domain" name="domain" type="text" inputmode="url" autocomplete="url" dir="ltr"
-             placeholder="example.com" value="{{ domain }}" required maxlength="253">
+             placeholder="example.com" value="{{ domain }}" required maxlength="253"{% if not domain %} autofocus{% endif %}>
       <button type="submit">{{ t.scan_button }}</button>
     </div>
+    <p class="try">{{ t.try_label }}
+      <button type="button" class="example-link" data-domain="github.com">github.com</button>
+      <button type="button" class="example-link" data-domain="amazon.com">amazon.com</button>
+      <button type="button" class="example-link" data-domain="cloudflare.com">cloudflare.com</button></p>
     {% if error %}<p class="form-error" role="alert">{{ error }}</p>{% endif %}
     <p class="form-busy" hidden>{{ t.scanning }}</p>
   </form>
+  <p class="trustbar">{{ t.trust_bar }}</p>
 </section>
 
 <section class="card ladder">
