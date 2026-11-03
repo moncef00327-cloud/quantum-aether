@@ -19,33 +19,39 @@ ALERT_TEXT = {
     "GRADE_CHANGED": {
         "en": "{domain}: grade changed from {old} to {new}",
         "ar": "{domain}: تغيّرت الدرجة من {old} إلى {new}",
+        "de": "{domain}: Note geändert von {old} zu {new}",
     },
     "PQ_LOST": {
         "en": "{domain}: post-quantum key exchange is no longer negotiated (now {group})",
         "ar": "{domain}: لم يعد الخادم يتفق على تبادل المفاتيح المقاوم للكم (الآن {group})",
+        "de": "{domain}: Quantenresistenter Schlüsselaustausch wird nicht mehr ausgehandelt (jetzt {group})",
     },
     "PQ_GAINED": {
         "en": "{domain}: post-quantum key exchange is now enabled ({group})",
         "ar": "{domain}: أصبح تبادل المفاتيح المقاوم للكم مفعّلاً ({group})",
+        "de": "{domain}: Quantenresistenter Schlüsselaustausch ist jetzt aktiv ({group})",
     },
     "CERT_EXPIRING": {
         "en": "{domain}: certificate expires in {days} days",
         "ar": "{domain}: تنتهي الشهادة خلال {days} يوماً",
+        "de": "{domain}: Zertifikat läuft in {days} Tagen ab",
     },
     "UNREACHABLE": {
         "en": "{domain}: scan failed ({error})",
         "ar": "{domain}: فشل الفحص ({error})",
+        "de": "{domain}: Prüfung fehlgeschlagen ({error})",
     },
     "RECOVERED": {
         "en": "{domain}: reachable again, grade {new}",
         "ar": "{domain}: عاد يعمل، الدرجة {new}",
+        "de": "{domain}: wieder erreichbar, Note {new}",
     },
 }
 
 
 def alert_text(alert, lang):
     params = dict(alert["params"], domain=alert["domain"])
-    return ALERT_TEXT[alert["kind"]][lang if lang in ("en", "ar") else "en"].format(**params)
+    return ALERT_TEXT[alert["kind"]][lang if lang in ("en", "ar", "de") else "en"].format(**params)
 
 
 def diff(previous, result):
@@ -109,23 +115,67 @@ def alert_email(account, alerts, dashboard_url):
     if lang == "ar":
         subject = f"الأثير الكمومي: {len(alerts)} تنبيه لنطاقاتك"
         text = "\n".join(["تغيّرات في نطاقاتك المراقبة:", "", *lines, "", "رابط لوحة التحكم في رسالة الترحيب، أو اطلبه من جديد هنا:", dashboard_url])
+    elif lang == "de":
+        subject = f"Quantum Aether: {len(alerts)} Hinweis(e) zu Ihren Domains"
+        text = "\n".join(["Änderungen an Ihren überwachten Domains:", "", *lines, "", "Ihr Dashboard-Link steht in der Willkommens-E-Mail, oder fordern Sie ihn hier erneut an:", dashboard_url])
     else:
         subject = f"Quantum Aether: {len(alerts)} alert(s) for your domains"
         text = "\n".join(["Changes on your monitored domains:", "", *lines, "", "Your dashboard link is in your welcome email, or request it again here:", dashboard_url])
     return subject, text
 
 
+def _lang(account):
+    l = (account.get("lang") or "en")
+    return l if l in ("en", "ar", "de") else "en"
+
+
 def welcome_email(account, dashboard_url):
+    """رسالة شكر وترحيب عند تفعيل الاشتراك، بلغة العميل."""
     plan = PLANS[account["plan"]]
-    if account.get("lang") == "ar":
-        return ("الأثير الكمومي: اشتراك المراقبة فعّال",
-                f"تم تفعيل خطة {plan['name']} (حتى {plan['domains']} نطاقاً).\n\n"
-                f"لوحة التحكم (احفظ هذا الرابط، فهو مفتاح حسابك):\n{dashboard_url}\n\n"
-                "أضف نطاقاتك من اللوحة. نفحصها يومياً ونراسلك عند أي تغيّر.")
-    return ("Quantum Aether: your monitoring subscription is active",
-            f"Your {plan['name']} plan is active (up to {plan['domains']} domains).\n\n"
-            f"Dashboard (keep this link private, it is the key to your account):\n{dashboard_url}\n\n"
-            "Add your domains there. We scan them daily and email you when anything changes.")
+    name, domains = plan["name"], plan["domains"]
+    bodies = {
+        "ar": ("الأثير الكمومي: شكراً لك، اشتراك المراقبة فعّال",
+               f"شكراً لاشتراكك في الأثير الكمومي. تم تفعيل خطة {name} (حتى {domains} نطاقاً).\n\n"
+               f"لوحة التحكم (احفظ هذا الرابط، فهو مفتاح حسابك):\n{dashboard_url}\n\n"
+               "أضف نطاقاتك من اللوحة. نفحصها يومياً ونراسلك فور أي تغيّر: فقدان التبادل المقاوم للكم، "
+               "أو انخفاض الدرجة، أو اقتراب انتهاء شهادة.\n\n"
+               "يمكنك الإلغاء في أي وقت من لوحة التحكم. لأي سؤال، ردّ على هذه الرسالة."),
+        "de": ("Quantum Aether: Danke – Ihre Überwachung ist aktiv",
+               f"Danke für Ihr Abonnement bei Quantum Aether. Ihr Tarif {name} ist aktiv (bis zu {domains} Domains).\n\n"
+               f"Dashboard (bewahren Sie diesen Link privat auf, er ist der Schlüssel zu Ihrem Konto):\n{dashboard_url}\n\n"
+               "Fügen Sie dort Ihre Domains hinzu. Wir prüfen sie täglich und mailen Ihnen sofort bei jeder Änderung: "
+               "Wegfall des quantenresistenten Schlüsselaustauschs, schlechtere Note oder ablaufendes Zertifikat.\n\n"
+               "Sie können jederzeit im Dashboard kündigen. Bei Fragen antworten Sie einfach auf diese E-Mail."),
+        "en": ("Quantum Aether: thank you — your monitoring is active",
+               f"Thank you for subscribing to Quantum Aether. Your {name} plan is active (up to {domains} domains).\n\n"
+               f"Dashboard (keep this link private, it is the key to your account):\n{dashboard_url}\n\n"
+               "Add your domains there. We scan them daily and email you the moment anything changes: "
+               "post-quantum key exchange lost, a lower grade, or a certificate nearing expiry.\n\n"
+               "You can cancel anytime from the dashboard. Any questions, just reply to this email."),
+    }
+    return bodies[_lang(account)]
+
+
+def cancel_email(account, monitoring_url):
+    """رسالة تأكيد الإلغاء وشكر، بلغة العميل."""
+    bodies = {
+        "ar": ("الأثير الكمومي: تم إلغاء اشتراك المراقبة",
+               "تم إلغاء اشتراكك ولن تُحصَّل منك أي رسوم بعد الآن. توقفت المراقبة اليومية لنطاقاتك.\n\n"
+               "شكراً لتجربتك الأثير الكمومي. تستطيع العودة والاشتراك في أي وقت من:\n"
+               f"{monitoring_url}\n\n"
+               "إن كان الإلغاء عن طريق الخطأ، أو لديك ملاحظة تساعدنا على التحسّن، فقط ردّ على هذه الرسالة."),
+        "de": ("Quantum Aether: Ihr Überwachungs-Abo wurde gekündigt",
+               "Ihr Abonnement wurde gekündigt und es werden keine weiteren Gebühren berechnet. Die tägliche Überwachung wurde beendet.\n\n"
+               "Danke, dass Sie Quantum Aether ausprobiert haben. Sie können jederzeit erneut abonnieren:\n"
+               f"{monitoring_url}\n\n"
+               "War die Kündigung ein Versehen oder haben Sie Feedback für uns? Antworten Sie einfach auf diese E-Mail."),
+        "en": ("Quantum Aether: your monitoring subscription is cancelled",
+               "Your subscription has been cancelled and you will not be charged again. Daily monitoring has stopped.\n\n"
+               "Thank you for trying Quantum Aether. You can resubscribe anytime at:\n"
+               f"{monitoring_url}\n\n"
+               "If this was a mistake, or you have feedback that would help us improve, just reply to this email."),
+    }
+    return bodies[_lang(account)]
 
 
 def owner_email(event, account, detail=""):

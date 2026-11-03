@@ -182,8 +182,26 @@ class MonitoringTest(unittest.TestCase):
         self.assertEqual(self.paypal.cancelled, [f"I-{account_id}"])
         self.assertIn("Cancelled by customer", self.mailer.sent[-1][1])
         self.assertEqual(self.mailer.sent[-1][0], "owner@example.com")
+        customer = [m for m in self.mailer.sent if m[0] == "ops@example.com"][-1]
+        self.assertIn("cancelled", customer[1].lower())  # تأكيد الإلغاء للعميل
+        self.assertIn("/monitoring", customer[2])
         r = self.client.post(f"/monitor/{token}/domains", data={"domains": "a.example.com"})
         self.assertIn("n=inactive", r.headers["Location"])
+
+    def test_subscription_emails_are_in_customer_language(self):
+        import monitor
+        expect = {
+            "ar": ("شكراً", "تم إلغاء"),
+            "en": ("thank you", "cancelled"),
+            "de": ("Danke", "gekündigt"),
+        }
+        for lang, (w, c) in expect.items():
+            acc = {"plan": "starter", "lang": lang, "email": "c@x.test", "id": "acc_x", "subscription_id": "I-x"}
+            self.assertIn(w.lower(), monitor.welcome_email(acc, "https://x/monitor/T")[1].lower())
+            self.assertIn(c.lower(), monitor.cancel_email(acc, "https://x/monitoring?lang=" + lang)[1].lower())
+        # لغة غير مدعومة ترجع للإنجليزية
+        acc = {"plan": "starter", "lang": "fr", "email": "c@x.test", "id": "a", "subscription_id": "I"}
+        self.assertIn("thank you", monitor.welcome_email(acc, "u")[1].lower())
 
     def test_dashboard_is_private(self):
         _, r = self.subscribe()

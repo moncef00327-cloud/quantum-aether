@@ -979,8 +979,10 @@ def monitor_cancel(token):
         log.warning("PayPal cancel failed for %s: %s", account["id"], exc)
         return _back(token, "cancel_failed")
     monitor_db.set_status(db(), account["id"], "CANCELLED")
-    monitor.notify_owner(current_app.extensions["mailer"], current_app.config["OWNER_EMAIL"],
-                         "Cancelled by customer", account)
+    mailer = current_app.extensions["mailer"]
+    subject, text = monitor.cancel_email(account, public_base() + url_for(".monitoring", lang=account.get("lang") or "en"))
+    mailer.send(account["email"], subject, text)  # تأكيد الإلغاء بلغة العميل
+    monitor.notify_owner(mailer, current_app.config["OWNER_EMAIL"], "Cancelled by customer", account)
     return _back(token, "cancelled")
 
 
