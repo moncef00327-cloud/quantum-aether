@@ -233,9 +233,28 @@ def research_data():
 
 # ---------------------------------------------------------------- الصفحات
 
+def home_jsonld():
+    base, t = public_base(), texts()
+    return [
+        {"@context": "https://schema.org", "@type": "WebSite", "name": t["brand"], "url": base,
+         "inLanguage": current_lang(),
+         "potentialAction": {"@type": "SearchAction", "target": base + "/site/{search_term_string}",
+                             "query-input": "required name=search_term_string"}},
+        {"@context": "https://schema.org", "@type": "SoftwareApplication", "name": t["brand"],
+         "applicationCategory": "SecurityApplication", "operatingSystem": "Web",
+         "description": t["hero_sub"], "url": base,
+         "offers": [{"@type": "Offer", "price": "0", "priceCurrency": "USD", "name": t["free_title"]},
+                    {"@type": "Offer", "price": current_app.config["PRICE"], "priceCurrency": "USD", "name": t["paid_title"]}]},
+        {"@context": "https://schema.org", "@type": "FAQPage",
+         "mainEntity": [{"@type": "Question", "name": q,
+                         "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in t["faq"]]},
+    ]
+
+
 @bp.get("/")
 def index():
-    return render_template("index.html", error=None, domain=request.args.get("domain", "")[:253])
+    return render_template("index.html", error=None, domain=request.args.get("domain", "")[:253],
+                           jsonld=home_jsonld())
 
 
 @bp.post("/scan")
@@ -389,8 +408,18 @@ def site_page(domain):
     except quantum_vuln_scanner.ScanError:
         abort(404)
     summary, source = known_result_for(domain)
+    jsonld = None
+    if summary:
+        pq = "yes" if summary["pq"] else "no"
+        jsonld = [{"@context": "https://schema.org", "@type": "WebPage",
+                   "name": f"{domain} — post-quantum TLS readiness",
+                   "url": public_base() + url_for(".site_page", domain=domain),
+                   "inLanguage": current_lang(),
+                   "about": {"@type": "WebSite", "name": domain, "url": f"https://{domain}"},
+                   "description": f"{domain} TLS grade {summary['grade']}, key exchange {summary.get('group') or 'unknown'}, "
+                                  f"post-quantum key exchange: {pq}."}]
     return render_template("site_page.html", domain=domain, summary=summary, source=source,
-                           snippets=badge_snippets(domain) if summary else None)
+                           snippets=badge_snippets(domain) if summary else None, jsonld=jsonld)
 
 
 @bp.get("/compare")
@@ -1027,8 +1056,8 @@ def sitemap():
     pages += [(f"/guides/{slug}", g["updated"], site_langs) for slug, g in guides.GUIDES.items()]
     pages.append(("/compare", template_date("compare.html"), site_langs))
     study_day = study_data()["scanned_on"]
-    by_domain = study_by_domain()
-    pages += [(f"/site/{d}", study_day, site_langs) for d in STUDY_NOTABLE if d in by_domain]
+    # صفحة قابلة للفهرسة لكل نطاق في الدراسة (SEO برمجي طويل الذيل)
+    pages += [(f"/site/{site['domain']}", study_day, site_langs) for site in study_data()["sites"]]
     legal_date = os.path.getmtime(os.path.join(BASE_DIR, "legal.py"))
     legal_day = dt.datetime.fromtimestamp(legal_date, dt.timezone.utc).date().isoformat()
     pages += [(f"/{slug}", legal_day, legal_langs) for slug in legal.PAGES]

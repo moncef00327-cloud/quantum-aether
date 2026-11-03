@@ -171,3 +171,9 @@ mark.placeholder { background: var(--warn); color: var(--bg); border-radius: 4px
 .ladder .steps li.primary { background: color-mix(in srgb, #16a34a 8%, transparent); border-radius: 8px; }
 .ladder .steps li.primary::before { background: #16a34a; }
 html[dir="rtl"] .ladder .steps li { padding: .75rem 2.5rem .75rem 0; }
+
+/* الأسئلة الشائعة */
+.faq details { border-top: 1px solid var(--border, #e2e8f0); padding: .6rem 0; }
+.faq details:first-of-type { border-top: 0; }
+.faq summary { cursor: pointer; font-weight: 600; }
+.faq details p { margin: .5rem 0 0; color: var(--muted, #475569); }

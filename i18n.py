@@ -711,6 +711,48 @@ TEXTS["en"].update({
     "ladder_cta": "Start daily monitoring →",
 })
 
+
+TEXTS["ar"].update({
+    "faq_title": "أسئلة شائعة",
+    "faq": [
+        ["ما هو X25519MLKEM768؟",
+         "تبادل مفاتيح هجين لـ TLS 1.3 يجمع X25519 التقليدي مع ML-KEM (المعيار FIPS 203) المقاوم للحواسيب الكمومية. تتفاوض عليه Chrome وFirefox وEdge تلقائياً اليوم. وجوده يحمي مفاتيح الجلسة من هجوم «احفظ الآن، فُكّ لاحقاً»."],
+        ["هل موقعي في خطر من الحواسيب الكمومية اليوم؟",
+         "لا يوجد حاسوب كمومي قادر على كسر TLS الآن، لكن الحركة المشفّرة التي تُسجَّل اليوم قد تُفكّ بعد سنوات عند توفّره. لذا تبادل المفاتيح المقاوم للكم مهم الآن لأي بيانات تبقى حساسة لسنوات."],
+        ["كيف أفعّل TLS المقاوم للكم على خادمي؟",
+         "تحتاج مكتبة TLS تدعم ML-KEM: OpenSSL 3.5+ لـ nginx وApache، أو Caddy حديث، أو تفعيل Cloudflare أمام موقعك. لدينا أدلة خطوة بخطوة لكل خادم."],
+        ["هل الدرجة A تعني أن موقعي آمن كموميّاً بالكامل؟",
+         "لا. نحن نقيس تبادل المفاتيح في اتصال TLS العام فقط. الشهادات ما زالت تقليدية في كل المواقع (المتصفحات لا تقبل شهادات ML-DSA بعد)، ولا نفحص تطبيقك ولا الاتصال بين CDN وخادمك الأصلي."],
+        ["كم يكلّف؟",
+         "الفحص والملخص مجانيان. التقرير الكامل بخطوات الإصلاح 49$ لمرة واحدة. المراقبة اليومية لكل نطاقاتك من 29$ شهرياً."],
+    ],
+})
+TEXTS["en"].update({
+    "faq_title": "Frequently asked questions",
+    "faq": [
+        ["What is X25519MLKEM768?",
+         "A hybrid TLS 1.3 key exchange combining classical X25519 with post-quantum ML-KEM (FIPS 203). Chrome, Firefox and Edge negotiate it by default today. It protects session keys against \"harvest now, decrypt later\" attacks."],
+        ["Is my website at risk from quantum computers today?",
+         "No quantum computer can break TLS yet, but traffic recorded today could be decrypted years from now once one exists. Post-quantum key exchange matters now for any data that stays sensitive for years."],
+        ["How do I enable post-quantum TLS on my server?",
+         "You need a TLS library with ML-KEM: OpenSSL 3.5+ for nginx and Apache, a recent Caddy, or putting Cloudflare in front of your site. We publish step-by-step guides for each."],
+        ["Does an A grade mean my site is fully quantum-safe?",
+         "No. We measure the key exchange on the public TLS connection only. Certificates are still classical on every site (browsers do not accept ML-DSA certificates yet), and we do not test your application or the CDN-to-origin link."],
+        ["How much does it cost?",
+         "The scan and summary are free. The full report with fix steps is a one-off $49. Daily monitoring of all your domains starts at $29/month."],
+    ],
+})
+
+
+TEXTS["ar"].update({
+    "share_title": "شارك نتيجتك",
+    "share_text": "درجة {domain} في جاهزية TLS لما بعد الكم: {grade}. افحص موقعك عبر Quantum Aether",
+})
+TEXTS["en"].update({
+    "share_title": "Share your result",
+    "share_text": "{domain} scored {grade} on post-quantum TLS readiness. Check your site with Quantum Aether",
+})
+
 TEXTS["de"] = dict(TEXTS["en"])
 TEXTS["de"].update({
     "dir": "ltr",
@@ -850,6 +892,29 @@ TEXTS["de"].update({
     "ladder_step3_h": "Sicher bleiben — tägliche Überwachung",
     "ladder_step3_b": "Wir prüfen alle Ihre Domains täglich und mailen Ihnen sofort, wenn der quantenresistente Schlüsselaustausch wegfällt, die Note sinkt oder ein Zertifikat abläuft. Ab 29 $/Monat — genau das, was einmalige Prüftools nicht leisten.",
     "ladder_cta": "Tägliche Überwachung starten →",
+})
+
+
+TEXTS["de"].update({
+    "faq_title": "Häufige Fragen",
+    "faq": [
+        ["Was ist X25519MLKEM768?",
+         "Ein hybrider TLS-1.3-Schlüsselaustausch, der klassisches X25519 mit dem quantenresistenten ML-KEM (FIPS 203) verbindet. Chrome, Firefox und Edge handeln ihn heute standardmäßig aus. Er schützt Sitzungsschlüssel vor „Harvest now, decrypt later“."],
+        ["Ist meine Website heute durch Quantencomputer gefährdet?",
+         "Noch kann kein Quantencomputer TLS brechen, aber heute aufgezeichneter Verkehr könnte in einigen Jahren entschlüsselt werden. Quantenresistenter Schlüsselaustausch zählt daher jetzt für Daten, die lange sensibel bleiben."],
+        ["Wie aktiviere ich quantenresistentes TLS auf meinem Server?",
+         "Sie brauchen eine TLS-Bibliothek mit ML-KEM: OpenSSL 3.5+ für nginx und Apache, ein aktuelles Caddy oder Cloudflare vor Ihrer Website. Wir veröffentlichen Schritt-für-Schritt-Anleitungen."],
+        ["Bedeutet Note A, dass meine Website vollständig quantensicher ist?",
+         "Nein. Wir messen nur den Schlüsselaustausch der öffentlichen TLS-Verbindung. Zertifikate sind überall noch klassisch, und wir prüfen weder Ihre Anwendung noch die Verbindung CDN–Ursprungsserver."],
+        ["Was kostet es?",
+         "Prüfung und Zusammenfassung sind kostenlos. Der vollständige Bericht mit Behebungsschritten kostet einmalig 49 $. Tägliche Überwachung aller Domains ab 29 $/Monat."],
+    ],
+})
+
+
+TEXTS["de"].update({
+    "share_title": "Ergebnis teilen",
+    "share_text": "{domain} erreichte Note {grade} bei der quantenresistenten TLS-Prüfung. Prüfen Sie Ihre Website mit Quantum Aether",
 })
 
 LANG_NAMES = {"en": "English", "ar": "العربية", "de": "Deutsch"}

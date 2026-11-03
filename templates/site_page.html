@@ -1,7 +1,8 @@
 {% extends "base.html" %}
 {% block title %}{{ domain }} — {{ t.site_title }}{% endblock %}
 {% block description %}{{ t.site_meta.format(domain=domain) }}{% endblock %}
-{% block head %}{% if not summary %}<meta name="robots" content="noindex">{% endif %}{% endblock %}
+{% block head %}{% if not summary %}<meta name="robots" content="noindex">{% endif %}{% if jsonld %}{% for obj in jsonld %}
+<script type="application/ld+json">{{ obj | tojson }}</script>{% endfor %}{% endif %}{% endblock %}
 {% block content %}
 <section class="card result-head">
   {% if summary %}<div class="grade grade-{{ summary.grade }}">{{ summary.grade }}</div>{% endif %}
