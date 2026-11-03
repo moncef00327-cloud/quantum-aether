@@ -431,6 +431,57 @@ def finding_text(finding, lang):
     return title.format(**params), detail.format(**params)
 
 
+TEXTS["ar"].update({
+    "crypto_title": "أو ادفع بـ USDT / USDC",
+    "crypto_sub": "تحويل مباشر من محفظتك أو من منصة تداول. يتحقق خادمنا من المعاملة على الشبكة نفسها ثم يفتح التقرير.",
+    "crypto_send": "أرسل بالضبط",
+    "crypto_on": "على شبكة",
+    "crypto_to": "إلى العنوان:",
+    "crypto_copy": "نسخ",
+    "crypto_warning": "أرسل على هذه الشبكة فقط وبهذا المبلغ بالضبط (الكسر العشري يعرّف دفعتك). "
+                      "الإرسال على شبكة أخرى أو بعملة أخرى قد يضيع المبلغ. رسوم الشبكة على المرسل.",
+    "crypto_tx_label": "بعد الإرسال، الصق رقم المعاملة (Transaction hash / TxID):",
+    "crypto_verify": "تحقق وافتح التقرير",
+    "crypto_msgs": {
+        "choose_failed": "تعذّر إنشاء طلب الدفع. حاول مجدداً.",
+        "invalid_tx_hash": "رقم المعاملة غير صحيح: يبدأ بـ 0x ويليه 64 حرفاً.",
+        "pending": "لم تظهر المعاملة على الشبكة بعد. انتظر قليلاً ثم اضغط مجدداً.",
+        "confirming": "وصلت الدفعة وتنتظر التأكيدات ({c} من {n}). اضغط مجدداً بعد دقيقة.",
+        "no_transfer": "هذه المعاملة لا تحوي تحويل {token} إلى عنواننا على هذه الشبكة.",
+        "wrong_amount": "المبلغ المستلم ({received}) أقل من المطلوب ({expected}). راسلنا عبر البريد في صفحة Impressum.",
+        "too_old": "هذه المعاملة أقدم من الطلب، فهي ليست دفعته.",
+        "failed": "المعاملة فشلت على الشبكة.",
+        "tx_already_used": "هذه المعاملة استُخدمت لطلب آخر.",
+        "chain_unavailable": "تعذّر الاتصال بالشبكة الآن. حاول بعد دقيقة؛ دفعتك محفوظة على الشبكة.",
+        "copied": "تم النسخ",
+    },
+})
+TEXTS["en"].update({
+    "crypto_title": "Or pay with USDT / USDC",
+    "crypto_sub": "Direct transfer from your wallet or an exchange. Our server checks the transaction on the blockchain itself, then unlocks the report.",
+    "crypto_send": "Send exactly",
+    "crypto_on": "on",
+    "crypto_to": "to this address:",
+    "crypto_copy": "Copy",
+    "crypto_warning": "Use this network only and this exact amount (the decimals identify your payment). "
+                      "Sending on another network or another token may lose the funds. Network fees are paid by the sender.",
+    "crypto_tx_label": "After sending, paste the transaction hash (TxID):",
+    "crypto_verify": "Verify and open the report",
+    "crypto_msgs": {
+        "choose_failed": "Could not create the payment request. Please try again.",
+        "invalid_tx_hash": "That is not a transaction hash: it starts with 0x followed by 64 characters.",
+        "pending": "The transaction is not on the blockchain yet. Wait a moment and try again.",
+        "confirming": "Payment received, waiting for confirmations ({c} of {n}). Try again in a minute.",
+        "no_transfer": "This transaction does not transfer {token} to our address on this network.",
+        "wrong_amount": "The amount received ({received}) is less than required ({expected}). Contact us via the email in the Impressum.",
+        "too_old": "This transaction is older than the order, so it is not its payment.",
+        "failed": "The transaction failed on the blockchain.",
+        "tx_already_used": "This transaction was already used for another order.",
+        "chain_unavailable": "The blockchain cannot be reached right now. Try again in a minute; your payment is safe on-chain.",
+        "copied": "Copied",
+    },
+})
+
 # ---------------------------------------------------------------- نصوص اشتراك المراقبة الشهري
 TEXTS["ar"].update({
     "nav_monitoring": "للشركات",

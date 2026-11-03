@@ -23,6 +23,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.security import check_password_hash
 
 import bio_archive_report
+import crypto_pay
 import dna_encode
 import analytics_db
 import guides
@@ -65,10 +66,12 @@ def _config_from_env():
         "MAIL_FROM": env("QS_MAIL_FROM", ""),
         "OWNER_EMAIL": env("QS_OWNER_EMAIL", ""),
         "REPLY_TO": env("QS_REPLY_TO", ""),
+        "USDT_POLYGON_ADDR": env("QS_USDT_POLYGON_ADDR", ""),
+        "USDC_ARBITRUM_ADDR": env("QS_USDC_ARBITRUM_ADDR", ""),
     }
 
 
-def create_app(overrides=None, scanner=None, paypal=None, mailer=None):
+def create_app(overrides=None, scanner=None, paypal=None, mailer=None, chain=None):
     app = Flask(__name__)
     app.config.update(_config_from_env())
     app.config.update(overrides or {})
@@ -81,6 +84,7 @@ def create_app(overrides=None, scanner=None, paypal=None, mailer=None):
         paypal = PayPalClient(app.config["PAYPAL_CLIENT_ID"], app.config["PAYPAL_CLIENT_SECRET"], app.config["PAYPAL_ENV"])
     app.extensions["scanner"] = scanner or quantum_vuln_scanner.scan
     app.extensions["paypal"] = paypal
+    app.extensions["chain"] = chain or crypto_pay.ChainClient()
     app.extensions["mailer"] = mailer or Mailer(app.config["RESEND_API_KEY"], app.config["MAIL_FROM"],
                                                      app.config["REPLY_TO"])
     app.register_blueprint(bp)
@@ -251,6 +255,7 @@ def scan_page(scan_id):
     return render_template(
         "scan.html", scan=scan, r=scan["result"], paid=sales_db.is_scan_paid(db(), scan_id),
         payments_enabled=payments_enabled(), paypal_client_id=cfg["PAYPAL_CLIENT_ID"],
+        crypto_networks=crypto_pay.enabled_networks(cfg),
         price=cfg["PRICE"], currency=cfg["CURRENCY"],
     )
 
@@ -560,6 +565,101 @@ def api_v1_order_status(order_id):
         scan = sales_db.get_scan(db(), row["scan_id"])
         body["report_url"] = public_base() + url_for(".report", token=scan["report_token"])
     return jsonify(body)
+
+
+# ---------------------------------------------------------------- الدفع بالعملات المستقرة (USDT / USDC)
+
+def _crypto_network_of(order_id):
+    for key in crypto_pay.NETWORKS:
+        if order_id.startswith(f"cx-{key}-"):
+            return key
+    return None
+
+
+def _crypto_order_body(order_id, key, net, amount):
+    base = public_base()
+    return {"order_id": order_id, "network": key, "chain": net["chain"], "chain_id": net["chain_id"],
+            "token": net["token"], "token_contract": net["contract"], "pay_to": net["address"],
+            "amount": amount, "confirmations_required": net["confirmations"],
+            "verify_url": base + url_for(".crypto_verify", order_id=order_id),
+            "status_url": base + url_for(".api_v1_order_status", order_id=order_id),
+            "instructions": f"Send exactly {amount} {net['token']} on {net['chain']} to {net['address']}, "
+                            "then POST the transaction hash as {\"tx_hash\": \"0x...\"} to verify_url."}
+
+
+@bp.post("/api/crypto/orders")
+@bp.post("/api/v1/crypto/orders", endpoint="api_v1_crypto_create_order")
+def crypto_create_order():
+    """ينشئ طلب دفع بعملة مستقرة بمبلغ فريد. نفس المسار للبشر (صفحة النتيجة) ولوكلاء الذكاء الاصطناعي."""
+    networks = crypto_pay.enabled_networks(current_app.config)
+    if not networks:
+        return jsonify(error="crypto_disabled"), 503
+    data = request.get_json(silent=True) or {}
+    if data.get("consent") is not True and data.get("consent_immediate_delivery") is not True:
+        return jsonify(error="consent_required",
+                       message="Set consent_immediate_delivery to true only after the payer has expressly agreed that "
+                               "the report is delivered immediately and acknowledged losing the right of withdrawal."), 400
+    key = str(data.get("network", ""))
+    if key not in networks:
+        return jsonify(error="unknown_network", networks=sorted(networks)), 400
+    conn = db()
+    scan = sales_db.get_scan(conn, str(data.get("scan_id", "")))
+    if not scan:
+        return jsonify(error="scan_not_found"), 404
+    if sales_db.is_scan_paid(conn, scan["id"]):
+        return jsonify(error="already_paid"), 409
+    net = networks[key]
+    amount = str(crypto_pay.unique_amount(current_app.config["PRICE"], sales_db.open_amounts(conn, net["token"])))
+    order_id = f"cx-{key}-{secrets.token_urlsafe(9)}"
+    sales_db.create_order(conn, order_id, scan["id"], amount, net["token"], consent_at=now_iso(),
+                          is_test=is_admin_visitor())
+    return jsonify(_crypto_order_body(order_id, key, net, amount)), 201
+
+
+@bp.post("/api/crypto/orders/<order_id>/verify")
+@bp.post("/api/v1/crypto/orders/<order_id>/verify", endpoint="api_v1_crypto_verify")
+def crypto_verify(order_id):
+    """يتحقق من المعاملة على الشبكة نفسها؛ لا يُفتح التقرير إلا بتحويل مؤكد للمبلغ إلى عنواننا."""
+    conn = db()
+    key = _crypto_network_of(order_id)
+    row = sales_db.get_order(conn, order_id) if key else None
+    if not row:
+        return jsonify(error="order_not_found"), 404
+    scan = sales_db.get_scan(conn, row["scan_id"])
+    if row["status"] == "COMPLETED":
+        return jsonify(status="COMPLETED", report_url=public_base() + url_for(".report", token=scan["report_token"]))
+    net = crypto_pay.enabled_networks(current_app.config).get(key)
+    if not net:
+        return jsonify(error="crypto_disabled"), 503
+    data = request.get_json(silent=True) or {}
+    tx_hash = str(data.get("tx_hash", "")).strip().lower()
+    if not crypto_pay.TX_RE.match(tx_hash):
+        return jsonify(error="invalid_tx_hash"), 400
+    used = sales_db.order_by_capture(conn, tx_hash)
+    if used and used["order_id"] != order_id:
+        return jsonify(error="tx_already_used"), 409
+    created = dt.datetime.strptime(row["created_at"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=dt.timezone.utc)
+    try:
+        status, details = crypto_pay.verify_transfer(current_app.extensions["chain"], key, net, tx_hash,
+                                                     net["address"], row["amount"], created.timestamp())
+    except crypto_pay.ChainError as exc:
+        log.warning("chain verification unavailable for %s: %s", order_id, exc)
+        return jsonify(error="chain_unavailable"), 502
+    if status in ("PENDING", "CONFIRMING"):
+        return jsonify(dict(details, status=status, confirmations_required=net["confirmations"])), 202
+    if status != "OK":
+        return jsonify(dict(details, error=status.lower(), expected=row["amount"], token=net["token"])), 402
+    try:
+        sales_db.update_order(conn, order_id, "COMPLETED", tx_hash)
+    except sales_db.sqlite3.IntegrityError:
+        return jsonify(error="tx_already_used"), 409
+    owner = current_app.config["OWNER_EMAIL"]
+    if owner and not row["is_test"]:
+        current_app.extensions["mailer"].send(
+            owner, f"[Quantum Aether] Report paid: {row['amount']} {net['token']} — {scan['domain']}",
+            f"Order: {order_id}\nAmount: {row['amount']} {net['token']} on {net['chain']}\n"
+            f"To: {net['address']}\nTransaction: {net['explorer']}{tx_hash}")
+    return jsonify(status="COMPLETED", report_url=public_base() + url_for(".report", token=scan["report_token"]))
 
 
 @bp.get("/paypal/return")

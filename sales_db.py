@@ -71,6 +71,9 @@ def _migrate(conn):
     if "consent_at" not in cols:
         with conn:
             conn.execute("ALTER TABLE monitor_accounts ADD COLUMN consent_at TEXT")
+    # معاملة العملات الرقمية الواحدة لا تفتح أكثر من طلب واحد
+    conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS orders_crypto_tx ON orders (capture_id)"
+                 " WHERE currency IN ('USDT', 'USDC') AND capture_id IS NOT NULL")
     cols = {r[1] for r in conn.execute("PRAGMA table_info(pageviews)")}
     if "is_test" not in cols:
         with conn:
@@ -145,6 +148,19 @@ def update_order(conn, order_id, status, capture_id=None):
             " updated_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now') WHERE order_id = ?",
             (status, capture_id, order_id),
         )
+
+
+def open_amounts(conn, currency, days=7):
+    """مبالغ طلبات العملات الرقمية المفتوحة حديثاً، حتى لا يتكرر المبلغ الفريد."""
+    since = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    rows = conn.execute("SELECT amount FROM orders WHERE currency = ? AND status = 'CREATED' AND created_at >= ?",
+                        (currency, since)).fetchall()
+    return {r["amount"] for r in rows}
+
+
+def order_by_capture(conn, capture_id):
+    row = conn.execute("SELECT * FROM orders WHERE capture_id = ?", (capture_id,)).fetchone()
+    return dict(row) if row else None
 
 
 def is_scan_paid(conn, scan_id):

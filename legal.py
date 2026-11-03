@@ -72,6 +72,9 @@ PAGES = {
 <h2>7. Zahlungen über PayPal</h2>
 <p>Zahlungen wickelt PayPal (Europe) S.à r.l. et Cie, S.C.A., 22-24 Boulevard Royal, L-2449 Luxemburg, ab. Auf der Ergebnis- und der Abo-Seite wird der PayPal-Bezahlknopf von Servern von PayPal geladen; dabei wird Ihre IP-Adresse an PayPal übertragen. Bei einer Zahlung übermitteln wir Betrag und Bestellreferenz. Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO. Datenschutzhinweise von PayPal: <a href="https://www.paypal.com/at/legalhub/privacy-full" rel="nofollow">paypal.com/at/legalhub/privacy-full</a>.</p>
 
+<h2>7a. Zahlungen mit USDT/USDC</h2>
+<p>Wenn Sie den Bericht mit einer Kryptowährung (USDT auf Polygon oder USDC auf Arbitrum) bezahlen, speichern wir die Transaktionskennung (Transaction-Hash) und den Betrag zu Ihrer Bestellung. Zur Prüfung der Zahlung fragt unser Server öffentliche Blockchain-Knoten (u. a. Allnodes/PublicNode, dRPC, Offchain Labs) nach dieser Transaktion ab; dabei wird nur die Transaktionskennung übermittelt. Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO. Bitte beachten Sie: Transaktionen auf einer Blockchain, einschließlich Ihrer Absenderadresse, sind öffentlich und dauerhaft einsehbar und können von uns nicht gelöscht werden. Die Zahlung geht an ein Einzahlungskonto bei einer Kryptobörse (Binance bzw. OKX).</p>
+
 <h2>8. Überwachungs-Abonnement</h2>
 <p>Für ein Abonnement speichern wir Ihre E-Mail-Adresse, den Tarif, die PayPal-Abonnement-ID, die von Ihnen eingetragenen Domains, deren Prüfergebnisse und Benachrichtigungen. Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO. Die Daten werden nach Vertragsende gelöscht, soweit keine gesetzlichen Aufbewahrungspflichten bestehen (Buchhaltungsunterlagen: 7 Jahre gemäß § 132 BAO).</p>
 
@@ -108,6 +111,9 @@ PAGES = {
 <h2>7. Payments via PayPal</h2>
 <p>Payments are processed by PayPal (Europe) S.à r.l. et Cie, S.C.A., 22-24 Boulevard Royal, L-2449 Luxembourg. On the result and subscription pages the PayPal button is loaded from PayPal's servers, which transmits your IP address to PayPal. For a payment we transmit the amount and order reference. Legal basis: Art. 6(1)(b) GDPR. PayPal's privacy notice: <a href="https://www.paypal.com/at/legalhub/privacy-full" rel="nofollow">paypal.com/at/legalhub/privacy-full</a>.</p>
 
+<h2>7a. Payments with USDT/USDC</h2>
+<p>If you pay for the report with a cryptocurrency (USDT on Polygon or USDC on Arbitrum), we store the transaction hash and amount with your order. To check the payment our server queries public blockchain nodes (including Allnodes/PublicNode, dRPC and Offchain Labs) for this transaction; only the transaction hash is transmitted. Legal basis: Art. 6(1)(b) GDPR. Please note: blockchain transactions, including your sending address, are public and permanent and cannot be deleted by us. The payment goes to a deposit account at a crypto exchange (Binance or OKX).</p>
+
 <h2>8. Monitoring subscription</h2>
 <p>For a subscription we store your email address, plan, PayPal subscription ID, the domains you add, their scan results and alerts. Legal basis: Art. 6(1)(b) GDPR. The data are deleted after the contract ends unless statutory retention applies (accounting records: 7 years under § 132 BAO).</p>
 
@@ -138,10 +144,10 @@ PAGES = {
 <p>Die Prüfung ist eine technische Momentaufnahme von einem Messpunkt aus. Sie ersetzt kein vollständiges Sicherheitsaudit.</p>
 
 <h2>3. Preise und Zahlung</h2>
-<p>Alle Preise in US-Dollar. Gemäß § 6 Abs. 1 Z 27 UStG (Kleinunternehmerregelung) wird keine Umsatzsteuer berechnet. Die Zahlung erfolgt über PayPal (auch mit Kredit- oder Debitkarte).</p>
+<p>Alle Preise in US-Dollar. Gemäß § 6 Abs. 1 Z 27 UStG (Kleinunternehmerregelung) wird keine Umsatzsteuer berechnet. Die Zahlung erfolgt über PayPal (auch mit Kredit- oder Debitkarte). Den Bericht können Sie alternativ mit USDT (Netzwerk Polygon) oder USDC (Netzwerk Arbitrum One) bezahlen: Zu zahlen ist genau der angezeigte Betrag auf dem angezeigten Netzwerk; Netzwerkgebühren trägt der Absender. Für Beträge, die auf einem anderen Netzwerk, in einer anderen Währung oder an eine andere Adresse gesendet werden, können wir keine Haftung übernehmen. Eine Rückerstattung erfolgt in derselben Währung an eine vom Kunden genannte Adresse.</p>
 
 <h2>4. Vertragsschluss</h2>
-<p>Der Vertrag über den Bericht kommt mit der von PayPal bestätigten Zahlung zustande. Der Abonnementvertrag kommt mit der Aktivierung des Abonnements bei PayPal zustande.</p>
+<p>Der Vertrag über den Bericht kommt mit der von PayPal bestätigten Zahlung bzw. mit der von unserem Server auf der Blockchain bestätigten Zahlung zustande. Der Abonnementvertrag kommt mit der Aktivierung des Abonnements bei PayPal zustande.</p>
 
 <h2>5. Laufzeit und Kündigung des Abonnements</h2>
 <p>Das Abonnement läuft auf unbestimmte Zeit und wird monatlich im Voraus abgerechnet. Es kann jederzeit im Kunden-Dashboard oder im PayPal-Konto gekündigt werden; die Überwachung endet mit der Kündigung, weitere Abbuchungen erfolgen nicht.</p>
@@ -180,10 +186,10 @@ PAGES = {
 <p>A scan is a technical snapshot from a single vantage point. It does not replace a full security audit.</p>
 
 <h2>3. Prices and payment</h2>
-<p>All prices in US dollars. No VAT is charged under the Austrian small-business exemption (§ 6(1)(27) UStG). Payment is made through PayPal (including credit or debit card).</p>
+<p>All prices in US dollars. No VAT is charged under the Austrian small-business exemption (§ 6(1)(27) UStG). Payment is made through PayPal (including credit or debit card). The report can alternatively be paid with USDT (Polygon network) or USDC (Arbitrum One network): the exact amount shown must be sent on the network shown; network fees are borne by the sender. We cannot accept liability for funds sent on another network, in another token or to another address. Refunds are made in the same token to an address named by the customer.</p>
 
 <h2>4. Conclusion of contract</h2>
-<p>The contract for a report is concluded when PayPal confirms the payment. The subscription contract is concluded when the subscription is activated at PayPal.</p>
+<p>The contract for a report is concluded when PayPal confirms the payment, or when our server confirms the payment on the blockchain. The subscription contract is concluded when the subscription is activated at PayPal.</p>
 
 <h2>5. Term and cancellation of the subscription</h2>
 <p>The subscription runs for an indefinite period and is billed monthly in advance. It can be cancelled at any time in the customer dashboard or in the PayPal account; monitoring ends with the cancellation and no further charges are made.</p>

@@ -1,6 +1,6 @@
 # Quantum Aether — post-quantum TLS readiness scanner
 
-> Checks whether an HTTPS server negotiates the hybrid post-quantum key exchange X25519MLKEM768 (ML-KEM, FIPS 203) used by Chrome and Firefox, and reports TLS version and certificate details. Free summary; full report with remediation steps costs ${{ price }} via PayPal.
+> Checks whether an HTTPS server negotiates the hybrid post-quantum key exchange X25519MLKEM768 (ML-KEM, FIPS 203) used by Chrome and Firefox, and reports TLS version and certificate details. Free summary; full report with remediation steps costs ${{ price }} via PayPal, or the same in USDT/USDC.
 
 ## Free API
 
@@ -8,6 +8,7 @@
 - `GET {{ base }}/api/scan/{scan_id}` returns the same summary later.
 - `POST {{ base }}/api/v1/quantum-scan` is the agent endpoint: `{"domain": "example.com"}` runs the same real scan; `{"key_size": 2048}` alone returns an honest assessment of that RSA key size (no network scan). Any RSA or ECC key size is breakable by Shor's algorithm; key exchange is what needs upgrading.
 - Buying the full report (${{ price }}): `POST {{ base }}/api/v1/orders` with `{"scan_id": "...", "consent_immediate_delivery": true}` (set the flag only after the payer expressly agreed to immediate delivery and to losing the right of withdrawal) returns a PayPal `approve_url` and a `status_url`. After the payer (or an agent the payer authorized in PayPal) approves, the site captures and verifies the payment automatically, and `GET status_url` returns `report_url`.
+- Paying with stablecoins instead: `POST {{ base }}/api/v1/crypto/orders` with `{"scan_id": "...", "network": "polygon-usdt" | "arbitrum-usdc", "consent_immediate_delivery": true}` returns a unique `amount` and a `pay_to` address. Send exactly that amount (USDT on Polygon PoS or native USDC on Arbitrum One), then `POST verify_url` with `{"tx_hash": "0x..."}`; the server checks the transfer on-chain and returns `report_url` once confirmed (HTTP 202 while confirming).
 - OpenAPI description: {{ base }}/openapi.yaml
 
 ## Grades

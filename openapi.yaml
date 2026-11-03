@@ -125,6 +125,76 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/OrderStatus" }
         "404": { description: Unknown order. }
+  /api/v1/crypto/orders:
+    post:
+      summary: Buy the full report with a stablecoin (USDT on Polygon or USDC on Arbitrum One)
+      description: >
+        Returns a unique amount (for example 49.0137) and a receiving address. Send exactly that amount of the
+        token on that network (a direct ERC-20 transfer), then POST the transaction hash to verify_url. The server
+        reads the transaction receipt from the blockchain itself and unlocks the report once the transfer to our
+        address has enough confirmations.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [scan_id, network, consent_immediate_delivery]
+              properties:
+                scan_id: { type: string }
+                network: { type: string, enum: [polygon-usdt, arbitrum-usdc] }
+                consent_immediate_delivery:
+                  type: boolean
+                  enum: [true]
+                  description: Same meaning as for /api/v1/orders (Austrian FAGG § 18(1)(11)).
+      responses:
+        "201":
+          description: Payment request created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  order_id: { type: string }
+                  network: { type: string }
+                  chain: { type: string }
+                  chain_id: { type: integer }
+                  token: { type: string }
+                  token_contract: { type: string }
+                  pay_to: { type: string }
+                  amount: { type: string, description: Exact amount to send, in token units. }
+                  confirmations_required: { type: integer }
+                  verify_url: { type: string }
+                  status_url: { type: string }
+        "400": { description: Consent missing or unknown network (the response lists available networks). }
+        "404": { description: Unknown scan. }
+        "409": { description: The report for this scan is already paid. }
+        "503": { description: Stablecoin payments are not configured. }
+  /api/v1/crypto/orders/{order_id}/verify:
+    post:
+      summary: Submit the transaction hash; returns report_url once the payment is confirmed on-chain
+      parameters:
+        - name: order_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tx_hash]
+              properties:
+                tx_hash: { type: string, pattern: "^0x[0-9a-fA-F]{64}$" }
+      responses:
+        "200": { description: "Paid: {status: COMPLETED, report_url}." }
+        "202": { description: "Not final yet: status PENDING (not mined) or CONFIRMING (with confirmations). Retry later." }
+        "400": { description: Malformed transaction hash. }
+        "402": { description: "Rejected: error is wrong_amount, no_transfer, too_old or failed." }
+        "404": { description: Unknown order. }
+        "409": { description: Transaction already used for another order. }
+        "502": { description: Blockchain temporarily unreachable; retry. }
   /badge/{domain}.svg:
     get:
       summary: Embeddable SVG badge with the domain's latest grade (scans from the last 30 days; never triggers a scan)
