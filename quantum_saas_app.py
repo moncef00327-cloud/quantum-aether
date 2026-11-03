@@ -1036,7 +1036,8 @@ def badge(domain):
 def robots():
     agents = "".join(f"User-agent: {name}\n" for name in [*AI_CRAWLERS, "*"])
     body = (agents + "Allow: /\nDisallow: /admin\nDisallow: /report/\nDisallow: /api/paypal/\nDisallow: /monitor/\nDisallow: /api/monitor/\n\n"
-            f"Sitemap: {public_base()}/sitemap.xml\n")
+            f"Sitemap: {public_base()}/sitemap.xml\n"
+            f"# AI agents: machine-readable summary and API at {public_base()}/llms.txt\n")
     return Response(body, mimetype="text/plain")
 
 
