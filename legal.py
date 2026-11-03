@@ -4,6 +4,7 @@
 # المحتوى HTML مكتوب هنا يدوياً، لا يأتي من المستخدم.
 
 P = '<mark class="placeholder">[{}]</mark>'
+OWNER = "Omer Alsaloum"
 
 PAGES = {
     "impressum": {
@@ -12,7 +13,7 @@ PAGES = {
             "body": f"""
 <p>Angaben gemäß § 5 E-Commerce-Gesetz (ECG), § 14 Unternehmensgesetzbuch (UGB), § 63 Gewerbeordnung (GewO) und Offenlegung gemäß § 25 Mediengesetz (MedienG).</p>
 <h2>Medieninhaber und Diensteanbieter</h2>
-<p>{P.format("Name bzw. Firma")}<br>{P.format("Anschrift: Straße, Hausnummer, PLZ, Ort, Österreich")}</p>
+<p>{OWNER}<br>{P.format("Anschrift: Straße, Hausnummer, PLZ, Ort, Österreich")}</p>
 <p>E-Mail: {P.format("E-Mail-Adresse")}<br>Telefon: {P.format("Telefonnummer (optional)")}</p>
 <h2>Unternehmensangaben</h2>
 <ul>
@@ -32,7 +33,7 @@ PAGES = {
             "body": f"""
 <p>Information pursuant to § 5 Austrian E-Commerce Act (ECG), § 14 Austrian Commercial Code (UGB), § 63 Trade Act (GewO) and disclosure pursuant to § 25 Media Act (MedienG).</p>
 <h2>Media owner and service provider</h2>
-<p>{P.format("Name or company name")}<br>{P.format("Address: street, number, postcode, town, Austria")}</p>
+<p>{OWNER}<br>{P.format("Address: street, number, postcode, town, Austria")}</p>
 <p>Email: {P.format("Email address")}<br>Phone: {P.format("Phone number (optional)")}</p>
 <h2>Business details</h2>
 <ul>
@@ -54,7 +55,7 @@ PAGES = {
             "title": "Datenschutzerklärung",
             "body": f"""
 <h2>1. Verantwortlicher</h2>
-<p>{P.format("Name bzw. Firma")}, {P.format("Anschrift")}, E-Mail: {P.format("E-Mail-Adresse")}</p>
+<p>{OWNER}, {P.format("Anschrift")}, E-Mail: {P.format("E-Mail-Adresse")}</p>
 
 <h2>2. Hosting</h2>
 <p>Die Website läuft auf einem Server der The Constant Company, LLC („Vultr“, USA) im Rechenzentrum London, Vereinigtes Königreich. Für das Vereinigte Königreich besteht ein Angemessenheitsbeschluss der EU-Kommission. Auftragsverarbeitungsvertrag nach Art. 28 DSGVO: {P.format("bitte bestätigen, dass der Vultr-AVV/DPA akzeptiert wurde")}.</p>
@@ -90,7 +91,7 @@ PAGES = {
             "title": "Privacy policy",
             "body": f"""
 <h2>1. Controller</h2>
-<p>{P.format("Name or company name")}, {P.format("Address")}, email: {P.format("Email address")}</p>
+<p>{OWNER}, {P.format("Address")}, email: {P.format("Email address")}</p>
 
 <h2>2. Hosting</h2>
 <p>The website runs on a server of The Constant Company, LLC ("Vultr", USA) in a London data centre, United Kingdom. The United Kingdom is covered by an EU Commission adequacy decision. Data processing agreement under Art. 28 GDPR: {P.format("please confirm the Vultr DPA has been accepted")}.</p>
@@ -128,7 +129,7 @@ PAGES = {
             "title": "Allgemeine Geschäftsbedingungen (AGB)",
             "body": f"""
 <h2>1. Geltungsbereich</h2>
-<p>Diese AGB gelten für alle Leistungen von {P.format("Name bzw. Firma")} (im Folgenden „Anbieter“) über die Website ather-quatum.cloud.</p>
+<p>Diese AGB gelten für alle Leistungen von {OWNER} (im Folgenden „Anbieter“) über die Website ather-quatum.cloud.</p>
 
 <h2>2. Leistungen</h2>
 <ul>
@@ -170,7 +171,7 @@ PAGES = {
             "title": "Terms and conditions",
             "body": f"""
 <h2>1. Scope</h2>
-<p>These terms apply to all services provided by {P.format("Name or company name")} ("provider") through the website ather-quatum.cloud.</p>
+<p>These terms apply to all services provided by {OWNER} ("provider") through the website ather-quatum.cloud.</p>
 
 <h2>2. Services</h2>
 <ul>
