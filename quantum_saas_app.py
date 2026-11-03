@@ -41,8 +41,17 @@ log = logging.getLogger("quantum_saas")
 bp = Blueprint("site", __name__)
 
 # زواحف الذكاء الاصطناعي مذكورة صراحة؛ كلها في مجموعة واحدة مع "*" لتنطبق عليها قواعد الحجب نفسها.
-AI_CRAWLERS = ["GPTBot", "ChatGPT-User", "OAI-SearchBot", "ClaudeBot", "Claude-User", "Claude-SearchBot",
-               "anthropic-ai", "PerplexityBot", "Perplexity-User", "Google-Extended", "Bingbot", "cohere-ai"]
+AI_CRAWLERS = [  # زواحف بحث وذكاء اصطناعي نسمح لها صراحةً لتفهرسنا وتستشهد بنا
+    "GPTBot", "ChatGPT-User", "OAI-SearchBot",            # OpenAI
+    "ClaudeBot", "Claude-User", "Claude-SearchBot", "anthropic-ai",  # Anthropic
+    "PerplexityBot", "Perplexity-User",                  # Perplexity
+    "Google-Extended", "GoogleOther", "Google-CloudVertexBot",  # Google AI
+    "Applebot", "Applebot-Extended",                     # Apple
+    "Amazonbot", "Meta-ExternalAgent", "FacebookBot",    # Amazon / Meta
+    "Bingbot", "cohere-ai", "CCBot",                     # Bing / Cohere / Common Crawl (يغذّي معظم النماذج)
+    "Bytespider", "TikTokSpider",                        # ByteDance
+    "DuckAssistBot", "YouBot", "Diffbot", "Ai2Bot", "Timpibot", "PetalBot",
+]
 
 
 def _config_from_env():
