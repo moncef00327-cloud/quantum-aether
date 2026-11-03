@@ -9,6 +9,6 @@
   <h1>{{ page.title }}</h1>
   <p class="muted small">{{ t.updated_label }}: <time datetime="{{ updated }}">{{ updated }}</time></p>
   {{ page.body | safe }}
-  <p><a class="button-link" href="{{ url_for('site.index', lang=lang) }}">{{ t.scan_cta }}</a></p>
 </article>
+{% include "_scan_box.html" %}
 {% endblock %}

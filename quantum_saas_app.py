@@ -102,11 +102,22 @@ def _close_db(_exc):
         conn.close()
 
 
+def german_allowed():
+    return request.endpoint in i18n.DE_ENDPOINTS
+
+
 def current_lang():
+    """لغة الصفحة: en وar في كل الصفحات، وde فقط في الصفحات المترجمة (وإلا الإنجليزية)."""
     lang = request.args.get("lang")
-    if lang in i18n.TEXTS:
+    if lang == "de":
+        return "de" if german_allowed() else "en"
+    if lang in ("en", "ar"):
         return lang
-    return request.accept_languages.best_match(["en", "ar"]) or "en"
+    return request.accept_languages.best_match(["en", "ar"] + (["de"] if german_allowed() else [])) or "en"
+
+
+# الصفحات التي لها نسخة ألمانية فعلية (لمبدّل اللغة وhreflang وخريطة الموقع).
+DE_PAGES = {"site.index", "site.study", "site.monitoring"}
 
 
 def texts():
@@ -117,7 +128,8 @@ def texts():
 def _inject():
     lang = current_lang()
     return {"t": i18n.TEXTS[lang], "lang": lang, "other_lang": "en" if lang == "ar" else "ar",
-            "legal_lang": "en"}
+            "legal_lang": "de" if lang == "de" else "en", "lang_names": i18n.LANG_NAMES,
+            "page_langs": ["en", "ar", "de"] if request.endpoint in DE_PAGES else ["en", "ar"]}
 
 
 def public_base():
@@ -291,7 +303,7 @@ def legal_page(slug):
     # الصفحة بالألمانية أو الإنجليزية: نمرر لغة القالب صراحة فتتجاوز لغة الموقع (عربي/إنجليزي).
     t = dict(i18n.TEXTS["en"], dir="ltr", other_lang="English" if lang == "de" else "Deutsch")
     return render_template("legal.html", page=legal.PAGES[slug][lang], t=t, lang=lang, other_lang=other,
-                           legal_lang=lang)
+                           legal_lang=lang, page_langs=list(legal.LANGS))
 
 
 @bp.get("/guides")
@@ -420,7 +432,8 @@ def paypal_create_order():
     except (PayPalError, requests.RequestException) as exc:
         log.warning("PayPal create order failed: %s", exc)
         return jsonify(error="paypal_unavailable"), 502
-    sales_db.create_order(conn, order["id"], scan["id"], cfg["PRICE"], cfg["CURRENCY"], consent_at=now_iso())
+    sales_db.create_order(conn, order["id"], scan["id"], cfg["PRICE"], cfg["CURRENCY"], consent_at=now_iso(),
+                          is_test=is_admin_visitor())
     return jsonify(id=order["id"]), 201
 
 
@@ -511,7 +524,8 @@ def api_v1_create_order():
                         if link.get("rel") in ("payer-action", "approve")), None)
     if not approve_url:
         return jsonify(error="paypal_unavailable"), 502
-    sales_db.create_order(conn, order["id"], scan["id"], cfg["PRICE"], cfg["CURRENCY"], consent_at=now_iso())
+    sales_db.create_order(conn, order["id"], scan["id"], cfg["PRICE"], cfg["CURRENCY"], consent_at=now_iso(),
+                          is_test=is_admin_visitor())
     return jsonify(order_id=order["id"], approve_url=approve_url,
                    status_url=base + url_for(".api_v1_order_status", order_id=order["id"]),
                    amount=cfg["PRICE"], currency=cfg["CURRENCY"]), 201
@@ -787,11 +801,11 @@ def sitemap():
         mtime = os.path.getmtime(os.path.join(BASE_DIR, "templates", name))
         return dt.datetime.fromtimestamp(mtime, dt.timezone.utc).date().isoformat()
 
-    site_langs, legal_langs = ("en", "ar"), legal.LANGS
-    pages = [("/", template_date("index.html"), site_langs), ("/monitoring", template_date("monitoring.html"), site_langs),
+    site_langs, de_langs, legal_langs = ("en", "ar"), ("en", "ar", "de"), legal.LANGS
+    pages = [("/", template_date("index.html"), de_langs), ("/monitoring", template_date("monitoring.html"), de_langs),
              ("/research", template_date("research.html"), site_langs),
              ("/guides", max(g["updated"] for g in guides.GUIDES.values()), site_langs),
-             ("/study/top-1000-post-quantum-tls", study_data()["scanned_on"], site_langs)]
+             ("/study/top-1000-post-quantum-tls", study_data()["scanned_on"], de_langs)]
     pages += [(f"/guides/{slug}", g["updated"], site_langs) for slug, g in guides.GUIDES.items()]
     legal_date = os.path.getmtime(os.path.join(BASE_DIR, "legal.py"))
     legal_day = dt.datetime.fromtimestamp(legal_date, dt.timezone.utc).date().isoformat()
@@ -854,7 +868,8 @@ def _track_pageview(response):
         salt = current_app.config["HASH_SALT"].encode()
         visitor = hmac.new(salt, f"{day}|{request.remote_addr}|{ua}".encode(), hashlib.sha256).hexdigest()[:16]
         own_host = (current_app.config["PUBLIC_URL"].split("://")[-1] or request.host).split("/")[0]
-        analytics_db.record(db(), day, path, analytics_db.referrer_host(request.referrer, own_host), visitor,
+        source = analytics_db.utm_source(request.args.get("utm_source")) or analytics_db.referrer_host(request.referrer, own_host)
+        analytics_db.record(db(), day, path, source, visitor,
                             not ua or bool(analytics_db.BOT_RE.search(ua)))
     except Exception:  # الإحصاءات ثانوية
         log.exception("pageview tracking failed")

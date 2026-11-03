@@ -255,7 +255,7 @@ class AdminTests(AppTestCase):
         good = base64.b64encode(b"admin:s3cret").decode()
         page = self.client.get("/admin?lang=en", headers={"Authorization": f"Basic {good}"}).get_data(as_text=True)
         self.assertIn("49.00 USD", page)
-        self.assertIn("CREATED", page)
+        self.assertIn("Awaiting payment", page)
 
 
 if __name__ == "__main__":

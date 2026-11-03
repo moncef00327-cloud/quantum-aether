@@ -1,5 +1,6 @@
 # sales_db.py
 # تخزين الفحوصات والطلبات في SQLite (بدل CSV): آمن مع عدة عمّال gunicorn بفضل WAL والمعاملات.
+import datetime as dt
 import json
 import sqlite3
 from decimal import Decimal
@@ -62,6 +63,10 @@ def _migrate(conn):
     if "consent_at" not in cols:
         with conn:
             conn.execute("ALTER TABLE orders ADD COLUMN consent_at TEXT")
+    if "is_test" not in cols:
+        with conn:
+            conn.execute("ALTER TABLE orders ADD COLUMN is_test INTEGER NOT NULL DEFAULT 0")
+            conn.execute("UPDATE orders SET is_test = 1")  # كل الطلبات السابقة اختبارات
     cols = {r[1] for r in conn.execute("PRAGMA table_info(monitor_accounts)")}
     if "consent_at" not in cols:
         with conn:
@@ -121,11 +126,11 @@ def count_attempts_since(conn, since_iso, client_hash=None):
     return row[0]
 
 
-def create_order(conn, order_id, scan_id, amount, currency, consent_at=None):
+def create_order(conn, order_id, scan_id, amount, currency, consent_at=None, is_test=False):
     """consent_at: وقت موافقة المشتري الصريحة على التسليم الفوري وفقدان حق التراجع (§ 18 FAGG)."""
     with conn:
-        conn.execute("INSERT INTO orders (order_id, scan_id, status, amount, currency, consent_at)"
-                     " VALUES (?, ?, 'CREATED', ?, ?, ?)", (order_id, scan_id, amount, currency, consent_at))
+        conn.execute("INSERT INTO orders (order_id, scan_id, status, amount, currency, consent_at, is_test)"
+                     " VALUES (?, ?, 'CREATED', ?, ?, ?, ?)", (order_id, scan_id, amount, currency, consent_at, int(is_test)))
 
 
 def get_order(conn, order_id):
@@ -149,19 +154,37 @@ def is_scan_paid(conn, scan_id):
 
 def stats(conn):
     scans = conn.execute("SELECT COUNT(*) FROM scans WHERE is_test = 0").fetchone()[0]
-    paid = conn.execute("SELECT amount, currency FROM orders WHERE status = 'COMPLETED'").fetchall()
+    paid = conn.execute("SELECT amount, currency FROM orders WHERE status = 'COMPLETED' AND is_test = 0").fetchall()
+    incomplete = conn.execute("SELECT COUNT(*) FROM orders WHERE status = 'CREATED' AND is_test = 0 AND created_at < ?",
+                              (_hours_ago(INCOMPLETE_AFTER_HOURS),)).fetchone()[0]
     revenue = {}
     for row in paid:
         revenue[row["currency"]] = revenue.get(row["currency"], Decimal("0")) + Decimal(row["amount"])
-    return {"scans": scans, "paid_orders": len(paid), "revenue": {k: f"{v:.2f}" for k, v in revenue.items()}}
+    return {"scans": scans, "paid_orders": len(paid), "incomplete_orders": incomplete,
+            "revenue": {k: f"{v:.2f}" for k, v in revenue.items()}}
+
+
+INCOMPLETE_AFTER_HOURS = 3
+
+
+def _hours_ago(hours):
+    return (dt.datetime.now(dt.timezone.utc) - dt.timedelta(hours=hours)).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def recent_orders(conn, limit=50):
+    """الطلبات الأخيرة. الطلب الذي بقي CREATED أكثر من 3 ساعات يُعرض كـ INCOMPLETE (لم يكتمل)."""
     rows = conn.execute(
         "SELECT o.*, s.domain FROM orders o JOIN scans s ON s.id = o.scan_id ORDER BY o.created_at DESC LIMIT ?",
         (limit,),
     ).fetchall()
-    return [dict(r) for r in rows]
+    cutoff = _hours_ago(INCOMPLETE_AFTER_HOURS)
+    out = []
+    for r in rows:
+        order = dict(r)
+        order["display_status"] = ("INCOMPLETE" if order["status"] == "CREATED" and order["created_at"] < cutoff
+                                   else order["status"])
+        out.append(order)
+    return out
 
 
 def scans_per_day(conn, since_day):

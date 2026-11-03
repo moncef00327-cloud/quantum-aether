@@ -4,6 +4,7 @@ import tempfile
 import unittest
 from contextlib import closing
 
+import guides
 import monitor
 import monitor_db
 import monitor_job
@@ -411,7 +412,7 @@ class AdminExclusionAndSeoTest(unittest.TestCase):
         self.assertIn('xmlns:xhtml="http://www.w3.org/1999/xhtml"', body)
         self.assertIn('<xhtml:link rel="alternate" hreflang="x-default" href="https://ather-quatum.cloud/guides?lang=en"/>', body)
         self.assertIn("https://ather-quatum.cloud/impressum?lang=de", body)
-        self.assertEqual(body.count("<url>"), 2 * (5 + 3) + 2 * 3)
+        self.assertEqual(body.count("<url>"), 3 * 3 + 2 * (2 + 3) + 2 * 3)  # 3 صفحات بثلاث لغات، 5 بلغتين، 3 قانونية
 
     def test_robots_points_to_sitemap(self):
         self.assertIn("Sitemap: https://ather-quatum.cloud/sitemap.xml",
@@ -456,3 +457,98 @@ class ConsentTest(unittest.TestCase):
         self.assertIn('id="consent"', scan_page)
         self.assertIn("lose my right of withdrawal", scan_page)
         self.assertIn('id="consent"', self.client.get("/monitoring?lang=ar").get_data(as_text=True))
+
+
+class OrdersUtmScanBoxGermanTest(unittest.TestCase):
+    def setUp(self):
+        import base64
+        from werkzeug.security import generate_password_hash
+        from tests.test_app import FakePayPal as OrdersPayPal
+        self.tmp = tempfile.mkdtemp()
+        self.app = quantum_saas_app.create_app(
+            {"TESTING": True, "DATA_DIR": self.tmp, "PUBLIC_URL": "https://ather-quatum.cloud", "HASH_SALT": "salt",
+             "ADMIN_PASSWORD_HASH": generate_password_hash("pw"), "PAYPAL_CLIENT_ID": "cid", **PLAN_IDS},
+            scanner=lambda raw: result_for(quantum_vuln_scanner.normalize_domain(raw)), paypal=OrdersPayPal(),
+            mailer=FakeMailer())
+        self.auth = {"Authorization": "Basic " + base64.b64encode(b"admin:pw").decode()}
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp)
+
+    def db(self):
+        return closing(sales_db.connect(os.path.join(self.tmp, "quantum_saas.db")))
+
+    # البند 2
+    def test_admin_orders_are_tests_and_old_created_orders_are_incomplete(self):
+        admin, visitor = self.app.test_client(), self.app.test_client()
+        admin.get("/admin", headers=self.auth)
+        scan_id = visitor.post("/api/scan", json={"domain": "example.com"}).get_json()["scan_id"]
+        admin_order = admin.post("/api/paypal/orders", json={"scan_id": scan_id, "consent": True}).get_json()["id"]
+        scan2 = visitor.post("/api/scan", json={"domain": "example.org"}).get_json()["scan_id"]
+        real_order = visitor.post("/api/paypal/orders", json={"scan_id": scan2, "consent": True}).get_json()["id"]
+        with self.db() as c:
+            self.assertEqual(sales_db.get_order(c, admin_order)["is_test"], 1)
+            self.assertEqual(sales_db.get_order(c, real_order)["is_test"], 0)
+            self.assertEqual(sales_db.stats(c)["incomplete_orders"], 0)  # عمره دقائق فقط
+            with c:
+                c.execute("UPDATE orders SET created_at = '2020-01-01T00:00:00Z'")
+            stats = sales_db.stats(c)
+            self.assertEqual(stats["incomplete_orders"], 1)  # طلب المدير لا يُحسب
+            statuses = {o["order_id"]: o["display_status"] for o in sales_db.recent_orders(c)}
+            self.assertEqual(statuses[real_order], "INCOMPLETE")
+        body = admin.get("/admin?lang=en", headers=self.auth).get_data(as_text=True)
+        self.assertIn("Incomplete orders", body)
+        self.assertIn("Incomplete", body)
+
+    # البند 4
+    def test_utm_source_is_recorded_as_source(self):
+        client = self.app.test_client()
+        client.get("/study/top-1000-post-quantum-tls?lang=en&utm_source=LinkedIn",
+                   headers={"User-Agent": "Mozilla/5.0 Firefox/140", "Referer": "https://www.linkedin.com/feed/"})
+        client.get("/?utm_source=<script>", headers={"User-Agent": "Mozilla/5.0 Firefox/140"})
+        with self.db() as c:
+            sources = [r[0] for r in c.execute("SELECT referrer FROM pageviews ORDER BY rowid")]
+        self.assertEqual(sources, ["utm:linkedin", "utm:script"])
+        body = self.app.test_client().get("/admin?lang=en", headers=self.auth).get_data(as_text=True)
+        self.assertIn("utm:linkedin", body)
+
+    # البند 5
+    def test_scan_box_on_guides_and_study(self):
+        client = self.app.test_client()
+        pages = [f"/guides/{slug}?lang=en" for slug in guides.GUIDES] + ["/study/top-1000-post-quantum-tls?lang=ar"]
+        for url in pages:
+            body = client.get(url).get_data(as_text=True)
+            self.assertIn('class="card scan-box"', body, url)
+            self.assertIn('action="/scan?lang=', body, url)
+        r = client.post("/scan?lang=en", data={"domain": "example.com"})
+        self.assertEqual(r.status_code, 303)
+        self.assertIn("/scan/", r.headers["Location"])
+
+    # البند 6
+    def test_german_pages_switcher_and_hreflang(self):
+        client = self.app.test_client()
+        for url, text in [("/?lang=de", "Ist Ihre Website bereit"), ("/monitoring?lang=de", "Für Unternehmen"),
+                          ("/study/top-1000-post-quantum-tls?lang=de", "Methodik")]:
+            body = client.get(url).get_data(as_text=True)
+            self.assertIn('<html lang="de" dir="ltr">', body, url)
+            self.assertIn(text, body, url)
+            self.assertIn('hreflang="de"', body, url)
+            self.assertIn(">English</a>", body, url)
+            self.assertIn(">العربية</a>", body, url)
+        # صفحة بلا نسخة ألمانية: ?lang=de يعود للإنجليزية ولا يُعرض الألماني في المبدّل
+        body = client.get("/guides?lang=de").get_data(as_text=True)
+        self.assertIn('<html lang="en"', body)
+        self.assertNotIn('hreflang="de"', body)
+        self.assertNotIn(">Deutsch</a>", body)
+        self.assertIn(">Deutsch</a>", client.get("/?lang=en").get_data(as_text=True))
+        sitemap = client.get("/sitemap.xml").get_data(as_text=True)
+        self.assertIn("<loc>https://ather-quatum.cloud/study/top-1000-post-quantum-tls?lang=de</loc>", sitemap)
+        self.assertIn('hreflang="de" href="https://ather-quatum.cloud/monitoring?lang=de"', sitemap)
+        self.assertNotIn("guides?lang=de", sitemap)
+
+    def test_german_form_error_is_german(self):
+        client = self.app.test_client()
+        app = quantum_saas_app.create_app({"TESTING": True, "DATA_DIR": self.tmp},
+                                          scanner=quantum_vuln_scanner.scan, paypal=None, mailer=FakeMailer())
+        body = app.test_client().post("/scan?lang=de", data={"domain": "localhost"}).get_data(as_text=True)
+        self.assertIn("öffentliche", body)

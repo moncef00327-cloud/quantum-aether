@@ -48,6 +48,14 @@ def referrer_host(referrer, own_host):
             "lnkd.in": "linkedin.com", "l.facebook.com": "facebook.com", "m.facebook.com": "facebook.com"}.get(host, host)
 
 
+def utm_source(value):
+    """قيمة utm_source منظَّفة (حروف وأرقام و . _ - فقط، 40 حرفاً)، تُسجَّل كمصدر «utm:القيمة»."""
+    if not value:
+        return None
+    clean = re.sub(r"[^a-z0-9._-]", "", value.strip().lower())[:40]
+    return f"utm:{clean}" if clean else None
+
+
 def record(conn, day, path, referrer, visitor, is_bot):
     with conn:
         conn.execute("INSERT INTO pageviews (day, path, referrer, visitor, is_bot) VALUES (?, ?, ?, ?, ?)",

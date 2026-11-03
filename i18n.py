@@ -479,6 +479,8 @@ TEXTS["ar"].update({
     "adm_pages": "أكثر الصفحات زيارة",
     "adm_self_excluded": "زياراتك وفحوصاتك أنت (المدير) مستثناة من كل الإحصاءات على هذا المتصفح لمدة سنة منذ آخر دخول للوحة. كل ما سُجل قبل 3 نوفمبر 2026 معلَّم كاختبار.",
     "adm_test": "(اختبار)",
+    "adm_incomplete": "طلبات لم تكتمل",
+    "adm_order_status": {"COMPLETED": "مدفوع", "CREATED": "بانتظار الدفع", "INCOMPLETE": "لم يكتمل", "PENDING": "قيد المراجعة في PayPal", "FAILED": "فشل التحقق"},
     "legal_imprint": "Impressum",
     "legal_privacy": "الخصوصية (Datenschutz)",
     "legal_terms": "الشروط (AGB)",
@@ -560,6 +562,8 @@ TEXTS["en"].update({
     "adm_pages": "Top pages",
     "adm_self_excluded": "Your own visits and scans (admin) are excluded from all statistics in this browser for one year after your last dashboard login. Everything recorded before 3 November 2026 is marked as a test.",
     "adm_test": "(test)",
+    "adm_incomplete": "Incomplete orders",
+    "adm_order_status": {"COMPLETED": "Paid", "CREATED": "Awaiting payment", "INCOMPLETE": "Incomplete", "PENDING": "Pending at PayPal", "FAILED": "Verification failed"},
     "legal_imprint": "Impressum",
     "legal_privacy": "Privacy (Datenschutz)",
     "legal_terms": "Terms (AGB)",
@@ -567,3 +571,119 @@ TEXTS["en"].update({
     "consent_subscription": "I expressly request that monitoring starts immediately, and I acknowledge that if I withdraw within 14 days I pay for the days already provided.",
     "consent_missing": "Please tick the consent box first.",
 })
+
+
+# ---------------------------------------------------------------- الفحص السريع في نهاية الأدلة والدراسة
+TEXTS["ar"]["scanbox_title"] = "افحص موقعك الآن مجاناً"
+TEXTS["en"]["scanbox_title"] = "Scan your site now, free"
+
+# ---------------------------------------------------------------- الألمانية (Sie)
+# متاحة للصفحة الرئيسية والدراسة وصفحة الشركات فقط؛ أي نص غير مترجم هنا يبقى بالإنجليزية.
+DE_ENDPOINTS = {"site.index", "site.scan_form", "site.study", "site.monitoring", "site.monitor_login"}
+TEXTS["de"] = dict(TEXTS["en"])
+TEXTS["de"].update({
+    "dir": "ltr",
+    "brand": "Quantum Aether",
+    "nav_scan": "Prüfung",
+    "nav_monitoring": "Für Unternehmen",
+    "nav_guides": "Anleitungen",
+    "nav_study": "Studie",
+    "nav_research": "Forschung",
+    "nav_api": "API",
+    "hero_title": "Ist Ihre Website bereit für Quantencomputer?",
+    "hero_sub": "Eine echte HTTPS-Prüfung: Vereinbart Ihr Server die Schlüssel mit Browsern über X25519MLKEM768 "
+                "(ML-KEM / FIPS 203), wie es Chrome und Firefox heute tun? Und wie steht Ihr Zertifikat gegenüber dem Shor-Algorithmus da?",
+    "domain_label": "Domainname",
+    "scan_button": "Kostenlos prüfen",
+    "scanning": "Prüfung läuft… das kann bis zu 20 Sekunden dauern",
+    "checks_title": "Was wir prüfen",
+    "checks": [
+        "TLS-Version und Unterstützung von TLS 1.3",
+        "Schlüsselaustausch: quantenresistent (hybrid) oder klassisch und damit „Harvest now, decrypt later“ ausgesetzt",
+        "Ob der Server mit dem großen ClientHello moderner Browser zurechtkommt",
+        "Zertifikatsalgorithmus, Schlüssellänge, Gültigkeit und Ablaufdatum",
+    ],
+    "how_title": "So funktioniert die Prüfung",
+    "how_body": "Wir bauen zwei gewöhnliche Verbindungen zu Port 443 auf, wie es jeder Browser tut, lesen die Auswahl des Servers "
+                "und schließen die Verbindung. Es werden keine Daten gesendet und keine Schwachstellen ausprobiert. "
+                "Geprüft werden nur öffentliche Domains.",
+    "pricing_title": "Preise",
+    "free_title": "Kostenlose Zusammenfassung",
+    "free_items": ["Note (A / B / C / F)", "Status des quantenresistenten Schlüsselaustauschs", "TLS-Version und Zertifikatsalgorithmus"],
+    "paid_title": "Vollständiger Bericht",
+    "paid_items": [
+        "Alle Befunde mit Erklärung und Priorität",
+        "Schritte zur Behebung für nginx, Apache, Caddy und Cloudflare",
+        "Details zu Zertifikat und Handshake",
+        "Zeitlicher Kontext: NIST-Standards und veröffentlichte Schätzungen zum Brechen von RSA",
+        "Eine Kopie des Berichts als digitale DNA mit Reed-Solomon-Fehlerkorrektur",
+    ],
+    "privacy": "Wir speichern nur die Domain und das Prüfergebnis. Ihre IP-Adresse wird nicht gespeichert, nur ein verschlüsselter "
+               "Hashwert zur Begrenzung von Anfragen.",
+    "errors": {
+        "invalid_domain": "Das ist kein gültiger Domainname. Geben Sie zum Beispiel example.com ein.",
+        "private_address": "Diese Domain zeigt auf eine interne oder reservierte Adresse. Geprüft werden nur öffentliche Domains.",
+        "dns_failure": "Diese Domain wurde im DNS nicht gefunden.",
+        "connect_failure": "Port 443 dieser Domain ist nicht erreichbar.",
+        "tls_failure": "Der Server akzeptiert keine moderne HTTPS-Verbindung (TLS 1.2 oder neuer).",
+    },
+    "mon_cta_home": "Für Unternehmen: tägliche Überwachung vieler Domains mit E-Mail-Benachrichtigungen, ab 29 $ pro Monat",
+    "scanbox_title": "Prüfen Sie Ihre Website jetzt kostenlos",
+    "scan_cta": "Prüfen Sie Ihre Domain kostenlos",
+    # الدراسة
+    "study_title": "Wie viele der 1.000 größten Websites sind bereit für Post-Quanten-TLS?",
+    "study_lead": "Wir haben am {date} die 1.000 größten Domains der Tranco-Liste geprüft. Von den {reachable}, die über HTTPS "
+                  "antworteten, vereinbaren {pq} ({pct} %) mit Browsern den hybriden Schlüsselaustausch X25519MLKEM768.",
+    "study_reachable": "Domains antworteten",
+    "study_pq": "Post-Quanten-bereit",
+    "study_top100": "der Top 100",
+    "study_grades": "Verteilung der Noten",
+    "study_groups": "Vereinbarte Schlüsselaustausch-Gruppe",
+    "study_certs": "Zertifikatsschlüssel",
+    "study_notable": "Große Websites ohne Post-Quanten-Schlüsselaustausch",
+    "study_notable_note": "Diese Domains vereinbaren nur klassischen Schlüsselaustausch. Ihr Datenverkehr ist damit "
+                          "„Harvest now, decrypt later“ ausgesetzt.",
+    "study_method_title": "Methodik",
+    "study_method": "Für jede Domain (ohne www) haben wir von einem einzigen Server aus zwei Verbindungen zu Port 443 aufgebaut: "
+                    "eine mit X25519MLKEM768 und X25519, wie Chrome sie anbietet, und eine gewöhnliche TLS-Verbindung zum Auslesen "
+                    "des Zertifikats. „Nicht geantwortet“ bedeutet, dass der Name keine öffentliche Adresse hat oder auf der "
+                    "nackten Domain kein HTTPS anbietet; meist sind das Infrastruktur- und CDN-Namen. Die Ergebnisse stammen von "
+                    "einem Messpunkt und können anderswo abweichen.",
+    "study_full_table": "Alle Ergebnisse",
+    "study_download": "Daten herunterladen (JSON)",
+    "rank": "Rang",
+    "domain_col": "Domain",
+    "grade_col": "Note",
+    "group_col": "Gruppe",
+    # الشركات
+    "mon_title": "Tägliche Überwachung der Post-Quanten-Bereitschaft Ihrer Domains",
+    "mon_sub": "Wir prüfen alle Ihre Domains täglich und benachrichtigen Sie sofort per E-Mail, wenn sich etwas verschlechtert: "
+               "Post-Quanten-Schlüsselaustausch verloren, Note gesunken oder Zertifikat kurz vor dem Ablauf.",
+    "mon_features": [
+        "Automatische tägliche Prüfung jeder Domain",
+        "E-Mail-Benachrichtigung, wenn sich die Note ändert oder X25519MLKEM768 wegfällt",
+        "Warnung vor Zertifikatsablauf 14 Tage und erneut 3 Tage vorher",
+        "Dashboard mit dem Status aller Domains und dem Verlauf der Benachrichtigungen, als Bericht druckbar",
+        "Jederzeit im Dashboard kündbar",
+    ],
+    "mon_per_month": "pro Monat",
+    "mon_domains": "bis zu {n} Domains",
+    "mon_email_label": "Ihre E-Mail-Adresse (dorthin senden wir den Dashboard-Link und die Benachrichtigungen)",
+    "mon_choose": "Wählen Sie einen Tarif und bezahlen Sie mit PayPal oder Karte:",
+    "mon_disabled": "Abonnements sind noch nicht aktiviert. Bitte kontaktieren Sie uns, wenn Sie abonnieren möchten.",
+    "mon_email_first": "Bitte geben Sie zuerst eine gültige E-Mail-Adresse ein.",
+    "mon_error": "Das Abonnement konnte nicht abgeschlossen werden. Es wird nichts abgebucht, solange Sie die Freigabe bei "
+                 "PayPal nicht abschließen. Bitte versuchen Sie es erneut.",
+    "mon_login_title": "Bereits Abonnent?",
+    "mon_login_sub": "Geben Sie Ihre E-Mail-Adresse ein, und wir senden Ihnen Ihren Dashboard-Link.",
+    "mon_login_button": "Link senden",
+    "mon_login_sent": "Wenn für diese E-Mail-Adresse ein aktives Abonnement besteht, erhalten Sie den Link in wenigen Minuten.",
+    "consent_subscription": "Ich verlange ausdrücklich, dass die Überwachung sofort beginnt, und nehme zur Kenntnis, dass ich bei "
+                            "einem Rücktritt innerhalb von 14 Tagen die bereits erbrachten Tage bezahle.",
+    "consent_missing": "Bitte setzen Sie zuerst das Häkchen bei der Zustimmung.",
+    "legal_imprint": "Impressum",
+    "legal_privacy": "Datenschutz",
+    "legal_terms": "AGB",
+})
+
+LANG_NAMES = {"en": "English", "ar": "العربية", "de": "Deutsch"}

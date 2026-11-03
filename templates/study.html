@@ -58,8 +58,9 @@
   <h2>{{ t.study_method_title }}</h2>
   <p>{{ t.study_method }}</p>
   <p class="small">Tranco: <a href="{{ d.list_url }}" rel="nofollow">{{ d.list }}</a> · <a href="{{ url_for('site.study_json') }}">{{ t.study_download }}</a> · CC BY 4.0</p>
-  <p><a class="button-link" href="{{ url_for('site.index', lang=lang) }}">{{ t.scan_cta }}</a></p>
 </section>
+
+{% include "_scan_box.html" %}
 
 <section class="card">
   <details>

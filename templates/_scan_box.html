@@ -1,0 +1,12 @@
+<section class="card scan-box">
+  <h2>{{ t.scanbox_title }}</h2>
+  <form class="scan-form" method="post" action="{{ url_for('site.scan_form', lang=lang) }}" data-busy="{{ t.scanning }}">
+    <label for="domain-box">{{ t.domain_label }}</label>
+    <div class="scan-row">
+      <input id="domain-box" name="domain" type="text" inputmode="url" autocomplete="url" dir="ltr"
+             placeholder="example.com" required maxlength="253">
+      <button type="submit">{{ t.scan_button }}</button>
+    </div>
+    <p class="form-busy" hidden>{{ t.scanning }}</p>
+  </form>
+</section>
