@@ -4,6 +4,7 @@ import bisect
 import gzip
 import ipaddress
 import os
+import re
 import time
 import urllib.request
 
@@ -34,11 +35,19 @@ def _download(url):
         return r.read()
 
 
+HANDLE = re.compile(r"^[A-Z0-9-]+$")
+
+
 def provider_name(description):
-    """«CLOUDFLARENET - Cloudflare, Inc.» ← «Cloudflare, Inc.»؛ وإلا الوصف كما هو."""
+    """اسم مقروء للشبكة. «CLOUDFLARENET - Cloudflare, Inc.» و«HETZNER-AS Hetzner Online GmbH» و«OVH OVH SAS»
+    تصير «Cloudflare, Inc.» و«Hetzner Online GmbH» و«OVH SAS». تطبيقها مرتين لا يغيّر النتيجة."""
     description = (description or "").strip()
     if " - " in description:
         return description.split(" - ", 1)[1].strip()
+    first, _, rest = description.partition(" ")
+    if rest and HANDLE.match(first) and ("-" in first or any(c.isdigit() for c in first) or len(first) >= 10
+                                         or rest.upper().startswith(first)):
+        return rest.strip()
     return description
 
 

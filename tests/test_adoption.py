@@ -213,6 +213,14 @@ class ScaleAndProviderTests(unittest.TestCase):
         self.assertEqual(prov["rows"][0]["reachable"], 25)
         self.assertEqual(adoption.timeline(self.conn), [])   # الشهري لا يدخل الخط الزمني الأسبوعي
 
+    def test_provider_names_are_readable_and_stable(self):
+        import asn
+        for raw, clean in (("HETZNER-AS Hetzner Online GmbH", "Hetzner Online GmbH"), ("OVH OVH SAS", "OVH SAS"),
+                           ("AKAMAI-ASN1 Akamai International B.V.", "Akamai International B.V."),
+                           ("Google LLC", "Google LLC"), ("CLOUDFLARENET - Cloudflare, Inc.", "Cloudflare, Inc.")):
+            self.assertEqual(asn.provider_name(raw), clean)
+            self.assertEqual(asn.provider_name(clean), clean)
+
     def test_asn_lookup(self):
         import gzip, tempfile, asn
         path = tempfile.mktemp(suffix=".tsv.gz")
