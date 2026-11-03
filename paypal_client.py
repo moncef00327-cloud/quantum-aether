@@ -79,6 +79,48 @@ class PayPalClient:
     def get_order(self, order_id):
         return self._request("GET", f"/v2/checkout/orders/{order_id}")
 
+    # ------------------------------------------------------------ الاشتراكات (Subscriptions v1)
+
+    def create_product(self, name, description, home_url):
+        body = {"name": name, "description": description, "type": "SERVICE", "category": "SOFTWARE",
+                "home_url": home_url}
+        return self._request("POST", "/v1/catalogs/products", json=body, request_id=f"product-{name}")
+
+    def create_plan(self, product_id, name, description, price, currency):
+        body = {
+            "product_id": product_id,
+            "name": name,
+            "description": description,
+            "status": "ACTIVE",
+            "billing_cycles": [{
+                "frequency": {"interval_unit": "MONTH", "interval_count": 1},
+                "tenure_type": "REGULAR",
+                "sequence": 1,
+                "total_cycles": 0,
+                "pricing_scheme": {"fixed_price": {"value": price, "currency_code": currency}},
+            }],
+            "payment_preferences": {"auto_bill_outstanding": True, "payment_failure_threshold": 2,
+                                    "setup_fee_failure_action": "CANCEL"},
+        }
+        return self._request("POST", "/v1/billing/plans", json=body, request_id=f"plan-{product_id}-{name}")
+
+    def get_subscription(self, subscription_id):
+        return self._request("GET", f"/v1/billing/subscriptions/{subscription_id}")
+
+    def cancel_subscription(self, subscription_id, reason):
+        return self._request("POST", f"/v1/billing/subscriptions/{subscription_id}/cancel", json={"reason": reason})
+
+
+# حالات الاشتراك في PayPal التي تعني أن الخدمة مدفوعة ويجب أن تعمل.
+SUBSCRIPTION_LIVE_STATUSES = {"ACTIVE"}
+
+
+def verify_subscription(subscription, expected_plan_id, expected_custom_id):
+    """يعيد حالة الاشتراك في PayPal إن طابق الخطة والمرجع، وإلا 'MISMATCH'."""
+    if subscription.get("plan_id") != expected_plan_id or subscription.get("custom_id") != expected_custom_id:
+        return "MISMATCH"
+    return subscription.get("status") or "UNKNOWN"
+
 
 def verify_capture(order, expected_reference, expected_amount, expected_currency):
     """يعيد (الحالة, معرّف الالتقاط). الحالة COMPLETED فقط إذا طابق المبلغ والعملة والمرجع."""

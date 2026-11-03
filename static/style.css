@@ -135,3 +135,9 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 10px;
 .prose li { margin-bottom: 6px; }
 details summary { cursor: pointer; }
 .grade-chip.grade-A, .grade-chip.grade-B, .grade-chip.grade-C, .grade-chip.grade-F { padding: 0 6px; }
+
+.textarea { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line);
+  background: var(--bg); color: var(--text); font-size: 1rem; font-family: inherit; }
+.link-button { background: none; color: var(--muted); padding: 4px 6px; font-weight: 400; text-decoration: underline; }
+.link-button.danger { color: var(--bad); }
+.paypal-sub { margin-top: 12px; min-height: 40px; }

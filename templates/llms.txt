@@ -27,3 +27,7 @@
 - {{ base }}/guides/enable-x25519mlkem768-nginx — enable post-quantum TLS on nginx (OpenSSL 3.5+) and verify it.
 - {{ base }}/guides/post-quantum-tls-apache-caddy-haproxy-cloudflare — the same for Apache, Caddy, HAProxy and Cloudflare.
 - {{ base }}/guides/harvest-now-decrypt-later — why key exchange must be upgraded before certificates.
+
+## Monitoring subscription (for teams)
+
+- {{ base }}/monitoring — daily scans of up to 10 domains ($29/month) or 100 domains ($99/month) with email alerts when post-quantum key exchange is lost, a grade changes, or a certificate nears expiry. Billed monthly through PayPal; cancel any time.

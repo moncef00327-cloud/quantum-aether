@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}{{ t.dash_title }} · {{ t.brand }}{% endblock %}
+{% block head %}<meta name="robots" content="noindex">{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>{{ t.dash_title }}</h1>
+  <table class="kv">
+    <tr><th>{{ t.dash_plan }}</th><td>{{ plan.name }} · ${{ plan.price | replace(".00", "") }} {{ t.mon_per_month }}</td></tr>
+    <tr><th>{{ t.dash_status }}</th><td>{{ t.dash_status_names.get(account.status, account.status) }}</td></tr>
+    <tr><th>{{ t.dash_used }}</th><td dir="ltr">{{ domains | length }} / {{ plan.domains }}</td></tr>
+    <tr><th>Email</th><td dir="ltr">{{ account.email }}</td></tr>
+  </table>
+  <p class="muted small no-print">{{ t.dash_keep_private }}</p>
+  {% if notice %}<p class="notice no-print" role="status">{{ t.dash_notices.get(notice, "") }}</p>{% endif %}
+</section>
+
+{% if account.status == "ACTIVE" %}
+<section class="card no-print">
+  <h2>{{ t.dash_add_title }}</h2>
+  <form method="post" action="{{ url_for('site.monitor_add_domains', token=token, lang=lang) }}">
+    <label for="domains" class="muted">{{ t.dash_add_hint }}</label>
+    <textarea id="domains" name="domains" rows="3" dir="ltr" class="textarea" placeholder="example.com&#10;api.example.com"></textarea>
+    <p><button type="submit">{{ t.dash_add_button }}</button></p>
+  </form>
+</section>
+{% endif %}
+
+<section class="card">
+  <h2>{{ t.dash_domains_title }}</h2>
+  {% if domains %}
+  <table class="data" dir="ltr">
+    <tr><th>{{ t.domain_col }}</th><th>{{ t.grade_col }}</th><th>{{ t.group_col }}</th><th>{{ t.dash_days_left }}</th><th>{{ t.dash_checked }}</th><th class="no-print"></th></tr>
+    {% for d in domains %}
+    <tr>
+      <td>{{ d.domain }}</td>
+      <td>{% if d.grade %}<span class="grade-chip grade-{{ d.grade }}">{{ d.grade }}</span>{% else %}—{% endif %}</td>
+      <td>{% if d.error %}<span class="warn">{{ d.error }}</span>{% elif d.result %}<code>{{ d.result.key_exchange.group or "?" }}</code>{% else %}<span class="muted">{{ t.dash_pending }}</span>{% endif %}</td>
+      <td>{{ d.days_left if d.days_left is not none else "—" }}</td>
+      <td class="small">{{ d.checked_at or "—" }}</td>
+      <td class="no-print">
+        <form method="post" action="{{ url_for('site.monitor_remove_domain', token=token, domain_id=d.id, lang=lang) }}">
+          <button type="submit" class="link-button">{{ t.dash_remove }}</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% if account.status == "ACTIVE" %}
+  <form method="post" action="{{ url_for('site.monitor_scan_now', token=token, lang=lang) }}" class="no-print">
+    <p><button type="submit">{{ t.dash_scan_now }}</button></p>
+  </form>
+  {% endif %}
+  {% else %}
+  <p class="muted">{{ t.dash_none }}</p>
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2>{{ t.dash_alerts_title }}</h2>
+  {% if alerts %}
+  <ul>{% for a in alerts %}<li><span class="muted small" dir="ltr">{{ a.created_at }}</span> · <span dir="auto">{{ a.text }}</span></li>{% endfor %}</ul>
+  {% else %}<p class="muted">{{ t.dash_no_alerts }}</p>{% endif %}
+</section>
+
+<section class="no-print">
+  <p><button type="button" id="print-report">{{ t.dash_print }}</button></p>
+  {% if account.status == "ACTIVE" %}
+  <form method="post" action="{{ url_for('site.monitor_cancel', token=token, lang=lang) }}"
+        id="cancel-form" data-confirm="{{ t.dash_cancel_confirm }}">
+    <button type="submit" class="link-button danger">{{ t.dash_cancel }}</button>
+  </form>
+  {% endif %}
+</section>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='dashboard.js') }}"></script>{% endblock %}

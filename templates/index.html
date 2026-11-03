@@ -38,5 +38,6 @@
       <ul class="ticks">{% for item in t.paid_items %}<li>{{ item }}</li>{% endfor %}</ul>
     </div>
   </div>
+  <p class="notice"><a href="{{ url_for('site.monitoring', lang=lang) }}">{{ t.mon_cta_home }} →</a></p>
 </section>
 {% endblock %}

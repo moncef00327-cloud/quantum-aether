@@ -4,6 +4,8 @@ import json
 import sqlite3
 from decimal import Decimal
 
+import monitor_db
+
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS scans (
     id            TEXT PRIMARY KEY,
@@ -42,6 +44,7 @@ def connect(path: str) -> sqlite3.Connection:
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA foreign_keys=ON")
     conn.executescript(SCHEMA)
+    monitor_db.init(conn)
     return conn
 
 

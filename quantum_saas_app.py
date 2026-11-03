@@ -12,6 +12,7 @@ import hmac
 import json
 import logging
 import os
+import re
 import secrets
 
 import requests
@@ -23,10 +24,13 @@ from werkzeug.security import check_password_hash
 import bio_archive_report
 import dna_encode
 import guides
+import monitor
+import monitor_db
 import i18n
 import quantum_vuln_scanner
 import sales_db
-from paypal_client import PayPalClient, PayPalError, verify_capture
+from mailer import Mailer
+from paypal_client import SUBSCRIPTION_LIVE_STATUSES, PayPalClient, PayPalError, verify_capture, verify_subscription
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 log = logging.getLogger("quantum_saas")
@@ -52,10 +56,14 @@ def _config_from_env():
         "PAYPAL_CLIENT_ID": env("PAYPAL_CLIENT_ID", ""),
         "PAYPAL_CLIENT_SECRET": env("PAYPAL_CLIENT_SECRET", ""),
         "PAYPAL_ENV": env("PAYPAL_ENV", "live"),
+        "PAYPAL_PLAN_STARTER": env("PAYPAL_PLAN_STARTER", ""),
+        "PAYPAL_PLAN_BUSINESS": env("PAYPAL_PLAN_BUSINESS", ""),
+        "RESEND_API_KEY": env("RESEND_API_KEY", ""),
+        "MAIL_FROM": env("QS_MAIL_FROM", ""),
     }
 
 
-def create_app(overrides=None, scanner=None, paypal=None):
+def create_app(overrides=None, scanner=None, paypal=None, mailer=None):
     app = Flask(__name__)
     app.config.update(_config_from_env())
     app.config.update(overrides or {})
@@ -68,6 +76,7 @@ def create_app(overrides=None, scanner=None, paypal=None):
         paypal = PayPalClient(app.config["PAYPAL_CLIENT_ID"], app.config["PAYPAL_CLIENT_SECRET"], app.config["PAYPAL_ENV"])
     app.extensions["scanner"] = scanner or quantum_vuln_scanner.scan
     app.extensions["paypal"] = paypal
+    app.extensions["mailer"] = mailer or Mailer(app.config["RESEND_API_KEY"], app.config["MAIL_FROM"])
     app.register_blueprint(bp)
     return app
 
@@ -498,10 +507,180 @@ def favicon():
     return current_app.send_static_file("favicon.svg")
 
 
+# ---------------------------------------------------------------- اشتراك المراقبة الشهري
+
+EMAIL_RE = re.compile(r"^[^@\s]{1,64}@[A-Za-z0-9.-]{1,253}\.[A-Za-z]{2,}$")
+MANUAL_SCAN_INTERVAL = dt.timedelta(hours=1)
+
+
+def plan_ids():
+    cfg = current_app.config
+    return {name: cfg[p["env"]] for name, p in monitor.PLANS.items()}
+
+
+def subscriptions_enabled():
+    return current_app.extensions["paypal"] is not None and all(plan_ids().values())
+
+
+def dashboard_url(token, lang):
+    return f"{public_base()}/monitor/{token}?lang={lang}"
+
+
+def account_or_404(token):
+    account = monitor_db.get_account_by_token(db(), token)
+    if not account or account["status"] == "PENDING":
+        abort(404)
+    return account
+
+
+@bp.get("/monitoring")
+def monitoring():
+    cfg = current_app.config
+    return render_template("monitoring.html", plans=monitor.PLANS, plan_ids=plan_ids(),
+                           enabled=subscriptions_enabled(), paypal_client_id=cfg["PAYPAL_CLIENT_ID"],
+                           currency=cfg["CURRENCY"], sent=request.args.get("sent"))
+
+
+@bp.post("/api/monitor/signup")
+def monitor_signup():
+    """الخطوة 1: ينشئ حساباً معلقاً ويعيد معرّفه ليُرفق بالاشتراك في PayPal (custom_id)."""
+    if not subscriptions_enabled():
+        return jsonify(error="subscriptions_disabled"), 503
+    data = request.get_json(silent=True) or {}
+    email, plan = str(data.get("email", "")).strip().lower(), str(data.get("plan", ""))
+    if plan not in monitor.PLANS:
+        return jsonify(error="invalid_plan"), 400
+    if not EMAIL_RE.match(email):
+        return jsonify(error="invalid_email"), 400
+    account_id, _token = monitor_db.create_account(db(), email, plan, current_lang())
+    return jsonify(account_id=account_id, plan_id=plan_ids()[plan]), 201
+
+
+@bp.post("/api/monitor/activate")
+def monitor_activate():
+    """الخطوة 2: بعد موافقة المشترك في PayPal نتحقق من الاشتراك على خادم PayPal ثم نفعّل الحساب."""
+    paypal = current_app.extensions["paypal"]
+    if not subscriptions_enabled():
+        return jsonify(error="subscriptions_disabled"), 503
+    data = request.get_json(silent=True) or {}
+    conn = db()
+    account = monitor_db.get_account(conn, str(data.get("account_id", "")))
+    subscription_id = str(data.get("subscription_id", ""))
+    if not account or not subscription_id:
+        return jsonify(error="account_not_found"), 404
+    if account["status"] != "PENDING":
+        return jsonify(error="already_activated"), 409
+    try:
+        subscription = paypal.get_subscription(subscription_id)
+    except (PayPalError, requests.RequestException) as exc:
+        log.warning("PayPal subscription lookup failed for %s: %s", subscription_id, exc)
+        return jsonify(error="paypal_unavailable"), 502
+    status = verify_subscription(subscription, plan_ids()[account["plan"]], account["id"])
+    if status not in SUBSCRIPTION_LIVE_STATUSES:
+        log.warning("Subscription %s for %s not active: %s", subscription_id, account["id"], status)
+        return jsonify(error="subscription_not_active", status=status), 402
+    monitor_db.set_status(conn, account["id"], "ACTIVE", subscription_id)
+    token = monitor_db.rotate_token(conn, account["id"])  # الرمز يُكشف مرة واحدة فقط، هنا
+    url = dashboard_url(token, account["lang"])
+    subject, text = monitor.welcome_email(account, url)
+    current_app.extensions["mailer"].send(account["email"], subject, text)
+    return jsonify(dashboard_url=url)
+
+
+@bp.post("/monitoring/login")
+def monitor_login():
+    """يرسل رابط لوحة التحكم إلى بريد مشترك فعّال. الرد نفسه دائماً حتى لا يُكشف من هو مشترك."""
+    email = request.form.get("email", "").strip().lower()
+    conn = db()
+    # بلا بريد مفعّل لا نغيّر الرمز، وإلا فقد المشترك رابطه الحالي دون أن يصله بديل.
+    if EMAIL_RE.match(email) and current_app.extensions["mailer"].enabled:
+        for account in monitor_db.active_accounts_by_email(conn, email):
+            token = monitor_db.rotate_token(conn, account["id"])
+            subject, text = monitor.welcome_email(account, dashboard_url(token, account["lang"]))
+            current_app.extensions["mailer"].send(email, subject, text)
+    return redirect(url_for(".monitoring", lang=current_lang(), sent=1, _anchor="login"), code=303)
+
+
+@bp.get("/monitor/<token>")
+def monitor_dashboard(token):
+    account = account_or_404(token)
+    conn = db()
+    alerts = monitor_db.recent_alerts(conn, account["id"])
+    lang = current_lang()
+    for a in alerts:
+        a["text"] = monitor.alert_text(a, lang)
+    return render_template("monitor_dashboard.html", account=account, token=token,
+                           domains=monitor_db.list_domains(conn, account["id"]), alerts=alerts,
+                           plan=monitor.PLANS[account["plan"]], notice=request.args.get("n"))
+
+
+def _back(token, notice):
+    return redirect(url_for(".monitor_dashboard", token=token, lang=current_lang(), n=notice), code=303)
+
+
+@bp.post("/monitor/<token>/domains")
+def monitor_add_domains(token):
+    account = account_or_404(token)
+    if account["status"] != "ACTIVE":
+        return _back(token, "inactive")
+    conn = db()
+    limit = monitor.PLANS[account["plan"]]["domains"]
+    raw = re.split(r"[\s,]+", request.form.get("domains", ""))
+    added, notice = 0, "added"
+    for item in filter(None, raw):
+        if monitor_db.count_domains(conn, account["id"]) >= limit:
+            notice = "limit"
+            break
+        try:
+            domain = monitor.normalize(item)
+        except quantum_vuln_scanner.ScanError:
+            notice = "invalid"
+            continue
+        added += monitor_db.add_domain(conn, account["id"], domain)
+    return _back(token, notice)
+
+
+@bp.post("/monitor/<token>/domains/<int:domain_id>/delete")
+def monitor_remove_domain(token, domain_id):
+    account = account_or_404(token)
+    monitor_db.remove_domain(db(), account["id"], domain_id)
+    return _back(token, "removed")
+
+
+@bp.post("/monitor/<token>/scan")
+def monitor_scan_now(token):
+    account = account_or_404(token)
+    if account["status"] != "ACTIVE":
+        return _back(token, "inactive")
+    now = dt.datetime.now(dt.timezone.utc)
+    last = account.get("last_manual_scan")
+    if last and now - dt.datetime.fromisoformat(last) < MANUAL_SCAN_INTERVAL:
+        return _back(token, "wait")
+    conn = db()
+    monitor_db.mark_manual_scan(conn, account["id"], now.isoformat(timespec="seconds"))
+    monitor.check_account(conn, account, scanner=current_app.extensions["scanner"])
+    return _back(token, "scanned")
+
+
+@bp.post("/monitor/<token>/cancel")
+def monitor_cancel(token):
+    account = account_or_404(token)
+    if account["status"] != "ACTIVE":
+        return _back(token, "inactive")
+    paypal = current_app.extensions["paypal"]
+    try:
+        paypal.cancel_subscription(account["subscription_id"], "Cancelled by customer from dashboard")
+    except (PayPalError, requests.RequestException) as exc:
+        log.warning("PayPal cancel failed for %s: %s", account["id"], exc)
+        return _back(token, "cancel_failed")
+    monitor_db.set_status(db(), account["id"], "CANCELLED")
+    return _back(token, "cancelled")
+
+
 @bp.get("/robots.txt")
 def robots():
     agents = "".join(f"User-agent: {name}\n" for name in [*AI_CRAWLERS, "*"])
-    body = (agents + "Allow: /\nDisallow: /admin\nDisallow: /report/\nDisallow: /api/paypal/\n\n"
+    body = (agents + "Allow: /\nDisallow: /admin\nDisallow: /report/\nDisallow: /api/paypal/\nDisallow: /monitor/\nDisallow: /api/monitor/\n\n"
             f"Sitemap: {public_base()}/sitemap.xml\n")
     return Response(body, mimetype="text/plain")
 
@@ -509,7 +688,7 @@ def robots():
 @bp.get("/sitemap.xml")
 def sitemap():
     base = public_base()
-    paths = ["/", "/research", "/guides", "/study/top-1000-post-quantum-tls"] + [f"/guides/{slug}" for slug in guides.GUIDES]
+    paths = ["/", "/monitoring", "/research", "/guides", "/study/top-1000-post-quantum-tls"] + [f"/guides/{slug}" for slug in guides.GUIDES]
     urls = [f"{base}{p}?lang={lang}" for p in paths for lang in ("en", "ar")]
     body = ('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
             + "".join(f"  <url><loc>{u.replace('&', '&amp;')}</loc></url>\n" for u in urls) + "</urlset>\n")
@@ -547,7 +726,7 @@ def _security_headers(response):
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
     response.headers.setdefault("X-Frame-Options", "DENY")
     response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
-    if request.path.startswith(("/report/", "/admin")):
+    if request.path.startswith(("/report/", "/admin", "/monitor/")):
         # رابط التقرير يحمل مفتاح الوصول: لا نخزنه ولا نرسله في Referer ولا نسمح بالفهرسة.
         response.headers["Cache-Control"] = "no-store"
         response.headers["Referrer-Policy"] = "no-referrer"
