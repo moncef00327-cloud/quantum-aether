@@ -3,6 +3,37 @@
 {% block head %}<meta name="robots" content="noindex">{% endblock %}
 {% block content %}
 <h1>{{ t.admin_title }}</h1>
+
+<section class="stats">
+  <div class="card stat"><h3>{{ t.adm_visitors }}</h3><p class="value">{{ traffic.funnel.visitors }}</p></div>
+  <div class="card stat"><h3>{{ t.adm_scanners }}</h3><p class="value">{{ traffic.funnel.scan_pages }}</p></div>
+  <div class="card stat"><h3>{{ t.adm_pricing_views }}</h3><p class="value">{{ traffic.funnel.monitoring_page }}</p></div>
+</section>
+<p class="muted small">{{ t.adm_window }} · {{ t.adm_bots }}: {{ traffic.bots }}</p>
+
+<section class="grid-2">
+  <div class="card">
+    <h2>{{ t.adm_daily }}</h2>
+    <table class="data" dir="ltr">
+      <thead><tr><th>{{ t.date }}</th><th>{{ t.adm_visitors }}</th><th>{{ t.adm_views }}</th><th>{{ t.total_scans }}</th></tr></thead>
+      <tbody>{% for d in traffic.daily %}<tr><td>{{ d.day }}</td><td>{{ d.visitors }}</td><td>{{ d.views }}</td><td>{{ scans_daily.get(d.day, 0) }}</td></tr>
+      {% else %}<tr><td colspan="4">—</td></tr>{% endfor %}</tbody>
+    </table>
+  </div>
+  <div class="card">
+    <h2>{{ t.adm_sources }}</h2>
+    <table class="data" dir="ltr">
+      <thead><tr><th>{{ t.adm_source }}</th><th>{{ t.adm_visitors }}</th></tr></thead>
+      <tbody>{% for r in traffic.referrers %}<tr><td>{{ r.referrer }}</td><td>{{ r.visitors }}</td></tr>
+      {% else %}<tr><td colspan="2">—</td></tr>{% endfor %}</tbody>
+    </table>
+    <h2>{{ t.adm_pages }}</h2>
+    <table class="data" dir="ltr">
+      <tbody>{% for p in traffic.pages %}<tr><td>{{ p.path }}</td><td>{{ p.views }}</td></tr>
+      {% else %}<tr><td>—</td></tr>{% endfor %}</tbody>
+    </table>
+  </div>
+</section>
 <section class="stats">
   <div class="card stat"><h3>{{ t.total_scans }}</h3><p class="value">{{ stats.scans }}</p></div>
   <div class="card stat"><h3>{{ t.paid_orders }}</h3><p class="value">{{ stats.paid_orders }}</p></div>

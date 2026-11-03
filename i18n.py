@@ -467,6 +467,16 @@ TEXTS["ar"].update({
     "admin_mrr": "الدخل الشهري المتكرر",
     "admin_churned": "ملغاة أو موقوفة",
     "admin_subs_title": "المشتركون",
+    "adm_visitors": "زوار",
+    "adm_views": "مشاهدات",
+    "adm_scanners": "زوار شاهدوا نتيجة فحص",
+    "adm_pricing_views": "زوار صفحة الاشتراك",
+    "adm_window": "آخر 14 يوماً، بشر فقط",
+    "adm_bots": "زيارات روبوتات مستبعدة",
+    "adm_daily": "يومياً",
+    "adm_sources": "مصادر الزوار",
+    "adm_source": "المصدر",
+    "adm_pages": "أكثر الصفحات زيارة",
 })
 
 TEXTS["en"].update({
@@ -530,4 +540,14 @@ TEXTS["en"].update({
     "admin_mrr": "Monthly recurring revenue",
     "admin_churned": "Cancelled or suspended",
     "admin_subs_title": "Subscribers",
+    "adm_visitors": "Visitors",
+    "adm_views": "Views",
+    "adm_scanners": "Visitors who saw a scan result",
+    "adm_pricing_views": "Visitors on the subscription page",
+    "adm_window": "Last 14 days, humans only",
+    "adm_bots": "bot views excluded",
+    "adm_daily": "Daily",
+    "adm_sources": "Traffic sources",
+    "adm_source": "Source",
+    "adm_pages": "Top pages",
 })

@@ -4,6 +4,7 @@ import json
 import sqlite3
 from decimal import Decimal
 
+import analytics_db
 import monitor_db
 
 SCHEMA = """
@@ -45,6 +46,7 @@ def connect(path: str) -> sqlite3.Connection:
     conn.execute("PRAGMA foreign_keys=ON")
     conn.executescript(SCHEMA)
     monitor_db.init(conn)
+    analytics_db.init(conn)
     return conn
 
 
@@ -135,6 +137,12 @@ def recent_orders(conn, limit=50):
         (limit,),
     ).fetchall()
     return [dict(r) for r in rows]
+
+
+def scans_per_day(conn, since_day):
+    rows = conn.execute("SELECT substr(created_at, 1, 10) AS day, COUNT(*) AS n FROM scans"
+                        " WHERE created_at >= ? GROUP BY day ORDER BY day DESC", (since_day,)).fetchall()
+    return {r["day"]: r["n"] for r in rows}
 
 
 def recent_scans(conn, limit=50):

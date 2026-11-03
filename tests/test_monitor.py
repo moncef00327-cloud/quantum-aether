@@ -296,3 +296,33 @@ class BadgeAndAdminTest(unittest.TestCase):
         body = self.client.get("/admin?lang=en", headers=auth).get_data(as_text=True)
         self.assertIn("$128.00", body)
         self.assertIn("y@example.com", body)
+
+
+class AnalyticsTest(unittest.TestCase):
+    def setUp(self):
+        from werkzeug.security import generate_password_hash
+        self.tmp = tempfile.mkdtemp()
+        self.app = quantum_saas_app.create_app(
+            {"TESTING": True, "DATA_DIR": self.tmp, "PUBLIC_URL": "https://ather-quatum.cloud",
+             "ADMIN_PASSWORD_HASH": generate_password_hash("pw")},
+            scanner=lambda raw: result_for(quantum_vuln_scanner.normalize_domain(raw)), paypal=None, mailer=FakeMailer())
+        self.client = self.app.test_client()
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp)
+
+    def test_tracks_humans_sources_and_skips_private_pages(self):
+        browser = {"User-Agent": "Mozilla/5.0 Firefox/140"}
+        self.client.get("/", headers=dict(browser, Referer="https://news.ycombinator.com/item?id=1"))
+        self.client.get("/guides", headers=dict(browser, Referer="https://ather-quatum.cloud/"))
+        self.client.get("/", headers={"User-Agent": "Mozilla/5.0 (compatible; bingbot/2.0)"})
+        self.client.get("/robots.txt", headers=browser)
+        self.client.get("/admin", headers=browser)
+        import base64
+        auth = {"Authorization": "Basic " + base64.b64encode(b"admin:pw").decode()}
+        body = self.client.get("/admin?lang=en", headers=auth).get_data(as_text=True)
+        self.assertIn("news.ycombinator.com", body)
+        with closing(sales_db.connect(os.path.join(self.tmp, "quantum_saas.db"))) as c:
+            rows = c.execute("SELECT path, referrer, is_bot FROM pageviews ORDER BY rowid").fetchall()
+        self.assertEqual([tuple(r) for r in rows],
+                         [("/", "news.ycombinator.com", 0), ("/guides", "(internal)", 0), ("/", "(direct)", 1)])

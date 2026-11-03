@@ -23,6 +23,7 @@ from werkzeug.security import check_password_hash
 
 import bio_archive_report
 import dna_encode
+import analytics_db
 import guides
 import monitor
 import monitor_db
@@ -305,7 +306,9 @@ def admin():
     conn = db()
     return render_template("admin.html", stats=sales_db.stats(conn),
                            orders=sales_db.recent_orders(conn), scans=sales_db.recent_scans(conn),
-                           subs=monitor_db.stats(conn, monitor.PLANS), accounts=monitor_db.recent_accounts(conn))
+                           subs=monitor_db.stats(conn, monitor.PLANS), accounts=monitor_db.recent_accounts(conn),
+                           traffic=analytics_db.summary(conn, (dt.date.today() - dt.timedelta(days=13)).isoformat()),
+                           scans_daily=sales_db.scans_per_day(conn, (dt.date.today() - dt.timedelta(days=13)).isoformat()))
 
 
 # ---------------------------------------------------------------- API
@@ -767,6 +770,27 @@ def openapi():
 def llms_txt():
     return Response(render_template("llms.txt", base=public_base(), price=current_app.config["PRICE"]),
                     mimetype="text/plain")
+
+
+@bp.after_app_request
+def _track_pageview(response):
+    """يسجل زيارة لكل صفحة HTML عامة ناجحة. أي خطأ هنا لا يمس الرد."""
+    if request.method != "GET" or response.status_code != 200 or response.mimetype != "text/html":
+        return response
+    path = analytics_db.normalize_path(request.path)
+    if path is None:
+        return response
+    try:
+        day = dt.date.today().isoformat()
+        ua = request.headers.get("User-Agent", "")
+        salt = current_app.config["HASH_SALT"].encode()
+        visitor = hmac.new(salt, f"{day}|{request.remote_addr}|{ua}".encode(), hashlib.sha256).hexdigest()[:16]
+        own_host = (current_app.config["PUBLIC_URL"].split("://")[-1] or request.host).split("/")[0]
+        analytics_db.record(db(), day, path, analytics_db.referrer_host(request.referrer, own_host), visitor,
+                            not ua or bool(analytics_db.BOT_RE.search(ua)))
+    except Exception:  # الإحصاءات ثانوية
+        log.exception("pageview tracking failed")
+    return response
 
 
 @bp.after_app_request

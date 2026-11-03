@@ -1,12 +1,14 @@
 # monitor_job.py
 # المهمة اليومية: يتحقق من حالة كل اشتراك في PayPal، ثم يفحص نطاقات المشتركين الفعّالين ويرسل التنبيهات.
 # التشغيل: python monitor_job.py   (يشغله مؤقت systemd: deploy/quantum_monitor.timer)
+import datetime as dt
 import logging
 import os
 import sys
 
 import requests
 
+import analytics_db
 import monitor
 import monitor_db
 import quantum_saas_app
@@ -59,6 +61,7 @@ def run(app):
             account = dict(row)
             total_domains += monitor.check_account(conn, account, scanner=app.extensions["scanner"])
             total_alerts += send_alerts(conn, account, app.extensions["mailer"], base_url)
+        analytics_db.prune(conn, (dt.date.today() - dt.timedelta(days=180)).isoformat())  # نحتفظ بستة أشهر
         log.info("checked %d accounts, %d domains, %d alerts", len(accounts), total_domains, total_alerts)
     finally:
         conn.close()
