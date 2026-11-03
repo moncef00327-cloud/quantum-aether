@@ -37,6 +37,19 @@ the rest still use classical X25519 or ECDHE only (among them amazon.com, github
   (`adoption_job.py`, systemd timer `quantum_adoption.timer`, lists in `data/adoption_watchlists.json`).
   Data: `/adoption.json` and `/adoption.csv` (CC BY 4.0).
 
+## GitHub Action
+
+Check on every deploy that your site still negotiates post-quantum TLS:
+
+```yaml
+- uses: moncef00327-cloud/quantum-aether/github-action@main
+  with:
+    domain: example.com
+    require-post-quantum: true
+```
+
+Details: [`github-action/README.md`](github-action/README.md).
+
 ## Guides
 
 - [Enable X25519MLKEM768 on nginx](https://ather-quatum.cloud/guides/enable-x25519mlkem768-nginx)

@@ -58,3 +58,4 @@
 - {{ base }}/site/{domain} — public, indexable page with a domain's latest known grade (from a recent scan or the top-1000 study) and a ready badge snippet.
 - {{ base }}/compare?a=sitea.com&b=siteb.com — scan two sites side by side.
 - CLI: `npx quantum-aether {domain}` (Node ≥18) prints the grade in your terminal; `--json` for machine output.
+- GitHub Action: `uses: moncef00327-cloud/quantum-aether/github-action@main` with `domain:` checks post-quantum TLS on every deploy; optional `require-post-quantum: true` fails the job if X25519MLKEM768 is missing.

@@ -1,0 +1,49 @@
+name: "Post-quantum TLS check (Quantum Aether)"
+description: "Check that a website negotiates post-quantum TLS key exchange (X25519MLKEM768) on every deploy."
+author: "Quantum Aether"
+branding:
+  icon: "shield"
+  color: "green"
+
+inputs:
+  domain:
+    description: "Hostname to check, e.g. example.com"
+    required: true
+  require-post-quantum:
+    description: "Fail the job if the site does not negotiate X25519MLKEM768 (true/false)"
+    required: false
+    default: "false"
+  min-grade:
+    description: "Fail the job if the grade is worse than this (A, B, C or F). Empty = never fail on grade."
+    required: false
+    default: ""
+  base-url:
+    description: "Scanner base URL"
+    required: false
+    default: "https://ather-quatum.cloud"
+
+outputs:
+  grade:
+    description: "Grade A/B/C/F"
+    value: ${{ steps.scan.outputs.grade }}
+  post-quantum:
+    description: "true if the server negotiated X25519MLKEM768"
+    value: ${{ steps.scan.outputs.post-quantum }}
+  key-exchange:
+    description: "Negotiated key-exchange group"
+    value: ${{ steps.scan.outputs.key-exchange }}
+  scan-url:
+    description: "Link to the free result page"
+    value: ${{ steps.scan.outputs.scan-url }}
+
+runs:
+  using: "composite"
+  steps:
+    - id: scan
+      shell: bash
+      env:
+        INPUT_DOMAIN: ${{ inputs.domain }}
+        INPUT_REQUIRE_PQ: ${{ inputs.require-post-quantum }}
+        INPUT_MIN_GRADE: ${{ inputs.min-grade }}
+        INPUT_BASE_URL: ${{ inputs.base-url }}
+      run: python3 "$GITHUB_ACTION_PATH/scan.py"
