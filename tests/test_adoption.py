@@ -80,7 +80,9 @@ class UnitTests(unittest.TestCase):
         targets = adoption.load_targets()
         domains = [t["domain"] for t in targets]
         self.assertEqual(len(domains), len(set(domains)))
-        self.assertEqual(sum(1 for t in targets if t["rank"]), 1000)
+        self.assertEqual(sum(1 for t in targets if t["rank"]), adoption.WEEKLY_TOP)
+        study = [json.loads(l)["domain"] for l in open(adoption.RAW_STUDY_FILE)]
+        self.assertEqual([t["domain"] for t in targets[:1000]], study)   # الأكبر 1000 هي قائمة الدراسة نفسها
         watch = {d for s in adoption.load_watchlists().values() for d in s["domains"]}
         self.assertTrue(watch <= set(domains))
         for domain in watch:  # كل اسم في قوائم المراقبة صالح للماسح
@@ -129,7 +131,7 @@ class TrackerTests(unittest.TestCase):
         # github.com كان بلا PQ في الدراسة، وgoogle.com كان معه
         self.scanner.overrides = {"github.com": result("github.com", pq=True),
                                   "google.com": result("google.com", pq=False)}
-        outcome = adoption_job.run(self.app, day=NEXT_MONDAY, workers=4)
+        outcome = adoption_job.run(self.app, day=NEXT_MONDAY, workers=4, asn_lookup=None)
         self.assertEqual(outcome["week"], "2026-W46")
         self.assertGreater(outcome["targets"], 1000)
         body = self.client.get("/adoption?lang=en").get_data(as_text=True)
@@ -149,6 +151,13 @@ class TrackerTests(unittest.TestCase):
         self.assertEqual([p["week"] for p in data["timeline"]], ["2026-W45", "2026-W46"])
         self.assertEqual(data["license"], "CC BY 4.0")
 
+    def test_scanning_page(self):
+        for lang in ("en", "ar", "de"):
+            body = self.client.get(f"/scanning?lang={lang}").get_data(as_text=True)
+            self.assertIn("95.179.195.150", body)
+            self.assertIn("mailto:", body)
+        self.assertIn("/scanning", self.client.get("/adoption?lang=en").get_data(as_text=True))
+
     def test_csv_and_discovery_files(self):
         r = self.client.get("/adoption.csv")
         self.assertEqual(r.mimetype, "text/csv")
@@ -159,6 +168,61 @@ class TrackerTests(unittest.TestCase):
         self.assertIn("/adoption#2026-W45", self.client.get("/feed.xml").get_data(as_text=True))
         self.assertIn("/adoption.json", self.client.get("/llms.txt").get_data(as_text=True))
         self.assertIn("/adoption?lang=en", self.client.get("/?lang=en").get_data(as_text=True))
+
+
+class ScaleAndProviderTests(unittest.TestCase):
+    def setUp(self):
+        import sqlite3
+        self.conn = sqlite3.connect(":memory:")
+        self.conn.row_factory = sqlite3.Row
+        adoption.init(self.conn)
+
+    def lookup(self, ip):
+        return {"1.1.1.1": (13335, "Cloudflare, Inc."), "2.2.2.2": (24940, "Hetzner Online GmbH")}.get(ip, (None, None))
+
+    def test_optout_excludes_domain_and_subdomains(self):
+        out = {"example.com"}
+        self.assertTrue(adoption.opted_out("example.com", out))
+        self.assertTrue(adoption.opted_out("www.example.com", out))
+        self.assertFalse(adoption.opted_out("notexample.com", out))
+        targets = adoption.load_targets(limit=50, watchlists={}, optout={"google.com"})
+        self.assertNotIn("google.com", [t["domain"] for t in targets])
+
+    def test_providers_and_top10k_tier(self):
+        targets = [{"domain": f"site{i}.test", "rank": i + 1, "sector": None} for i in range(60)]
+        def scanner(domain):
+            i = int(domain[4:-5])
+            ip = "1.1.1.1" if i % 2 == 0 else "2.2.2.2"
+            return result(domain, pq=(ip == "1.1.1.1")) | {"ip": ip}
+        adoption.run_week(self.conn, scanner, targets, day=NEXT_MONDAY, workers=4, asn_lookup=self.lookup)
+        prov = adoption.providers(self.conn)
+        by = {p["name"]: p for p in prov["rows"]}
+        self.assertEqual((by["Cloudflare, Inc."]["reachable"], by["Cloudflare, Inc."]["pct"]), (30, 100.0))
+        self.assertEqual((by["Hetzner Online GmbH"]["pq"], by["Hetzner Online GmbH"]["pct"]), (0, 0.0))
+        self.assertFalse(prov["monthly"])
+        self.assertEqual(adoption.tier_stats(adoption.rows_for(self.conn, "2026-W46"), 60)["pct"], 50.0)
+        self.assertIsNone(adoption.tier_stats(adoption.rows_for(self.conn, "2026-W46"), 10000))  # لم يُفحص هذا العدد
+
+    def test_monthly_run_feeds_providers_and_timeline_stays_top1000(self):
+        targets = [{"domain": f"m{i}.test", "rank": 5000 + i, "sector": None} for i in range(25)]
+        adoption.run_month(self.conn, lambda d: result(d, pq=True) | {"ip": "1.1.1.1"}, targets,
+                           day=NEXT_MONDAY, workers=4, asn_lookup=self.lookup)
+        prov = adoption.providers(self.conn)
+        self.assertTrue(prov["monthly"])
+        self.assertEqual(prov["period"], "2026-11")
+        self.assertEqual(prov["rows"][0]["reachable"], 25)
+        self.assertEqual(adoption.timeline(self.conn), [])   # الشهري لا يدخل الخط الزمني الأسبوعي
+
+    def test_asn_lookup(self):
+        import gzip, tempfile, asn
+        path = tempfile.mktemp(suffix=".tsv.gz")
+        with gzip.open(path, "wt") as f:
+            f.write("1.0.0.0\t1.0.0.255\t13335\tUS\tCLOUDFLARENET - Cloudflare, Inc.\n1.0.1.0\t1.0.3.255\t0\tNone\tNot routed\n")
+        lookup = asn.AsnLookup(path).lookup
+        self.assertEqual(lookup("1.0.0.7"), (13335, "Cloudflare, Inc."))
+        self.assertEqual(lookup("1.0.2.1"), (None, None))
+        self.assertEqual(lookup("not-an-ip"), (None, None))
+        os.remove(path)
 
 
 def adoption_texts(lang):

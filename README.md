@@ -32,10 +32,10 @@ the rest still use classical X25519 or ECDHE only (among them amazon.com, github
 - Results page: https://ather-quatum.cloud/study/top-1000-post-quantum-tls
 - Data (CC BY 4.0): [`data/pq_study_top1000.json`](data/pq_study_top1000.json), raw per-domain results in `data/pq_study_top1000_raw.jsonl`
 - Reproduce: `python tools/run_study.py domains.txt results.jsonl` (one domain per line)
-- Weekly tracker: https://ather-quatum.cloud/adoption re-scans the same 1,000 domains plus watchlists of
+- Weekly tracker: https://ather-quatum.cloud/adoption re-scans the Tranco top 10,000 (monthly the top 100,000, `adoption_job.py monthly`) plus watchlists of
   government, bank and company sites in Germany, Austria and Switzerland every Monday
   (`adoption_job.py`, systemd timer `quantum_adoption.timer`, lists in `data/adoption_watchlists.json`).
-  Data: `/adoption.json` and `/adoption.csv` (CC BY 4.0).
+  Data: `/adoption.json` and `/adoption.csv` (CC BY 4.0). Network names: IP-to-ASN data from iptoasn.com (PDDL). Scan policy and opt-out: https://ather-quatum.cloud/scanning
 
 ## GitHub Action
 

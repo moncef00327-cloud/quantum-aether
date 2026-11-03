@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}{{ t.scanning_title }} · {{ t.brand }}{% endblock %}
+{% block description %}{{ t.scanning_lead }}{% endblock %}
+{% block content %}
+<article class="card prose">
+  <h1>{{ t.scanning_title }}</h1>
+  <p>{{ t.scanning_lead }}</p>
+  <h2>{{ t.scanning_what_title }}</h2>
+  <ul>{% for item in t.scanning_what %}<li>{{ item }}</li>{% endfor %}</ul>
+  <h2>{{ t.scanning_optout_title }}</h2>
+  <p>{{ t.scanning_optout }} <a href="mailto:sajad.vip56@gmail.com?subject=Opt-out%20from%20Quantum%20Aether%20scans">sajad.vip56@gmail.com</a></p>
+  <p class="muted small">{{ t.scanning_source }} <code dir="ltr">95.179.195.150</code> · <a href="{{ url_for('site.adoption_page', lang=lang) }}">/adoption</a></p>
+</article>
+{% endblock %}

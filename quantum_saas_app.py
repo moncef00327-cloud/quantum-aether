@@ -132,7 +132,7 @@ def current_lang():
 
 
 # الصفحات التي لها نسخة ألمانية فعلية (لمبدّل اللغة وhreflang وخريطة الموقع).
-DE_PAGES = {"site.index", "site.study", "site.monitoring", "site.adoption_page"}
+DE_PAGES = {"site.index", "site.study", "site.monitoring", "site.adoption_page", "site.scanning_page"}
 
 
 def texts():
@@ -410,6 +410,12 @@ def adoption_page():
     # في العربية نعزل اتجاه رمز الأسبوع (Unicode isolate) حتى لا ينقلب «2026-W46» إلى «W46-2026»
     iso = (lambda value: f"\u2066{value}\u2069") if current_lang() == "ar" else str
     return render_template("adoption.html", s=adoption_snapshot(), iso=iso)
+
+
+@bp.get("/scanning")
+def scanning_page():
+    """يشرح فحوصاتنا لمن يراها في سجلاته، مع طريقة طلب الاستبعاد."""
+    return render_template("scanning.html")
 
 
 @bp.get("/adoption.json")
@@ -1156,6 +1162,7 @@ def sitemap():
     adoption_weeks = adoption.weeks(db())
     pages.append(("/adoption", adoption.week_monday(adoption_weeks[-1]).isoformat() if adoption_weeks
                   else study_data()["scanned_on"], de_langs))
+    pages.append(("/scanning", template_date("scanning.html"), de_langs))
     pages += [(f"/guides/{slug}", g["updated"], site_langs) for slug, g in guides.GUIDES.items()]
     pages.append(("/compare", template_date("compare.html"), site_langs))
     study_day = study_data()["scanned_on"]

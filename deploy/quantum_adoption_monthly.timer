@@ -1,0 +1,10 @@
+[Unit]
+Description=Run the Quantum Aether 100k adoption scan on the 1st of every month (night, UTC)
+
+[Timer]
+OnCalendar=*-*-01 00:30:00 UTC
+RandomizedDelaySec=30min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

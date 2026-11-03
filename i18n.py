@@ -659,7 +659,7 @@ TEXTS["en"]["scanbox_title"] = "Scan your site now, free"
 # ---------------------------------------------------------------- الألمانية (Sie)
 # متاحة للصفحة الرئيسية والدراسة وصفحة الشركات فقط؛ أي نص غير مترجم هنا يبقى بالإنجليزية.
 DE_ENDPOINTS = {"site.index", "site.scan_form", "site.study", "site.monitoring", "site.monitor_login",
-                "site.adoption_page"}
+                "site.adoption_page", "site.scanning_page"}
 
 TEXTS["ar"].update({
     "copy": "نسخ", "copied": "تم النسخ ✓",
@@ -947,9 +947,9 @@ LANG_NAMES = {"en": "English", "ar": "العربية", "de": "Deutsch"}
 TEXTS["en"].update({
     "nav_adoption": "Tracker",
     "adoption_title": "Post-quantum TLS adoption tracker",
-    "adoption_lead": "Every Monday we re-scan the Tranco top 1,000 and watchlists for Germany, Austria and Switzerland. "
-                     "Week {week} (from {date}): {pq} of the {reachable} top sites that answered ({pct}%) negotiate the "
-                     "hybrid X25519MLKEM768 key exchange.",
+    "adoption_lead": "Every Monday we re-scan the Tranco top 10,000 and watchlists for Germany, Austria and Switzerland; "
+                     "once a month the top 100,000. Week {week} (from {date}): {pq} of the {reachable} top-1,000 sites that "
+                     "answered ({pct}%) negotiate the hybrid X25519MLKEM768 key exchange.",
     "adoption_stat_pct": "Top sites with post-quantum key exchange",
     "adoption_stat_delta": "Change vs previous week",
     "adoption_stat_switched": "Switched this week",
@@ -989,9 +989,9 @@ TEXTS["en"].update({
 TEXTS["ar"].update({
     "nav_adoption": "المتتبّع",
     "adoption_title": "متتبّع تبنّي TLS المقاوم للكم",
-    "adoption_lead": "كل يوم اثنين نعيد فحص أكبر 1000 نطاق في قائمة Tranco وقوائم مراقبة لألمانيا والنمسا وسويسرا. "
-                     "الأسبوع {week} (من {date}): {pq} من أصل {reachable} موقعاً كبيراً أجاب ({pct}%) تتفق على تبادل "
-                     "المفاتيح الهجين X25519MLKEM768.",
+    "adoption_lead": "كل يوم اثنين نعيد فحص أكبر 10,000 نطاق في قائمة Tranco وقوائم مراقبة لألمانيا والنمسا وسويسرا، "
+                     "وكل شهر أكبر 100,000. الأسبوع {week} (من {date}): {pq} من أصل {reachable} موقعاً من الأكبر 1000 أجاب "
+                     "({pct}%) تتفق على تبادل المفاتيح الهجين X25519MLKEM768.",
     "adoption_stat_pct": "المواقع الكبرى بتبادل مفاتيح مقاوم للكم",
     "adoption_stat_delta": "التغيّر عن الأسبوع السابق",
     "adoption_stat_switched": "انتقلت هذا الأسبوع",
@@ -1029,9 +1029,10 @@ TEXTS["ar"].update({
 TEXTS["de"].update({
     "nav_adoption": "Tracker",
     "adoption_title": "Post-Quanten-TLS: Wochen-Tracker",
-    "adoption_lead": "Jeden Montag prüfen wir die 1.000 größten Domains der Tranco-Liste sowie Beobachtungslisten für "
-                     "Deutschland, Österreich und die Schweiz erneut. Woche {week} (ab {date}): {pq} der {reachable} "
-                     "erreichbaren Top-Websites ({pct} %) vereinbaren den hybriden Schlüsselaustausch X25519MLKEM768.",
+    "adoption_lead": "Jeden Montag prüfen wir die 10.000 größten Domains der Tranco-Liste sowie Beobachtungslisten für "
+                     "Deutschland, Österreich und die Schweiz erneut, einmal im Monat die 100.000 größten. Woche {week} "
+                     "(ab {date}): {pq} der {reachable} erreichbaren Top-1.000-Websites ({pct} %) vereinbaren den hybriden "
+                     "Schlüsselaustausch X25519MLKEM768.",
     "adoption_stat_pct": "Top-Websites mit Post-Quanten-Schlüsselaustausch",
     "adoption_stat_delta": "Veränderung zur Vorwoche",
     "adoption_stat_switched": "Diese Woche umgestellt",
@@ -1067,4 +1068,85 @@ TEXTS["de"].update({
     "adoption_week_col": "Woche",
     "adoption_status_col": "Status",
     "host_col": "Hostname",
+})
+
+
+# ---------------------------------------------------------------- المزوّدون والفحص الواسع وصفحة /scanning
+
+TEXTS["en"].update({
+    "adoption_stat_top10k": "Top 10,000 sites with post-quantum key exchange",
+    "adoption_providers_title": "Hosting providers and CDNs",
+    "adoption_providers_note": "Share of sites that negotiate X25519MLKEM768, by the network that serves them ({sites} answering sites, {period}). "
+                               "Behind a CDN this is the CDN's edge. Networks with fewer than 20 sites are not listed.",
+    "adoption_provider_col": "Network",
+    "adoption_sites_col": "Sites",
+    "adoption_enabled_col": "Enabled",
+    "scanning_link": "How we scan, and how to opt out →",
+    "scanning_title": "About our scans",
+    "scanning_lead": "Quantum Aether measures how many public websites already use post-quantum key exchange. If you saw TLS connections "
+                     "from our server in your logs, this page explains them.",
+    "scanning_what_title": "What the scan does",
+    "scanning_what": [
+        "Two TLS connections to port 443 per hostname: one offering X25519MLKEM768 with X25519 as Chrome does, one ordinary "
+        "connection to read the certificate. Then the connection is closed.",
+        "No HTTP request, no paths, no content, no login attempts, no vulnerability tests.",
+        "Weekly for the Tranco top 10,000 and a few public watchlists; monthly for the top 100,000; a limited number of parallel "
+        "connections.",
+        "Results are published per hostname and in aggregate as open data (CC BY 4.0).",
+    ],
+    "scanning_optout_title": "Opt out",
+    "scanning_optout": "To have a hostname (and its subdomains) excluded from future scans and removed from the published tables, "
+                       "email us from an address at that domain or describe your relationship to it:",
+    "scanning_source": "Scans come from",
+})
+TEXTS["ar"].update({
+    "adoption_stat_top10k": "أكبر 10,000 موقع بتبادل مفاتيح مقاوم للكم",
+    "adoption_providers_title": "مزوّدو الاستضافة وشبكات CDN",
+    "adoption_providers_note": "نسبة المواقع التي تتفق على X25519MLKEM768 حسب الشبكة التي تخدمها ({sites} موقعاً أجاب، {period}). "
+                               "خلف CDN تظهر شبكة الـ CDN. لا نعرض شبكة بأقل من 20 موقعاً.",
+    "adoption_provider_col": "الشبكة",
+    "adoption_sites_col": "المواقع",
+    "adoption_enabled_col": "مفعّل",
+    "scanning_link": "كيف نفحص، وكيف تطلب الاستبعاد ←",
+    "scanning_title": "عن فحوصاتنا",
+    "scanning_lead": "يقيس الأثير الكمومي عدد المواقع العامة التي تستخدم تبادل مفاتيح مقاوماً للكم. إن رأيت اتصالات TLS من خادمنا في "
+                     "سجلاتك، فهذه الصفحة تشرحها.",
+    "scanning_what_title": "ماذا يفعل الفحص",
+    "scanning_what": [
+        "اتصالا TLS بالمنفذ 443 لكل اسم موقع: الأول يعرض X25519MLKEM768 مع X25519 كما يفعل Chrome، والثاني اتصال عادي لقراءة "
+        "الشهادة، ثم يُغلق الاتصال.",
+        "لا طلب HTTP، ولا مسارات، ولا محتوى، ولا محاولات دخول، ولا اختبار ثغرات.",
+        "أسبوعياً لأكبر 10,000 نطاق في Tranco وقوائم مراقبة عامة، وشهرياً لأكبر 100,000، بعدد اتصالات متوازية محدود.",
+        "تُنشر النتائج لكل اسم موقع وإجمالاً كبيانات مفتوحة (CC BY 4.0).",
+    ],
+    "scanning_optout_title": "طلب الاستبعاد",
+    "scanning_optout": "لاستبعاد اسم موقع (ونطاقاته الفرعية) من الفحوص القادمة وحذفه من الجداول المنشورة، راسلنا من عنوان بريد على ذلك "
+                       "النطاق، أو اشرح صلتك به:",
+    "scanning_source": "تأتي الفحوص من",
+})
+TEXTS["de"].update({
+    "adoption_stat_top10k": "Top-10.000-Websites mit Post-Quanten-Schlüsselaustausch",
+    "adoption_providers_title": "Hoster und CDNs",
+    "adoption_providers_note": "Anteil der Websites mit X25519MLKEM768 nach dem Netz, das sie ausliefert ({sites} antwortende Websites, "
+                               "{period}). Hinter einem CDN ist das die CDN-Kante. Netze mit weniger als 20 Websites werden nicht gezeigt.",
+    "adoption_provider_col": "Netz",
+    "adoption_sites_col": "Websites",
+    "adoption_enabled_col": "Aktiviert",
+    "scanning_link": "Wie wir prüfen und wie Sie sich ausnehmen lassen →",
+    "scanning_title": "Über unsere Prüfungen",
+    "scanning_lead": "Quantum Aether misst, wie viele öffentliche Websites bereits Post-Quanten-Schlüsselaustausch nutzen. Wenn Sie "
+                     "TLS-Verbindungen von unserem Server in Ihren Logs sehen, erklärt diese Seite sie.",
+    "scanning_what_title": "Was die Prüfung tut",
+    "scanning_what": [
+        "Zwei TLS-Verbindungen zu Port 443 pro Hostname: eine mit X25519MLKEM768 und X25519 wie Chrome, eine gewöhnliche "
+        "zum Lesen des Zertifikats. Danach wird die Verbindung geschlossen.",
+        "Keine HTTP-Anfrage, keine Pfade, keine Inhalte, keine Anmeldeversuche, keine Schwachstellentests.",
+        "Wöchentlich für die Tranco-Top-10.000 und einige öffentliche Beobachtungslisten, monatlich für die Top-100.000, "
+        "mit begrenzter Zahl paralleler Verbindungen.",
+        "Die Ergebnisse werden pro Hostname und aggregiert als offene Daten (CC BY 4.0) veröffentlicht.",
+    ],
+    "scanning_optout_title": "Ausnahme beantragen",
+    "scanning_optout": "Um einen Hostnamen (samt Subdomains) von künftigen Prüfungen auszunehmen und aus den veröffentlichten Tabellen zu "
+                       "entfernen, schreiben Sie uns von einer Adresse dieser Domain oder beschreiben Sie Ihre Verbindung dazu:",
+    "scanning_source": "Prüfungen kommen von",
 })

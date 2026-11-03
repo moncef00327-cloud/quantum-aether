@@ -12,6 +12,7 @@ EnvironmentFile=/etc/quantum_saas.env
 Environment=PYTHONDONTWRITEBYTECODE=1
 ExecStart=/var/www/quantum_saas/.venv/bin/python3 adoption_job.py
 TimeoutStartSec=3h
+Nice=10
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict

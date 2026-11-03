@@ -461,7 +461,7 @@ class AdminExclusionAndSeoTest(unittest.TestCase):
         # 4 صفحات بثلاث لغات (منها /adoption) + 6 صفحات ثابتة + compare + صفحات النطاقات البارزة، بلغتين، + 3 قانونية
         import quantum_saas_app
         sites = len(quantum_saas_app.study_data()["sites"])
-        self.assertEqual(body.count("<url>"), 4 * 3 + 2 * (3 + 3 + 1 + sites) + 2 * 3)
+        self.assertEqual(body.count("<url>"), 5 * 3 + 2 * (3 + 3 + 1 + sites) + 2 * 3)  # +/scanning
         self.assertIn("https://ather-quatum.cloud/compare?lang=en", body)
         self.assertIn("https://ather-quatum.cloud/site/amazon.com?lang=en", body)
 

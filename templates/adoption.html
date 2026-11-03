@@ -22,6 +22,10 @@
 
 <section class="stats">
   <div class="card stat"><h3>{{ t.adoption_stat_pct }}</h3><p class="value">{{ s.pct }}%</p></div>
+  {% if s.top10k %}
+  <div class="card stat"><h3>{{ t.adoption_stat_top10k }}</h3><p class="value">{{ s.top10k.pct }}%</p>
+    <p class="muted small">{{ t.adoption_enabled_of.format(pq=s.top10k.pq, reachable=s.top10k.reachable) }}</p></div>
+  {% endif %}
   {% if s.changes %}
   {% if s.delta_pp is not none %}
   <div class="card stat"><h3>{{ t.adoption_stat_delta }}</h3>
@@ -64,6 +68,19 @@
 {% endif %}
 {% endif %}
 
+{% if s.providers %}
+<section class="card" id="providers">
+  <h2>{{ t.adoption_providers_title }}</h2>
+  <p class="muted">{{ t.adoption_providers_note.format(sites=s.providers.sites, period=iso(s.providers.period)) }}</p>
+  <table class="data" dir="ltr">
+    <tr><th>{{ t.adoption_provider_col }}</th><th>{{ t.adoption_sites_col }}</th><th>{{ t.adoption_enabled_col }}</th><th></th></tr>
+    {% for p in s.providers.rows %}<tr><td>{{ p.name or "?" }} <span class="muted small">AS{{ p.asn }}</span></td>
+      <td>{{ p.reachable }}</td><td>{{ p.pq }}</td>
+      <td><span class="{{ 'pq-on' if p.pct >= 50 else 'pq-off' }}">{{ p.pct }}%</span></td></tr>{% endfor %}
+  </table>
+</section>
+{% endif %}
+
 {% set filled = s.sectors | selectattr("rows") | list %}
 {% if filled %}
 <section class="card">
@@ -94,7 +111,8 @@
 <section class="card">
   <h2>{{ t.adoption_method_title }}</h2>
   <p>{{ t.adoption_method }}</p>
-  <p>{{ t.adoption_correction }} <a href="{{ url_for('site.legal_page', slug='impressum', lang=legal_lang) }}">{{ t.legal_imprint }}</a>.</p>
+  <p>{{ t.adoption_correction }} <a href="{{ url_for('site.legal_page', slug='impressum', lang=legal_lang) }}">{{ t.legal_imprint }}</a>.
+     <a href="{{ url_for('site.scanning_page', lang=lang) }}">{{ t.scanning_link }}</a></p>
   <p class="small">{{ t.adoption_download }}
     <a href="{{ url_for('site.adoption_json') }}">JSON</a> ·
     <a href="{{ url_for('site.adoption_csv') }}">CSV</a> ·

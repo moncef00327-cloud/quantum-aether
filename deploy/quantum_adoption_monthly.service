@@ -1,0 +1,20 @@
+[Unit]
+Description=Quantum Aether monthly post-quantum adoption scan, top 100,000 (/adoption providers)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=quantum
+Group=quantum
+WorkingDirectory=/var/www/quantum_saas
+EnvironmentFile=/etc/quantum_saas.env
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/var/www/quantum_saas/.venv/bin/python3 adoption_job.py monthly
+Nice=10
+TimeoutStartSec=8h
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/quantum_saas
