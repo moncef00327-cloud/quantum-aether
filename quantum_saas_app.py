@@ -14,6 +14,7 @@ import logging
 import os
 import re
 import secrets
+import urllib.parse
 
 import requests
 from flask import (Blueprint, Flask, Response, abort, current_app, g, jsonify, redirect,
@@ -873,26 +874,35 @@ def llms_txt():
                     mimetype="text/plain")
 
 
-@bp.after_app_request
-def _track_pageview(response):
-    """يسجل زيارة لكل صفحة HTML عامة ناجحة. أي خطأ هنا لا يمس الرد."""
-    if request.method != "GET" or response.status_code != 200 or response.mimetype != "text/html":
-        return response
-    path = analytics_db.normalize_path(request.path)
-    if path is None or is_admin_visitor():
-        return response
+@bp.post("/api/pv")
+def track_pageview():
+    """يسجل زيارة صفحة عامة. يرسلها app.js من المتصفح بعد تحميل الصفحة، فلا تُحسب الروبوتات
+    التي تطلب HTML فقط دون تشغيل JavaScript (وهي أغلب الزيارات المتنكرة بمتصفح). أي خطأ هنا يُهمَل."""
+    # مصدر الطلب يجب أن يكون صفحتنا نفسها
+    if request.headers.get("Sec-Fetch-Site", "same-origin") != "same-origin":
+        return "", 204
     try:
+        data = json.loads(request.get_data(as_text=True)[:2000] or "{}")
+    except ValueError:
+        return "", 204
+    if not isinstance(data, dict):
+        return "", 204
+    try:
+        path = analytics_db.normalize_path(str(data.get("path", "")))
+        if path is None or is_admin_visitor():
+            return "", 204
+        query = urllib.parse.parse_qs(str(data.get("search", "")).lstrip("?"))
         day = dt.date.today().isoformat()
         ua = request.headers.get("User-Agent", "")
         salt = current_app.config["HASH_SALT"].encode()
         visitor = hmac.new(salt, f"{day}|{request.remote_addr}|{ua}".encode(), hashlib.sha256).hexdigest()[:16]
         own_host = (current_app.config["PUBLIC_URL"].split("://")[-1] or request.host).split("/")[0]
-        source = analytics_db.utm_source(request.args.get("utm_source")) or analytics_db.referrer_host(request.referrer, own_host)
-        analytics_db.record(db(), day, path, source, visitor,
-                            not ua or bool(analytics_db.BOT_RE.search(ua)))
+        source = (analytics_db.utm_source((query.get("utm_source") or [None])[0])
+                  or analytics_db.referrer_host(str(data.get("ref", "")) or None, own_host))
+        analytics_db.record(db(), day, path, source, visitor, not ua or bool(analytics_db.BOT_RE.search(ua)))
     except Exception:  # الإحصاءات ثانوية
         log.exception("pageview tracking failed")
-    return response
+    return "", 204
 
 
 @bp.after_app_request

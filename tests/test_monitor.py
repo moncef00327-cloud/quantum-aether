@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 import tempfile
@@ -22,6 +23,16 @@ def result_for(domain, grade="A", pq=True, days=60, group="X25519MLKEM768"):
     r["certificate"] = dict(RESULT["certificate"], days_left=days)
     return r
 
+
+
+def view(client, url, headers=None):
+    """يحاكي متصفحاً: يطلب الصفحة ثم يرسل app.js إشارة الزيارة."""
+    headers = dict(headers or {})
+    client.get(url, headers=headers)
+    path, _, search = url.partition("?")
+    return client.post("/api/pv", data=json.dumps({"path": path, "search": "?" + search if search else "",
+                                                    "ref": headers.pop("Referer", "")}),
+                       headers=headers, content_type="text/plain")
 
 class FakeScanner:
     def __init__(self):
@@ -314,11 +325,12 @@ class AnalyticsTest(unittest.TestCase):
 
     def test_tracks_humans_sources_and_skips_private_pages(self):
         browser = {"User-Agent": "Mozilla/5.0 Firefox/140"}
-        self.client.get("/", headers=dict(browser, Referer="https://news.ycombinator.com/item?id=1"))
-        self.client.get("/guides", headers=dict(browser, Referer="https://ather-quatum.cloud/"))
-        self.client.get("/", headers={"User-Agent": "Mozilla/5.0 (compatible; bingbot/2.0)"})
+        view(self.client, "/", dict(browser, Referer="https://news.ycombinator.com/item?id=1"))
+        view(self.client, "/guides", dict(browser, Referer="https://ather-quatum.cloud/"))
+        view(self.client, "/", {"User-Agent": "Mozilla/5.0 (compatible; bingbot/2.0)"})
+        self.client.get("/monitoring", headers=browser)  # HTML بلا JavaScript: لا يُحسب
         self.client.get("/robots.txt", headers=browser)
-        self.client.get("/admin", headers=browser)
+        view(self.client, "/admin", browser)
         import base64
         auth = {"Authorization": "Basic " + base64.b64encode(b"admin:pw").decode()}
         body = self.client.get("/admin?lang=en", headers=auth).get_data(as_text=True)
@@ -354,11 +366,11 @@ class AdminExclusionAndSeoTest(unittest.TestCase):
         self.assertIn("qa_admin=", cookie)
         self.assertIn("HttpOnly", cookie)
         self.assertIn("Max-Age=31536000", cookie)
-        admin.get("/", headers=self.browser)
-        admin.get("/monitoring", headers=self.browser)
+        view(admin, "/", self.browser)
+        view(admin, "/monitoring", self.browser)
         admin.post("/api/scan", json={"domain": "example.com"})
         visitor = self.app.test_client()
-        visitor.get("/", headers=self.browser)
+        view(visitor, "/", self.browser)
         visitor.post("/api/scan", json={"domain": "example.org"})
         with self.db() as c:
             self.assertEqual(c.execute("SELECT COUNT(*) FROM pageviews").fetchone()[0], 1)
@@ -367,10 +379,17 @@ class AdminExclusionAndSeoTest(unittest.TestCase):
         body = admin.get("/admin?lang=en", headers=self.auth).get_data(as_text=True)
         self.assertIn("excluded from all statistics", body)
 
+    def test_cross_site_beacon_is_ignored(self):
+        client = self.app.test_client()
+        client.post("/api/pv", data='{"path": "/"}', headers=dict(self.browser, **{"Sec-Fetch-Site": "cross-site"}))
+        client.post("/api/pv", data="not json", headers=self.browser)
+        with self.db() as c:
+            self.assertEqual(c.execute("SELECT COUNT(*) FROM pageviews").fetchone()[0], 0)
+
     def test_forged_cookie_is_ignored(self):
         client = self.app.test_client()
         client.set_cookie("qa_admin", "forged")
-        client.get("/", headers=self.browser)
+        view(client, "/", self.browser)
         with self.db() as c:
             self.assertEqual(c.execute("SELECT COUNT(*) FROM pageviews").fetchone()[0], 1)
 
@@ -503,9 +522,9 @@ class OrdersUtmScanBoxGermanTest(unittest.TestCase):
     # البند 4
     def test_utm_source_is_recorded_as_source(self):
         client = self.app.test_client()
-        client.get("/study/top-1000-post-quantum-tls?lang=en&utm_source=LinkedIn",
-                   headers={"User-Agent": "Mozilla/5.0 Firefox/140", "Referer": "https://www.linkedin.com/feed/"})
-        client.get("/?utm_source=<script>", headers={"User-Agent": "Mozilla/5.0 Firefox/140"})
+        view(client, "/study/top-1000-post-quantum-tls?lang=en&utm_source=LinkedIn",
+             {"User-Agent": "Mozilla/5.0 Firefox/140", "Referer": "https://www.linkedin.com/feed/"})
+        view(client, "/?utm_source=<script>", {"User-Agent": "Mozilla/5.0 Firefox/140"})
         with self.db() as c:
             sources = [r[0] for r in c.execute("SELECT referrer FROM pageviews ORDER BY rowid")]
         self.assertEqual(sources, ["utm:linkedin", "utm:script"])
