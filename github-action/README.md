@@ -15,7 +15,7 @@ jobs:
   pq-tls:
     runs-on: ubuntu-latest
     steps:
-      - uses: moncef00327-cloud/quantum-aether/github-action@main
+      - uses: moncef00327-cloud/pq-tls-action@v1
         with:
           domain: example.com
           require-post-quantum: true   # fail the job if it is missing

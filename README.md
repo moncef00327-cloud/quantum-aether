@@ -42,7 +42,7 @@ the rest still use classical X25519 or ECDHE only (among them amazon.com, github
 Check on every deploy that your site still negotiates post-quantum TLS:
 
 ```yaml
-- uses: moncef00327-cloud/quantum-aether/github-action@main
+- uses: moncef00327-cloud/pq-tls-action@v1
   with:
     domain: example.com
     require-post-quantum: true
