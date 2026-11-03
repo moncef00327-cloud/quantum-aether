@@ -76,7 +76,7 @@ class MonitoringTest(unittest.TestCase):
         return closing(sales_db.connect(os.path.join(self.tmp, "quantum_saas.db")))
 
     def subscribe(self, plan="starter", email="ops@example.com", status="ACTIVE", plan_id=None):
-        r = self.client.post("/api/monitor/signup", json={"email": email, "plan": plan})
+        r = self.client.post("/api/monitor/signup", json={"email": email, "plan": plan, "consent": True})
         self.assertEqual(r.status_code, 201)
         account_id = r.get_json()["account_id"]
         self.assertEqual(r.get_json()["plan_id"], PLAN_IDS[f"PAYPAL_PLAN_{plan.upper()}"])
@@ -104,8 +104,8 @@ class MonitoringTest(unittest.TestCase):
         self.assertEqual(app.test_client().post("/api/monitor/signup", json={}).status_code, 503)
 
     def test_signup_validates_email_and_plan(self):
-        self.assertEqual(self.client.post("/api/monitor/signup", json={"email": "bad", "plan": "starter"}).status_code, 400)
-        self.assertEqual(self.client.post("/api/monitor/signup", json={"email": "a@b.co", "plan": "gold"}).status_code, 400)
+        self.assertEqual(self.client.post("/api/monitor/signup", json={"email": "bad", "plan": "starter", "consent": True}).status_code, 400)
+        self.assertEqual(self.client.post("/api/monitor/signup", json={"email": "a@b.co", "plan": "gold", "consent": True}).status_code, 400)
 
     def test_activation_verifies_with_paypal_and_sends_welcome(self):
         account_id, r = self.subscribe()
@@ -132,7 +132,7 @@ class MonitoringTest(unittest.TestCase):
         self.assertEqual(r.status_code, 409)
 
     def test_pending_account_has_no_dashboard(self):
-        r = self.client.post("/api/monitor/signup", json={"email": "x@example.com", "plan": "starter"})
+        r = self.client.post("/api/monitor/signup", json={"email": "x@example.com", "plan": "starter", "consent": True})
         with self.conn() as c:
             token = monitor_db.rotate_token(c, r.get_json()["account_id"])
         self.assertEqual(self.client.get(f"/monitor/{token}").status_code, 404)
@@ -416,3 +416,43 @@ class AdminExclusionAndSeoTest(unittest.TestCase):
     def test_robots_points_to_sitemap(self):
         self.assertIn("Sitemap: https://ather-quatum.cloud/sitemap.xml",
                       self.app.test_client().get("/robots.txt").get_data(as_text=True))
+
+
+class ConsentTest(unittest.TestCase):
+    def setUp(self):
+        from tests.test_app import FakePayPal as OrdersPayPal
+        self.tmp = tempfile.mkdtemp()
+        paypal = OrdersPayPal()
+        paypal.subscriptions = {}
+        self.app = quantum_saas_app.create_app(
+            {"TESTING": True, "DATA_DIR": self.tmp, "PAYPAL_CLIENT_ID": "cid", **PLAN_IDS},
+            scanner=lambda raw: result_for(quantum_vuln_scanner.normalize_domain(raw)), paypal=paypal, mailer=FakeMailer())
+        self.client = self.app.test_client()
+        self.scan_id = self.client.post("/api/scan", json={"domain": "example.com"}).get_json()["scan_id"]
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp)
+
+    def test_report_order_requires_consent_and_stores_it(self):
+        for body in ({"scan_id": self.scan_id}, {"scan_id": self.scan_id, "consent": "yes"}):
+            r = self.client.post("/api/paypal/orders", json=body)
+            self.assertEqual((r.status_code, r.get_json()["error"]), (400, "consent_required"))
+        r = self.client.post("/api/paypal/orders", json={"scan_id": self.scan_id, "consent": True})
+        self.assertEqual(r.status_code, 201)
+        with closing(sales_db.connect(os.path.join(self.tmp, "quantum_saas.db"))) as c:
+            self.assertRegex(sales_db.get_order(c, r.get_json()["id"])["consent_at"], r"^\d{4}-\d\d-\d\dT")
+
+    def test_agent_order_requires_consent_flag(self):
+        r = self.client.post("/api/v1/orders", json={"scan_id": self.scan_id})
+        self.assertEqual(r.status_code, 400)
+        self.assertIn("consent_immediate_delivery", r.get_json()["message"])
+
+    def test_subscription_signup_requires_consent(self):
+        r = self.client.post("/api/monitor/signup", json={"email": "a@example.com", "plan": "starter"})
+        self.assertEqual((r.status_code, r.get_json()["error"]), (400, "consent_required"))
+
+    def test_pages_show_consent_checkbox(self):
+        scan_page = self.client.get(f"/scan/{self.scan_id}?lang=en").get_data(as_text=True)
+        self.assertIn('id="consent"', scan_page)
+        self.assertIn("lose my right of withdrawal", scan_page)
+        self.assertIn('id="consent"', self.client.get("/monitoring?lang=ar").get_data(as_text=True))

@@ -54,12 +54,13 @@ def hash_token(token):
     return hashlib.sha256(token.encode()).hexdigest()
 
 
-def create_account(conn, email, plan, lang):
-    """ينشئ حساباً معلقاً حتى يؤكد PayPal الاشتراك. يعيد (المعرّف، الرمز السري)."""
+def create_account(conn, email, plan, lang, consent_at=None):
+    """ينشئ حساباً معلقاً حتى يؤكد PayPal الاشتراك. يعيد (المعرّف، الرمز السري).
+    consent_at: وقت طلب المشترك الصريح لبدء الخدمة فوراً (§ 16 FAGG)."""
     account_id, token = "acc_" + secrets.token_urlsafe(12), secrets.token_urlsafe(32)
     with conn:
-        conn.execute("INSERT INTO monitor_accounts (id, email, plan, status, token_hash, lang) VALUES (?, ?, ?, 'PENDING', ?, ?)",
-                     (account_id, email, plan, hash_token(token), lang))
+        conn.execute("INSERT INTO monitor_accounts (id, email, plan, status, token_hash, lang, consent_at)"
+                     " VALUES (?, ?, ?, 'PENDING', ?, ?, ?)", (account_id, email, plan, hash_token(token), lang, consent_at))
     return account_id, token
 
 

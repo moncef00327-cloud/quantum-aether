@@ -85,7 +85,7 @@ class AppTestCase(unittest.TestCase):
         return response.get_json()
 
     def pay(self, scan_id):
-        order = self.client.post("/api/paypal/orders", json={"scan_id": scan_id})
+        order = self.client.post("/api/paypal/orders", json={"scan_id": scan_id, "consent": True})
         self.assertEqual(order.status_code, 201)
         return self.client.post(f"/api/paypal/orders/{order.get_json()['id']}/capture")
 
@@ -180,11 +180,11 @@ class PaymentTests(AppTestCase):
 
     def test_capture_is_idempotent(self):
         scan = self.scan()
-        order = self.client.post("/api/paypal/orders", json={"scan_id": scan["scan_id"]}).get_json()
+        order = self.client.post("/api/paypal/orders", json={"scan_id": scan["scan_id"], "consent": True}).get_json()
         first = self.client.post(f"/api/paypal/orders/{order['id']}/capture").get_json()
         second = self.client.post(f"/api/paypal/orders/{order['id']}/capture").get_json()
         self.assertEqual(first, second)
-        self.assertEqual(self.client.post("/api/paypal/orders", json={"scan_id": scan["scan_id"]}).status_code, 409)
+        self.assertEqual(self.client.post("/api/paypal/orders", json={"scan_id": scan["scan_id"], "consent": True}).status_code, 409)
 
     def test_wrong_amount_does_not_unlock(self):
         scan = self.scan()
@@ -208,7 +208,7 @@ class PaymentTests(AppTestCase):
                                            "PAYPAL_CLIENT_ID": "", "PAYPAL_CLIENT_SECRET": ""}, scanner=fake_scanner)
         client = app.test_client()
         scan_id = client.post("/api/scan", json={"domain": "example.com"}).get_json()["scan_id"]
-        self.assertEqual(client.post("/api/paypal/orders", json={"scan_id": scan_id}).status_code, 503)
+        self.assertEqual(client.post("/api/paypal/orders", json={"scan_id": scan_id, "consent": True}).status_code, 503)
         page = client.get(f"/scan/{scan_id}?lang=en").get_data(as_text=True)
         self.assertIn("Payments are currently unavailable", page)
         self.assertNotIn("paypal.com/sdk", page)
@@ -217,7 +217,7 @@ class PaymentTests(AppTestCase):
 class AgentPaymentTests(AppTestCase):
     def test_agent_gets_approval_link_then_return_unlocks_report(self):
         scan = self.scan()
-        created = self.client.post("/api/v1/orders", json={"scan_id": scan["scan_id"]})
+        created = self.client.post("/api/v1/orders", json={"scan_id": scan["scan_id"], "consent_immediate_delivery": True})
         self.assertEqual(created.status_code, 201)
         order = created.get_json()
         self.assertIn("checkoutnow?token=", order["approve_url"])
@@ -235,7 +235,7 @@ class AgentPaymentTests(AppTestCase):
     def test_return_with_unknown_or_bad_payment(self):
         self.assertEqual(self.client.get("/paypal/return?token=FOREIGN").status_code, 404)
         scan = self.scan()
-        order = self.client.post("/api/v1/orders", json={"scan_id": scan["scan_id"]}).get_json()
+        order = self.client.post("/api/v1/orders", json={"scan_id": scan["scan_id"], "consent_immediate_delivery": True}).get_json()
         self.paypal.capture_amount = "1.00"
         self.assertEqual(self.client.get(f"/paypal/return?token={order['order_id']}").status_code, 400)
         self.assertEqual(self.client.get(f"/api/v1/orders/{order['order_id']}").get_json()["status"], "FAILED")
@@ -251,7 +251,7 @@ class AdminTests(AppTestCase):
         paid = self.scan()
         self.pay(paid["scan_id"])
         unpaid = self.scan()
-        self.client.post("/api/paypal/orders", json={"scan_id": unpaid["scan_id"]})
+        self.client.post("/api/paypal/orders", json={"scan_id": unpaid["scan_id"], "consent": True})
         good = base64.b64encode(b"admin:s3cret").decode()
         page = self.client.get("/admin?lang=en", headers={"Authorization": f"Basic {good}"}).get_data(as_text=True)
         self.assertIn("49.00 USD", page)

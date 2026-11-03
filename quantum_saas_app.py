@@ -405,6 +405,8 @@ def paypal_create_order():
     if paypal is None:
         return jsonify(error="payments_disabled"), 503
     data = request.get_json(silent=True) or {}
+    if data.get("consent") is not True:
+        return jsonify(error="consent_required"), 400
     conn = db()
     scan = sales_db.get_scan(conn, str(data.get("scan_id", "")))
     if not scan:
@@ -418,7 +420,7 @@ def paypal_create_order():
     except (PayPalError, requests.RequestException) as exc:
         log.warning("PayPal create order failed: %s", exc)
         return jsonify(error="paypal_unavailable"), 502
-    sales_db.create_order(conn, order["id"], scan["id"], cfg["PRICE"], cfg["CURRENCY"])
+    sales_db.create_order(conn, order["id"], scan["id"], cfg["PRICE"], cfg["CURRENCY"], consent_at=now_iso())
     return jsonify(id=order["id"]), 201
 
 
@@ -486,6 +488,10 @@ def api_v1_create_order():
     if paypal is None:
         return jsonify(error="payments_disabled"), 503
     data = request.get_json(silent=True) or {}
+    if data.get("consent_immediate_delivery") is not True:
+        return jsonify(error="consent_required",
+                       message="Set consent_immediate_delivery to true only after the payer has expressly agreed that "
+                               "the report is delivered immediately and acknowledged losing the right of withdrawal."), 400
     conn = db()
     scan = sales_db.get_scan(conn, str(data.get("scan_id", "")))
     if not scan:
@@ -505,7 +511,7 @@ def api_v1_create_order():
                         if link.get("rel") in ("payer-action", "approve")), None)
     if not approve_url:
         return jsonify(error="paypal_unavailable"), 502
-    sales_db.create_order(conn, order["id"], scan["id"], cfg["PRICE"], cfg["CURRENCY"])
+    sales_db.create_order(conn, order["id"], scan["id"], cfg["PRICE"], cfg["CURRENCY"], consent_at=now_iso())
     return jsonify(order_id=order["id"], approve_url=approve_url,
                    status_url=base + url_for(".api_v1_order_status", order_id=order["id"]),
                    amount=cfg["PRICE"], currency=cfg["CURRENCY"]), 201
@@ -552,6 +558,10 @@ EMAIL_RE = re.compile(r"^[^@\s]{1,64}@[A-Za-z0-9.-]{1,253}\.[A-Za-z]{2,}$")
 MANUAL_SCAN_INTERVAL = dt.timedelta(hours=1)
 
 
+def now_iso():
+    return dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
 def plan_ids():
     cfg = current_app.config
     return {name: cfg[p["env"]] for name, p in monitor.PLANS.items()}
@@ -591,7 +601,9 @@ def monitor_signup():
         return jsonify(error="invalid_plan"), 400
     if not EMAIL_RE.match(email):
         return jsonify(error="invalid_email"), 400
-    account_id, _token = monitor_db.create_account(db(), email, plan, current_lang())
+    if data.get("consent") is not True:
+        return jsonify(error="consent_required"), 400
+    account_id, _token = monitor_db.create_account(db(), email, plan, current_lang(), consent_at=now_iso())
     return jsonify(account_id=account_id, plan_id=plan_ids()[plan]), 201
 
 

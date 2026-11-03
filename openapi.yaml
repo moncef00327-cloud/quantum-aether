@@ -90,15 +90,23 @@ paths:
           application/json:
             schema:
               type: object
-              required: [scan_id]
+              required: [scan_id, consent_immediate_delivery]
               properties:
                 scan_id: { type: string }
+                consent_immediate_delivery:
+                  type: boolean
+                  enum: [true]
+                  description: >
+                    Must be true, and only after the payer has expressly agreed that the report is delivered
+                    immediately after payment and acknowledged losing the statutory right of withdrawal
+                    (Austrian FAGG § 18(1)(11)).
       responses:
         "201":
           description: Order created.
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Order" }
+        "400": { description: consent_immediate_delivery missing or not true. }
         "404": { description: Unknown scan. }
         "409": { description: The report for this scan is already paid. }
         "503": { description: Payments are not configured. }

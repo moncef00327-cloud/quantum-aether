@@ -2,6 +2,7 @@
 (function () {
   var message = document.getElementById("sub-message");
   var emailInput = document.getElementById("sub-email");
+  var consent = document.getElementById("consent");
   if (!window.paypal || !message || !emailInput) return;
   var lang = document.documentElement.lang || "en";
 
@@ -20,10 +21,11 @@
       onClick: function (_data, actions) {
         message.textContent = "";
         if (!emailInput.checkValidity() || !emailInput.value) { fail(message.dataset.msgEmail); return actions.reject(); }
+        if (!consent || !consent.checked) { fail(message.dataset.msgConsent); return actions.reject(); }
         return actions.resolve();
       },
       createSubscription: function (_data, actions) {
-        return post("/api/monitor/signup", { email: emailInput.value, plan: box.dataset.plan }).then(function (d) {
+        return post("/api/monitor/signup", { email: emailInput.value, plan: box.dataset.plan, consent: consent.checked }).then(function (d) {
           accountId = d.account_id;
           return actions.subscription.create({ plan_id: d.plan_id, custom_id: d.account_id });
         });

@@ -479,9 +479,12 @@ TEXTS["ar"].update({
     "adm_pages": "أكثر الصفحات زيارة",
     "adm_self_excluded": "زياراتك وفحوصاتك أنت (المدير) مستثناة من كل الإحصاءات على هذا المتصفح لمدة سنة منذ آخر دخول للوحة. كل ما سُجل قبل 3 نوفمبر 2026 معلَّم كاختبار.",
     "adm_test": "(اختبار)",
-    "legal_imprint": "بيانات الناشر (Impressum)",
-    "legal_privacy": "الخصوصية",
-    "legal_terms": "الشروط",
+    "legal_imprint": "Impressum",
+    "legal_privacy": "الخصوصية (Datenschutz)",
+    "legal_terms": "الشروط (AGB)",
+    "consent_report": "أطلب صراحةً تسليم التقرير فور الدفع، وأعلم أنني بذلك أفقد حق التراجع عن الشراء.",
+    "consent_subscription": "أطلب صراحةً أن تبدأ المراقبة فوراً، وأعلم أنني إن تراجعت خلال 14 يوماً أدفع مقابل الأيام التي قُدمت فيها الخدمة.",
+    "consent_missing": "ضع علامة على خانة الموافقة أولاً.",
 })
 
 TEXTS["en"].update({
@@ -557,7 +560,10 @@ TEXTS["en"].update({
     "adm_pages": "Top pages",
     "adm_self_excluded": "Your own visits and scans (admin) are excluded from all statistics in this browser for one year after your last dashboard login. Everything recorded before 3 November 2026 is marked as a test.",
     "adm_test": "(test)",
-    "legal_imprint": "Imprint",
-    "legal_privacy": "Privacy",
-    "legal_terms": "Terms",
+    "legal_imprint": "Impressum",
+    "legal_privacy": "Privacy (Datenschutz)",
+    "legal_terms": "Terms (AGB)",
+    "consent_report": "I expressly request that the report is delivered immediately after payment, and I acknowledge that I thereby lose my right of withdrawal.",
+    "consent_subscription": "I expressly request that monitoring starts immediately, and I acknowledge that if I withdraw within 14 days I pay for the days already provided.",
+    "consent_missing": "Please tick the consent box first.",
 })
