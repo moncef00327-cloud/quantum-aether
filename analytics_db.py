@@ -15,7 +15,7 @@ CREATE INDEX IF NOT EXISTS pageviews_day ON pageviews (day);
 """
 
 BOT_RE = re.compile(r"bot|crawl|spider|slurp|curl|wget|python|httpclient|go-http|java/|headless|scan|censys|"
-                    r"preview|monitor|facebookexternalhit|embedly|whatsapp|telegram", re.I)
+                    r"preview|monitor|verification|facebookexternalhit|embedly|whatsapp|telegram", re.I)
 TRACKED_PREFIXES = ("/", "/monitoring", "/guides", "/study", "/research", "/scan/")
 
 
