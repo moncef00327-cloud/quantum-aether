@@ -417,7 +417,9 @@ class AdminExclusionAndSeoTest(unittest.TestCase):
                 r = client.get(f"/{slug}?lang={lang}")
                 self.assertEqual(r.status_code, 200, (slug, lang))
                 body = r.get_data(as_text=True)
-                self.assertIn('class="placeholder"', body)
+                self.assertIn("Omer Alsaloum", body)
+                if slug == "impressum":  # Impressum مكتمل: لا خانات فارغة
+                    self.assertNotIn('class="placeholder"', body)
                 self.assertIn(f'<html lang="{lang}" dir="ltr">', body)
                 self.assertIn('hreflang="de"', body)
         home = client.get("/?lang=ar").get_data(as_text=True)
