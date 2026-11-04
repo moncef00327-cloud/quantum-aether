@@ -6,16 +6,17 @@ import math
 
 LAUNCH = dt.date(2026, 11, 3)          # أول يوم بزوار حقيقيين
 WEEKS_PER_MONTH = 4.345
-COST_PER_MONTH = 63.0                   # تقدير: خادم + نطاق. عدّله حين تصل فاتورة Vultr الفعلية.
+COST_PER_MONTH = 123.0                  # تقدير 2026-11-04: خادم Vultr Optimized Cloud 4c/16GB ~$120 + نطاق ~$3. لم تُؤكد الفاتورة.
+CREDIT_UNTIL = dt.date(2026, 12, 2)     # رصيد Vultr الترويجي $250 (تقدير 30 يوماً من التسجيل): لا دفع نقدي قبله
 
 # visitors_m1, monthly growth, visitor→scan, scan→report, scan→subscription
 SCENARIOS = {
     "pessimistic": {"label": "Pessimistic", "label_ar": "متشائم", "visitors": 300, "growth": 1.10,
-                    "scan": 0.05, "report": 0.002, "sub": 0.001, "net_12m": -710},
+                    "scan": 0.05, "report": 0.002, "sub": 0.001, "net_12m": -1307},
     "realistic": {"label": "Realistic", "label_ar": "واقعي", "visitors": 1500, "growth": 1.20,
-                  "scan": 0.15, "report": 0.004, "sub": 0.003, "net_12m": 4587},
+                  "scan": 0.15, "report": 0.004, "sub": 0.003, "net_12m": 3927},
     "optimistic": {"label": "Optimistic", "label_ar": "متفائل", "visitors": 5000, "growth": 1.25,
-                   "scan": 0.20, "report": 0.008, "sub": 0.005, "net_12m": 55564},
+                   "scan": 0.20, "report": 0.008, "sub": 0.005, "net_12m": 54889},
 }
 
 
@@ -76,12 +77,14 @@ def build(conn, owner_email="", plans=None, today=None):
                           "GROUP BY plan", (owner_email,)).fetchall()
     mrr = sum(prices.get(plan, 0) * n for plan, n in active)
     totals = {m: sum(w[m] for w in weeks) for m in ("visitors", "scans", "reports", "revenue", "subs")}
-    days = max(1, (min(today or dt.date.today(), dt.date.today()) - LAUNCH).days + 1)
-    cost_so_far = COST_PER_MONTH * days / 30.4
+    day = min(today or dt.date.today(), dt.date.today())
+    paid_days = max(0, (day - CREDIT_UNTIL).days + 1)   # الأيام بعد انتهاء الرصيد فقط تكلّف نقداً
+    cost_so_far = COST_PER_MONTH * paid_days / 30.4
     full = [r for r in rows if r["partial_days"] == 7]
     latest = (full or rows)[-1] if rows else None
     return {"weeks": rows, "totals": totals, "mrr": mrr, "cost_so_far": round(cost_so_far, 2),
-            "net_so_far": round(totals["revenue"] + 0 - cost_so_far, 2), "breakeven_subs": math.ceil(COST_PER_MONTH / 27.06),
+            "net_so_far": round(totals["revenue"] - cost_so_far, 2), "breakeven_subs": math.ceil(COST_PER_MONTH / 27.06),
+            "credit_until": CREDIT_UNTIL.isoformat(), "cost_per_month": COST_PER_MONTH,
             "verdict": latest["closest"] if latest else None, "scenarios": SCENARIOS,
             "conversion": {"scan": round(totals["scans"] / totals["visitors"], 4) if totals["visitors"] else None},
             "conversion_warning": conversion_warning(totals, latest["closest"] if latest else None)}
@@ -112,7 +115,8 @@ def as_text(card):
     t = card["totals"]
     lines += ["", f"Since launch: {t['visitors']} visitors, {t['scans']} scans, {t['reports']} reports (${t['revenue']:.2f}), "
                   f"{t['subs']} subscriptions. MRR ${card['mrr']:.2f}.",
-              f"Estimated cost so far ${card['cost_so_far']:.2f}; net ${card['net_so_far']:.2f}. "
+              f"Cash cost so far ${card['cost_so_far']:.2f} (Vultr credit until {card['credit_until']}, then ~${card['cost_per_month']:.0f}/month); "
+              f"net ${card['net_so_far']:.2f}. "
               f"Break-even: {card['breakeven_subs']} Starter subscriptions.",
               f"Verdict: tracking the {SCENARIOS[card['verdict']]['label'].upper()} scenario "
               f"(الأقرب: {SCENARIOS[card['verdict']]['label_ar']})." if card["verdict"] else "No data yet."]

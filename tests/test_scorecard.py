@@ -36,7 +36,8 @@ class ScorecardTests(unittest.TestCase):
         self.assertEqual(week["partial_days"], 3)
         self.assertEqual(card["verdict"], "pessimistic")
         self.assertIn("PESSIMISTIC", scorecard.as_text(card))
-        self.assertEqual(card["breakeven_subs"], 3)
+        self.assertEqual(card["breakeven_subs"], 5)
+        self.assertEqual(card["cost_so_far"], 0)  # ما زلنا ضمن رصيد Vultr
 
     def test_conversion_warning_when_no_scans(self):
         totals = {"visitors": 70, "scans": 0}
