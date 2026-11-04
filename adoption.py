@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS adoption_results (
     PRIMARY KEY (week, domain)
 );
 CREATE INDEX IF NOT EXISTS adoption_by_domain ON adoption_results(domain, week);
+CREATE INDEX IF NOT EXISTS adoption_by_week_rank ON adoption_results(week, rank);
 
 CREATE TABLE IF NOT EXISTS adoption_monthly (
     month       TEXT NOT NULL,          -- مثل 2026-11
@@ -62,6 +63,7 @@ def init(conn):
                            ("unsure", "INTEGER NOT NULL DEFAULT 0")):
             if name not in cols:
                 conn.execute(f"ALTER TABLE adoption_results ADD COLUMN {name} {kind}")
+        conn.execute("CREATE INDEX IF NOT EXISTS adoption_by_week_network ON adoption_results(week, as_name, rank)")
         mcols = {r[1] for r in conn.execute("PRAGMA table_info(adoption_monthly)")}
         if "unsure" not in mcols:
             conn.execute("ALTER TABLE adoption_monthly ADD COLUMN unsure INTEGER NOT NULL DEFAULT 0")
@@ -407,9 +409,10 @@ def rank_neighbors(conn, rank, week, domain, limit=6):
     """نطاقات قريبة في ترتيب Tranco: تربط كل صفحة بجيرانها فيصل الزاحف إلى كل الصفحات."""
     if rank is None:
         return []
-    cur = conn.execute("SELECT domain, grade, pq, unsure FROM adoption_results WHERE week = ? AND ok = 1 "
-                       "AND rank IS NOT NULL AND domain <> ? ORDER BY ABS(rank - ?) LIMIT ?",
-                       (week, domain, rank, limit))
+    span = 4 * limit + 10  # نافذة صغيرة حول الترتيب فيُستعمل الفهرس بدل مسح الأسبوع كله
+    cur = conn.execute("SELECT domain, grade, pq, unsure FROM adoption_results WHERE week = ? AND rank BETWEEN ? AND ? "
+                       "AND ok = 1 AND domain <> ? ORDER BY ABS(rank - ?) LIMIT ?",
+                       (week, rank - span, rank + span, domain, rank, limit))
     return [dict(r) for r in cur]
 
 

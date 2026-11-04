@@ -2,6 +2,24 @@
 {% block title %}{{ t.admin_title }} · {{ t.brand }}{% endblock %}
 {% block head %}<meta name="robots" content="noindex">{% endblock %}
 {% block content %}
+<section class="card" dir="ltr">
+  <h2>Reality vs simulation (الواقع مقابل المحاكاة)</h2>
+  {% if card.verdict %}<p><strong>Closest scenario: {{ card.scenarios[card.verdict].label }} ({{ card.scenarios[card.verdict].label_ar }})</strong>
+    · 12-month median net in that scenario: ${{ card.scenarios[card.verdict].net_12m }}</p>{% endif %}
+  {% if card.conversion_warning %}<p class="error">⚠ {{ card.conversion_warning }}</p>{% endif %}
+  <table class="data">
+    <tr><th>Week from</th><th>Visitors</th><th>Expected (pess / real / opt)</th><th>Scans</th><th>Exp. scans (real)</th><th>Reports</th><th>New subs</th><th>Closest</th></tr>
+    {% for w in card.weeks|reverse %}<tr><td>{{ w.start }}{% if w.partial_days < 7 %} ({{ w.partial_days }}d){% endif %}</td>
+      <td>{{ w.visitors }}</td>
+      <td>{{ "%.0f"|format(w.expected.pessimistic.visitors) }} / {{ "%.0f"|format(w.expected.realistic.visitors) }} / {{ "%.0f"|format(w.expected.optimistic.visitors) }}</td>
+      <td>{{ w.scans }}</td><td>{{ "%.1f"|format(w.expected.realistic.scans) }}</td><td>{{ w.reports }}</td><td>{{ w.subs }}</td>
+      <td>{{ card.scenarios[w.closest].label }}</td></tr>{% endfor %}
+  </table>
+  <p class="muted small">Since launch: {{ card.totals.visitors }} visitors · {{ card.totals.scans }} scans · {{ card.totals.reports }} reports (${{ "%.2f"|format(card.totals.revenue) }})
+    · MRR ${{ "%.2f"|format(card.mrr) }} · est. cost ${{ card.cost_so_far }} · break-even = {{ card.breakeven_subs }} Starter subscriptions.
+    Excludes bots, admin-cookie visits and test orders.</p>
+</section>
+
 <h1>{{ t.admin_title }}</h1>
 
 <section class="stats">

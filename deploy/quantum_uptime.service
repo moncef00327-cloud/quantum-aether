@@ -1,0 +1,12 @@
+[Unit]
+Description=Quantum Aether uptime check (restart + email owner when the site is down)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/var/www/quantum_saas
+EnvironmentFile=/etc/quantum_saas.env
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/var/www/quantum_saas/.venv/bin/python3 uptime_check.py
+TimeoutStartSec=2min

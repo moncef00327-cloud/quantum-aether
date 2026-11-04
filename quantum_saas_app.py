@@ -34,6 +34,7 @@ import monitor_db
 import i18n
 import quantum_vuln_scanner
 import sales_db
+import scorecard
 from mailer import Mailer
 from paypal_client import SUBSCRIPTION_LIVE_STATUSES, PayPalClient, PayPalError, verify_capture, verify_subscription
 
@@ -390,12 +391,30 @@ def study_json():
 
 # ---------------------------------------------------------------- متتبّع التبنّي الأسبوعي (/adoption)
 
+_SNAPSHOT_CACHE = {}
+
+
+def cached_snapshot():
+    """adoption.snapshot مكلفة (~90ms: آلاف الصفوف) والبيانات تتغير أسبوعياً فقط. نخزّنها في ذاكرة
+    العامل ونعيد حسابها حين تتغير «بصمة» الجداول (عدد الصفوف وآخر وقت فحص). اختبار الضغط: 20 طلباً/ث قبلها."""
+    conn = db()
+    fingerprint = (current_app.config["DATA_DIR"],
+                   tuple(conn.execute("SELECT MAX(week), COUNT(*), MAX(scanned_at), SUM(unsure) FROM adoption_results").fetchone()),
+                   tuple(conn.execute("SELECT MAX(month), COUNT(*) FROM adoption_monthly").fetchone()))
+    hit = _SNAPSHOT_CACHE.get(fingerprint[0])
+    if hit and hit[0] == fingerprint:
+        return hit[1]
+    snap = adoption.snapshot(conn)
+    _SNAPSHOT_CACHE[fingerprint[0]] = (fingerprint, snap)
+    return snap
+
+
 def adoption_snapshot():
     """لقطة آخر أسبوع. قبل أول تشغيل للمهمة الأسبوعية نزرع أول أسبوع من بيانات الدراسة المنشورة."""
-    snap = adoption.snapshot(db())
+    snap = cached_snapshot()
     if snap is None:
         adoption.seed_from_study(db())
-        snap = adoption.snapshot(db())
+        snap = cached_snapshot()
     return snap
 
 
@@ -636,7 +655,8 @@ def admin():
                            orders=sales_db.recent_orders(conn), scans=sales_db.recent_scans(conn),
                            subs=monitor_db.stats(conn, monitor.PLANS), accounts=monitor_db.recent_accounts(conn),
                            traffic=analytics_db.summary(conn, (dt.date.today() - dt.timedelta(days=13)).isoformat()),
-                           scans_daily=sales_db.scans_per_day(conn, (dt.date.today() - dt.timedelta(days=13)).isoformat())))
+                           scans_daily=sales_db.scans_per_day(conn, (dt.date.today() - dt.timedelta(days=13)).isoformat()),
+                           card=scorecard.build(conn, current_app.config["OWNER_EMAIL"], monitor.PLANS)))
     # كوكي دائم لسنة: كل زيارات هذا المتصفح لا تُحسب في الإحصاءات.
     response.set_cookie(ADMIN_COOKIE, admin_cookie_value(), max_age=365 * 24 * 3600, httponly=True,
                         secure=request.is_secure, samesite="Lax")
@@ -1341,7 +1361,7 @@ def feed():
     ]
     for slug, g in guides.GUIDES.items():
         entries.append((f"{base}/guides/{slug}", g["updated"], g["en"]["title"], g["en"]["description"]))
-    snap = adoption.snapshot(db())
+    snap = cached_snapshot()
     if snap:  # مدخل جديد كل أسبوع (المعرّف يتضمن الأسبوع) فيظهر في القارئات كخبر جديد
         moved = snap["changes"]
         detail = (f" {len(moved['adopted'])} switched to post-quantum key exchange and {len(moved['dropped'])} lost it this week."
@@ -1434,7 +1454,7 @@ def llms_full_txt():
     زواحف الذكاء الاصطناعي ووكلاؤه يقرؤونه بطلب واحد بدل عشرات الصفحات."""
     base = public_base()
     parts = [render_template("llms.txt", base=base, price=current_app.config["PRICE"]).strip()]
-    snap = adoption.snapshot(db())
+    snap = cached_snapshot()
     if snap:
         lines = [f"\n\n## Live adoption figures (week {snap['week']}, scanned {snap['scanned_at'][:10]})\n",
                  f"- Tranco top 1,000: {snap['pq']} of {snap['reachable']} reachable sites ({snap['pct']}%) negotiate X25519MLKEM768."]
