@@ -15,17 +15,37 @@
 
 {% if summary %}
 <section class="card">
+  <h2>{{ t.site_answer }}</h2>
+  <p dir="ltr" class="verdict">{{ verdict }}</p>
+</section>
+
+<section class="card">
   <table class="kv" dir="ltr">
     <tr><th>Grade</th><td>{{ summary.grade }}</td></tr>
     <tr><th>Key exchange</th><td>{{ summary.group or "—" }}</td></tr>
     <tr><th>Post-quantum</th><td>{{ "yes" if summary.pq else ("undetermined (probe blocked, rescan)" if summary.unsure else "no (classical)") }}</td></tr>
     <tr><th>TLS</th><td>{{ summary.tls or "—" }}</td></tr>
+    {% if network %}<tr><th>{{ t.site_network }}</th><td>{{ network }}</td></tr>{% endif %}
+    {% if summary.rank %}<tr><th>{{ t.site_rank }}</th><td>#{{ summary.rank }}</td></tr>{% endif %}
   </table>
   <p class="muted small">
     {% if source == "scan" %}{{ t.site_source_scan }} <span dir="ltr">{{ summary.scanned_at }}</span>
+    {% elif source == "weekly" %}{{ t.site_source_weekly }} <span dir="ltr">{{ summary.scanned_at[:10] }}</span>
+      · <a href="{{ url_for('site.adoption_page') }}">/adoption</a>
     {% else %}{{ t.site_source_study.format(date=summary.scanned_at) }}{% endif %}
   </p>
 </section>
+
+{% if history|length > 1 %}
+<section class="card">
+  <h2>{{ t.site_history }}</h2>
+  <table class="data" dir="ltr">
+    <tr><th>Week</th><th>Grade</th><th>Key exchange</th><th>Post-quantum</th></tr>
+    {% for h in history|reverse %}<tr><td>{{ h.week }}</td><td>{{ h.grade or "—" }}</td><td>{{ h.grp or "—" }}</td>
+      <td>{{ "—" if not h.ok else ("yes" if h.pq else ("undetermined" if h.unsure else "no")) }}</td></tr>{% endfor %}
+  </table>
+</section>
+{% endif %}
 
 <section class="card">
   <h2>{{ t.badge_title }}</h2>
@@ -36,6 +56,15 @@
     <pre id="sp-md" dir="ltr"><code>{{ snippets.markdown }}</code></pre>
   </div>
 </section>
+{% if related %}
+<section class="card">
+  <h2>{{ t.site_related }}</h2>
+  <ul class="related" dir="ltr">
+    {% for r in related %}<li><a href="{{ url_for('site.site_page', domain=r.domain) }}">{{ r.domain }}</a>
+      <span class="muted">{{ r.grade }} · {{ "post-quantum" if r.pq else ("undetermined" if r.unsure else "classical") }}</span></li>{% endfor %}
+  </ul>
+</section>
+{% endif %}
 {% else %}
 <section class="card"><p>{{ t.site_unknown.format(domain=domain) }}</p></section>
 {% endif %}

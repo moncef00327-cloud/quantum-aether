@@ -376,3 +376,48 @@ def to_csv(rows):
     for row in rows:
         writer.writerow({k: row.get(k) for k in EXPORT_FIELDS})
     return out.getvalue()
+
+
+# ---------------------------------------------------------------- صفحات النطاقات العامة (/site/<domain>)
+def domain_history(conn, domain, limit=TIMELINE_WEEKS):
+    """نتائج النطاق أسبوعاً بأسبوع (الأحدث أخيراً): ما يجعل كل صفحة نطاق فريدة وقابلة للاستشهاد."""
+    cur = conn.execute("SELECT week, rank, ok, grade, grp, tls, pq, unsure, as_name, scanned_at FROM adoption_results "
+                       "WHERE domain = ? ORDER BY week DESC LIMIT ?", (domain, limit))
+    return [dict(r) for r in cur][::-1]
+
+
+def latest_for(conn, domain):
+    """آخر نتيجة أسبوعية أجاب فيها النطاق، أو None."""
+    row = conn.execute("SELECT * FROM adoption_results WHERE domain = ? AND ok = 1 ORDER BY week DESC LIMIT 1",
+                       (domain,)).fetchone()
+    return dict(row) if row else None
+
+
+def peers(conn, domain, as_name, week, limit=6):
+    """نطاقات على الشبكة نفسها في الأسبوع نفسه (روابط داخلية ذات صلة)، الأعلى ترتيباً أولاً."""
+    if not as_name:
+        return []
+    cur = conn.execute("SELECT domain, grade, pq, unsure FROM adoption_results WHERE week = ? AND as_name = ? "
+                       "AND ok = 1 AND domain <> ? AND rank IS NOT NULL ORDER BY rank LIMIT ?",
+                       (week, as_name, domain, limit))
+    return [dict(r) for r in cur]
+
+
+def rank_neighbors(conn, rank, week, domain, limit=6):
+    """نطاقات قريبة في ترتيب Tranco: تربط كل صفحة بجيرانها فيصل الزاحف إلى كل الصفحات."""
+    if rank is None:
+        return []
+    cur = conn.execute("SELECT domain, grade, pq, unsure FROM adoption_results WHERE week = ? AND ok = 1 "
+                       "AND rank IS NOT NULL AND domain <> ? ORDER BY ABS(rank - ?) LIMIT ?",
+                       (week, domain, rank, limit))
+    return [dict(r) for r in cur]
+
+
+def site_domains(conn):
+    """كل النطاقات التي أجابت في آخر أسبوع مع تاريخ فحصها، مرتبة حسب الترتيب (لخريطة الموقع)."""
+    all_weeks = weeks(conn)
+    if not all_weeks:
+        return []
+    cur = conn.execute("SELECT domain, substr(scanned_at, 1, 10) FROM adoption_results WHERE week = ? AND ok = 1 "
+                       "ORDER BY rank IS NULL, rank, domain", (all_weeks[-1],))
+    return [(d, day) for d, day in cur]

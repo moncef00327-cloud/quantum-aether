@@ -27,7 +27,7 @@ class ContentPagesTest(unittest.TestCase):
         self.assertEqual(len(data["sites"]), data["reachable"])
 
     def test_sitemap_lists_content(self):
-        body = self.client.get("/sitemap.xml").get_data(as_text=True)
+        body = self.client.get("/sitemap-pages.xml").get_data(as_text=True)
         self.assertIn("https://example.test/study/top-1000-post-quantum-tls?lang=ar", body)
         for slug in guides.GUIDES:
             self.assertIn(f"/guides/{slug}?lang=en", body)
@@ -40,7 +40,7 @@ class ContentPagesTest(unittest.TestCase):
             self.assertNotIn("noindex", body)
             self.assertIn("X25519MLKEM768", body)  # خطوات الإصلاح ظاهرة
             self.assertNotIn("DNA", body)
-        self.assertIn("/sample-report?lang=en", self.client.get("/sitemap.xml").get_data(as_text=True))
+        self.assertIn("/sample-report?lang=en", self.client.get("/sitemap-pages.xml").get_data(as_text=True))
 
     def test_home_states_scan_limits_and_links_sample(self):
         body = self.client.get("/?lang=en").get_data(as_text=True)

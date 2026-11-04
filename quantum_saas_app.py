@@ -17,7 +17,7 @@ import secrets
 import urllib.parse
 
 import requests
-from flask import (Blueprint, Flask, Response, abort, current_app, g, jsonify, redirect,
+from flask import (Blueprint, Flask, Response, abort, current_app, g, jsonify, make_response, redirect,
                    render_template, request, url_for)
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.security import check_password_hash
@@ -452,10 +452,58 @@ def known_result_for(domain):
         return ({"domain": domain, "grade": r["grade"], "group": r["key_exchange"].get("group"), "tls": tls,
                  "pq": bool(r["key_exchange"].get("pq")), "unsure": adoption.is_unsure(r["key_exchange"], tls),
                  "scanned_at": r["scanned_at"]}, "scan")
+    weekly = adoption.latest_for(db(), domain)
+    if weekly:
+        return ({"domain": domain, "grade": weekly["grade"], "group": weekly["grp"], "tls": weekly["tls"],
+                 "pq": bool(weekly["pq"]), "unsure": bool(weekly["unsure"]), "scanned_at": weekly["scanned_at"],
+                 "week": weekly["week"], "rank": weekly["rank"]}, "weekly")
     site = study_by_domain().get(domain)
     if site:
         return (dict(site, scanned_at=study_data()["scanned_on"]), "study")
     return (None, None)
+
+
+def _http_date(iso):
+    """تاريخ ISO (يوم أو وقت) إلى صيغة HTTP لترويسة Last-Modified؛ None إن تعذّر."""
+    try:
+        moment = dt.datetime.fromisoformat(str(iso).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if moment.tzinfo is None:
+        moment = moment.replace(tzinfo=dt.timezone.utc)
+    from email.utils import format_datetime
+    return format_datetime(moment.astimezone(dt.timezone.utc), usegmt=True)
+
+
+def with_last_modified(response, iso):
+    """يضيف Last-Modified ويجيب 304 إن لم يتغير شيء منذ زيارة الزاحف السابقة (يوفّر ميزانية الزحف)."""
+    stamp = _http_date(iso)
+    if not stamp:
+        return response
+    response.headers["Last-Modified"] = stamp
+    since = request.headers.get("If-Modified-Since")
+    if since and response.status_code == 200:
+        from email.utils import parsedate_to_datetime
+        try:
+            if parsedate_to_datetime(since) >= parsedate_to_datetime(stamp):
+                response.status_code, response.data = 304, b""
+        except (TypeError, ValueError):
+            pass
+    return response
+
+
+def site_verdict(domain, summary):
+    """جملة واحدة واضحة قابلة للاقتباس (للبشر ولمحركات الإجابة)، بالإنجليزية لأنها تُقتبس كما هي."""
+    day = str(summary.get("scanned_at", ""))[:10]
+    if summary.get("unsure"):
+        return (f"As of {day}, Quantum Aether could not determine whether {domain} negotiates post-quantum key exchange: "
+                "the server or its firewall rejected our raw TLS probe.")
+    if summary["pq"]:
+        return (f"Yes. As of {day}, {domain} negotiates the hybrid post-quantum key exchange "
+                f"{summary.get('group') or 'X25519MLKEM768'} over {summary.get('tls') or 'TLS 1.3'} (Quantum Aether grade {summary['grade']}).")
+    return (f"No. As of {day}, {domain} does not negotiate post-quantum key exchange; it uses "
+            f"{summary.get('group') or 'classical key exchange'} over {summary.get('tls') or 'TLS'} "
+            f"(Quantum Aether grade {summary['grade']}), so recorded traffic is exposed to harvest-now-decrypt-later.")
 
 
 @bp.get("/site/<domain>")
@@ -466,18 +514,40 @@ def site_page(domain):
     except quantum_vuln_scanner.ScanError:
         abort(404)
     summary, source = known_result_for(domain)
-    jsonld = None
+    jsonld, verdict, history, related, network = None, None, [], [], None
     if summary:
+        conn = db()
+        history = adoption.domain_history(conn, domain)
+        last = history[-1] if history else None
+        network = last["as_name"] if last else None
+        if last:
+            seen = {domain}
+            for row in adoption.peers(conn, domain, network, last["week"]) + \
+                    adoption.rank_neighbors(conn, last["rank"], last["week"], domain):
+                if row["domain"] not in seen:
+                    seen.add(row["domain"])
+                    related.append(row)
+            related = related[:10]
+        verdict = site_verdict(domain, summary)
+        page_url = public_base() + url_for(".site_page", domain=domain)
         pq = "yes" if summary["pq"] else ("undetermined" if summary.get("unsure") else "no")
+        modified = str(summary["scanned_at"])[:10]
         jsonld = [{"@context": "https://schema.org", "@type": "WebPage",
                    "name": f"{domain} — post-quantum TLS readiness",
-                   "url": public_base() + url_for(".site_page", domain=domain),
-                   "inLanguage": current_lang(),
+                   "url": page_url, "inLanguage": current_lang(), "dateModified": modified,
+                   "isPartOf": {"@type": "Dataset", "name": "Post-quantum TLS adoption tracker",
+                                "url": public_base() + url_for(".adoption_page")},
                    "about": {"@type": "WebSite", "name": domain, "url": f"https://{domain}"},
                    "description": f"{domain} TLS grade {summary['grade']}, key exchange {summary.get('group') or 'unknown'}, "
-                                  f"post-quantum key exchange: {pq}."}]
-    return render_template("site_page.html", domain=domain, summary=summary, source=source,
-                           snippets=badge_snippets(domain) if summary else None, jsonld=jsonld)
+                                  f"post-quantum key exchange: {pq}."},
+                  {"@context": "https://schema.org", "@type": "FAQPage",
+                   "mainEntity": [{"@type": "Question", "name": f"Does {domain} use post-quantum TLS?",
+                                   "acceptedAnswer": {"@type": "Answer", "text": verdict}}]}]
+    response = make_response(render_template(
+        "site_page.html", domain=domain, summary=summary, source=source, verdict=verdict, history=history,
+        related=related, network=network, snippets=badge_snippets(domain) if summary else None, jsonld=jsonld),
+        200 if summary else 404)  # نطاق لا نعرفه (مثل wp-login.php من الماسحات) ليس صفحة حقيقية
+    return with_last_modified(response, summary["scanned_at"]) if summary else response
 
 
 @bp.get("/compare")
@@ -1143,42 +1213,56 @@ def robots():
     body = (agents + "Allow: /\nDisallow: /admin\nDisallow: /report/\nDisallow: /api/paypal/\nDisallow: /monitor/\nDisallow: /api/monitor/\n\n"
             f"Sitemap: {public_base()}/sitemap.xml\n"
             f"# AI agents: machine-readable summary and API at {public_base()}/llms.txt\n"
+            f"# Full text for AI agents (guides + live figures in one file): {public_base()}/llms-full.txt\n"
             f"# Content feed (Atom): {public_base()}/feed.xml\n")
     return Response(body, mimetype="text/plain")
 
 
-@bp.get("/sitemap.xml")
-def sitemap():
-    base = public_base()
-    def template_date(name):  # تاريخ آخر تعديل حقيقي لقالب الصفحة
-        mtime = os.path.getmtime(os.path.join(BASE_DIR, "templates", name))
-        return dt.datetime.fromtimestamp(mtime, dt.timezone.utc).date().isoformat()
+SITEMAP_CHUNK = 2500  # نطاقات لكل ملف (× لغتين) تحت حدّ 50 ألف رابط بهامش واسع
 
+
+def _template_day(name):  # تاريخ آخر تعديل حقيقي لقالب الصفحة
+    mtime = os.path.getmtime(os.path.join(BASE_DIR, "templates", name))
+    return dt.datetime.fromtimestamp(mtime, dt.timezone.utc).date().isoformat()
+
+
+def _sitemap_pages():
     site_langs, de_langs, legal_langs = ("en", "ar"), ("en", "ar", "de"), legal.LANGS
-    pages = [("/", template_date("index.html"), de_langs), ("/monitoring", template_date("monitoring.html"), de_langs),
+    pages = [("/", _template_day("index.html"), de_langs), ("/monitoring", _template_day("monitoring.html"), de_langs),
              ("/sample-report", sample_result()["scanned_at"][:10], site_langs),
-             ("/research", template_date("research.html"), site_langs),
+             ("/research", _template_day("research.html"), site_langs),
              ("/guides", max(g["updated"] for g in guides.GUIDES.values()), site_langs),
              ("/study/top-1000-post-quantum-tls", study_data()["scanned_on"], de_langs)]
     adoption_weeks = adoption.weeks(db())
     pages.append(("/adoption", adoption.week_monday(adoption_weeks[-1]).isoformat() if adoption_weeks
                   else study_data()["scanned_on"], de_langs))
-    pages.append(("/scanning", template_date("scanning.html"), de_langs))
+    pages.append(("/scanning", _template_day("scanning.html"), de_langs))
     pages += [(f"/guides/{slug}", g["updated"], site_langs) for slug, g in guides.GUIDES.items()]
-    pages.append(("/compare", template_date("compare.html"), site_langs))
-    study_day = study_data()["scanned_on"]
-    # صفحة قابلة للفهرسة لكل نطاق في الدراسة (SEO برمجي طويل الذيل)
-    pages += [(f"/site/{site['domain']}", study_day, site_langs) for site in study_data()["sites"]]
+    pages.append(("/compare", _template_day("compare.html"), site_langs))
     legal_date = os.path.getmtime(os.path.join(BASE_DIR, "legal.py"))
     legal_day = dt.datetime.fromtimestamp(legal_date, dt.timezone.utc).date().isoformat()
     pages += [(f"/{slug}", legal_day, legal_langs) for slug in legal.PAGES]
+    return pages
+
+
+def _sitemap_domains():
+    """كل النطاقات التي لها صفحة /site/ مفهرسة: المتتبّع الأسبوعي (بتاريخ فحصها) ثم ما تبقى من الدراسة."""
+    rows = adoption.site_domains(db())
+    known = {d for d, _ in rows}
+    study_day = study_data()["scanned_on"]
+    rows += [(site["domain"], study_day) for site in study_data()["sites"] if site["domain"] not in known]
+    return rows
+
+
+def _urlset(pages):
+    base = public_base()
 
     def esc(u):
         return u.replace("&", "&amp;")
 
     parts = []
     for path, day, langs in pages:
-        default = "de" if langs == legal_langs else "en"
+        default = "de" if langs == legal.LANGS else "en"
         alternates = "".join(f'<xhtml:link rel="alternate" hreflang="{alt}" href="{esc(f"{base}{path}?lang={alt}")}"/>'
                              for alt in langs)
         alternates += f'<xhtml:link rel="alternate" hreflang="x-default" href="{esc(f"{base}{path}?lang={default}")}"/>'
@@ -1188,6 +1272,35 @@ def sitemap():
             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n'
             + "".join(parts) + "</urlset>\n")
     return Response(body, mimetype="application/xml")
+
+
+@bp.get("/sitemap.xml")
+def sitemap():
+    """فهرس خرائط: صفحات الموقع + ملف لكل 2500 نطاق. lastmod لكل جزء = أحدث تاريخ فيه."""
+    base = public_base()
+    pages = _sitemap_pages()
+    domains = _sitemap_domains()
+    entries = [(f"{base}/sitemap-pages.xml", max(day for _, day, _ in pages))]
+    for i in range(0, len(domains), SITEMAP_CHUNK):
+        chunk = domains[i:i + SITEMAP_CHUNK]
+        entries.append((f"{base}/sitemap-sites-{i // SITEMAP_CHUNK + 1}.xml", max(day for _, day in chunk)))
+    body = ('<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+            + "".join(f"  <sitemap><loc>{url}</loc><lastmod>{day}</lastmod></sitemap>\n" for url, day in entries)
+            + "</sitemapindex>\n")
+    return Response(body, mimetype="application/xml")
+
+
+@bp.get("/sitemap-pages.xml")
+def sitemap_pages():
+    return _urlset(_sitemap_pages())
+
+
+@bp.get("/sitemap-sites-<int:n>.xml")
+def sitemap_sites(n):
+    chunk = _sitemap_domains()[(n - 1) * SITEMAP_CHUNK:n * SITEMAP_CHUNK] if n >= 1 else []
+    if not chunk:
+        abort(404)
+    return _urlset([(f"/site/{d}", day, ("en", "ar")) for d, day in chunk])
 
 
 @bp.get("/<key>.txt")
@@ -1264,6 +1377,104 @@ def feed():
 def llms_txt():
     return Response(render_template("llms.txt", base=public_base(), price=current_app.config["PRICE"]),
                     mimetype="text/plain")
+
+
+def html_to_markdown(fragment):
+    """تحويل بسيط لنص الأدلة (HTML نظيف نكتبه نحن) إلى Markdown لملف llms-full.txt."""
+    from html.parser import HTMLParser
+
+    class Conv(HTMLParser):
+        def __init__(self):
+            super().__init__(convert_charrefs=True)
+            self.out, self.href, self.pre = [], None, False
+
+        def handle_starttag(self, tag, attrs):
+            attrs = dict(attrs)
+            if tag in ("h1", "h2", "h3"):
+                self.out.append("\n\n" + "#" * (int(tag[1]) + 1) + " ")
+            elif tag == "p":
+                self.out.append("\n\n")
+            elif tag == "li":
+                self.out.append("\n- ")
+            elif tag == "pre":
+                self.pre = True
+                self.out.append("\n\n```\n")
+            elif tag == "code" and not self.pre:
+                self.out.append("`")
+            elif tag == "a":
+                self.href = attrs.get("href")
+                self.out.append("[")
+            elif tag == "br":
+                self.out.append("\n")
+
+        def handle_endtag(self, tag):
+            if tag == "pre":
+                self.pre = False
+                self.out.append("\n```")
+            elif tag == "code" and not self.pre:
+                self.out.append("`")
+            elif tag == "a":
+                href = self.href or ""
+                if href.startswith("/"):
+                    href = public_base() + href
+                self.out.append(f"]({href})")
+                self.href = None
+
+        def handle_data(self, data):
+            self.out.append(data if self.pre else re.sub(r"\s+", " ", data))
+
+    conv = Conv()
+    conv.feed(fragment)
+    return re.sub(r"\n{3,}", "\n\n", "".join(conv.out)).strip()
+
+
+@bp.get("/llms-full.txt")
+def llms_full_txt():
+    """كل المحتوى المفيد في ملف واحد: ملخص llms.txt + أرقام المتتبّع الحية + نص الأدلة كاملاً.
+    زواحف الذكاء الاصطناعي ووكلاؤه يقرؤونه بطلب واحد بدل عشرات الصفحات."""
+    base = public_base()
+    parts = [render_template("llms.txt", base=base, price=current_app.config["PRICE"]).strip()]
+    snap = adoption.snapshot(db())
+    if snap:
+        lines = [f"\n\n## Live adoption figures (week {snap['week']}, scanned {snap['scanned_at'][:10]})\n",
+                 f"- Tranco top 1,000: {snap['pq']} of {snap['reachable']} reachable sites ({snap['pct']}%) negotiate X25519MLKEM768."]
+        if snap.get("top10k"):
+            t = snap["top10k"]
+            lines.append(f"- Tranco top 10,000: {t['pq']} of {t['reachable']} ({t['pct']}%).")
+        for sector in snap["sectors"]:
+            label = sector["labels"].get("en") or sector["key"]
+            lines.append(f"- {label}: {sector['pq']} of {sector['reachable']} measured sites.")
+        if snap.get("providers"):
+            lines.append(f"\n### Share of sites with post-quantum key exchange by hosting network ({snap['providers']['period']})\n")
+            lines.append("| Network | Sites | Post-quantum |\n|---|---|---|")
+            lines += [f"| {r['name']} (AS{r['asn']}) | {r['reachable']} | {r['pct']}% |" for r in snap["providers"]["rows"]]
+        lines.append(f"\nPer-domain answers: {base}/site/<domain> (for example {base}/site/github.com). "
+                     f"Full data: {base}/adoption.csv (CC BY 4.0).")
+        parts.append("\n".join(lines))
+    for slug, g in guides.GUIDES.items():
+        parts.append(f"\n\n---\n\n# {g['en']['title']}\n\nSource: {base}/guides/{slug} (updated {g['updated']})\n\n"
+                     + html_to_markdown(g["en"]["body"]))
+    return Response("\n".join(parts) + "\n", mimetype="text/plain")
+
+
+@bp.get("/.well-known/security.txt")
+@bp.get("/security.txt")
+def security_txt():
+    """RFC 9116: موقع يبيع خدمة أمنية يجب أن يقول أين يُبلَّغ عن الثغرات."""
+    expires = (dt.datetime.now(dt.timezone.utc) + dt.timedelta(days=180)).strftime("%Y-%m-%dT00:00:00Z")
+    email = re.search(r"mailto:([^\"'>]+)", legal.EMAIL)
+    contact = email.group(1) if email else legal.EMAIL
+    body = (f"Contact: mailto:{contact}\nExpires: {expires}\nPreferred-Languages: en, de, ar\n"
+            f"Canonical: {public_base()}/.well-known/security.txt\nPolicy: {public_base()}/scanning\n")
+    return Response(body, mimetype="text/plain")
+
+
+@bp.get("/apple-touch-icon.png")
+@bp.get("/apple-touch-icon-precomposed.png")
+def apple_touch_icon():
+    response = current_app.send_static_file("apple-touch-icon.png")
+    response.headers["Cache-Control"] = "public, max-age=604800"
+    return response
 
 
 @bp.post("/api/pv")

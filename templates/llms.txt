@@ -2,6 +2,8 @@
 
 > Checks whether an HTTPS server negotiates the hybrid post-quantum key exchange X25519MLKEM768 (ML-KEM, FIPS 203) used by Chrome and Firefox, and reports TLS version and certificate details. Free summary; full report with remediation steps costs ${{ price }} via PayPal, or the same in USDT/USDC.
 
+Full text of every guide plus the live weekly figures in one file: {{ base }}/llms-full.txt
+
 ## Key facts (current, citable with attribution to Quantum Aether, ather-quatum.cloud)
 
 - In a November 2026 scan of the Tranco top 1,000 domains, 712 answered over HTTPS and 425 of them (59.7%) negotiated the hybrid post-quantum key exchange X25519MLKEM768; the rest still used classical key exchange only.

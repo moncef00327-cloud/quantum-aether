@@ -91,9 +91,8 @@ class ViralFeaturesTest(unittest.TestCase):
         self.assertEqual(self.client.get("/api/v1/scan?domain=x y&format=text").status_code, 400)
 
     def test_sitemap_lists_compare_and_site_pages(self):
-        body = self.client.get("/sitemap.xml").get_data(as_text=True)
-        self.assertIn("/compare?lang=en", body)
-        self.assertIn("/site/amazon.com?lang=en", body)
+        self.assertIn("/compare?lang=en", self.client.get("/sitemap-pages.xml").get_data(as_text=True))
+        self.assertIn("/site/amazon.com?lang=en", self.client.get("/sitemap-sites-1.xml").get_data(as_text=True))
 
 
 if __name__ == "__main__":

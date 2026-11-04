@@ -186,7 +186,7 @@ class TrackerTests(unittest.TestCase):
         self.assertEqual(r.headers["Access-Control-Allow-Origin"], "*")
         rows = list(csv.DictReader(io.StringIO(r.get_data(as_text=True))))
         self.assertEqual(len(rows), 1000)
-        self.assertIn("/adoption?lang=de", self.client.get("/sitemap.xml").get_data(as_text=True))
+        self.assertIn("/adoption?lang=de", self.client.get("/sitemap-pages.xml").get_data(as_text=True))
         self.assertIn("/adoption#2026-W45", self.client.get("/feed.xml").get_data(as_text=True))
         self.assertIn("/adoption.json", self.client.get("/llms.txt").get_data(as_text=True))
         self.assertIn("/adoption?lang=en", self.client.get("/?lang=en").get_data(as_text=True))

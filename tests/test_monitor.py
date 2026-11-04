@@ -453,17 +453,26 @@ class AdminExclusionAndSeoTest(unittest.TestCase):
 
     def test_sitemap_has_xhtml_alternates(self):
         import xml.dom.minidom
-        body = self.app.test_client().get("/sitemap.xml").get_data(as_text=True)
+        client = self.app.test_client()
+        index = client.get("/sitemap.xml").get_data(as_text=True)
+        xml.dom.minidom.parseString(index)
+        self.assertIn("<sitemapindex", index)
+        self.assertIn("https://ather-quatum.cloud/sitemap-pages.xml", index)
+        self.assertIn("https://ather-quatum.cloud/sitemap-sites-1.xml", index)
+        body = client.get("/sitemap-pages.xml").get_data(as_text=True)
         xml.dom.minidom.parseString(body)
         self.assertIn('xmlns:xhtml="http://www.w3.org/1999/xhtml"', body)
         self.assertIn('<xhtml:link rel="alternate" hreflang="x-default" href="https://ather-quatum.cloud/guides?lang=en"/>', body)
         self.assertIn("https://ather-quatum.cloud/impressum?lang=de", body)
-        # 4 صفحات بثلاث لغات (منها /adoption) + 6 صفحات ثابتة + compare + صفحات النطاقات البارزة، بلغتين، + 3 قانونية
-        import quantum_saas_app
-        sites = len(quantum_saas_app.study_data()["sites"])
-        self.assertEqual(body.count("<url>"), 5 * 3 + 2 * (3 + 3 + 1 + sites) + 2 * 3)  # +/scanning
+        # 5 صفحات بثلاث لغات (منها /adoption و/scanning) + 6 بلغتين + compare بلغتين + 3 قانونية بلغتين
+        self.assertEqual(body.count("<url>"), 5 * 3 + 2 * (3 + 3 + 1) + 2 * 3)
         self.assertIn("https://ather-quatum.cloud/compare?lang=en", body)
-        self.assertIn("https://ather-quatum.cloud/site/amazon.com?lang=en", body)
+        import quantum_saas_app
+        sites_xml = client.get("/sitemap-sites-1.xml").get_data(as_text=True)
+        xml.dom.minidom.parseString(sites_xml)
+        self.assertEqual(sites_xml.count("<url>"), 2 * len(quantum_saas_app.study_data()["sites"]))
+        self.assertIn("https://ather-quatum.cloud/site/amazon.com?lang=en", sites_xml)
+        self.assertEqual(client.get("/sitemap-sites-2.xml").status_code, 404)
 
     def test_robots_points_to_sitemap(self):
         self.assertIn("Sitemap: https://ather-quatum.cloud/sitemap.xml",
@@ -592,7 +601,7 @@ class OrdersUtmScanBoxGermanTest(unittest.TestCase):
         self.assertNotIn('hreflang="de"', body)
         self.assertNotIn(">Deutsch</a>", body)
         self.assertIn(">Deutsch</a>", client.get("/?lang=en").get_data(as_text=True))
-        sitemap = client.get("/sitemap.xml").get_data(as_text=True)
+        sitemap = client.get("/sitemap-pages.xml").get_data(as_text=True)
         self.assertIn("<loc>https://ather-quatum.cloud/study/top-1000-post-quantum-tls?lang=de</loc>", sitemap)
         self.assertIn('hreflang="de" href="https://ather-quatum.cloud/monitoring?lang=de"', sitemap)
         self.assertNotIn("guides?lang=de", sitemap)
