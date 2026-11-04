@@ -1,9 +1,10 @@
 {% extends "base.html" %}
 {% set kx = r.key_exchange %}{% set cert = r.certificate %}
 {% block title %}{{ r.domain }} · {{ t.result_title }}{% endblock %}
+{% block og_image %}{{ abs_url('site.og_scan', scan_id=scan.id) }}{% endblock %}
 {% block head %}<meta name="robots" content="noindex">{% endblock %}
 {% block content %}
-<section class="card result-head">
+<section class="card result-head" data-ev-load="result">
   <div class="grade grade-{{ r.grade }}" aria-label="{{ t.grade }} {{ r.grade }}">{{ r.grade }}</div>
   <div>
     <p class="muted">{{ t.result_title }}</p>
@@ -28,12 +29,12 @@
 <section class="card buy" id="buy">
   <h2>{{ t.buy_title }} — ${{ price }}</h2>
   <ul class="ticks">{% for item in t.paid_items %}<li>{{ item }}</li>{% endfor %}</ul>
-  <p><a href="{{ url_for('site.sample_report', lang=lang) }}" target="_blank">{{ t.sample_link }} →</a></p>
+  <p><a href="{{ url_for('site.sample_report', lang=lang) }}" target="_blank" data-ev="sample_report">{{ t.sample_link }} →</a></p>
   {% if paid %}
     <p class="notice">{{ t.already_paid }}</p>
   {% elif payments_enabled or crypto_networks %}
     <p>{{ t.buy_sub }} <strong>{{ t.save_link }}</strong></p>
-    <p class="consent"><label><input type="checkbox" id="consent">
+    <p class="consent"><label><input type="checkbox" id="consent" data-ev="buy_click">
       <span>{{ t.consent_report }} (<a href="{{ url_for('site.legal_page', slug='agb', lang=legal_lang) }}" target="_blank">{{ t.legal_terms }}</a>)</span></label></p>
     {% if payments_enabled %}
     <div id="paypal-button-container" data-scan-id="{{ scan.id }}" data-msg-consent="{{ t.consent_missing }}"
@@ -48,7 +49,7 @@
       <p><label>{{ t.crypto_email_label }}<br>
         <input type="email" class="crypto-email" dir="ltr" autocomplete="email" placeholder="you@example.com"></label></p>
       <p>{% for key, net in crypto_networks.items() %}
-        <button type="button" class="crypto-choose" data-network="{{ key }}">{{ net.token }} · {{ net.chain }}</button>
+        <button type="button" class="crypto-choose" data-ev="buy_click" data-network="{{ key }}">{{ net.token }} · {{ net.chain }}</button>
       {% endfor %}</p>
       <div class="crypto-details" hidden>
         <p>{{ t.crypto_send }} <strong dir="ltr" class="crypto-amount"></strong> <strong class="crypto-token"></strong>
@@ -74,12 +75,12 @@
   <p><img src="{{ url_for('site.badge', domain=r.domain) }}" alt="post-quantum TLS: {{ r.grade }}"></p>
   <div class="snippet">
     <div class="snippet-head"><span>HTML</span>
-      <button type="button" class="copy-btn" data-copy="#badge-html" data-done="{{ t.copied }}">{{ t["copy"] }}</button></div>
+      <button type="button" class="copy-btn" data-ev="badge_copy" data-copy="#badge-html" data-done="{{ t.copied }}">{{ t["copy"] }}</button></div>
     <pre id="badge-html" dir="ltr"><code>{{ badge.html }}</code></pre>
   </div>
   <div class="snippet">
     <div class="snippet-head"><span>Markdown (README)</span>
-      <button type="button" class="copy-btn" data-copy="#badge-md" data-done="{{ t.copied }}">{{ t["copy"] }}</button></div>
+      <button type="button" class="copy-btn" data-ev="badge_copy" data-copy="#badge-md" data-done="{{ t.copied }}">{{ t["copy"] }}</button></div>
     <pre id="badge-md" dir="ltr"><code>{{ badge.markdown }}</code></pre>
   </div>
 </section>
@@ -89,9 +90,9 @@
   {% set share_url = url_for('site.site_page', domain=r.domain, _external=True) %}
   {% set share_text = t.share_text.format(domain=r.domain, grade=r.grade) %}
   <p>
-    <a class="button-link" target="_blank" rel="noopener"
+    <a class="button-link" target="_blank" rel="noopener" data-ev="share"
        href="https://www.linkedin.com/sharing/share-offsite/?url={{ share_url | urlencode }}">LinkedIn</a>
-    <a class="button-link" target="_blank" rel="noopener"
+    <a class="button-link" target="_blank" rel="noopener" data-ev="share"
        href="https://twitter.com/intent/tweet?text={{ share_text | urlencode }}&url={{ share_url | urlencode }}">X</a>
   </p>
 </section>

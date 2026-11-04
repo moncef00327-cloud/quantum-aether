@@ -12,11 +12,15 @@
              placeholder="example.com" value="{{ domain }}" required maxlength="253"{% if not domain %} autofocus{% endif %}>
       <button type="submit">{{ t.scan_button }}</button>
     </div>
-    <p class="try">{{ t.try_label }}
-      <button type="button" class="example-link" data-domain="github.com">github.com</button>
-      <button type="button" class="example-link" data-domain="amazon.com">amazon.com</button>
-      <button type="button" class="example-link" data-domain="cloudflare.com">cloudflare.com</button></p>
-    {% if error %}<p class="form-error" role="alert">{{ error }}</p>{% endif %}
+    <p class="try-label">{{ t.try_label }}</p>
+    <div class="examples" dir="ltr">
+      {% for ex in examples %}<button type="button" class="example-link example-chip{% if ex.grade %} {{ 'ok' if ex.pq else ('unsure' if ex.unsure else 'bad') }}{% endif %}" data-domain="{{ ex.domain }}">
+        <span class="ex-domain">{{ ex.domain }}</span>{% if ex.grade %}
+        <span class="ex-result">{{ ex.grade }} · {{ t.example_ready if ex.pq else (t.example_unsure if ex.unsure else t.example_not_ready) }}</span>{% endif %}
+      </button>{% endfor %}
+    </div>
+    <p class="no-site">{{ t.hero_no_site }}</p>
+    {% if error %}<p class="form-error" role="alert" data-ev-load="error">{{ error }}</p>{% endif %}
     <p class="form-busy" hidden>{{ t.scanning }}</p>
   </form>
   <p class="trustbar"><a href="{{ url_for('site.adoption_page', lang=lang) }}">{{ t.trust_bar }}</a></p>
@@ -30,7 +34,7 @@
     <li><strong>{{ t.ladder_step2_h }}</strong> — {{ t.ladder_step2_b }}</li>
     <li class="primary"><strong>{{ t.ladder_step3_h }}</strong> — {{ t.ladder_step3_b }}</li>
   </ol>
-  <p><a class="button-link" href="{{ url_for('site.monitoring', lang=lang) }}">{{ t.ladder_cta }}</a></p>
+  <p><a class="button-link" data-ev="monitoring_cta" href="{{ url_for('site.monitoring', lang=lang) }}">{{ t.ladder_cta }}</a></p>
 </section>
 
 <section class="grid-2">
@@ -59,7 +63,7 @@
     <div class="price-box highlight">
       <h3>{{ t.paid_title }} <span class="tag">$49</span></h3>
       <ul class="ticks">{% for item in t.paid_items %}<li>{{ item }}</li>{% endfor %}</ul>
-      <p><a href="{{ url_for('site.sample_report', lang=lang if lang != 'de' else 'en') }}">{{ t.sample_link }} →</a></p>
+      <p><a data-ev="sample_report" href="{{ url_for('site.sample_report', lang=lang if lang != 'de' else 'en') }}">{{ t.sample_link }} →</a></p>
     </div>
   </div>
   <p class="notice"><a href="{{ url_for('site.monitoring', lang=lang) }}">{{ t.mon_cta_home }} →</a></p>
@@ -70,5 +74,6 @@
   {% for q, a in t.faq %}
   <details><summary>{{ q }}</summary><p>{{ a }}</p></details>
   {% endfor %}
+  <p><a href="{{ url_for('site.deadlines_page', lang=lang) }}">{{ t.deadlines_link }} →</a></p>
 </section>
 {% endblock %}

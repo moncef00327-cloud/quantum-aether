@@ -9,6 +9,9 @@
 <section class="card">
   <h2><a href="{{ url_for('site.study', lang=lang) }}">{{ t.study_title }}</a></h2>
 </section>
+<section class="card">
+  <h2><a href="{{ url_for('site.deadlines_page', lang=lang) }}">{{ t.deadlines_link }}</a></h2>
+</section>
 {% for slug, g in items %}
 <section class="card">
   <h2><a href="{{ url_for('site.guide', slug=slug, lang=lang) }}">{{ g.title }}</a></h2>

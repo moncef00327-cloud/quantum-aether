@@ -18,7 +18,7 @@ import urllib.parse
 
 import requests
 from flask import (Blueprint, Flask, Response, abort, current_app, g, jsonify, make_response, redirect,
-                   render_template, request, url_for)
+                   render_template, request, send_file, url_for)
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.security import check_password_hash
 
@@ -30,7 +30,9 @@ import analytics_db
 import guides
 import legal
 import monitor
+import deadlines
 import monitor_db
+import og_image
 import i18n
 import quantum_vuln_scanner
 import sales_db
@@ -133,7 +135,7 @@ def current_lang():
 
 
 # الصفحات التي لها نسخة ألمانية فعلية (لمبدّل اللغة وhreflang وخريطة الموقع).
-DE_PAGES = {"site.index", "site.study", "site.monitoring", "site.adoption_page", "site.scanning_page"}
+DE_PAGES = {"site.index", "site.study", "site.monitoring", "site.adoption_page", "site.scanning_page", "site.deadlines_page"}
 
 
 def texts():
@@ -145,7 +147,8 @@ def _inject():
     lang = current_lang()
     return {"t": i18n.TEXTS[lang], "lang": lang, "other_lang": "en" if lang == "ar" else "ar",
             "legal_lang": "de" if lang == "de" else "en", "lang_names": i18n.LANG_NAMES,
-            "page_langs": ["en", "ar", "de"] if request.endpoint in DE_PAGES else ["en", "ar"]}
+            "page_langs": ["en", "ar", "de"] if request.endpoint in DE_PAGES else ["en", "ar"],
+            "abs_url": lambda endpoint, **kw: public_base() + url_for(endpoint, **kw)}
 
 
 def public_base():
@@ -262,10 +265,25 @@ def home_jsonld():
     ]
 
 
+HOME_EXAMPLES = ("github.com", "cloudflare.com", "amazon.com")
+
+
+def home_examples():
+    """أمثلة الصفحة الرئيسية مع نتيجتها المعروفة (من المتتبّع، بلا فحص جديد): يرى الزائر أن مواقع كبيرة
+    غير جاهزة قبل أن يفحص موقعه."""
+    examples = []
+    for domain in HOME_EXAMPLES:
+        summary, _ = known_result_for(domain)
+        examples.append({"domain": domain, "grade": summary["grade"] if summary else None,
+                         "pq": bool(summary and summary["pq"]),
+                         "unsure": bool(summary and summary.get("unsure"))})
+    return examples
+
+
 @bp.get("/")
 def index():
     return render_template("index.html", error=None, domain=request.args.get("domain", "")[:253],
-                           jsonld=home_jsonld())
+                           jsonld=home_jsonld(), examples=home_examples())
 
 
 @bp.post("/scan")
@@ -274,7 +292,8 @@ def scan_form():
     try:
         scan_id, _ = perform_scan(raw)
     except quantum_vuln_scanner.ScanError as exc:
-        return render_template("index.html", error=texts()["errors"].get(exc.code, str(exc)), domain=raw), 400
+        return render_template("index.html", error=texts()["errors"].get(exc.code, str(exc)), domain=raw,
+                               jsonld=home_jsonld(), examples=home_examples()), 400
     return redirect(url_for(".scan_page", scan_id=scan_id, lang=current_lang()), code=303)
 
 
@@ -365,6 +384,17 @@ def guides_index():
     lang = current_lang()
     items = [(slug, g[lang]) for slug, g in guides.GUIDES.items()]
     return render_template("guides_index.html", items=items)
+
+
+@bp.get("/deadlines")
+def deadlines_page():
+    d = deadlines.TEXT[current_lang()]
+    jsonld = {"@context": "https://schema.org", "@type": "Article", "headline": d["title"], "description": d["description"],
+              "inLanguage": current_lang(), "dateModified": deadlines.UPDATED, "url": public_base() + url_for(".deadlines_page"),
+              "author": {"@type": "Organization", "name": "Quantum Aether"},
+              "citation": [url for _, _, url in deadlines.TIMELINE]}
+    return render_template("deadlines.html", d=d, timeline=deadlines.TIMELINE, milestones=deadlines.MILESTONES,
+                           updated=deadlines.UPDATED, jsonld=jsonld)
 
 
 @bp.get("/guides/<slug>")
@@ -656,7 +686,8 @@ def admin():
                            subs=monitor_db.stats(conn, monitor.PLANS), accounts=monitor_db.recent_accounts(conn),
                            traffic=analytics_db.summary(conn, (dt.date.today() - dt.timedelta(days=13)).isoformat()),
                            scans_daily=sales_db.scans_per_day(conn, (dt.date.today() - dt.timedelta(days=13)).isoformat()),
-                           card=scorecard.build(conn, current_app.config["OWNER_EMAIL"], monitor.PLANS)))
+                           card=scorecard.build(conn, current_app.config["OWNER_EMAIL"], monitor.PLANS),
+                           events=analytics_db.event_funnel(conn, (dt.date.today() - dt.timedelta(days=13)).isoformat())))
     # كوكي دائم لسنة: كل زيارات هذا المتصفح لا تُحسب في الإحصاءات.
     response.set_cookie(ADMIN_COOKIE, admin_cookie_value(), max_age=365 * 24 * 3600, httponly=True,
                         secure=request.is_secure, samesite="Lax")
@@ -1221,10 +1252,57 @@ def badge(domain):
         abort(404)
     since = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=BADGE_MAX_AGE_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
     scan = sales_db.latest_scan_for_domain(db(), domain, since)
-    response = Response(badge_svg(scan["grade"] if scan else None), mimetype="image/svg+xml")
+    grade = scan["grade"] if scan else None
+    if grade is None:  # لم يُفحص يدوياً: نتيجة المتتبّع الأسبوعي إن كانت حديثة (لا نُجري فحصاً من الشارة أبداً)
+        weekly = adoption.latest_for(db(), domain)
+        if weekly and weekly["grade"] and not weekly["unsure"] and weekly["scanned_at"] >= since:
+            grade = weekly["grade"]
+    response = Response(badge_svg(grade), mimetype="image/svg+xml")
     response.headers["Cache-Control"] = "public, max-age=86400"
     response.headers["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'"
     return response
+
+
+OG_VERSION = "1"  # غيّره حين يتغير تصميم الصورة فتُبنى من جديد
+
+
+def _og_response(key, build):
+    if not og_image.available():
+        abort(404)
+    path = og_image.cached_png(os.path.join(current_app.config["DATA_DIR"], "og"), f"{OG_VERSION}|{key}", build)
+    response = send_file(path, mimetype="image/png", max_age=86400)
+    response.headers["Cache-Control"] = "public, max-age=86400"
+    return response
+
+
+@bp.get("/og/default.png")
+def og_default():
+    return _og_response("default", og_image.render_default)
+
+
+@bp.get("/og/site/<domain>.png")
+def og_site(domain):
+    try:
+        domain = quantum_vuln_scanner.normalize_domain(domain)
+    except quantum_vuln_scanner.ScanError:
+        abort(404)
+    summary, _ = known_result_for(domain)
+    if not summary:
+        abort(404)
+    day = str(summary["scanned_at"])[:10]
+    return _og_response(f"site|{domain}|{summary['grade']}|{summary['pq']}|{summary.get('unsure')}|{day}",
+                        lambda: og_image.render_result(domain, summary["grade"], summary["pq"], summary.get("unsure"), day))
+
+
+@bp.get("/og/scan/<scan_id>.png")
+def og_scan(scan_id):
+    scan = sales_db.get_scan(db(), scan_id) or abort(404)
+    r = scan["result"]
+    tls = r["key_exchange"].get("version") or r["certificate"].get("negotiated_version")
+    unsure = adoption.is_unsure(r["key_exchange"], tls)
+    day = str(r["scanned_at"])[:10]
+    return _og_response(f"scan|{scan_id}",
+                        lambda: og_image.render_result(r["domain"], r["grade"], bool(r["key_exchange"].get("pq")), unsure, day))
 
 
 @bp.get("/robots.txt")
@@ -1257,6 +1335,7 @@ def _sitemap_pages():
     pages.append(("/adoption", adoption.week_monday(adoption_weeks[-1]).isoformat() if adoption_weeks
                   else study_data()["scanned_on"], de_langs))
     pages.append(("/scanning", _template_day("scanning.html"), de_langs))
+    pages.append(("/deadlines", deadlines.UPDATED, de_langs))
     pages += [(f"/guides/{slug}", g["updated"], site_langs) for slug, g in guides.GUIDES.items()]
     pages.append(("/compare", _template_day("compare.html"), site_langs))
     legal_date = os.path.getmtime(os.path.join(BASE_DIR, "legal.py"))
@@ -1361,6 +1440,7 @@ def feed():
     ]
     for slug, g in guides.GUIDES.items():
         entries.append((f"{base}/guides/{slug}", g["updated"], g["en"]["title"], g["en"]["description"]))
+    entries.append((f"{base}/deadlines", deadlines.UPDATED, deadlines.TEXT["en"]["title"], deadlines.TEXT["en"]["description"]))
     snap = cached_snapshot()
     if snap:  # مدخل جديد كل أسبوع (المعرّف يتضمن الأسبوع) فيظهر في القارئات كخبر جديد
         moved = snap["changes"]
@@ -1525,6 +1605,29 @@ def track_pageview():
         analytics_db.record(db(), day, path, source, visitor, not ua or bool(analytics_db.BOT_RE.search(ua)))
     except Exception:  # الإحصاءات ثانوية
         log.exception("pageview tracking failed")
+    return "", 204
+
+
+@bp.post("/api/ev")
+def track_event():
+    """حدث داخل الصفحة (لمس خانة الفحص، مثال، إرسال، نتيجة...). نفس قواعد /api/pv: من صفحتنا فقط،
+    بلا كوكيز، بصمة يومية لا تُربط بين الأيام، والمدير لا يُحسب. أي خطأ يُهمَل."""
+    if request.headers.get("Sec-Fetch-Site", "same-origin") != "same-origin" or is_admin_visitor():
+        return "", 204
+    try:
+        data = json.loads(request.get_data(as_text=True)[:1000] or "{}")
+        if not isinstance(data, dict):
+            return "", 204
+        page = analytics_db.normalize_path(str(data.get("page", ""))) or "(other)"
+        lang = str(data.get("lang", ""))[:2] if str(data.get("lang", ""))[:2] in ("en", "ar", "de") else "?"
+        day = dt.date.today().isoformat()
+        ua = request.headers.get("User-Agent", "")
+        salt = current_app.config["HASH_SALT"].encode()
+        visitor = hmac.new(salt, f"{day}|{request.remote_addr}|{ua}".encode(), hashlib.sha256).hexdigest()[:16]
+        analytics_db.record_event(db(), day, str(data.get("name", ""))[:20], page, lang, visitor,
+                                  not ua or bool(analytics_db.BOT_RE.search(ua)))
+    except Exception:  # الإحصاءات ثانوية
+        log.exception("event tracking failed")
     return "", 204
 
 

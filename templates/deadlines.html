@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}{{ d.title }} · {{ t.brand }}{% endblock %}
+{% block description %}{{ d.description }}{% endblock %}
+{% block head %}<script type="application/ld+json">{{ jsonld | tojson }}</script>{% endblock %}
+{% block content %}
+<article class="card prose">
+  <h1>{{ d.title }}</h1>
+  <p class="lead">{{ d.lead }}</p>
+
+  <h2>{{ d.short_title }}</h2>
+  <ul>{% for line in d.short %}<li>{{ line }}</li>{% endfor %}</ul>
+
+  <h2>{{ d.upcoming_title }}</h2>
+  <ol class="timeline">
+    {% for year, key in milestones %}<li><strong dir="ltr">{{ year }}</strong> — {{ d.milestones[key] }}</li>{% endfor %}
+  </ol>
+
+  <h2>{{ d.timeline_title }}</h2>
+  <ol class="timeline">
+    {% for when, key, url in timeline %}<li><strong dir="ltr">{{ when }}</strong> — {{ d["items"][key] }}
+      <a href="{{ url }}" rel="noopener" target="_blank" class="small">({{ d.source }})</a></li>{% endfor %}
+  </ol>
+
+  <h2>{{ d.means_title }}</h2>
+  {% for head, body in d.means %}<p><strong>{{ head }}</strong> {{ body }}</p>{% endfor %}
+
+  <p>
+    <a class="button-link" data-ev="scan_cta" href="{{ url_for('site.index', lang=lang) }}">{{ d.cta_scan }}</a>
+    <a class="button-link" data-ev="monitoring_cta" href="{{ url_for('site.monitoring', lang=lang) }}">{{ d.cta_monitor }}</a>
+  </p>
+  <p class="muted small">{{ d.sources_note.format(date=updated) }}</p>
+</article>
+{% endblock %}

@@ -17,6 +17,7 @@ Full text of every guide plus the live weekly figures in one file: {{ base }}/ll
 - "How do I enable post-quantum TLS on nginx / Apache / Caddy / Cloudflare?" — step-by-step guides at {{ base }}/guides .
 - "How do I keep it enabled over time?" — daily monitoring with email alerts at {{ base }}/monitoring .
 - "What is harvest-now-decrypt-later and does it affect me?" — {{ base }}/guides/harvest-now-decrypt-later .
+- "When do I have to move to post-quantum cryptography? (NIST, CNSA 2.0, EU, UK deadlines)" — {{ base }}/deadlines (every date with its official source).
 
 ## Free API
 

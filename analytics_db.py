@@ -16,7 +16,7 @@ CREATE INDEX IF NOT EXISTS pageviews_day ON pageviews (day);
 
 BOT_RE = re.compile(r"bot|crawl|spider|slurp|curl|wget|python|httpclient|go-http|java/|headless|scan|censys|"
                     r"preview|monitor|verification|facebookexternalhit|embedly|whatsapp|telegram", re.I)
-TRACKED_PREFIXES = ("/", "/monitoring", "/guides", "/study", "/research", "/scan/")
+TRACKED_PREFIXES = ("/", "/monitoring", "/guides", "/study", "/research", "/scan/", "/deadlines", "/site/", "/adoption", "/compare")
 
 
 def init(conn):
@@ -83,3 +83,47 @@ def summary(conn, since_day):
 def prune(conn, before_day):
     with conn:
         conn.execute("DELETE FROM pageviews WHERE day < ?", (before_day,))
+
+
+# ---------------------------------------------------------------- أحداث داخل الصفحة (بلا كوكيز)
+# نعرف بها هل يحاول الزائر الفحص أصلاً: لمس الخانة، الكتابة، مثال، إرسال، ظهور النتيجة...
+EVENT_NAMES = ("focus", "type", "example", "submit", "result", "lang", "monitoring_cta", "buy_click",
+               "share", "badge_copy", "sample_report", "error", "scan_cta")
+EVENTS_SCHEMA = """
+CREATE TABLE IF NOT EXISTS events (
+    day      TEXT NOT NULL,
+    name     TEXT NOT NULL,
+    page     TEXT NOT NULL,
+    lang     TEXT NOT NULL,
+    visitor  TEXT NOT NULL,
+    is_bot   INTEGER NOT NULL,
+    is_test  INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS events_day ON events (day, name);
+"""
+
+
+def init_events(conn):
+    conn.executescript(EVENTS_SCHEMA)
+
+
+def record_event(conn, day, name, page, lang, visitor, is_bot):
+    """حدث واحد لكل (زائر، يوم، اسم، صفحة): التكرار لا يضخّم الأرقام."""
+    if name not in EVENT_NAMES:
+        return False
+    with conn:
+        exists = conn.execute("SELECT 1 FROM events WHERE day = ? AND name = ? AND page = ? AND visitor = ? LIMIT 1",
+                              (day, name, page, visitor)).fetchone()
+        if not exists:
+            conn.execute("INSERT INTO events (day, name, page, lang, visitor, is_bot) VALUES (?, ?, ?, ?, ?, ?)",
+                         (day, name, page, lang, visitor, int(is_bot)))
+    return True
+
+
+def event_funnel(conn, since_day, until_day="9999-12-31"):
+    """عدد الزوار (زائر-يوم) الفريدين لكل حدث، بلا روبوتات ولا اختبارات."""
+    rows = conn.execute("SELECT name, COUNT(DISTINCT visitor || day) FROM events WHERE is_bot = 0 AND is_test = 0 "
+                        "AND day >= ? AND day < ? GROUP BY name", (since_day, until_day)).fetchall()
+    counts = {name: 0 for name in EVENT_NAMES}
+    counts.update({name: n for name, n in rows})
+    return counts

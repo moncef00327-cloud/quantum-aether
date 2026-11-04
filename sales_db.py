@@ -49,6 +49,7 @@ def connect(path: str) -> sqlite3.Connection:
     conn.executescript(SCHEMA)
     monitor_db.init(conn)
     analytics_db.init(conn)
+    analytics_db.init_events(conn)
     adoption.init(conn)
     _migrate(conn)
     return conn

@@ -4,6 +4,8 @@
 import datetime as dt
 import math
 
+import analytics_db
+
 LAUNCH = dt.date(2026, 11, 3)          # أول يوم بزوار حقيقيين
 WEEKS_PER_MONTH = 4.345
 COST_PER_MONTH = 123.0                  # تقدير 2026-11-04: خادم Vultr Optimized Cloud 4c/16GB ~$120 + نطاق ~$3. لم تُؤكد الفاتورة.
@@ -67,6 +69,9 @@ def closest_scenario(actual_visitors, week_index, fraction=1.0):
 
 def build(conn, owner_email="", plans=None, today=None):
     weeks = actual_weeks(conn, owner_email, today)
+    for w in weeks:  # أحداث داخل الصفحة (بدأت 2026-11-04): أين يتوقف الزائر؟
+        end = (dt.date.fromisoformat(w["start"]) + dt.timedelta(days=7)).isoformat()
+        w["events"] = analytics_db.event_funnel(conn, w["start"], end)
     rows = []
     for w in weeks:
         frac = w["partial_days"] / 7
@@ -120,6 +125,11 @@ def as_text(card):
               f"Break-even: {card['breakeven_subs']} Starter subscriptions.",
               f"Verdict: tracking the {SCENARIOS[card['verdict']]['label'].upper()} scenario "
               f"(الأقرب: {SCENARIOS[card['verdict']]['label_ar']})." if card["verdict"] else "No data yet."]
+    if card["weeks"]:
+        e = card["weeks"][-1]["events"]
+        lines.append(f"On-page (latest week): focused box {e['focus']}, typed {e['type']}, example {e['example']}, "
+                     f"submitted {e['submit']}, saw result {e['result']}, errors {e['error']}, monitoring CTA {e['monitoring_cta']}, "
+                     f"buy clicks {e['buy_click']}.")
     if card.get("conversion_warning"):
         lines.append("WARNING: " + card["conversion_warning"])
     return "\n".join(lines)

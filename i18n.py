@@ -659,7 +659,7 @@ TEXTS["en"]["scanbox_title"] = "Scan your site now, free"
 # ---------------------------------------------------------------- الألمانية (Sie)
 # متاحة للصفحة الرئيسية والدراسة وصفحة الشركات فقط؛ أي نص غير مترجم هنا يبقى بالإنجليزية.
 DE_ENDPOINTS = {"site.index", "site.scan_form", "site.study", "site.monitoring", "site.monitor_login",
-                "site.adoption_page", "site.scanning_page"}
+                "site.adoption_page", "site.scanning_page", "site.deadlines_page"}
 
 TEXTS["ar"].update({
     "copy": "نسخ", "copied": "تم النسخ ✓",
@@ -1171,3 +1171,28 @@ TEXTS["de"].update({
                        "entfernen, schreiben Sie uns von einer Adresse dieser Domain oder beschreiben Sie Ihre Verbindung dazu:",
     "scanning_source": "Prüfungen kommen von",
 })
+
+
+# الصفحة الرئيسية: أمثلة بنتائجها + جملة لمن لا يملك موقعاً
+TEXTS["ar"].update({
+    "example_ready": "جاهز",
+    "example_not_ready": "غير جاهز",
+    "example_unsure": "غير محسوم",
+    "hero_no_site": "لا تملك موقعاً؟ افحص موقع بنكك أو شركتك أو متجرك المفضل.",
+})
+TEXTS["en"].update({
+    "example_ready": "ready",
+    "example_not_ready": "not ready",
+    "example_unsure": "undetermined",
+    "hero_no_site": "No website of your own? Check your bank, your employer or your favourite shop.",
+})
+TEXTS["de"].update({
+    "example_ready": "bereit",
+    "example_not_ready": "nicht bereit",
+    "example_unsure": "unklar",
+    "hero_no_site": "Keine eigene Website? Prüfen Sie Ihre Bank, Ihren Arbeitgeber oder Ihren Lieblingsshop.",
+})
+
+TEXTS["ar"]["deadlines_link"] = "متى يجب الانتقال؟ مواعيد NIST وCNSA 2.0 والاتحاد الأوروبي"
+TEXTS["en"]["deadlines_link"] = "When do you have to move? NIST, CNSA 2.0, EU and UK deadlines"
+TEXTS["de"]["deadlines_link"] = "Bis wann umstellen? Fristen von NIST, CNSA 2.0, EU und Großbritannien"

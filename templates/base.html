@@ -12,7 +12,12 @@
   <meta property="og:description" content="{{ self.description() }}">
   <meta property="og:url" content="{{ request.url }}">
   <meta property="og:locale" content="{{ 'ar_AR' if lang == 'ar' else 'de_DE' if lang == 'de' else 'en_US' }}">
-  <meta name="twitter:card" content="summary">
+  {% set og_img %}{% block og_image %}{{ abs_url('site.og_default') }}{% endblock %}{% endset %}
+  <meta property="og:image" content="{{ og_img | trim }}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="{{ og_img | trim }}">
   <meta name="twitter:title" content="{{ self.title() }}">
   <meta name="twitter:description" content="{{ self.description() }}">
   <link rel="alternate" type="application/atom+xml" title="{{ t.brand }}" href="{{ url_for('site.feed') }}">

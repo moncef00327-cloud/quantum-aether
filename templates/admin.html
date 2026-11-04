@@ -3,6 +3,17 @@
 {% block head %}<meta name="robots" content="noindex">{% endblock %}
 {% block content %}
 <section class="card" dir="ltr">
+  <h2>On-page funnel, last 14 days (visitors who…)</h2>
+  <table class="data">
+    <tr><th>focused the domain box</th><th>typed</th><th>clicked an example</th><th>submitted a scan</th><th>saw a result</th><th>error</th></tr>
+    <tr><td>{{ events.focus }}</td><td>{{ events.type }}</td><td>{{ events.example }}</td><td>{{ events.submit }}</td><td>{{ events.result }}</td><td>{{ events.error }}</td></tr>
+    <tr><th>switched language</th><th>monitoring CTA</th><th>sample report</th><th>buy (consent/crypto)</th><th>share</th><th>badge copy</th></tr>
+    <tr><td>{{ events.lang }}</td><td>{{ events.monitoring_cta }}</td><td>{{ events.sample_report }}</td><td>{{ events.buy_click }}</td><td>{{ events.share }}</td><td>{{ events.badge_copy }}</td></tr>
+  </table>
+  <p class="muted small">Unique visitor-days, bots and admin excluded. Tracking started 2026-11-04.</p>
+</section>
+
+<section class="card" dir="ltr">
   <h2>Reality vs simulation (الواقع مقابل المحاكاة)</h2>
   {% if card.verdict %}<p><strong>Closest scenario: {{ card.scenarios[card.verdict].label }} ({{ card.scenarios[card.verdict].label_ar }})</strong>
     · 12-month median net in that scenario: ${{ card.scenarios[card.verdict].net_12m }}</p>{% endif %}
