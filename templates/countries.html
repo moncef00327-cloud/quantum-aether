@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}{{ t.countries_title }} · {{ t.brand }}{% endblock %}
+{% block description %}{{ t.countries_lead.format(sites=b.sites, countries=b.countries, week=b.week) }}{% endblock %}
+{% block head %}<script type="application/ld+json">{{ jsonld | tojson }}</script>{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>{{ t.countries_title }}</h1>
+  <p class="lead">{{ t.countries_lead.format(sites=b.sites, countries=b.countries, week=b.week) }}</p>
+  <table class="data countries">
+    <tr><th>#</th><th>{{ t.countries_col_country }}</th><th>{{ t.countries_col_ready }}</th><th>{{ t.countries_col_sites }}</th><th>{{ t.countries_col_change }}</th></tr>
+    {% for e in b.entries %}<tr>
+      <td>{{ e.rank }}</td>
+      <td><a href="{{ url_for('site.country_page', code=e.code, lang=lang) }}">{{ e.flag }} {{ e.name }}</a></td>
+      <td dir="ltr"><strong>{{ e.pct }}%</strong></td>
+      <td dir="ltr">{{ e.pq }}/{{ e.measured }}</td>
+      <td dir="ltr">{% if e.delta_pp is none %}—{% elif e.delta_pp > 0 %}<span class="ok">▲ {{ e.delta_pp }}</span>{% elif e.delta_pp < 0 %}<span class="warn">▼ {{ e.delta_pp|abs }}</span>{% else %}•{% endif %}</td>
+    </tr>{% endfor %}
+  </table>
+  <p class="muted small">{{ t.countries_caveat.format(min=b.min_sites) }}
+    · <a href="{{ url_for('site.countries_json') }}">JSON (CC BY 4.0)</a> · <a href="{{ url_for('site.adoption_page', lang=lang) }}">{{ t.nav_adoption }}</a></p>
+</section>
+{% include "_scan_box.html" %}
+{% endblock %}

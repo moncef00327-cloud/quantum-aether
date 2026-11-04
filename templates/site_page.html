@@ -28,6 +28,7 @@
     <tr><th>TLS</th><td>{{ summary.tls or "—" }}</td></tr>
     {% if network %}<tr><th>{{ t.site_network }}</th><td>{{ network }}</td></tr>{% endif %}
     {% if summary.rank %}<tr><th>{{ t.site_rank }}</th><td>#{{ summary.rank }}</td></tr>{% endif %}
+    {% if country %}<tr><th>{{ t.countries_col_country }}</th><td><a href="{{ url_for('site.country_page', code=country.code, lang=lang) }}">{{ country.flag }} {{ country.name }}: #{{ country.rank }}/{{ country.total }} ({{ country.pct }}%)</a></td></tr>{% endif %}
   </table>
   <p class="muted small">
     {% if source == "scan" %}{{ t.site_source_scan }} <span dir="ltr">{{ summary.scanned_at }}</span>

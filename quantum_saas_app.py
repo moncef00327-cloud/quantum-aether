@@ -30,6 +30,7 @@ import analytics_db
 import guides
 import legal
 import monitor
+import countries
 import deadlines
 import free_alerts
 import packs
@@ -140,7 +141,7 @@ def current_lang():
 
 # الصفحات التي لها نسخة ألمانية فعلية (لمبدّل اللغة وhreflang وخريطة الموقع).
 DE_PAGES = {"site.index", "site.study", "site.monitoring", "site.adoption_page", "site.scanning_page", "site.deadlines_page",
-            "site.agency_page"}
+            "site.agency_page", "site.countries_page", "site.country_page"}
 
 
 def texts():
@@ -611,6 +612,22 @@ def cached_snapshot():
     return snap
 
 
+_COUNTRIES_CACHE = {}
+
+
+def cached_countries():
+    """ترتيب الدول، يُعاد حسابه فقط حين تتغير بيانات المتتبّع (نفس بصمة cached_snapshot)."""
+    conn = db()
+    fingerprint = tuple(conn.execute("SELECT MAX(week), COUNT(*), MAX(scanned_at), SUM(unsure) FROM adoption_results").fetchone())
+    key = current_app.config["DATA_DIR"]
+    hit = _COUNTRIES_CACHE.get(key)
+    if hit and hit[0] == fingerprint:
+        return hit[1]
+    board = countries.leaderboard(conn)
+    _COUNTRIES_CACHE[key] = (fingerprint, board)
+    return board
+
+
 def adoption_snapshot():
     """لقطة آخر أسبوع. قبل أول تشغيل للمهمة الأسبوعية نزرع أول أسبوع من بيانات الدراسة المنشورة."""
     snap = cached_snapshot()
@@ -631,6 +648,41 @@ def adoption_page():
     # في العربية نعزل اتجاه رمز الأسبوع (Unicode isolate) حتى لا ينقلب «2026-W46» إلى «W46-2026»
     iso = (lambda value: f"\u2066{value}\u2069") if current_lang() == "ar" else str
     return render_template("adoption.html", s=adoption_snapshot(), iso=iso)
+
+
+@bp.get("/adoption/countries")
+def countries_page():
+    board = cached_countries() or abort(404)
+    lang = current_lang()
+    for e in board["entries"]:
+        e["name"] = countries.name(e["code"], lang)
+    jsonld = {"@context": "https://schema.org", "@type": "Dataset", "name": "Post-quantum TLS readiness by country",
+              "description": "Share of each country's top websites (by country-code domain, Tranco top 10,000) that negotiate "
+                             "the hybrid post-quantum key exchange X25519MLKEM768, updated weekly.",
+              "url": public_base() + url_for(".countries_page"), "license": "https://creativecommons.org/licenses/by/4.0/",
+              "temporalCoverage": board["week"], "creator": {"@type": "Organization", "name": "Quantum Aether"},
+              "distribution": {"@type": "DataDownload", "encodingFormat": "application/json",
+                               "contentUrl": public_base() + url_for(".countries_json")}}
+    return render_template("countries.html", b=board, jsonld=jsonld)
+
+
+@bp.get("/adoption/countries/<code>")
+def country_page(code):
+    board = cached_countries() or abort(404)
+    entry = next((e for e in board["entries"] if e["code"] == code.lower()), None) or abort(404)
+    lang = current_lang()
+    sites = countries.country_sites(db(), entry["code"], board["week"])
+    return render_template("country.html", b=board, e=dict(entry, name=countries.name(entry["code"], lang)), sites=sites)
+
+
+@bp.get("/adoption/countries.json")
+def countries_json():
+    board = cached_countries() or abort(404)
+    body = dict(board, entries=[dict(e, name=countries.name(e["code"], "en")) for e in board["entries"]],
+                license="CC BY 4.0", source=public_base() + url_for(".countries_page"),
+                method="Country = country-code top-level domain of each Tranco top-10,000 hostname (generic-use ccTLDs such as "
+                       ".io, .ai, .tv, .co, .me excluded). pct = share of measured hostnames that negotiated X25519MLKEM768.")
+    return _open_data(current_app.response_class(json.dumps(body, ensure_ascii=False), mimetype="application/json"))
 
 
 @bp.get("/scanning")
@@ -764,9 +816,17 @@ def site_page(domain):
                   {"@context": "https://schema.org", "@type": "FAQPage",
                    "mainEntity": [{"@type": "Question", "name": f"Does {domain} use post-quantum TLS?",
                                    "acceptedAnswer": {"@type": "Answer", "text": verdict}}]}]
+    country = None
+    code = countries.code_of(domain)
+    board = cached_countries() if (summary and code) else None
+    if board:
+        entry = next((e for e in board["entries"] if e["code"] == code), None)
+        if entry:
+            country = dict(entry, name=countries.name(code, current_lang()), total=board["countries"])
     response = make_response(render_template(
         "site_page.html", domain=domain, summary=summary, source=source, verdict=verdict, history=history,
-        related=related, network=network, snippets=badge_snippets(domain) if summary else None, jsonld=jsonld),
+        related=related, network=network, snippets=badge_snippets(domain) if summary else None, jsonld=jsonld,
+        country=country),
         200 if summary else 404)  # نطاق لا نعرفه (مثل wp-login.php من الماسحات) ليس صفحة حقيقية
     return with_last_modified(response, summary["scanned_at"]) if summary else response
 
@@ -1468,6 +1528,15 @@ def og_site(domain):
                         lambda: og_image.render_result(domain, summary["grade"], summary["pq"], summary.get("unsure"), day))
 
 
+@bp.get("/og/country/<code>.png")
+def og_country(code):
+    board = cached_countries() or abort(404)
+    e = next((x for x in board["entries"] if x["code"] == code.lower()), None) or abort(404)
+    name = countries.name(e["code"], "en")
+    return _og_response(f"country|{e['code']}|{board['week']}|{e['pct']}|{e['rank']}|{board['countries']}|{e['delta_pp']}",
+                        lambda: og_image.render_country(name, e["pct"], e["rank"], board["countries"], e["delta_pp"], board["week"]))
+
+
 @bp.get("/og/scan/<scan_id>.png")
 def og_scan(scan_id):
     scan = sales_db.get_scan(db(), scan_id) or abort(404)
@@ -1511,6 +1580,11 @@ def _sitemap_pages():
     pages.append(("/scanning", _template_day("scanning.html"), de_langs))
     pages.append(("/deadlines", deadlines.UPDATED, de_langs))
     pages.append(("/agency", _template_day("agency.html"), de_langs))
+    board = countries.leaderboard(db())
+    if board:
+        week_day = adoption.week_monday(board["week"]).isoformat()
+        pages.append(("/adoption/countries", week_day, de_langs))
+        pages += [(f"/adoption/countries/{e['code']}", week_day, de_langs) for e in board["entries"]]
     pages += [(f"/guides/{slug}", g["updated"], site_langs) for slug, g in guides.GUIDES.items()]
     pages.append(("/compare", _template_day("compare.html"), site_langs))
     legal_date = os.path.getmtime(os.path.join(BASE_DIR, "legal.py"))
@@ -1616,6 +1690,12 @@ def feed():
     for slug, g in guides.GUIDES.items():
         entries.append((f"{base}/guides/{slug}", g["updated"], g["en"]["title"], g["en"]["description"]))
     entries.append((f"{base}/deadlines", deadlines.UPDATED, deadlines.TEXT["en"]["title"], deadlines.TEXT["en"]["description"]))
+    board = cached_countries()
+    if board and board["entries"]:
+        top = board["entries"][0]
+        entries.append((f"{base}/adoption/countries#{board['week']}", adoption.week_monday(board["week"]).isoformat(),
+                        f"Post-quantum TLS by country, week {board['week']}",
+                        f"{board['countries']} countries ranked; #1 {countries.name(top['code'], 'en')} at {top['pct']}%."))
     snap = cached_snapshot()
     if snap:  # مدخل جديد كل أسبوع (المعرّف يتضمن الأسبوع) فيظهر في القارئات كخبر جديد
         moved = snap["changes"]

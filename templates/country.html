@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}{{ t.country_title.format(name=e.name) }} · {{ t.brand }}{% endblock %}
+{% block description %}{{ t.country_lead.format(name=e.name, pct=e.pct, rank=e.rank, total=b.countries, measured=e.measured, week=b.week) }}{% endblock %}
+{% block og_image %}{{ abs_url('site.og_country', code=e.code) }}{% endblock %}
+{% block content %}
+<section class="card result-head">
+  <div class="grade grade-{{ 'A' if e.pct >= 50 else 'B' }}" dir="ltr">#{{ e.rank }}</div>
+  <div>
+    <p class="muted">{{ t.countries_title }}</p>
+    <h1>{{ e.flag }} {{ e.name }}</h1>
+    <p class="grade-text">{{ t.country_lead.format(name=e.name, pct=e.pct, rank=e.rank, total=b.countries, measured=e.measured, week=b.week) }}</p>
+    {% if e.delta_pp is not none %}<p class="muted small" dir="ltr">{{ "▲" if e.delta_pp > 0 else ("▼" if e.delta_pp < 0 else "•") }} {{ "%+g"|format(e.delta_pp) }} pp · {{ b.previous_week }} → {{ b.week }}</p>{% endif %}
+  </div>
+</section>
+
+{% set share_url = abs_url('site.country_page', code=e.code) %}
+{% set share_text = t.country_share.format(name=e.name, rank=e.rank, total=b.countries, pct=e.pct) %}
+<section class="card">
+  <h2>{{ t.share_title }}</h2>
+  <p>
+    <a class="button-link" target="_blank" rel="noopener" data-ev="share" href="https://www.linkedin.com/sharing/share-offsite/?url={{ share_url | urlencode }}">LinkedIn</a>
+    <a class="button-link" target="_blank" rel="noopener" data-ev="share" href="https://twitter.com/intent/tweet?text={{ share_text | urlencode }}&url={{ share_url | urlencode }}">X</a>
+  </p>
+</section>
+
+{% for key, rows in (("country_not_ready", sites.not_ready), ("country_ready", sites.ready), ("country_unsure", sites.unsure)) if rows %}
+<section class="card">
+  <h2>{{ t[key] }} ({{ rows|length }})</h2>
+  <ul class="related" dir="ltr">
+    {% for r in rows %}<li><a href="{{ url_for('site.site_page', domain=r.domain) }}">{{ r.domain }}</a>
+      <span class="muted">{{ r.grade }}{% if r.rank %} · #{{ r.rank }}{% endif %}</span></li>{% endfor %}
+  </ul>
+</section>
+{% endfor %}
+
+<p><a href="{{ url_for('site.countries_page', lang=lang) }}">← {{ t.countries_title }}</a></p>
+{% include "_scan_box.html" %}
+{% endblock %}

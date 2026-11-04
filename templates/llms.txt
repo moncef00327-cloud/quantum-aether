@@ -48,6 +48,10 @@ Full text of every guide plus the live weekly figures in one file: {{ base }}/ll
 - {{ base }}/guides/post-quantum-tls-apache-caddy-haproxy-cloudflare — the same for Apache, Caddy, HAProxy and Cloudflare.
 - {{ base }}/guides/harvest-now-decrypt-later — why key exchange must be upgraded before certificates.
 
+## Ranking by country
+
+- {{ base }}/adoption/countries — share of each country's top websites (country-code domains in the Tranco top 10,000) that negotiate X25519MLKEM768, with weekly change; one page per country at {{ base }}/adoption/countries/{cc} (e.g. /adoption/countries/de). Data: {{ base }}/adoption/countries.json (CC BY 4.0).
+
 ## Agency pack
 
 - {{ base }}/agency — 10 full reports for $199 (one payment, no expiry): after paying, a private pack page lets you scan any domain and open its full report immediately, one credit each.

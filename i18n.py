@@ -659,7 +659,8 @@ TEXTS["en"]["scanbox_title"] = "Scan your site now, free"
 # ---------------------------------------------------------------- الألمانية (Sie)
 # متاحة للصفحة الرئيسية والدراسة وصفحة الشركات فقط؛ أي نص غير مترجم هنا يبقى بالإنجليزية.
 DE_ENDPOINTS = {"site.index", "site.scan_form", "site.study", "site.monitoring", "site.monitor_login",
-                "site.adoption_page", "site.scanning_page", "site.deadlines_page", "site.agency_page"}
+                "site.adoption_page", "site.scanning_page", "site.deadlines_page", "site.agency_page",
+                "site.countries_page", "site.country_page"}
 
 TEXTS["ar"].update({
     "copy": "نسخ", "copied": "تم النسخ ✓",
@@ -1325,4 +1326,40 @@ TEXTS["de"].update({
     "pack_empty": "Alle Berichte dieses Pakets wurden genutzt.",
     "pack_reports_title": "Ihre Berichte",
     "pack_open_report": "Bericht öffnen",
+})
+
+
+# ترتيب الدول
+TEXTS["en"].update({
+    "countries_title": "Post-quantum TLS by country",
+    "countries_lead": "Which countries' top websites already protect visitors with post-quantum key exchange? {sites} sites with a country domain from the Tranco top 10,000, {countries} countries, week {week}. Updated every Monday.",
+    "countries_col_country": "Country", "countries_col_ready": "Ready", "countries_col_sites": "Sites", "countries_col_change": "vs last week (pp)",
+    "countries_caveat": "Country = the country-code domain (.de, .fr, ...), not where the server or company is. Domains such as .io, .ai, .tv, .co and .me are excluded because they are sold worldwide. Countries need at least {min} measured sites to be ranked.",
+    "country_title": "{name}: post-quantum TLS readiness",
+    "country_lead": "{pct}% of {name}'s top websites ({measured} measured) negotiate post-quantum key exchange: rank {rank} of {total} countries in week {week}.",
+    "country_share": "{name} ranks #{rank} of {total} countries for post-quantum TLS: {pct}% of its top sites are ready.",
+    "country_ready": "Ready (post-quantum key exchange)", "country_not_ready": "Not ready yet (classical key exchange)", "country_unsure": "Undetermined (probe blocked)",
+    "countries_link": "Ranking by country",
+})
+TEXTS["ar"].update({
+    "countries_title": "TLS ما بعد الكمومي حسب الدولة",
+    "countries_lead": "مواقع أي الدول تحمي زوارها بتبادل مفاتيح ما بعد كمومي؟ {sites} موقعاً بامتداد دولة من أكبر 10,000 في Tranco، {countries} دولة، الأسبوع {week}. يُحدَّث كل اثنين.",
+    "countries_col_country": "الدولة", "countries_col_ready": "جاهز", "countries_col_sites": "المواقع", "countries_col_change": "عن الأسبوع الماضي (نقطة)",
+    "countries_caveat": "الدولة = امتداد النطاق (.de و.fr...)، لا مكان الخادم أو الشركة. امتدادات مثل .io و.ai و.tv و.co و.me مستبعدة لأنها تُباع عالمياً. تحتاج الدولة {min} موقعاً مُقاساً على الأقل لتدخل الترتيب.",
+    "country_title": "{name}: الجاهزية لـ TLS ما بعد الكمومي",
+    "country_lead": "{pct}% من أكبر مواقع {name} ({measured} موقعاً مُقاساً) تتفق على تبادل مفاتيح ما بعد كمومي: المرتبة {rank} من {total} دولة في الأسبوع {week}.",
+    "country_share": "{name} في المرتبة {rank} من {total} دولة في TLS ما بعد الكمومي: {pct}% من أكبر مواقعها جاهزة.",
+    "country_ready": "جاهزة (تبادل مفاتيح ما بعد كمومي)", "country_not_ready": "غير جاهزة بعد (تبادل مفاتيح تقليدي)", "country_unsure": "غير محسومة (الفحص محجوب)",
+    "countries_link": "الترتيب حسب الدولة",
+})
+TEXTS["de"].update({
+    "countries_title": "Post-Quanten-TLS nach Ländern",
+    "countries_lead": "Die Top-Websites welcher Länder schützen Besucher schon mit Post-Quanten-Schlüsselaustausch? {sites} Websites mit Länderdomain aus den Tranco-Top-10.000, {countries} Länder, Woche {week}. Jeden Montag aktualisiert.",
+    "countries_col_country": "Land", "countries_col_ready": "Bereit", "countries_col_sites": "Websites", "countries_col_change": "zur Vorwoche (Pp.)",
+    "countries_caveat": "Land = Länderdomain (.de, .fr, ...), nicht der Standort von Server oder Firma. Domains wie .io, .ai, .tv, .co und .me sind ausgenommen, weil sie weltweit verkauft werden. Ein Land braucht mindestens {min} gemessene Websites für die Rangliste.",
+    "country_title": "{name}: Bereitschaft für Post-Quanten-TLS",
+    "country_lead": "{pct} % der Top-Websites von {name} ({measured} gemessen) handeln Post-Quanten-Schlüsselaustausch aus: Platz {rank} von {total} Ländern in Woche {week}.",
+    "country_share": "{name} liegt bei Post-Quanten-TLS auf Platz {rank} von {total} Ländern: {pct} % der Top-Websites sind bereit.",
+    "country_ready": "Bereit (Post-Quanten-Schlüsselaustausch)", "country_not_ready": "Noch nicht bereit (klassischer Schlüsselaustausch)", "country_unsure": "Unklar (Prüfung blockiert)",
+    "countries_link": "Rangliste nach Ländern",
 })
