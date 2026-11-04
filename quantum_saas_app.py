@@ -31,6 +31,7 @@ import guides
 import legal
 import monitor
 import deadlines
+import free_alerts
 import monitor_db
 import og_image
 import i18n
@@ -181,7 +182,10 @@ def is_api_request():
     return request.path.startswith("/api/")
 
 
-def perform_scan(raw_domain):
+SCAN_SOURCES = {"home", "example", "site", "scanbox", "compare", "api", "deadlines"}
+
+
+def perform_scan(raw_domain, source=None):
     conn, chash = db(), client_hash()
     since = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
     cfg = current_app.config
@@ -191,7 +195,8 @@ def perform_scan(raw_domain):
     sales_db.record_attempt(conn, chash)
     result = current_app.extensions["scanner"](raw_domain)
     scan_id = secrets.token_urlsafe(9)
-    sales_db.create_scan(conn, scan_id, secrets.token_urlsafe(32), result, chash, is_test=is_admin_visitor())
+    sales_db.create_scan(conn, scan_id, secrets.token_urlsafe(32), result, chash, is_test=is_admin_visitor(),
+                         source=source if source in SCAN_SOURCES else None)
     return scan_id, result
 
 
@@ -290,7 +295,7 @@ def index():
 def scan_form():
     raw = request.form.get("domain", "")
     try:
-        scan_id, _ = perform_scan(raw)
+        scan_id, _ = perform_scan(raw, request.form.get("src") or "home")
     except quantum_vuln_scanner.ScanError as exc:
         return render_template("index.html", error=texts()["errors"].get(exc.code, str(exc)), domain=raw,
                                jsonld=home_jsonld(), examples=home_examples()), 400
@@ -301,8 +306,10 @@ def scan_form():
 def scan_page(scan_id):
     scan = sales_db.get_scan(db(), scan_id) or abort(404)
     cfg = current_app.config
+    lang = current_lang()
+    findings = [dict(f, title=i18n.finding_text(f, lang if lang in ("en", "ar") else "en")[0]) for f in scan["result"]["findings"]]
     return render_template(
-        "scan.html", scan=scan, r=scan["result"], paid=sales_db.is_scan_paid(db(), scan_id),
+        "scan.html", scan=scan, r=scan["result"], paid=sales_db.is_scan_paid(db(), scan_id), findings=findings,
         payments_enabled=payments_enabled(), paypal_client_id=cfg["PAYPAL_CLIENT_ID"],
         crypto_networks=crypto_pay.enabled_networks(cfg), badge=badge_snippets(scan["result"]["domain"]),
         price=cfg["PRICE"], currency=cfg["CURRENCY"],
@@ -384,6 +391,62 @@ def guides_index():
     lang = current_lang()
     items = [(slug, g[lang]) for slug, g in guides.GUIDES.items()]
     return render_template("guides_index.html", items=items)
+
+
+# ---------------------------------------------------------------- «نبّهني مجاناً» (نطاق واحد، أسبوعياً، تأكيد مزدوج)
+
+@bp.post("/alerts")
+def alerts_subscribe():
+    email = (request.form.get("email") or "").strip()[:254]
+    raw = request.form.get("domain") or ""
+    state = "check_inbox"
+    if not request.form.get("consent"):
+        state = "consent_missing"
+    elif not EMAIL_RE.match(email):
+        state = "bad_email"
+    else:
+        try:
+            domain = quantum_vuln_scanner.normalize_domain(raw)
+        except quantum_vuln_scanner.ScanError:
+            abort(400)
+        mailer = current_app.extensions["mailer"]
+        if not mailer.enabled:
+            state = "unavailable"
+        else:
+            token, reason = free_alerts.subscribe(db(), email, domain, current_lang(), client_hash())
+            if reason:
+                state = reason
+            else:
+                url = public_base() + url_for(".alerts_confirm", token=token, lang=current_lang())
+                subject, text = free_alerts.confirm_email(current_lang(), domain, url, public_base())
+                if not mailer.send(email, subject, text):
+                    state = "unavailable"
+    status = 200 if state in ("check_inbox", "already_active") else 400
+    return render_template("alerts.html", state=state, domain=raw), status
+
+
+@bp.route("/alerts/confirm/<token>", methods=["GET", "POST"])
+def alerts_confirm(token):
+    """GET يعرض زراً و POST يؤكد: ماسحات الروابط في البريد (التي تفتح كل رابط) لا تؤكد نيابة عن أحد."""
+    alert = free_alerts.get(db(), token) or abort(404)
+    if request.method == "POST":
+        since = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=BADGE_MAX_AGE_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        latest = sales_db.latest_scan_for_domain(db(), alert["domain"], since)
+        free_alerts.confirm(db(), token, latest["result"] if latest else None)
+        return render_template("alerts.html", state="confirmed", domain=alert["domain"])
+    return render_template("alerts.html", state="confirm_prompt", domain=alert["domain"], token=token)
+
+
+@bp.route("/alerts/stop/<token>", methods=["GET", "POST"])
+def alerts_stop(token):
+    alert = free_alerts.get(db(), token)
+    if request.method == "POST":
+        if alert:
+            free_alerts.stop(db(), token)
+        return render_template("alerts.html", state="stopped", domain=alert["domain"] if alert else "")
+    if not alert:
+        return render_template("alerts.html", state="stopped", domain="")
+    return render_template("alerts.html", state="stop_prompt", domain=alert["domain"], token=token)
 
 
 @bp.get("/deadlines")
@@ -609,7 +672,7 @@ def compare():
         pair = {}
         for key, raw in (("a", a), ("b", b)):
             try:
-                _, result = perform_scan(raw)
+                _, result = perform_scan(raw, "compare")
                 pair[key] = result
             except quantum_vuln_scanner.ScanError as exc:
                 pair[key] = {"error": texts()["errors"].get(exc.code, str(exc)), "domain": raw}
@@ -639,7 +702,7 @@ def api_v1_scan_get():
                         report_hint=public_base() + url_for(".scan_page", scan_id=cached["id"]))
             return jsonify(body)
     try:
-        scan_id, result = perform_scan(request.args.get("domain", ""))
+        scan_id, result = perform_scan(request.args.get("domain", ""), "api")
     except quantum_vuln_scanner.ScanError as exc:
         if request.args.get("format") == "text":
             return Response(f"error: {exc}\n", mimetype="text/plain"), 400
@@ -687,7 +750,9 @@ def admin():
                            traffic=analytics_db.summary(conn, (dt.date.today() - dt.timedelta(days=13)).isoformat()),
                            scans_daily=sales_db.scans_per_day(conn, (dt.date.today() - dt.timedelta(days=13)).isoformat()),
                            card=scorecard.build(conn, current_app.config["OWNER_EMAIL"], monitor.PLANS),
-                           events=analytics_db.event_funnel(conn, (dt.date.today() - dt.timedelta(days=13)).isoformat())))
+                           events=analytics_db.event_funnel(conn, (dt.date.today() - dt.timedelta(days=13)).isoformat()),
+                           by_source=sales_db.funnel_by_source(conn, (dt.date.today() - dt.timedelta(days=30)).isoformat()),
+                           free_alert_counts=dict(conn.execute("SELECT status, COUNT(*) FROM free_alerts GROUP BY status").fetchall())))
     # كوكي دائم لسنة: كل زيارات هذا المتصفح لا تُحسب في الإحصاءات.
     response.set_cookie(ADMIN_COOKIE, admin_cookie_value(), max_age=365 * 24 * 3600, httponly=True,
                         secure=request.is_secure, samesite="Lax")
@@ -700,7 +765,7 @@ def admin():
 def api_scan():
     data = request.get_json(silent=True) or {}
     try:
-        scan_id, result = perform_scan(str(data.get("domain", "")))
+        scan_id, result = perform_scan(str(data.get("domain", "")), "api")
     except quantum_vuln_scanner.ScanError as exc:
         return jsonify(error=exc.code, message=str(exc)), 400
     return jsonify(scan_summary(scan_id, result)), 201
@@ -1636,7 +1701,7 @@ def _security_headers(response):
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
     response.headers.setdefault("X-Frame-Options", "DENY")
     response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
-    if request.path.startswith(("/report/", "/admin", "/monitor/")):
+    if request.path.startswith(("/report/", "/admin", "/monitor/", "/alerts/")):
         # رابط التقرير يحمل مفتاح الوصول: لا نخزنه ولا نرسله في Referer ولا نسمح بالفهرسة.
         response.headers["Cache-Control"] = "no-store"
         response.headers["Referrer-Policy"] = "no-referrer"

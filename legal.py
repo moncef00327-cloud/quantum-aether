@@ -77,6 +77,7 @@ PAGES = {
 
 <h2>8. Überwachungs-Abonnement</h2>
 <p>Für ein Abonnement speichern wir Ihre E-Mail-Adresse, den Tarif, die PayPal-Abonnement-ID, die von Ihnen eingetragenen Domains, deren Prüfergebnisse und Benachrichtigungen. Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO. Die Daten werden nach Vertragsende gelöscht, soweit keine gesetzlichen Aufbewahrungspflichten bestehen (Buchhaltungsunterlagen: 7 Jahre gemäß § 132 BAO).</p>
+<p>Kostenlose Änderungsbenachrichtigung: Wenn Sie auf einer Ergebnisseite „Benachrichtigen“ wählen, speichern wir Ihre E-Mail-Adresse und die Domain, um diese wöchentlich zu prüfen und Sie bei Änderungen zu informieren. Rechtsgrundlage: Ihre Einwilligung (Art. 6 Abs. 1 lit. a DSGVO), bestätigt per Link (Double-Opt-in). Unbestätigte Anfragen löschen wir nach 7 Tagen. Sie können die Einwilligung jederzeit über den Link in jeder E-Mail widerrufen; Ihre Adresse wird dann sofort gelöscht.</p>
 
 <h2>9. E-Mail-Versand</h2>
 <p>E-Mails (Zugangslink, Benachrichtigungen) versenden wir über Resend, Inc., USA. Dabei werden E-Mail-Adresse und Nachrichteninhalt übermittelt. Grundlage der Übermittlung in die USA: {P.format("bitte prüfen: Zertifizierung nach dem EU-US Data Privacy Framework oder Standardvertragsklauseln")}.</p>
@@ -116,6 +117,7 @@ PAGES = {
 
 <h2>8. Monitoring subscription</h2>
 <p>For a subscription we store your email address, plan, PayPal subscription ID, the domains you add, their scan results and alerts. Legal basis: Art. 6(1)(b) GDPR. The data are deleted after the contract ends unless statutory retention applies (accounting records: 7 years under § 132 BAO).</p>
+<p>Free change alert: if you choose "Notify me" on a result page, we store your email address and the domain to check it weekly and tell you about changes. Legal basis: your consent (Art. 6(1)(a) GDPR), confirmed by a link (double opt-in). Unconfirmed requests are deleted after 7 days. You can withdraw consent at any time with the link in every email; your address is then deleted immediately.</p>
 
 <h2>9. Email delivery</h2>
 <p>Emails (access link, alerts) are sent through Resend, Inc., USA, which receives the email address and message content. Basis for the transfer to the USA: {P.format("please verify: EU-US Data Privacy Framework certification or standard contractual clauses")}.</p>

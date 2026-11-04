@@ -1196,3 +1196,61 @@ TEXTS["de"].update({
 TEXTS["ar"]["deadlines_link"] = "متى يجب الانتقال؟ مواعيد NIST وCNSA 2.0 والاتحاد الأوروبي"
 TEXTS["en"]["deadlines_link"] = "When do you have to move? NIST, CNSA 2.0, EU and UK deadlines"
 TEXTS["de"]["deadlines_link"] = "Bis wann umstellen? Fristen von NIST, CNSA 2.0, EU und Großbritannien"
+
+
+# صفحة النتيجة: الملاحظات، الإصلاح المجاني، «مرة واحدة»، «نبّهني مجاناً»
+TEXTS["en"].update({
+    "findings_title": "What we found",
+    "free_fix_hint": "You can enable post-quantum key exchange yourself, free, with our step-by-step guides:",
+    "findings_paid_note": "The full report explains every finding for your server, with its priority and the exact configuration to fix it.",
+    "one_time": "One-time payment. No subscription.",
+    "alert_card_title": "Get an email if this changes (free)",
+    "alert_card_sub": "We re-check {domain} every week and email you only when its post-quantum status, grade or certificate warning changes. One domain, free, unsubscribe in one click.",
+    "alert_email_label": "Your email address",
+    "alert_button": "Notify me",
+    "alert_consent": "I agree that Quantum Aether may email me about this domain. I can withdraw at any time with the link in every email.",
+    "alerts_more": "More than one domain, checked daily? See monitoring",
+    "alerts_title": "Free change alert",
+    "alerts_confirm_button": "Confirm my alert",
+    "alerts_stop_button": "Stop emails and delete my address",
+    "alerts_states": {
+        "check_inbox": "Almost done: we sent a confirmation link. Your alert for {domain} starts when you click it.",
+        "consent_missing": "Please tick the consent box so we may email you.",
+        "bad_email": "That email address does not look right. Please go back and check it.",
+        "rate_limited": "Too many requests from your connection today. Please try again tomorrow.",
+        "already_active": "An alert for {domain} is already active for this address.",
+        "unavailable": "Email is temporarily unavailable. Please try again later.",
+        "confirm_prompt": "Confirm that you want a weekly-checked change alert for {domain}.",
+        "confirmed": "Confirmed. We will email you when the post-quantum status of {domain} changes. (A free alert covers one domain; confirming another domain replaces this one.)",
+        "stop_prompt": "Stop the alerts for {domain}? Your email address will be deleted.",
+        "stopped": "Done. No more emails, and your address has been deleted.",
+    },
+})
+TEXTS["ar"].update({
+    "findings_title": "ما وجدناه",
+    "free_fix_hint": "يمكنك تفعيل تبادل المفاتيح ما بعد الكمومي بنفسك مجاناً عبر أدلتنا خطوة بخطوة:",
+    "findings_paid_note": "التقرير الكامل يشرح كل ملاحظة لخادمك، مع أولويتها والإعدادات الدقيقة لإصلاحها.",
+    "one_time": "دفعة واحدة. بلا اشتراك.",
+    "alert_card_title": "تلقَّ رسالة إن تغيّر هذا (مجاناً)",
+    "alert_card_sub": "نعيد فحص {domain} كل أسبوع ونراسلك فقط حين يتغيّر وضعه ما بعد الكمومي أو درجته أو تحذير شهادته. نطاق واحد، مجاناً، وإلغاء بنقرة.",
+    "alert_email_label": "بريدك الإلكتروني",
+    "alert_button": "نبّهني",
+    "alert_consent": "أوافق على أن يراسلني الأثير الكمومي بخصوص هذا النطاق، ويمكنني سحب الموافقة في أي وقت عبر الرابط في كل رسالة.",
+    "alerts_more": "أكثر من نطاق، بفحص يومي؟ اطّلع على المراقبة",
+    "alerts_title": "تنبيه مجاني عند التغيير",
+    "alerts_confirm_button": "أكّد التنبيه",
+    "alerts_stop_button": "أوقف الرسائل واحذف بريدي",
+    "alerts_states": {
+        "check_inbox": "خطوة أخيرة: أرسلنا لك رابط تأكيد. يبدأ تنبيهك لـ {domain} حين تضغط عليه.",
+        "consent_missing": "ضع علامة على مربع الموافقة من فضلك حتى نستطيع مراسلتك.",
+        "bad_email": "يبدو أن عنوان البريد غير صحيح. ارجع وتحقق منه.",
+        "rate_limited": "طلبات كثيرة من اتصالك اليوم. حاول غداً.",
+        "already_active": "يوجد تنبيه فعّال لـ {domain} على هذا البريد.",
+        "unavailable": "البريد غير متاح مؤقتاً. حاول لاحقاً.",
+        "confirm_prompt": "أكّد أنك تريد تنبيهاً أسبوعياً عند تغيّر وضع {domain}.",
+        "confirmed": "تم التأكيد. سنراسلك حين يتغيّر وضع {domain} ما بعد الكمومي. (التنبيه المجاني لنطاق واحد؛ تأكيد نطاق آخر يحلّ محلّه.)",
+        "stop_prompt": "إيقاف التنبيهات لـ {domain}؟ سيُحذف بريدك.",
+        "stopped": "تم. لا رسائل بعد الآن، وحُذف بريدك.",
+    },
+})
+TEXTS["de"].update({k: v for k, v in TEXTS["en"].items() if k.startswith(("findings_title", "free_fix", "findings_paid", "one_time", "alert", "alerts"))})

@@ -74,6 +74,7 @@
   <form method="post" action="{{ url_for('site.scan_form') }}" data-busy>
     <input type="hidden" name="lang" value="{{ lang }}">
     <input type="hidden" name="domain" value="{{ domain }}">
+    <input type="hidden" name="src" value="site">
     <button type="submit">{{ t.site_scan_cta }}</button>
     <span class="form-busy" hidden>{{ t.scanning }}</span>
   </form>

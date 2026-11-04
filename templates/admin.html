@@ -11,6 +11,11 @@
     <tr><td>{{ events.lang }}</td><td>{{ events.monitoring_cta }}</td><td>{{ events.sample_report }}</td><td>{{ events.buy_click }}</td><td>{{ events.share }}</td><td>{{ events.badge_copy }}</td></tr>
   </table>
   <p class="muted small">Unique visitor-days, bots and admin excluded. Tracking started 2026-11-04.</p>
+  <h3>Real scans and sales by where the scan started (30 days)</h3>
+  <table class="data"><tr><th>Source</th><th>Scans</th><th>Sales</th></tr>
+    {% for row in by_source %}<tr><td>{{ row.source }}</td><td>{{ row.scans }}</td><td>{{ row.sales }}</td></tr>{% else %}<tr><td colspan="3">No real scans yet.</td></tr>{% endfor %}
+  </table>
+  <p>Free change alerts: {{ free_alert_counts.get("ACTIVE", 0) }} active · {{ free_alert_counts.get("PENDING", 0) }} awaiting confirmation</p>
 </section>
 
 <section class="card" dir="ltr">

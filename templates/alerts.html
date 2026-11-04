@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}{{ t.alerts_title }} · {{ t.brand }}{% endblock %}
+{% block head %}<meta name="robots" content="noindex">{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>{{ t.alerts_title }}</h1>
+  <p>{{ t.alerts_states[state].format(domain=domain) }}</p>
+  {% if state in ("confirm_prompt", "stop_prompt") %}
+  <form method="post">
+    <button type="submit">{{ t.alerts_confirm_button if state == "confirm_prompt" else t.alerts_stop_button }}</button>
+  </form>
+  {% endif %}
+  {% if state == "confirmed" %}<p><a href="{{ url_for('site.monitoring', lang=lang) }}" data-ev="monitoring_cta">{{ t.alerts_more }} →</a></p>{% endif %}
+  <p><a href="{{ url_for('site.index', lang=lang) }}">{{ t.scan_again }}</a></p>
+</section>
+{% endblock %}

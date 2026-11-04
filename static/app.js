@@ -57,6 +57,8 @@
       ev("example");
       var form = document.querySelector(".scan-form");
       if (!form) return;
+      var src = form.querySelector('input[name="src"]');
+      if (src) src.value = "example";
       form.querySelector('input[name="domain"]').value = link.dataset.domain;
       if (form.requestSubmit) form.requestSubmit(); else form.submit();
     });

@@ -7,6 +7,7 @@ from decimal import Decimal
 
 import adoption
 import analytics_db
+import free_alerts
 import monitor_db
 
 SCHEMA = """
@@ -48,6 +49,7 @@ def connect(path: str) -> sqlite3.Connection:
     conn.execute("PRAGMA foreign_keys=ON")
     conn.executescript(SCHEMA)
     monitor_db.init(conn)
+    free_alerts.init(conn)
     analytics_db.init(conn)
     analytics_db.init_events(conn)
     adoption.init(conn)
@@ -62,6 +64,9 @@ def _migrate(conn):
         with conn:
             conn.execute("ALTER TABLE scans ADD COLUMN is_test INTEGER NOT NULL DEFAULT 0")
             conn.execute("UPDATE scans SET is_test = 1")  # كل ما سبق الإطلاق اختبارات
+    if "source" not in {r[1] for r in conn.execute("PRAGMA table_info(scans)")}:
+        with conn:  # من أين بدأ الفحص (home/example/site/scanbox/compare/api): نعرف أي مسار يبيع
+            conn.execute("ALTER TABLE scans ADD COLUMN source TEXT")
     cols = {r[1] for r in conn.execute("PRAGMA table_info(orders)")}
     if "email" not in cols:
         with conn:
@@ -87,13 +92,23 @@ def _migrate(conn):
             conn.execute("UPDATE pageviews SET is_test = 1")
 
 
-def create_scan(conn, scan_id, report_token, result, client_hash, is_test=False):
+def create_scan(conn, scan_id, report_token, result, client_hash, is_test=False, source=None):
     with conn:
         conn.execute(
-            "INSERT INTO scans (id, report_token, domain, grade, result_json, client_hash, is_test) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO scans (id, report_token, domain, grade, result_json, client_hash, is_test, source) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             (scan_id, report_token, result["domain"], result["grade"], json.dumps(result, ensure_ascii=False), client_hash,
-             int(is_test)),
+             int(is_test), source),
         )
+
+
+def funnel_by_source(conn, since_iso):
+    """فحوص ومبيعات حقيقية حسب مصدر الفحص."""
+    cur = conn.execute(
+        "SELECT COALESCE(s.source, '(unknown)') AS source, COUNT(DISTINCT s.id) AS scans, "
+        "COUNT(DISTINCT CASE WHEN o.status = 'COMPLETED' THEN o.order_id END) AS sales "
+        "FROM scans s LEFT JOIN orders o ON o.scan_id = s.id AND o.is_test = 0 "
+        "WHERE s.is_test = 0 AND s.created_at >= ? GROUP BY 1 ORDER BY scans DESC", (since_iso,))
+    return [dict(r) for r in cur]
 
 
 def _scan_from_row(row):
