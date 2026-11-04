@@ -48,6 +48,10 @@ Full text of every guide plus the live weekly figures in one file: {{ base }}/ll
 - {{ base }}/guides/post-quantum-tls-apache-caddy-haproxy-cloudflare — the same for Apache, Caddy, HAProxy and Cloudflare.
 - {{ base }}/guides/harvest-now-decrypt-later — why key exchange must be upgraded before certificates.
 
+## Agency pack
+
+- {{ base }}/agency — 10 full reports for $199 (one payment, no expiry): after paying, a private pack page lets you scan any domain and open its full report immediately, one credit each.
+
 ## Monitoring subscription (for teams)
 
 - {{ base }}/monitoring — daily scans of up to 10 domains ($29/month) or 100 domains ($99/month) with email alerts when post-quantum key exchange is lost, a grade changes, or a certificate nears expiry. Billed monthly through PayPal; cancel any time.

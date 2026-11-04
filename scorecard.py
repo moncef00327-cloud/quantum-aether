@@ -48,7 +48,9 @@ def actual_weeks(conn, owner_email="", today=None):
             "reports": one("SELECT COUNT(*) FROM orders WHERE is_test = 0 AND status = 'COMPLETED' "
                            "AND created_at >= ? AND created_at < ?", a, b),
             "revenue": one("SELECT SUM(CAST(amount AS REAL)) FROM orders WHERE is_test = 0 AND status = 'COMPLETED' "
-                           "AND created_at >= ? AND created_at < ?", a, b),
+                           "AND created_at >= ? AND created_at < ?", a, b)
+                       + one("SELECT SUM(CAST(amount AS REAL)) FROM packs WHERE is_test = 0 AND status = 'COMPLETED' "
+                             "AND paid_at >= ? AND paid_at < ?", a, b),
             "subs": one("SELECT COUNT(*) FROM monitor_accounts WHERE status = 'ACTIVE' AND lower(email) <> lower(?) "
                         "AND created_at >= ? AND created_at < ?", owner_email, a, b),
         })

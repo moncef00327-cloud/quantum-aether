@@ -8,6 +8,7 @@ from decimal import Decimal
 import adoption
 import analytics_db
 import free_alerts
+import packs
 import monitor_db
 
 SCHEMA = """
@@ -50,6 +51,7 @@ def connect(path: str) -> sqlite3.Connection:
     conn.executescript(SCHEMA)
     monitor_db.init(conn)
     free_alerts.init(conn)
+    packs.init(conn)
     analytics_db.init(conn)
     analytics_db.init_events(conn)
     adoption.init(conn)
@@ -198,7 +200,10 @@ def stats(conn):
     revenue = {}
     for row in paid:
         revenue[row["currency"]] = revenue.get(row["currency"], Decimal("0")) + Decimal(row["amount"])
-    return {"scans": scans, "paid_orders": len(paid), "incomplete_orders": incomplete,
+    pack_count, _ = packs.revenue(conn)
+    for row in conn.execute("SELECT amount, currency FROM packs WHERE status = 'COMPLETED' AND is_test = 0"):
+        revenue[row["currency"]] = revenue.get(row["currency"], Decimal("0")) + Decimal(row["amount"])
+    return {"scans": scans, "paid_orders": len(paid), "incomplete_orders": incomplete, "packs_sold": pack_count,
             "revenue": {k: f"{v:.2f}" for k, v in revenue.items()}}
 
 

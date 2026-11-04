@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}{{ t.agency_title }} · {{ t.brand }}{% endblock %}
+{% block description %}{{ t.agency_meta.format(credits=credits, price=price|float|int) }}{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>{{ t.agency_title }}</h1>
+  <p class="lead">{{ t.agency_lead.format(credits=credits, price=price|float|int) }}</p>
+  <ul class="ticks">{% for item in t.agency_items %}<li>{{ item.format(credits=credits, each="%.2f"|format(price|float / credits), single=single|float|int) }}</li>{% endfor %}</ul>
+  <p><a href="{{ url_for('site.sample_report', lang=lang if lang != 'de' else 'en') }}" target="_blank" data-ev="sample_report">{{ t.sample_link }} →</a></p>
+</section>
+
+<section class="card buy" id="buy">
+  <h2>{{ t.agency_buy_title.format(credits=credits) }} — ${{ price }}</h2>
+  <p class="one-time">{{ t.one_time }}</p>
+  {% if payments_enabled %}
+    <p class="consent"><label><input type="checkbox" id="consent" data-ev="buy_click">
+      <span>{{ t.agency_consent }} (<a href="{{ url_for('site.legal_page', slug='agb', lang=legal_lang) }}" target="_blank">{{ t.legal_terms }}</a>)</span></label></p>
+    <div id="paypal-button-container" data-msg-consent="{{ t.consent_missing }}"
+         data-msg-error="{{ t.pay_error }}" data-msg-pending="{{ t.pay_pending }}"></div>
+    <p id="pay-message" class="form-error" role="status"></p>
+  {% else %}
+    <p class="notice">{{ t.payments_off }}</p>
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2>{{ t.agency_compare_title }}</h2>
+  <p>{{ t.agency_compare.format(single=single|float|int) }}</p>
+  <p><a href="{{ url_for('site.monitoring', lang=lang) }}" data-ev="monitoring_cta">{{ t.alerts_more }} →</a></p>
+</section>
+{% endblock %}
+{% block scripts %}
+{% if payments_enabled %}
+<script src="https://www.paypal.com/sdk/js?client-id={{ paypal_client_id | urlencode }}&currency={{ currency }}&intent=capture"></script>
+<script src="{{ url_for('static', filename='pack-checkout.js') }}"></script>
+{% endif %}
+{% endblock %}

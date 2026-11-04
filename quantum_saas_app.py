@@ -32,6 +32,7 @@ import legal
 import monitor
 import deadlines
 import free_alerts
+import packs
 import monitor_db
 import og_image
 import i18n
@@ -67,6 +68,8 @@ def _config_from_env():
         "HASH_SALT": env("QS_HASH_SALT", ""),
         "ADMIN_PASSWORD_HASH": env("QS_ADMIN_PASSWORD_HASH", ""),
         "PRICE": env("QS_PRICE", "49.00"),
+        "PACK_PRICE": env("QS_PACK_PRICE", "199.00"),
+        "PACK_CREDITS": int(env("QS_PACK_CREDITS", "10")),
         "CURRENCY": env("QS_CURRENCY", "USD"),
         "SCANS_PER_HOUR": int(env("QS_SCANS_PER_HOUR", "10")),
         "GLOBAL_SCANS_PER_HOUR": int(env("QS_GLOBAL_SCANS_PER_HOUR", "300")),
@@ -136,7 +139,8 @@ def current_lang():
 
 
 # الصفحات التي لها نسخة ألمانية فعلية (لمبدّل اللغة وhreflang وخريطة الموقع).
-DE_PAGES = {"site.index", "site.study", "site.monitoring", "site.adoption_page", "site.scanning_page", "site.deadlines_page"}
+DE_PAGES = {"site.index", "site.study", "site.monitoring", "site.adoption_page", "site.scanning_page", "site.deadlines_page",
+            "site.agency_page"}
 
 
 def texts():
@@ -182,7 +186,7 @@ def is_api_request():
     return request.path.startswith("/api/")
 
 
-SCAN_SOURCES = {"home", "example", "site", "scanbox", "compare", "api", "deadlines"}
+SCAN_SOURCES = {"home", "example", "site", "scanbox", "compare", "api", "deadlines", "pack"}
 
 
 def perform_scan(raw_domain, source=None):
@@ -391,6 +395,111 @@ def guides_index():
     lang = current_lang()
     items = [(slug, g[lang]) for slug, g in guides.GUIDES.items()]
     return render_template("guides_index.html", items=items)
+
+
+# ---------------------------------------------------------------- باقة الوكالات (10 تقارير، دفعة واحدة)
+
+@bp.get("/agency")
+def agency_page():
+    cfg = current_app.config
+    return render_template("agency.html", price=cfg["PACK_PRICE"], credits=cfg["PACK_CREDITS"], currency=cfg["CURRENCY"],
+                           single=cfg["PRICE"], payments_enabled=payments_enabled(), paypal_client_id=cfg["PAYPAL_CLIENT_ID"])
+
+
+@bp.post("/api/paypal/packs")
+def paypal_create_pack():
+    paypal = current_app.extensions["paypal"]
+    if paypal is None:
+        return jsonify(error="payments_disabled"), 503
+    data = request.get_json(silent=True) or {}
+    if data.get("consent") is not True:
+        return jsonify(error="consent_required"), 400
+    cfg = current_app.config
+    pack_id = packs.new_id()
+    try:
+        order = paypal.create_order(pack_id, cfg["PACK_PRICE"], cfg["CURRENCY"],
+                                    f"Agency pack: {cfg['PACK_CREDITS']} post-quantum TLS reports")
+    except (PayPalError, requests.RequestException) as exc:
+        log.warning("PayPal create pack order failed: %s", exc)
+        return jsonify(error="paypal_unavailable"), 502
+    packs.create(db(), pack_id, order["id"], cfg["PACK_CREDITS"], cfg["PACK_PRICE"], cfg["CURRENCY"], current_lang(),
+                 now_iso(), is_admin_visitor())
+    return jsonify(id=order["id"]), 201
+
+
+@bp.post("/api/paypal/packs/<order_id>/capture")
+def paypal_capture_pack(order_id):
+    """مثل التقرير: الخادم يلتقط ويتحقق من المبلغ والمرجع. رابط الباقة يُعاد مرة واحدة هنا ويُرسل بالبريد."""
+    paypal = current_app.extensions["paypal"]
+    if paypal is None:
+        return jsonify(error="payments_disabled"), 503
+    conn = db()
+    pack = packs.by_order(conn, order_id)
+    if not pack:
+        return jsonify(error="order_not_found"), 404
+    if pack["status"] == "COMPLETED":
+        return jsonify(status="COMPLETED", message="already_completed")
+    try:
+        order = paypal.capture_order(order_id)
+    except PayPalError as exc:
+        if exc.issue == "INSTRUMENT_DECLINED":
+            return jsonify(error="INSTRUMENT_DECLINED"), 422
+        if exc.issue == "ORDER_NOT_APPROVED":
+            return jsonify(error="order_not_approved"), 409
+        if exc.issue != "ORDER_ALREADY_CAPTURED":
+            log.warning("PayPal pack capture failed for %s: %s (%s)", order_id, exc, exc.issue)
+            return jsonify(error="capture_failed"), 502
+        try:
+            order = paypal.get_order(order_id)
+        except (PayPalError, requests.RequestException):
+            return jsonify(error="paypal_unavailable"), 502
+    except requests.RequestException:
+        return jsonify(error="paypal_unavailable"), 502
+    status, capture_id = verify_capture(order, pack["id"], pack["amount"], pack["currency"])
+    email = (order.get("payer") or {}).get("email_address")
+    token = packs.mark(conn, pack["id"], status, capture_id, email)
+    if status == "FAILED":
+        log.error("PayPal pack capture for %s did not match the expected amount/reference", order_id)
+        return jsonify(error="verification_failed"), 402
+    if status != "COMPLETED":
+        return jsonify(status=status), 202
+    pack_url = public_base() + url_for(".pack_page", token=token, lang=pack["lang"])
+    mailer = current_app.extensions["mailer"]
+    if email and mailer.enabled:
+        subject, text = packs.receipt_email(pack["lang"], dict(pack, order_id=order_id), pack_url, public_base())
+        mailer.send(email, subject, text)
+    owner = current_app.config["OWNER_EMAIL"]
+    if owner and not pack["is_test"]:
+        mailer.send(owner, f"[Quantum Aether] Agency pack sold: ${pack['amount']} — {email or '?'}",
+                    f"Pack {pack['id']} ({pack['credits']} reports)\nPayPal order {order_id}, capture {capture_id}\n"
+                    f"Buyer: {email or '?'} · language {pack['lang']}")
+    return jsonify(status="COMPLETED", pack_url=pack_url)
+
+
+@bp.get("/pack/<token>")
+def pack_page(token):
+    pack = packs.by_token(db(), token) or abort(404)
+    return render_template("pack.html", pack=pack, token=token, reports=packs.redeemed(db(), pack["id"]), error=None)
+
+
+@bp.post("/pack/<token>/redeem")
+def pack_redeem(token):
+    conn = db()
+    pack = packs.by_token(conn, token) or abort(404)
+    error = None
+    if pack["used"] >= pack["credits"]:
+        error = texts()["pack_empty"]
+    else:
+        try:
+            scan_id, _ = perform_scan(request.form.get("domain", ""), "pack")
+        except quantum_vuln_scanner.ScanError as exc:
+            error = texts()["errors"].get(exc.code, str(exc))
+        else:
+            if packs.redeem(conn, pack, scan_id):
+                return redirect(report_url(sales_db.get_scan(conn, scan_id)), code=303)
+            error = texts()["pack_empty"]
+    return render_template("pack.html", pack=packs.by_token(conn, token), token=token,
+                           reports=packs.redeemed(conn, pack["id"]), error=error), 400
 
 
 # ---------------------------------------------------------------- «نبّهني مجاناً» (نطاق واحد، أسبوعياً، تأكيد مزدوج)
@@ -1401,6 +1510,7 @@ def _sitemap_pages():
                   else study_data()["scanned_on"], de_langs))
     pages.append(("/scanning", _template_day("scanning.html"), de_langs))
     pages.append(("/deadlines", deadlines.UPDATED, de_langs))
+    pages.append(("/agency", _template_day("agency.html"), de_langs))
     pages += [(f"/guides/{slug}", g["updated"], site_langs) for slug, g in guides.GUIDES.items()]
     pages.append(("/compare", _template_day("compare.html"), site_langs))
     legal_date = os.path.getmtime(os.path.join(BASE_DIR, "legal.py"))
@@ -1701,7 +1811,7 @@ def _security_headers(response):
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
     response.headers.setdefault("X-Frame-Options", "DENY")
     response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
-    if request.path.startswith(("/report/", "/admin", "/monitor/", "/alerts/")):
+    if request.path.startswith(("/report/", "/admin", "/monitor/", "/alerts/", "/pack/")):
         # رابط التقرير يحمل مفتاح الوصول: لا نخزنه ولا نرسله في Referer ولا نسمح بالفهرسة.
         response.headers["Cache-Control"] = "no-store"
         response.headers["Referrer-Policy"] = "no-referrer"

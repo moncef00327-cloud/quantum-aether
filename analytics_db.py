@@ -88,7 +88,7 @@ def prune(conn, before_day):
 # ---------------------------------------------------------------- أحداث داخل الصفحة (بلا كوكيز)
 # نعرف بها هل يحاول الزائر الفحص أصلاً: لمس الخانة، الكتابة، مثال، إرسال، ظهور النتيجة...
 EVENT_NAMES = ("focus", "type", "example", "submit", "result", "lang", "monitoring_cta", "buy_click",
-               "share", "badge_copy", "sample_report", "error", "scan_cta", "alert_signup")
+               "share", "badge_copy", "sample_report", "error", "scan_cta", "alert_signup", "agency_cta")
 EVENTS_SCHEMA = """
 CREATE TABLE IF NOT EXISTS events (
     day      TEXT NOT NULL,

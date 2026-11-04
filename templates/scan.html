@@ -42,7 +42,7 @@
 
 <section class="card buy" id="buy">
   <h2>{{ t.buy_title }} — ${{ price }}</h2>
-  <p class="one-time">{{ t.one_time }}</p>
+  <p class="one-time">{{ t.one_time }} · <a href="{{ url_for('site.agency_page', lang=lang) }}" data-ev="agency_cta">{{ t.agency_home_link }}</a></p>
   <ul class="ticks">{% for item in t.paid_items %}<li>{{ item }}</li>{% endfor %}</ul>
   <p><a href="{{ url_for('site.sample_report', lang=lang) }}" target="_blank" data-ev="sample_report">{{ t.sample_link }} →</a></p>
   {% if paid %}

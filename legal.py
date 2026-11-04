@@ -140,6 +140,7 @@ PAGES = {
 <ul>
 <li><strong>Kostenlose Prüfung:</strong> Zusammenfassung der TLS-Konfiguration einer öffentlichen Domain (Note, TLS-Version, Schlüsselaustausch, Zertifikat).</li>
 <li><strong>Vollständiger Bericht:</strong> einmalig 49 USD je geprüfter Domain.</li>
+<li><strong>Agenturpaket:</strong> einmalig 199 USD für 10 vollständige Berichte zu frei wählbaren Domains, ohne Ablaufdatum. Jeder Bericht wird bei Nutzung eines Guthabens auf der privaten Paketseite sofort erstellt.</li>
 <li><strong>Überwachung Starter:</strong> 29 USD pro Monat, bis zu 10 Domains, tägliche Prüfung und E-Mail-Benachrichtigungen.</li>
 <li><strong>Überwachung Business:</strong> 99 USD pro Monat, bis zu 100 Domains, tägliche Prüfung und E-Mail-Benachrichtigungen.</li>
 </ul>
@@ -155,7 +156,7 @@ PAGES = {
 <p>Das Abonnement läuft auf unbestimmte Zeit und wird monatlich im Voraus abgerechnet. Es kann jederzeit im Kunden-Dashboard oder im PayPal-Konto gekündigt werden; die Überwachung endet mit der Kündigung, weitere Abbuchungen erfolgen nicht.</p>
 
 <h2>6. Rücktrittsrecht für Verbraucher</h2>
-<p>Verbraucher im Sinne des KSchG können von einem im Fernabsatz geschlossenen Vertrag binnen 14 Tagen ab Vertragsschluss ohne Angabe von Gründen zurücktreten (§ 11 FAGG). Die Erklärung ist an {EMAIL} zu richten. Beim <strong>vollständigen Bericht</strong> (digitaler Inhalt) erlischt das Rücktrittsrecht, wenn der Verbraucher vor der Zahlung ausdrücklich zugestimmt hat, dass der Bericht sofort bereitgestellt wird, und zur Kenntnis genommen hat, dass er dadurch sein Rücktrittsrecht verliert (§ 18 Abs. 1 Z 11 FAGG); diese Zustimmung wird beim Kauf durch ein Ankreuzfeld eingeholt und gespeichert. Beim <strong>Abonnement</strong> beginnt die Überwachung auf ausdrücklichen Wunsch des Verbrauchers sofort; bei einem Rücktritt innerhalb der Frist ist für die bis dahin erbrachten Leistungen ein anteiliges Entgelt zu zahlen (§ 16 FAGG).</p>
+<p>Verbraucher im Sinne des KSchG können von einem im Fernabsatz geschlossenen Vertrag binnen 14 Tagen ab Vertragsschluss ohne Angabe von Gründen zurücktreten (§ 11 FAGG). Die Erklärung ist an {EMAIL} zu richten. Beim <strong>vollständigen Bericht</strong> (digitaler Inhalt) erlischt das Rücktrittsrecht, wenn der Verbraucher vor der Zahlung ausdrücklich zugestimmt hat, dass der Bericht sofort bereitgestellt wird, und zur Kenntnis genommen hat, dass er dadurch sein Rücktrittsrecht verliert (§ 18 Abs. 1 Z 11 FAGG); diese Zustimmung wird beim Kauf durch ein Ankreuzfeld eingeholt und gespeichert. Beim <strong>Agenturpaket</strong> gilt dies für jeden bereits erstellten Bericht; vom Kauf noch nicht genutzter Berichte kann der Verbraucher binnen 14 Tagen zurücktreten und erhält den anteiligen Preis (19,90 USD je nicht genutztem Bericht) zurück. Beim <strong>Abonnement</strong> beginnt die Überwachung auf ausdrücklichen Wunsch des Verbrauchers sofort; bei einem Rücktritt innerhalb der Frist ist für die bis dahin erbrachten Leistungen ein anteiliges Entgelt zu zahlen (§ 16 FAGG).</p>
 
 <h2>7. Gewährleistung und Haftung</h2>
 <p>Gegenüber Verbrauchern gilt die gesetzliche Gewährleistung. Der Anbieter haftet nur für Vorsatz und grobe Fahrlässigkeit; dies gilt nicht für Personenschäden. Die Prüfergebnisse dienen der Information; für Entscheidungen auf ihrer Grundlage und für Folgeschäden wird gegenüber Unternehmern keine Haftung übernommen.</p>
@@ -182,6 +183,7 @@ PAGES = {
 <ul>
 <li><strong>Free scan:</strong> summary of the TLS configuration of a public domain (grade, TLS version, key exchange, certificate).</li>
 <li><strong>Full report:</strong> one-off USD 49 per scanned domain.</li>
+<li><strong>Agency pack:</strong> one-off USD 199 for 10 full reports on domains of your choice, no expiry. Each report is generated immediately when a credit is used on the private pack page.</li>
 <li><strong>Monitoring Starter:</strong> USD 29 per month, up to 10 domains, daily scans and email alerts.</li>
 <li><strong>Monitoring Business:</strong> USD 99 per month, up to 100 domains, daily scans and email alerts.</li>
 </ul>
@@ -197,7 +199,7 @@ PAGES = {
 <p>The subscription runs for an indefinite period and is billed monthly in advance. It can be cancelled at any time in the customer dashboard or in the PayPal account; monitoring ends with the cancellation and no further charges are made.</p>
 
 <h2>6. Right of withdrawal for consumers</h2>
-<p>Consumers within the meaning of the Austrian Consumer Protection Act may withdraw from a distance contract within 14 days of its conclusion without giving reasons (§ 11 FAGG). The withdrawal must be sent to {EMAIL}. For the <strong>full report</strong> (digital content), the right of withdrawal expires if, before paying, the consumer expressly agreed that the report is delivered immediately and acknowledged losing the right of withdrawal (§ 18(1)(11) FAGG); this consent is collected with a checkbox at purchase and stored. For the <strong>subscription</strong>, monitoring starts immediately at the consumer's express request; on withdrawal within the period a proportionate amount is payable for the services provided until then (§ 16 FAGG).</p>
+<p>Consumers within the meaning of the Austrian Consumer Protection Act may withdraw from a distance contract within 14 days of its conclusion without giving reasons (§ 11 FAGG). The withdrawal must be sent to {EMAIL}. For the <strong>full report</strong> (digital content), the right of withdrawal expires if, before paying, the consumer expressly agreed that the report is delivered immediately and acknowledged losing the right of withdrawal (§ 18(1)(11) FAGG); this consent is collected with a checkbox at purchase and stored. For the <strong>agency pack</strong> this applies to every report already generated; the consumer may withdraw from unused reports within 14 days and receives the proportionate price back (USD 19.90 per unused report). For the <strong>subscription</strong>, monitoring starts immediately at the consumer's express request; on withdrawal within the period a proportionate amount is payable for the services provided until then (§ 16 FAGG).</p>
 
 <h2>7. Warranty and liability</h2>
 <p>Statutory warranty applies to consumers. The provider is liable only for intent and gross negligence; this does not apply to personal injury. Scan results are for information; towards businesses no liability is accepted for decisions based on them or for consequential damages.</p>

@@ -659,7 +659,7 @@ TEXTS["en"]["scanbox_title"] = "Scan your site now, free"
 # ---------------------------------------------------------------- الألمانية (Sie)
 # متاحة للصفحة الرئيسية والدراسة وصفحة الشركات فقط؛ أي نص غير مترجم هنا يبقى بالإنجليزية.
 DE_ENDPOINTS = {"site.index", "site.scan_form", "site.study", "site.monitoring", "site.monitor_login",
-                "site.adoption_page", "site.scanning_page", "site.deadlines_page"}
+                "site.adoption_page", "site.scanning_page", "site.deadlines_page", "site.agency_page"}
 
 TEXTS["ar"].update({
     "copy": "نسخ", "copied": "تم النسخ ✓",
@@ -1254,3 +1254,75 @@ TEXTS["ar"].update({
     },
 })
 TEXTS["de"].update({k: v for k, v in TEXTS["en"].items() if k.startswith(("findings_title", "free_fix", "findings_paid", "one_time", "alert", "alerts"))})
+
+
+# باقة الوكالات
+TEXTS["en"].update({
+    "agency_title": "Agency pack",
+    "agency_meta": "{credits} full post-quantum TLS reports for ${price}, one payment, no expiry. For agencies, MSPs and auditors checking client sites.",
+    "agency_lead": "Checking post-quantum readiness for clients? Get {credits} full reports for ${price}: one payment, no subscription, no expiry.",
+    "agency_items": [
+        "{credits} full reports, ${each} each instead of ${single}",
+        "Use them on any domains, whenever you like: enter a domain on your private pack page and its full report opens at once",
+        "Every report: all findings with priority, fix steps for nginx, Apache, Caddy and Cloudflare, certificate and handshake details, printable as PDF for your client",
+        "All your reports stay listed on your pack page",
+    ],
+    "agency_buy_title": "{credits} full reports",
+    "agency_consent": "I agree that each report is delivered immediately when I use a credit, and I understand that I lose the right of withdrawal for every report already generated; unused reports can be withdrawn from within 14 days.",
+    "agency_compare_title": "One report, or ongoing checks?",
+    "agency_compare": "Need just one site? A single full report is ${single} from any scan result. Need to know the moment something changes? Daily monitoring covers up to 100 domains.",
+    "agency_home_link": "Agencies: 10 full reports for $199",
+    "pack_title": "Your agency pack",
+    "pack_left": "{left} of {total} reports left.",
+    "pack_keep_link": "Keep this page's link private: anyone who has it can use your reports. We also emailed it to you.",
+    "pack_redeem_button": "Scan and open the full report (1 credit)",
+    "pack_empty": "All reports in this pack have been used.",
+    "pack_reports_title": "Your reports",
+    "pack_open_report": "Open report",
+})
+TEXTS["ar"].update({
+    "agency_title": "باقة الوكالات",
+    "agency_meta": "{credits} تقارير كاملة لجاهزية TLS ما بعد الكم مقابل {price}$، دفعة واحدة وبلا انتهاء صلاحية. للوكالات ومزوّدي الخدمات والمدققين الذين يفحصون مواقع عملائهم.",
+    "agency_lead": "تفحص جاهزية مواقع عملائك لما بعد الكم؟ احصل على {credits} تقارير كاملة مقابل {price}$: دفعة واحدة، بلا اشتراك، بلا انتهاء صلاحية.",
+    "agency_items": [
+        "{credits} تقارير كاملة، {each}$ للتقرير بدل {single}$",
+        "استخدمها لأي نطاقات ومتى شئت: اكتب النطاق في صفحة باقتك الخاصة فيُفتح تقريره الكامل فوراً",
+        "كل تقرير: جميع الملاحظات بأولوياتها، وخطوات الإصلاح لـ nginx وApache وCaddy وCloudflare، وتفاصيل الشهادة والمصافحة، وقابل للطباعة PDF لعميلك",
+        "كل تقاريرك تبقى مدرجة في صفحة باقتك",
+    ],
+    "agency_buy_title": "{credits} تقارير كاملة",
+    "agency_consent": "أوافق على تسليم كل تقرير فوراً عند استخدام رصيد، وأعلم أنني أفقد حق التراجع عن كل تقرير أُنشئ؛ ويمكن التراجع عن التقارير غير المستخدمة خلال 14 يوماً.",
+    "agency_compare_title": "تقرير واحد، أم فحص مستمر؟",
+    "agency_compare": "تحتاج موقعاً واحداً فقط؟ التقرير الكامل الواحد بـ {single}$ من صفحة أي نتيجة فحص. تريد أن تعرف فور تغيّر شيء؟ المراقبة اليومية تغطي حتى 100 نطاق.",
+    "agency_home_link": "للوكالات: 10 تقارير كاملة مقابل 199$",
+    "pack_title": "باقة الوكالة الخاصة بك",
+    "pack_left": "بقي {left} من {total} تقارير.",
+    "pack_keep_link": "احفظ رابط هذه الصفحة سرّاً: من يملكه يستطيع استخدام تقاريرك. أرسلناه لك بالبريد أيضاً.",
+    "pack_redeem_button": "افحص وافتح التقرير الكامل (رصيد واحد)",
+    "pack_empty": "استُخدمت كل تقارير هذه الباقة.",
+    "pack_reports_title": "تقاريرك",
+    "pack_open_report": "افتح التقرير",
+})
+TEXTS["de"].update({
+    "agency_title": "Agenturpaket",
+    "agency_meta": "{credits} vollständige Post-Quanten-TLS-Berichte für {price} $, einmalige Zahlung, ohne Ablaufdatum. Für Agenturen, IT-Dienstleister und Prüfer, die Kunden-Websites prüfen.",
+    "agency_lead": "Sie prüfen die Post-Quanten-Bereitschaft Ihrer Kunden? {credits} vollständige Berichte für {price} $: einmalige Zahlung, kein Abonnement, kein Ablaufdatum.",
+    "agency_items": [
+        "{credits} vollständige Berichte, {each} $ pro Bericht statt {single} $",
+        "Für beliebige Domains, wann Sie wollen: Domain auf Ihrer privaten Paketseite eingeben, der vollständige Bericht öffnet sich sofort",
+        "Jeder Bericht: alle Befunde mit Priorität, Schritte für nginx, Apache, Caddy und Cloudflare, Zertifikats- und Handshake-Details, als PDF für Ihren Kunden druckbar",
+        "Alle Berichte bleiben auf Ihrer Paketseite aufgelistet",
+    ],
+    "agency_buy_title": "{credits} vollständige Berichte",
+    "agency_consent": "Ich stimme zu, dass jeder Bericht bei Nutzung eines Guthabens sofort bereitgestellt wird, und nehme zur Kenntnis, dass ich für jeden bereits erstellten Bericht mein Rücktrittsrecht verliere; vom Kauf nicht genutzter Berichte kann ich binnen 14 Tagen zurücktreten.",
+    "agency_compare_title": "Ein Bericht oder laufende Prüfung?",
+    "agency_compare": "Nur eine Website? Ein einzelner vollständiger Bericht kostet {single} $ auf jeder Ergebnisseite. Sie wollen sofort wissen, wenn sich etwas ändert? Die tägliche Überwachung deckt bis zu 100 Domains ab.",
+    "agency_home_link": "Für Agenturen: 10 vollständige Berichte für 199 $",
+    "pack_title": "Ihr Agenturpaket",
+    "pack_left": "{left} von {total} Berichten übrig.",
+    "pack_keep_link": "Halten Sie den Link dieser Seite privat: Wer ihn hat, kann Ihre Berichte nutzen. Wir haben ihn Ihnen auch per E-Mail geschickt.",
+    "pack_redeem_button": "Prüfen und vollständigen Bericht öffnen (1 Guthaben)",
+    "pack_empty": "Alle Berichte dieses Pakets wurden genutzt.",
+    "pack_reports_title": "Ihre Berichte",
+    "pack_open_report": "Bericht öffnen",
+})
