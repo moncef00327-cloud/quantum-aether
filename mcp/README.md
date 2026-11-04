@@ -1,5 +1,7 @@
 # Quantum Aether MCP server
 
+<!-- mcp-name: io.github.moncef00327-cloud/quantum-aether -->
+
 Let any MCP-compatible AI assistant (Claude Desktop, and others) **check a website's
 post-quantum TLS readiness** — and, with the user's consent, buy the full report or start
 monitoring — by calling Quantum Aether as a native tool.
@@ -18,7 +20,7 @@ It wraps the public Quantum Aether API. No API key. No secrets.
 ## Install
 
 ```sh
-pip install quantum-aether-mcp        # once published
+pip install quantum-aether-mcp
 # or from source:
 pip install -e .
 ```
