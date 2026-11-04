@@ -11,3 +11,6 @@ instance/
 
 tests/__pycache__/
 wordpress-plugin/*.zip
+mcp/dist/
+cli/*.tgz
+node_modules/

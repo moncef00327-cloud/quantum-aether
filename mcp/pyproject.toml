@@ -6,7 +6,8 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 keywords = ["mcp", "post-quantum", "tls", "mlkem", "x25519mlkem768", "security", "ai-tools"]
-dependencies = ["mcp>=1.2.0"]
+# mcp 2.x renamed FastMCP to MCPServer; server.py uses the 1.x API.
+dependencies = ["mcp>=1.2.0,<2"]
 
 [project.scripts]
 quantum-aether-mcp = "quantum_aether_mcp.server:main"
