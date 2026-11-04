@@ -174,6 +174,31 @@ def is_admin_visitor():
     return bool(value) and hmac.compare_digest(value, admin_cookie_value())
 
 
+OWNER_CLIENT_HOURS = 24
+
+
+@bp.before_app_request
+def _remember_owner_client():
+    """كل اتصال يحمل كوكي المدير يُسجَّل (بصمة IP مملّحة فقط). فحوص CLI/MCP/API من الاتصال نفسه خلال 24 ساعة
+    تُعدّ اختبارات، لأن تلك الأدوات لا تحمل الكوكي. نكتب مرة كل 10 دقائق على الأكثر لكل اتصال."""
+    if not is_admin_visitor() or request.path.startswith("/static/"):
+        return
+    try:
+        sales_db.remember_owner_client(db(), client_hash())
+    except Exception:  # ثانوي
+        log.exception("could not remember owner client")
+
+
+def is_test_request():
+    """طلب من المالك: كوكي المدير، أو اتصال استعمل الكوكي خلال آخر 24 ساعة (أدوات بلا متصفح)."""
+    if is_admin_visitor():
+        return True
+    try:
+        return sales_db.is_owner_client(db(), client_hash(), OWNER_CLIENT_HOURS)
+    except Exception:
+        return False
+
+
 def client_hash():
     salt = current_app.config["HASH_SALT"].encode()
     return hmac.new(salt, (request.remote_addr or "").encode(), hashlib.sha256).hexdigest()[:32]
@@ -200,7 +225,7 @@ def perform_scan(raw_domain, source=None):
     sales_db.record_attempt(conn, chash)
     result = current_app.extensions["scanner"](raw_domain)
     scan_id = secrets.token_urlsafe(9)
-    sales_db.create_scan(conn, scan_id, secrets.token_urlsafe(32), result, chash, is_test=is_admin_visitor(),
+    sales_db.create_scan(conn, scan_id, secrets.token_urlsafe(32), result, chash, is_test=is_test_request(),
                          source=source if source in SCAN_SOURCES else None)
     return scan_id, result
 
@@ -424,7 +449,7 @@ def paypal_create_pack():
         log.warning("PayPal create pack order failed: %s", exc)
         return jsonify(error="paypal_unavailable"), 502
     packs.create(db(), pack_id, order["id"], cfg["PACK_CREDITS"], cfg["PACK_PRICE"], cfg["CURRENCY"], current_lang(),
-                 now_iso(), is_admin_visitor())
+                 now_iso(), is_test_request())
     return jsonify(id=order["id"]), 201
 
 
@@ -1006,7 +1031,7 @@ def paypal_create_order():
         log.warning("PayPal create order failed: %s", exc)
         return jsonify(error="paypal_unavailable"), 502
     sales_db.create_order(conn, order["id"], scan["id"], cfg["PRICE"], cfg["CURRENCY"], consent_at=now_iso(),
-                          is_test=is_admin_visitor())
+                          is_test=is_test_request())
     return jsonify(id=order["id"]), 201
 
 
@@ -1115,7 +1140,7 @@ def api_v1_create_order():
     if not approve_url:
         return jsonify(error="paypal_unavailable"), 502
     sales_db.create_order(conn, order["id"], scan["id"], cfg["PRICE"], cfg["CURRENCY"], consent_at=now_iso(),
-                          is_test=is_admin_visitor())
+                          is_test=is_test_request())
     return jsonify(order_id=order["id"], approve_url=approve_url,
                    status_url=base + url_for(".api_v1_order_status", order_id=order["id"]),
                    amount=cfg["PRICE"], currency=cfg["CURRENCY"]), 201
@@ -1181,7 +1206,7 @@ def crypto_create_order():
         return jsonify(error="invalid_email"), 400
     order_id = f"cx-{key}-{secrets.token_urlsafe(9)}"
     sales_db.create_order(conn, order_id, scan["id"], amount, net["token"], consent_at=now_iso(),
-                          is_test=is_admin_visitor(), email=email)
+                          is_test=is_test_request(), email=email)
     return jsonify(_crypto_order_body(order_id, key, net, amount)), 201
 
 

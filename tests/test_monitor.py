@@ -395,6 +395,7 @@ class AdminExclusionAndSeoTest(unittest.TestCase):
         view(admin, "/monitoring", self.browser)
         admin.post("/api/scan", json={"domain": "example.com"})
         visitor = self.app.test_client()
+        visitor.environ_base["REMOTE_ADDR"] = "198.51.100.20"  # زائر من اتصال آخر (اتصال المالك يُعدّ اختباراً 24 ساعة)
         view(visitor, "/", self.browser)
         visitor.post("/api/scan", json={"domain": "example.org"})
         with self.db() as c:
@@ -541,6 +542,7 @@ class OrdersUtmScanBoxGermanTest(unittest.TestCase):
     # البند 2
     def test_admin_orders_are_tests_and_old_created_orders_are_incomplete(self):
         admin, visitor = self.app.test_client(), self.app.test_client()
+        visitor.environ_base["REMOTE_ADDR"] = "198.51.100.20"  # زائر من اتصال آخر
         admin.get("/admin", headers=self.auth)
         scan_id = visitor.post("/api/scan", json={"domain": "example.com"}).get_json()["scan_id"]
         admin_order = admin.post("/api/paypal/orders", json={"scan_id": scan_id, "consent": True}).get_json()["id"]

@@ -40,6 +40,12 @@ CREATE TABLE IF NOT EXISTS scan_attempts (
     created_at   TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
 CREATE INDEX IF NOT EXISTS attempts_client_time ON scan_attempts (client_hash, created_at);
+
+-- اتصالات المالك (بصمة IP مملّحة): لتصنيف فحوصه عبر CLI/MCP/API كاختبارات
+CREATE TABLE IF NOT EXISTS owner_clients (
+    client_hash TEXT PRIMARY KEY,
+    last_seen   TEXT NOT NULL
+);
 """
 
 
@@ -240,3 +246,21 @@ def recent_scans(conn, limit=50):
     rows = conn.execute("SELECT id, domain, grade, created_at, is_test FROM scans ORDER BY created_at DESC LIMIT ?",
                         (limit,)).fetchall()
     return [dict(r) for r in rows]
+
+
+def remember_owner_client(conn, client_hash):
+    """يسجّل اتصال المالك؛ لا يكتب إن سُجّل خلال آخر 10 دقائق."""
+    recent = _hours_ago(1 / 6)
+    row = conn.execute("SELECT last_seen FROM owner_clients WHERE client_hash = ?", (client_hash,)).fetchone()
+    if row and row[0] >= recent:
+        return
+    with conn:
+        conn.execute("INSERT INTO owner_clients (client_hash, last_seen) VALUES (?, strftime('%Y-%m-%dT%H:%M:%SZ', 'now')) "
+                     "ON CONFLICT(client_hash) DO UPDATE SET last_seen = excluded.last_seen", (client_hash,))
+        conn.execute("DELETE FROM owner_clients WHERE last_seen < ?", (_hours_ago(24 * 30),))
+
+
+def is_owner_client(conn, client_hash, hours):
+    row = conn.execute("SELECT 1 FROM owner_clients WHERE client_hash = ? AND last_seen >= ?",
+                       (client_hash, _hours_ago(hours))).fetchone()
+    return row is not None
