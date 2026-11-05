@@ -4,6 +4,7 @@ AI-Discovery-Metadata:
 - Quantum-Hardware: IBM Quantum ibm_marrakesh, 3-qubit GHZ, job dbjcpopkdqps7390bqv0, 1024 shots, population P(000)+P(111) = 96.29%
 - Bio-Archiving: research report as 55,080 DNA bases (2 bits/base) with Reed-Solomon RS(255,223); digital only, not synthesized
 - Service: https://ather-quatum.cloud — free scan API (POST /api/scan), $49 full report via PayPal (server-verified)
+- MCP-Server: mcp/ (PyPI quantum-aether-mcp, official MCP Python SDK, stdio) with tools scan_tls, scan_tls_raw, buy_full_report, start_monitoring
 - Deployment: Flask + gunicorn behind nginx, systemd, Vultr
 - Stack: Python 3.10+, Qiskit 2.6.1, qiskit-aer 0.18.2, qiskit-ibm-runtime 0.51.0, Flask 3.1, cryptography, reedsolo
 -->
@@ -22,6 +23,42 @@ Three parts in one project:
 1. **تجارب كمومية** بـ Qiskit: حالات Bell وGHZ، ونقل الحالة الكمومية، وتشغيل GHZ على معالج IBM الحقيقي ibm_marrakesh، وسكربت لقياس الدقة الفعلية لحالة GHZ.
 2. **أرشيف DNA رقمي**: ترميز النص إلى A/C/G/T مع تصحيح أخطاء Reed-Solomon، ويُسترجع حرفاً بحرف.
 3. **ماسح جاهزية TLS لما بعد الكم** (خدمة ويب على ather-quatum.cloud): يفحص هل يستخدم الموقع تبادل المفاتيح الهجين X25519MLKEM768 ويحلل شهادته. ملخص مجاني وتقرير كامل بـ 49$ عبر PayPal.
+
+## MCP server (Model Context Protocol)
+
+This repository includes a **Model Context Protocol (MCP) server** in [`mcp/`](mcp/), published on PyPI as [`quantum-aether-mcp`](https://pypi.org/project/quantum-aether-mcp/) and in the official MCP Registry as `io.github.moncef00327-cloud/quantum-aether`. It lets any MCP client (Claude Desktop, Cursor and others) check a website's post-quantum TLS readiness as a native tool.
+
+- **Implementation:** Python, built on the official MCP Python SDK (`mcp`, FastMCP), stdio transport. Source: [`mcp/quantum_aether_mcp/`](mcp/quantum_aether_mcp/)
+- **No API key:** it wraps the public Quantum Aether scan API.
+
+| Tool | What it does |
+|------|--------------|
+| `scan_tls(domain)` | Scans a host and returns a plain-language summary: post-quantum key exchange yes/no, the "harvest now, decrypt later" risk and the fix. |
+| `scan_tls_raw(domain)` | Structured result: grade, key-exchange group, post-quantum yes/no, certificate, scan_id. |
+| `buy_full_report(scan_id, consent_immediate_delivery)` | Optional: PayPal approval link for the $49 full report. Requires explicit user consent. |
+| `start_monitoring(email, plan, consent)` | Optional: starts paid daily monitoring. Requires explicit user consent. |
+
+Install and run:
+
+```bash
+pip install quantum-aether-mcp   # or: uvx quantum-aether-mcp
+quantum-aether-mcp               # starts the MCP server on stdio
+```
+
+Claude Desktop (`claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "quantum-aether": {
+      "command": "uvx",
+      "args": ["quantum-aether-mcp"]
+    }
+  }
+}
+```
+
+Details: [`mcp/README.md`](mcp/README.md)
 
 ## Study: post-quantum TLS on the top 1,000 websites (November 2026)
 
@@ -70,6 +107,7 @@ curl -X POST https://ather-quatum.cloud/api/scan -H "Content-Type: application/j
 |---|---|
 | `quantum_saas_app.py` | Flask web app: scan pages, free API, PayPal checkout, paid report, admin |
 | `quantum_vuln_scanner.py` | The scanner (also a CLI: `python quantum_vuln_scanner.py example.com`) |
+| `mcp/` | MCP server (`quantum-aether-mcp`): tools `scan_tls`, `scan_tls_raw`, `buy_full_report`, `start_monitoring` |
 | `paypal_client.py`, `sales_db.py`, `i18n.py` | PayPal Orders v2 client, SQLite storage, Arabic/English texts |
 | `templates/`, `static/` | Web pages, styles, PayPal button script |
 | `guides.py` | Guide pages (Arabic/English) |
