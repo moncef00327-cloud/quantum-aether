@@ -56,6 +56,31 @@ def utm_source(value):
     return f"utm:{clean}" if clean else None
 
 
+# مصادر تُعرض كسطر واحد في لوحة الإدارة (بيانات الجدول الخام لا تتغير).
+# الزائر نفسه لا يُحسب مرتين لو جاء من أكثر من صيغة للمصدر نفسه في اليوم نفسه.
+SOURCE_GROUPS = (
+    ("LinkedIn", re.compile(r"^(utm:(linked|lnkd|li$)|linkedin\.com$|lnkd\.in$)")),
+    ("Facebook", re.compile(r"^(utm:(facebook|fb$|meta$)|facebook\.com$|fb\.com$)")),
+    ("X", re.compile(r"^(utm:(twitter|x$)|x\.com$|twitter\.com$)")),
+    ("Reddit", re.compile(r"^(utm:reddit|reddit\.com$)")),
+)
+
+
+def source_group(source):
+    for name, rx in SOURCE_GROUPS:
+        if rx.match(source):
+            return name
+    return source
+
+
+def grouped_referrers(conn, where, args, limit=15):
+    seen = {}
+    for src, key in conn.execute(f"SELECT referrer, visitor || day FROM pageviews WHERE {where} AND referrer != '(internal)'", args):
+        seen.setdefault(source_group(src), set()).add(key)
+    rows = sorted(({"referrer": k, "visitors": len(v)} for k, v in seen.items()), key=lambda r: (-r["visitors"], r["referrer"]))
+    return rows[:limit]
+
+
 def record(conn, day, path, referrer, visitor, is_bot):
     with conn:
         conn.execute("INSERT INTO pageviews (day, path, referrer, visitor, is_bot) VALUES (?, ?, ?, ?, ?)",
@@ -68,8 +93,7 @@ def summary(conn, since_day):
     return {
         "daily": q(f"SELECT day, COUNT(*) AS views, COUNT(DISTINCT visitor) AS visitors FROM pageviews"
                    f" WHERE {humans} GROUP BY day ORDER BY day DESC"),
-        "referrers": q(f"SELECT referrer, COUNT(DISTINCT visitor || day) AS visitors FROM pageviews"
-                       f" WHERE {humans} AND referrer != '(internal)' GROUP BY referrer ORDER BY visitors DESC LIMIT 15"),
+        "referrers": grouped_referrers(conn, humans, (since_day,)),
         "pages": q(f"SELECT path, COUNT(*) AS views FROM pageviews WHERE {humans} GROUP BY path ORDER BY views DESC LIMIT 15"),
         "bots": conn.execute("SELECT COUNT(*) FROM pageviews WHERE is_bot = 1 AND is_test = 0 AND day >= ?", (since_day,)).fetchone()[0],
         "funnel": {

@@ -5,6 +5,7 @@ import tempfile
 import unittest
 from contextlib import closing
 
+import analytics_db
 import guides
 import monitor
 import monitor_db
@@ -572,7 +573,20 @@ class OrdersUtmScanBoxGermanTest(unittest.TestCase):
             sources = [r[0] for r in c.execute("SELECT referrer FROM pageviews ORDER BY rowid")]
         self.assertEqual(sources, ["utm:linkedin", "utm:script"])
         body = self.app.test_client().get("/admin?lang=en", headers=self.auth).get_data(as_text=True)
-        self.assertIn("utm:linkedin", body)
+        self.assertIn("<td>LinkedIn</td><td>1</td>", body)  # utm:linkedin يُعرض ضمن LinkedIn
+        self.assertNotIn("utm:linkedin", body)
+
+    def test_linkedin_sources_merged_without_double_counting(self):
+        ff = {"User-Agent": "Mozilla/5.0 Firefox/140"}
+        client = self.app.test_client()
+        view(client, "/?lang=en&utm_source=linkedin", ff)
+        view(client, "/study/top-1000-post-quantum-tls?lang=en", {**ff, "Referer": "https://www.linkedin.com/"})
+        view(self.app.test_client(), "/?utm_source=linkedi", {"User-Agent": "Mozilla/5.0 Safari/2", "Referer": "https://lnkd.in/abc"})
+        view(self.app.test_client(), "/", {"User-Agent": "Mozilla/5.0 Chrome/3", "Referer": "https://linkedin.com/feed"})
+        with self.db() as c:
+            refs = {r["referrer"]: r["visitors"] for r in analytics_db.summary(c, "2000-01-01")["referrers"]}
+        self.assertEqual(refs.get("LinkedIn"), 3)  # ثلاثة زوار، الأول بصيغتين يُحسب مرة
+        self.assertFalse([k for k in refs if "linked" in k.lower() and k != "LinkedIn"])
 
     # البند 5
     def test_scan_box_on_guides_and_study(self):
