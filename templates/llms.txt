@@ -30,7 +30,7 @@ Full text of every guide plus the live weekly figures in one file: {{ base }}/ll
 - get_tls_evidence is read-only. scan_tls starts a public HTTPS probe, consumes the existing scan quota, and stores a publicly accessible result. Never treat noindex as confidentiality.
 - Machine-readable methodology: {{ base }}/api/v1/agent/methodology
 - Archived example: {{ base }}/api/v1/agent/example — explicitly is_example:true and is_live:false; not a fresh observation.
-- Current scan summaries are free. Automatic x402 payments and Ed25519-signed receipts are not implemented. No external marketplace listing is claimed by this metadata.
+- Agents can create one-time full-report USDT Polygon orders and submit transaction hashes for on-chain verification through MCP tools. Payer consent is required for immediate report delivery. Automatic x402 settlement and signed receipts are not implemented.
 - Source: https://github.com/moncef00327-cloud/quantum-aether
 
 ## Free API
