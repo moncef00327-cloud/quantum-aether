@@ -54,13 +54,15 @@ class ActionTest(unittest.TestCase):
         self.assertEqual(self.run_with(200, CLASSIC, INPUT_MIN_GRADE="B"), 0)
 
     def test_service_problems_never_break_the_deploy(self):
-        self.assertEqual(self.run_with(429, {"error": "rate_limited"}, INPUT_REQUIRE_PQ="true"), 0)
-        self.assertEqual(self.run_with(502, {}, INPUT_REQUIRE_PQ="true"), 0)
+        self.assertEqual(self.run_with(429, {"error": "rate_limited"}, INPUT_REQUIRE_PQ="true"), 1)
+        self.assertEqual(self.run_with(502, {}, INPUT_REQUIRE_PQ="true"), 1)
+        self.assertEqual(self.run_with(500, {}, INPUT_REQUIRE_PQ="true"), 1)
+        self.assertEqual(self.run_with(200, {}, INPUT_REQUIRE_PQ="true"), 1)
 
         def down(base, domain):
             raise urllib.error.URLError("connection refused")
         os.environ["INPUT_REQUIRE_PQ"] = "true"
-        self.assertEqual(scan.main(fetcher=down), 0)
+        self.assertEqual(scan.main(fetcher=down), 1)
 
     def test_invalid_domain_fails(self):
         self.assertEqual(self.run_with(400, {"error": "invalid_domain", "message": "bad"}), 1)

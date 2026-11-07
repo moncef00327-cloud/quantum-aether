@@ -80,16 +80,16 @@ def main(fetcher=fetch):
         status, data = fetcher(base, domain)
     except (urllib.error.URLError, OSError, ValueError) as exc:
         print(f"::warning::Post-quantum TLS check skipped: scanner unreachable ({exc})")
-        return 0
+        return 1
     if status == 429:
         print("::warning::Post-quantum TLS check skipped: scan rate limit reached, try again later")
-        return 0
+        return 1
     if status == 400:
         print(f"::error::Invalid domain '{domain}': {data.get('message') or data.get('error')}")
         return 1
     if status != 200 or "grade" not in data:
         print(f"::warning::Post-quantum TLS check skipped: scanner returned HTTP {status}")
-        return 0
+        return 1
     write_env_file("GITHUB_OUTPUT", "".join([
         f"grade={data.get('grade')}\n",
         f"post-quantum={'true' if data.get('post_quantum_key_exchange') else 'false'}\n",
