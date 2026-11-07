@@ -1,3 +1,6 @@
+Privacy disclosure - the hosted API stores the domain and result and returns a public scan page. Anyone with its URL can view the summary; the full report is sold for USD 49. Do not submit confidential hostnames. Noindex is not access control.
+Grades combine key exchange with certificate validity and key strength. A post-quantum exchange can still receive F for a certificate issue. The min-grade policy and require-post-quantum policy check different conditions.
+Self-host matching scanner and action revisions with declared dependencies. Hosted-only fields are not guaranteed in local deployments. The current scanner source exposes observation status and limitations; review the deployed revision before relying on additional response fields.
 # Post-quantum TLS check — GitHub Action
 
 Check on every deploy that your site negotiates the hybrid post-quantum TLS key exchange
@@ -36,8 +39,8 @@ jobs:
 
 ## Behaviour
 
-- Fails only when you ask it to (`require-post-quantum`, `min-grade`) or the domain is invalid.
-- If the scanner is unreachable or rate-limited, it logs a warning and does **not** break your deploy.
-- Each run makes the same two TLS connections to port 443 as a browser; nothing else is sent.
+- Completed scans are checked against the requested policy. Invalid domains and failed scans fail the job.
+- Unavailable scans fail the job, including rate limits, server errors and incomplete responses.
+- The runner sends the domain to the hosted API. Its server probes the first public IPv4 address on port 443 from one location. CDN and anycast results can vary by location.
 
 Methodology and open data: https://ather-quatum.cloud/adoption
