@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}{{ commercial.business if section == 'business' else commercial.pricing }} · Quantum Aether{% endblock %}
+{% block description %}{{ commercial.lead }}{% endblock %}
+{% block content %}
+<section class="hero commercial-hero">
+  <p class="eyebrow">{{ commercial.business if section == 'business' else commercial.pricing }}</p>
+  <h1>{{ commercial.title }}</h1><p class="lead">{{ commercial.lead }}</p>
+  <div class="commercial-actions"><a class="button-link" href="{{ url_for('site.monitoring', lang=lang) }}#subscribe">{{ commercial.choose }}</a><a href="{{ url_for('site.sample_report', lang=lang if lang != 'de' else 'en') }}">{{ commercial.sample }} ↗</a></div>
+</section>
+<section class="commercial-grid plan-grid" aria-label="{{ commercial.pricing }}">
+  <article class="card"><span class="tag">{{ commercial.free }}</span><h2><bdi>0 {{ currency }}</bdi></h2><p>{{ commercial.free_desc }}</p><a class="button-link" href="{{ url_for('site.index', lang=lang) }}">{{ commercial.scan }}</a></article>
+  {% for name, plan in plans.items() %}
+  <article class="card{% if name == 'business' %} commercial-featured{% endif %}"><span class="tag">{{ commercial.monthly }}</span><h2>{{ plan.name }}</h2><p class="commercial-price"><bdi>{{ plan.price }} {{ currency }}</bdi></p><p>{{ commercial.domains.format(n=plan.domains) }}</p><a class="button-link" href="{{ url_for('site.monitoring', lang=lang) }}#subscribe">{{ commercial.choose }}</a>{% if not recurring_enabled %}<p class="small muted">{{ commercial.recurring_off }}</p>{% endif %}</article>
+  {% endfor %}
+</section>
+<section class="commercial-grid purchase-grid">
+  <article class="card"><span class="tag">{{ commercial.once }}</span><h2>{{ commercial.report }}</h2><p class="commercial-price"><bdi>{{ price }} {{ currency }}</bdi></p><p>{{ commercial.report_desc }}</p><a href="{{ url_for('site.index', lang=lang) }}">{{ commercial.scan }} ↗</a></article>
+<article class="card"><h2>{{ commercial.pack }}</h2><p>{{ commercial.pack_desc.format(n=credits) }}</p><p class="commercial-price"><bdi>{{ pack_price }} {{ currency }}</bdi> · {{ commercial.once }}</p><a class="button-link" href="{{ url_for('site.agency_page', lang=lang) }}#buy">{{ commercial.buy }}</a>{% if not payments_enabled %}<p class="notice">{{ commercial.unavailable }}</p>{% endif %}</article></section>
+<section class="commercial-grid"><article class="card"><h2>{{ commercial.billing }}</h2><p>{{ commercial.billing_desc }}</p><a href="{{ url_for('site.monitoring', lang=lang) }}#login">{{ commercial.login }} ↗</a></article><article class="card"><h2>{{ commercial.enterprise }}</h2><p>{{ commercial.enterprise_desc }}</p><a href="{{ url_for('site.openapi') }}">{{ commercial.api }} ↗</a></article></section>
+<section class="card"><h2>{{ commercial.limits }}</h2><p>{{ commercial.limits_desc }}</p></section>
+{% endblock %}

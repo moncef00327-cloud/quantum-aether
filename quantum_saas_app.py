@@ -34,6 +34,7 @@ import countries
 import deadlines
 import free_alerts
 import packs
+import business_pages
 import monitor_db
 import og_image
 import i18n
@@ -144,7 +145,7 @@ def current_lang():
 
 # الصفحات التي لها نسخة ألمانية فعلية (لمبدّل اللغة وhreflang وخريطة الموقع).
 DE_PAGES = {"site.index", "site.study", "site.monitoring", "site.adoption_page", "site.scanning_page", "site.deadlines_page",
-            "site.agency_page", "site.countries_page", "site.country_page"}
+            "site.business_page", "site.pricing_page", "site.agency_page", "site.countries_page", "site.country_page"}
 
 
 def texts():
@@ -469,6 +470,25 @@ def guides_index():
 
 
 # ---------------------------------------------------------------- باقة الوكالات (10 تقارير، دفعة واحدة)
+
+@bp.get("/business")
+def business_page():
+    return commercial_page("business")
+
+
+@bp.get("/pricing")
+def pricing_page():
+    return commercial_page("pricing")
+
+
+def commercial_page(section):
+    cfg = current_app.config
+    return render_template("commercial.html", commercial=business_pages.COPY[current_lang()],
+                           section=section, plans=monitor.PLANS, price=cfg["PRICE"],
+                           pack_price=cfg["PACK_PRICE"], credits=cfg["PACK_CREDITS"],
+                           currency=cfg["CURRENCY"], recurring_enabled=subscriptions_enabled(),
+                           payments_enabled=payments_enabled())
+
 
 @bp.get("/agency")
 def agency_page():
@@ -1674,6 +1694,8 @@ def _sitemap_pages():
                   else study_data()["scanned_on"], de_langs))
     pages.append(("/scanning", _template_day("scanning.html"), de_langs))
     pages.append(("/deadlines", deadlines.UPDATED, de_langs))
+    pages.append(("/business", _template_day("commercial.html"), de_langs))
+    pages.append(("/pricing", _template_day("commercial.html"), de_langs))
     pages.append(("/agency", _template_day("agency.html"), de_langs))
     board = countries.leaderboard(db())
     if board:

@@ -664,7 +664,7 @@ TEXTS["en"]["scanbox_title"] = "Scan your site now, free"
 
 # ---------------------------------------------------------------- الألمانية (Sie)
 # متاحة للصفحة الرئيسية والدراسة وصفحة الشركات فقط؛ أي نص غير مترجم هنا يبقى بالإنجليزية.
-DE_ENDPOINTS = {"site.index", "site.scan_form", "site.study", "site.monitoring", "site.monitor_login",
+DE_ENDPOINTS = {"site.business_page", "site.pricing_page", "site.index", "site.scan_form", "site.study", "site.monitoring", "site.monitor_login",
                 "site.adoption_page", "site.scanning_page", "site.deadlines_page", "site.agency_page",
                 "site.countries_page", "site.country_page"}
 
