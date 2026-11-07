@@ -3,7 +3,7 @@
   "name": "io.github.moncef00327-cloud/quantum-aether",
   "title": "Quantum Aether",
   "description": "Check a website's post-quantum TLS readiness (ML-KEM key exchange, certificate, grade)",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "repository": {
     "url": "https://github.com/moncef00327-cloud/quantum-aether",
     "source": "github",

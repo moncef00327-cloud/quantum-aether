@@ -171,6 +171,22 @@ paths:
         "404": { description: Unknown scan. }
         "409": { description: The report for this scan is already paid. }
         "503": { description: Stablecoin payments are not configured. }
+  /api/v1/agent/report/{scan_id}:
+    post:
+      summary: Retrieve a full report using x402 v2 payment in USDC on Base
+      description: Returns HTTP 402 and a PAYMENT-REQUIRED challenge when unpaid. Retry with the x402 PAYMENT-SIGNATURE header. The server verifies and settles the exact payment through the configured facilitator before returning the report. USDC on Base, exact amount based on current report price.
+      parameters:
+        - name: scan_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Payment settled; includes report_url and PAYMENT-RESPONSE. }
+        "202": { description: Settlement pending or reconciliation required; retry/reconcile the same payment. }
+        "402": { description: Payment required or payment invalid; see PAYMENT-REQUIRED header. }
+        "404": { description: Unknown scan. }
+        "409": { description: Report already paid. }
+        "503": { description: Base USDC receiver not configured or facilitator unavailable. }
   /api/v1/crypto/orders/{order_id}/verify:
     post:
       summary: Submit the transaction hash; returns report_url once the payment is confirmed on-chain

@@ -5,6 +5,7 @@
 # التشغيل المحلي:  python quantum_saas_app.py   ثم افتح http://127.0.0.1:5000
 # الإنتاج: gunicorn quantum_saas_app:app خلف nginx (انظر مجلد deploy/)
 import datetime as dt
+import base64
 import functools
 import glob
 import hashlib
@@ -90,6 +91,7 @@ def _config_from_env():
         "REPLY_TO": env("QS_REPLY_TO", ""),
         "USDT_POLYGON_ADDR": env("QS_USDT_POLYGON_ADDR", ""),
         "USDC_ARBITRUM_ADDR": env("QS_USDC_ARBITRUM_ADDR", ""),
+        "USDC_BASE_ADDR": env("QS_USDC_BASE_ADDR", ""),
     }
 
 
@@ -1345,6 +1347,88 @@ def crypto_verify(order_id):
             f"Order: {order_id}\nAmount: {row['amount']} {net['token']} on {net['chain']}\n"
             f"To: {net['address']}\nTransaction: {net['explorer']}{tx_hash}")
     return jsonify(status="COMPLETED", report_url=public_base() + url_for(".report", token=scan["report_token"]))
+
+
+@bp.post("/api/v1/agent/report/<scan_id>")
+def x402_agent_report(scan_id):
+    """Paid report resource using x402 v2 exact EIP-3009 on Base USDC."""
+    address = str(current_app.config.get("USDC_BASE_ADDR", "")).lower()
+    if not crypto_pay.ADDRESS_RE.fullmatch(address):
+        return jsonify(error="x402_unavailable"), 503
+    conn = db()
+    scan = sales_db.get_scan(conn, scan_id)
+    if not scan:
+        return jsonify(error="scan_not_found"), 404
+    if sales_db.is_scan_paid(conn, scan_id):
+        return jsonify(error="already_paid"), 409
+
+    price = str(current_app.config["PRICE"])
+    amount = str(crypto_pay.to_units(price, 6))
+    asset = "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
+    url = public_base() + request.path
+    requirements = {"scheme":"exact", "network":"eip155:8453", "amount":amount,
+        "asset":asset, "payTo":address, "maxTimeoutSeconds":60,
+        "extra":{"assetTransferMethod":"eip3009", "name":"USD Coin", "version":"2"}}
+    resource = {"url":url, "description":f"Quantum Aether full TLS evidence report for scan {scan_id}. Immediate delivery after payment; see terms.", "mimeType":"application/json"}
+    def payment_required(error=None):
+        challenge={"x402Version":2,"resource":resource,"accepts":[requirements]}
+        if error: challenge["error"]=error
+        encoded=base64.b64encode(json.dumps(challenge,separators=(",",":" )).encode()).decode()
+        response=jsonify({"error":"payment_required","currency":"USDC","network":"Base","amount_usd":price,"terms":current_app.config.get("PUBLIC_URL",public_base())+"/agb?lang=en"})
+        response.status_code=402;response.headers["PAYMENT-REQUIRED"]=encoded;response.headers["Cache-Control"]="no-store"
+        return response
+
+    signed=request.headers.get("PAYMENT-SIGNATURE", "")
+    if not signed: return payment_required()
+    try:
+        padded=signed+"="*((4-len(signed)%4)%4)
+        payload=json.loads(base64.urlsafe_b64decode(padded.encode()).decode())
+    except Exception:
+        return payment_required("Invalid PAYMENT-SIGNATURE")
+    accepted=payload.get("accepted",{}) if isinstance(payload,dict) else {}
+    if not isinstance(accepted,dict): accepted={}
+    signed_resource=payload.get("resource",{}) if isinstance(payload,dict) else {}
+    if not isinstance(signed_resource,dict): signed_resource={}
+    extra=accepted.get("extra",{}) if isinstance(accepted,dict) else {}
+    if not isinstance(extra,dict) or not isinstance(payload,dict) or payload.get("x402Version")!=2 or signed_resource.get("url")!=url or accepted.get("network")!="eip155:8453" or accepted.get("scheme")!="exact" or not isinstance(accepted.get("asset"),str) or accepted["asset"].lower()!=asset or not isinstance(accepted.get("payTo"),str) or accepted["payTo"].lower()!=address or str(accepted.get("amount"))!=amount or extra.get("assetTransferMethod")!="eip3009":
+        return payment_required("Payment does not match the requested amount, network, token or recipient")
+    facilitator="https://facilitator.payai.network"
+    facilitator_body={"x402Version":2,"paymentPayload":payload,"paymentRequirements":requirements}
+    try:
+        verified=requests.post(facilitator+"/verify",json=facilitator_body,timeout=20)
+        verified.raise_for_status(); verification=verified.json()
+    except (requests.RequestException, ValueError) as exc:
+        log.warning("x402 facilitator verify unavailable: %s",exc)
+        return jsonify(error="payment_verifier_unavailable"),503
+    if not verification.get("isValid"):
+        return payment_required(verification.get("invalidReason","Payment verification failed"))
+    try:
+        settled=requests.post(facilitator+"/settle",json=facilitator_body,timeout=45)
+        settlement=settled.json()
+    except (requests.RequestException, ValueError) as exc:
+        log.warning("x402 facilitator settlement uncertain: %s",exc)
+        return jsonify(error="settlement_status_unknown",message="Check the same signed payment with the facilitator before retrying."),202
+    if not settlement.get("success"):
+        if settlement.get("errorReason")=="settlement_pending":
+            return jsonify(error="settlement_pending",transaction=settlement.get("transaction"),network=settlement.get("network")),202
+        return payment_required(settlement.get("errorReason","Settlement failed"))
+    transaction=str(settlement.get("transaction", "")).lower()
+    if settlement.get("network")!="eip155:8453" or not crypto_pay.TX_RE.fullmatch(transaction):
+        log.error("x402 facilitator returned invalid settlement metadata")
+        return jsonify(error="settlement_reconciliation_required"),202
+    if sales_db.order_by_capture(conn,transaction):
+        return jsonify(error="payment_already_consumed"),409
+    order_id="x402-base-"+secrets.token_urlsafe(12)
+    sales_db.create_order(conn,order_id,scan_id,price,"USDC",consent_at=now_iso(),is_test=bool(scan.get("is_test")))
+    try:
+        sales_db.update_order(conn,order_id,"COMPLETED",transaction)
+    except sales_db.sqlite3.IntegrityError:
+        return jsonify(error="payment_already_consumed"),409
+    report_url=public_base()+url_for(".report",token=scan["report_token"])
+    response=jsonify(status="COMPLETED",report_url=report_url,order_id=order_id,transaction=transaction,network="eip155:8453",currency="USDC",amount=price)
+    response.headers["PAYMENT-RESPONSE"]=base64.b64encode(json.dumps(settlement,separators=(",",":" )).encode()).decode()
+    response.headers["Cache-Control"]="no-store"
+    return response
 
 
 @bp.get("/paypal/return")

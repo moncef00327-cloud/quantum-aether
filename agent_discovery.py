@@ -1,6 +1,7 @@
 """Discoverable public TLS tools over a stateless MCP JSON-RPC endpoint."""
 import datetime as dt
 import json
+import re
 from urllib.parse import urlsplit
 from flask import Response, current_app, jsonify, make_response, render_template, request
 from werkzeug.exceptions import HTTPException
@@ -10,7 +11,7 @@ import scan_experience
 
 UPDATED='2026-11-07'
 PROTOCOLS=('2025-11-25','2025-06-18')
-VERSION='1.2.0'
+VERSION='1.3.0'
 DOMAIN_SCHEMA={'type':'object','properties':{'domain':{'type':'string','minLength':1,'maxLength':253,'description':'Public DNS hostname, for example example.com. HTTPS port 443 only.'}},'required':['domain'],'additionalProperties':False}
 EMPTY_SCHEMA={'type':'object','properties':{},'additionalProperties':False}
 ORDER_SCHEMA={'type':'object','properties':{'scan_id':{'type':'string','minLength':1,'description':'ID returned by scan_tls.'},'consent_immediate_delivery':{'type':'boolean','const':True,'description':'Set true only after the payer explicitly agrees to immediate delivery and the applicable withdrawal-right terms.'}},'required':['scan_id','consent_immediate_delivery'],'additionalProperties':False}
@@ -20,7 +21,7 @@ TOOLS=[
  {'name':'get_tls_evidence','title':'Read stored TLS evidence without scanning','description':'Read existing TLS evidence with source, checked_at, expires_at and fresh/stale/undetermined/not_scanned state. Never starts a new network scan. A missing record is not proof that a domain is unsafe.', 'inputSchema':DOMAIN_SCHEMA,'annotations':{'readOnlyHint':True,'idempotentHint':True,'openWorldHint':False}},
  {'name':'get_methodology','title':'Understand measurement scope and limitations','description':'Get the documented measurement scope, observation states, certificate-grade rules and privacy limitations before interpreting a TLS result.','inputSchema':EMPTY_SCHEMA,'annotations':{'readOnlyHint':True,'idempotentHint':True,'openWorldHint':False}},
  {'name':'get_example_result','title':'Inspect an archived example without scanning','description':'Return an explicitly labeled archived example, not live telemetry. No payment and no network scan.','inputSchema':EMPTY_SCHEMA,'annotations':{'readOnlyHint':True,'idempotentHint':True,'openWorldHint':False}},
- {'name':'get_service_info','title':'Discover Quantum Aether capabilities and current pricing','description':'Get live endpoint locations, configured scan quotas, documentation and current full-report pricing. Automatic x402 payments and signed receipts are not available.','inputSchema':EMPTY_SCHEMA,'annotations':{'readOnlyHint':True,'idempotentHint':True,'openWorldHint':False}},
+ {'name':'get_service_info','title':'Discover Quantum Aether capabilities and current pricing','description':'Get live endpoints, quotas, report price, x402 Base USDC checkout status and limitations.','inputSchema':EMPTY_SCHEMA,'annotations':{'readOnlyHint':True,'idempotentHint':True,'openWorldHint':False}},
  {'name':'create_full_report_order','title':'Create a USDT Polygon payment order','description':'Create a one-time full-report order for an existing scan. This does not transfer funds. Only set consent_immediate_delivery true after the payer has expressly agreed to immediate delivery and applicable withdrawal terms. The payer must send USDT on Polygon and then submit its transaction hash using verify_full_report_payment.','inputSchema':ORDER_SCHEMA,'annotations':{'readOnlyHint':False,'destructiveHint':False,'idempotentHint':False,'openWorldHint':False}},
  {'name':'verify_full_report_payment','title':'Verify a Polygon transaction and unlock a paid report','description':'Submit the payer-provided Polygon transaction hash. The server checks the confirmed USDT transfer, exact order amount and recipient on chain. Returns the private report URL only after confirmation.','inputSchema':VERIFY_SCHEMA,'annotations':{'readOnlyHint':False,'destructiveHint':False,'idempotentHint':True,'openWorldHint':True}},
 ]
@@ -49,7 +50,7 @@ def manifest(base):
    'quantum_scan':{'url':base+'/api/v1/quantum-scan','method':'POST'},'stored_evidence':{'url_template':base+'/api/v1/badge/{domain}','method':'GET','starts_scan':False},
    'methodology':{'url':base+'/api/v1/agent/methodology','method':'GET'},'example':{'url':base+'/api/v1/agent/example','method':'GET','is_live':False},'health':{'url':base+'/healthz','method':'GET'}},
   'mcp':{'url':base+'/mcp','transport':'streamable-http','mode':'stateless JSON responses; no SSE stream','protocol_versions':list(PROTOCOLS),'authentication':'none','tools':[t['name'] for t in TOOLS],'active_scan_tool':'scan_tls'},
-  'pricing':{'scan_summary':{'amount':'0','currency':cfg['CURRENCY']},'full_report':{'amount':str(cfg['PRICE']),'currency':cfg['CURRENCY'],'purchase_method':'agent_assisted_crypto','network':'Polygon PoS','token':'USDT','purchase_tool':'create_full_report_order','verification_tool':'verify_full_report_payment','approval_required':True,'purchase_documentation':base+'/openapi.yaml'},'x402':{'enabled':False,'status':'not_implemented','automatic_checkout':False},'signed_receipts':{'enabled':False}},
+  'pricing':{'scan_summary':{'amount':'0','currency':cfg['CURRENCY']},'full_report':{'amount':str(cfg['PRICE']),'currency':cfg['CURRENCY'],'purchase_method':'x402','network':'Base','token':'USDC','endpoint_template':base+'/api/v1/agent/report/{scan_id}','approval_required':True,'purchase_documentation':base+'/openapi.yaml'},'x402':{'enabled':bool(re.fullmatch(r'0x[0-9a-fA-F]{40}',cfg.get('USDC_BASE_ADDR',''))),'status':'active' if re.fullmatch(r'0x[0-9a-fA-F]{40}',cfg.get('USDC_BASE_ADDR','')) else 'disabled_missing_receiver','automatic_checkout':bool(re.fullmatch(r'0x[0-9a-fA-F]{40}',cfg.get('USDC_BASE_ADDR',''))),'network':'eip155:8453','asset':'0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913','facilitator':'https://facilitator.payai.network'},'signed_receipts':{'enabled':False}},
   'limits':{'scan_attempts_per_client_per_hour':cfg['SCANS_PER_HOUR'],'global_scan_attempts_per_hour':cfg['GLOBAL_SCANS_PER_HOUR'],'rate_limit_status':429,'retry_after_seconds':3600},
   'documentation':{'human':base+'/agents?lang=en','openapi':base+'/openapi.yaml','llms':base+'/llms.txt','full_context':base+'/llms-full.txt','methodology':base+'/api/v1/agent/methodology','mcp_registry_metadata':base+'/api/v1/agent/mcp-server.json','source':'https://github.com/moncef00327-cloud/quantum-aether'},
   'directory_status':{'mcp_registry':'Official listing active; current MCP server version is '+VERSION+'.','x402_bazaar':'Not listed; automatic x402 settlement is not enabled.'},

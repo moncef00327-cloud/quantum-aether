@@ -37,12 +37,20 @@ try:
   dst=TARGET/name;dst.parent.mkdir(parents=True,exist_ok=True)
   tmp=dst.with_name(dst.name+'.agents-new');shutil.copyfile(ROOT/name,tmp);os.chmod(tmp,0o644);os.replace(tmp,dst)
  check='''
-import tempfile, quantum_saas_app
+import tempfile, json, quantum_saas_app, sales_db
 with tempfile.TemporaryDirectory() as data:
- app=quantum_saas_app.create_app({'TESTING':True,'DATA_DIR':data,'PAYPAL_CLIENT_ID':'','PAYPAL_CLIENT_SECRET':''})
+ app=quantum_saas_app.create_app({'TESTING':True,'DATA_DIR':data,'PAYPAL_CLIENT_ID':'','PAYPAL_CLIENT_SECRET':'','USDC_BASE_ADDR':'0x3855475de54c955b6d0785b6d02f57291addb064'})
  with app.test_client() as c:
   for path in ['/agents','/.well-known/agent-service.json','/api/v1/agent/methodology','/api/v1/agent/example','/api/v1/agent/mcp-server.json','/openapi.yaml','/llms.txt']:
    r=c.get(path);assert r.status_code==200,(path,r.status_code)
+  conn=sales_db.connect(data+'/quantum_saas.db')
+  conn.executescript(sales_db.SCHEMA)
+  sales_db.create_scan(conn,'x402-smoke','smoke-token',{'domain':'example.test','grade':'A','tls_version':'TLS 1.3','key_exchange_group':'X25519MLKEM768','post_quantum_key_exchange':True},'smoke-client',is_test=True)
+  conn.close()
+  r=c.post('/api/v1/agent/report/x402-smoke',json={});assert r.status_code==402
+  challenge=json.loads(__import__('base64').b64decode(r.headers['PAYMENT-REQUIRED']))
+  accepted=challenge['accepts'][0]
+  assert accepted['network']=='eip155:8453' and accepted['asset'].lower()=='0x833589fcd6edb6e08f4c7c32d4f71b54bda02913' and accepted['payTo'].lower()=='0x3855475de54c955b6d0785b6d02f57291addb064'
 '''
  subprocess.run([str(TARGET/'.venv/bin/python'),'-c',check],cwd=TARGET,check=True,env=dict(os.environ,PYTHONDONTWRITEBYTECODE='1'))
  restart()
