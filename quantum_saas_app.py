@@ -1724,6 +1724,7 @@ def _sitemap_pages():
     pages += [(f"/guides/{slug}", g["updated"], site_langs) for slug, g in guides.GUIDES.items()]
     pages.append(("/compare", _template_day("compare.html"), site_langs))
     pages.append(("/gravity", _template_day("gravity.html"), site_langs))
+    pages.append(("/agents", agent_discovery.UPDATED, site_langs))
     legal_date = os.path.getmtime(os.path.join(BASE_DIR, "legal.py"))
     legal_day = dt.datetime.fromtimestamp(legal_date, dt.timezone.utc).date().isoformat()
     pages += [(f"/{slug}", legal_day, legal_langs) for slug in legal.PAGES]
@@ -1824,6 +1825,9 @@ def feed():
          "Post-quantum TLS in the top 1,000 sites",
          "Open dataset: share of the Tranco top 1,000 that negotiate X25519MLKEM768, with per-domain results."),
     ]
+    entries.append((f"{base}/agents?lang=en", agent_discovery.UPDATED,
+                    "Quantum Aether tools for AI agents",
+                    "Public TLS and post-quantum observations through HTTP API and remote MCP, with evidence, examples and measurement limits."))
     for slug, g in guides.GUIDES.items():
         entries.append((f"{base}/guides/{slug}", g["updated"], g["en"]["title"], g["en"]["description"]))
     entries.append((f"{base}/deadlines", deadlines.UPDATED, deadlines.TEXT["en"]["title"], deadlines.TEXT["en"]["description"]))
@@ -2029,6 +2033,9 @@ def _security_headers(response):
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
     response.headers.setdefault("X-Frame-Options", "DENY")
     response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    if request.path in ('/', '/agents', '/llms.txt', '/llms-full.txt', '/openapi.yaml'):
+        response.headers.add('Link', f'<{public_base()}/.well-known/agent-service.json>; rel="service-desc"; type="application/json"')
+        response.headers.add('Link', f'<{public_base()}/agents?lang=en>; rel="service-doc"; type="text/html"')
     if request.path.startswith(('/scan/', '/api/')) or (request.endpoint == 'site.compare' and request.args.get('a')):
         response.headers.setdefault('Cache-Control', 'no-store')
         response.headers.setdefault('X-Robots-Tag', 'noindex')
@@ -2080,6 +2087,9 @@ def _too_large(_e):
 def _server_error(_e):
     return _error(500, "server_error")
 
+
+import agent_discovery
+agent_discovery.register(bp, {'base': public_base, 'db': db, 'scan': perform_scan, 'summary': scan_summary, 'sample': sample_result})
 
 import gravity_web
 gravity_web.register(bp, db)

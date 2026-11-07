@@ -116,3 +116,18 @@ Data lives in `/var/lib/quantum_saas`, settings in `/etc/quantum_saas.env`, and 
 - 96.29% is the GHZ **population** P(000)+P(111), an upper bound on the fidelity. Use `ghz_fidelity.py` for the fidelity itself.
 - The DNA sequence is a digital encoding; nothing was synthesized.
 - Shor's algorithm breaks RSA and elliptic-curve keys of any size; larger RSA keys do not provide quantum safety. What protects recorded traffic today is a post-quantum key exchange such as X25519MLKEM768.
+
+## AI agent discovery and remote MCP
+
+- Agent guide: https://ather-quatum.cloud/agents?lang=en
+- Service manifest: https://ather-quatum.cloud/.well-known/agent-service.json
+- Remote MCP (Streamable HTTP, stateless JSON): https://ather-quatum.cloud/mcp
+- Methodology: https://ather-quatum.cloud/api/v1/agent/methodology
+- Archived sample: https://ather-quatum.cloud/api/v1/agent/example
+
+Remote tools: `scan_tls`, `get_tls_evidence`, `get_methodology`,
+`get_example_result`, `get_service_info`. Scan summaries are free and use the
+existing per-client/global scan limits. Active scans store public results.
+Read-only tools do not start scans. See the manifest for actual limits and
+current full-report prices. x402 payments, signed receipts and external
+marketplace acceptance are not claimed by this release.

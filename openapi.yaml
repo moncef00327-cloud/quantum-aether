@@ -12,6 +12,7 @@ servers:
 paths:
   /api/scan:
     post:
+      operationId: scanPublicTls
       summary: Scan a public domain (free, rate limited per client)
       requestBody:
         required: true
@@ -251,6 +252,76 @@ paths:
                   limitations: { type: string }
         "400":
           description: Invalid domain.
+  /.well-known/agent-service.json:
+    get:
+      operationId: discoverQuantumAether
+      summary: Discover implemented agent tools, pricing, limits and payment status
+      responses:
+        "200":
+          description: Custom service discovery metadata; not an A2A Agent Card.
+          content:
+            application/json:
+              schema: { type: object }
+  /api/v1/agent/methodology:
+    get:
+      operationId: getTlsMethodology
+      summary: Read measurement scope, observation states and limitations without scanning
+      responses:
+        "200":
+          description: Measurement methodology, privacy limitations and interpretation rules.
+          content:
+            application/json:
+              schema: { type: object }
+  /api/v1/agent/example:
+    get:
+      operationId: getArchivedTlsExample
+      summary: Read an explicitly labeled archived example without scanning
+      responses:
+        "200":
+          description: Historical sample, is_example true and is_live false.
+          content:
+            application/json:
+              schema: { type: object }
+  /mcp:
+    post:
+      operationId: callQuantumAetherMcp
+      summary: Stateless remote MCP over Streamable HTTP with JSON responses
+      description: >
+        Supports initialize, ping, tools/list and tools/call. Use the MCP client protocol;
+        scan_tls starts a public, rate-limited probe and stores a public result.
+        Read-only tools never start scans. GET returns 405 because no SSE stream is provided.
+        No automatic payments or signed receipts are implemented.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [jsonrpc, method]
+              properties:
+                jsonrpc: { type: string, enum: ["2.0"] }
+                method: { type: string }
+                id:
+                  oneOf:
+                    - { type: string }
+                    - { type: number }
+                params: { type: object }
+      responses:
+        "200":
+          description: JSON-RPC result, protocol error, or MCP tool error.
+          content:
+            application/json:
+              schema: { type: object }
+        "202":
+          description: Notification accepted with no response body.
+        "400":
+          description: Invalid JSON-RPC request or unsupported protocol version.
+        "403":
+          description: Origin is not the configured service origin.
+        "404":
+          description: Unknown JSON-RPC method.
+        "415":
+          description: Content-Type must be application/json.
 components:
   schemas:
     ScanSummary:

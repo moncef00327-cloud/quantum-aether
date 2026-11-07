@@ -59,7 +59,7 @@ try {
         results.push({width,lang,tab,...state});
         if(state.scroll>width+2||state.h1!==1||state.lang!==lang||!state.labels||state.brokenLinks)failures.push({width,lang,tab,...state});
         if(tab==='business'&&state.resources!==3)throw Error('Business resources missing');
-        if(tab==='llm'&&state.resources!==3)throw Error('LLM resources missing');
+        if(tab==='llm'&&state.resources!==4)throw Error('LLM resources missing');
         if([390,1440].includes(width)&&['overview','business','llm'].includes(tab)){
           const shot=await c('Page.captureScreenshot',{format:'png'});await writeFile(join(output,`${tab}-${lang}-${width}.png`),Buffer.from(shot.data,'base64'));
         }
@@ -79,7 +79,7 @@ try {
   await evaluate('document.querySelector(".scanner form").dispatchEvent(new Event("submit",{bubbles:true,cancelable:true}))');await pause(1000);
   if(!await evaluate('location.pathname.startsWith("/scan/")'))throw Error('Live scanner POST did not reach report: '+await evaluate('location.href'));
 
-  const services=['/business','/pricing','/monitoring','/agency','/adoption','/guides','/research','/gravity','/sample-report','/compare','/scanning','/impressum','/datenschutz','/agb','/scan/qa-classical','/scan/qa-retry','/report/qa-private-classical'];
+  const services=['/business','/pricing','/monitoring','/agency','/adoption','/guides','/research','/gravity','/sample-report','/agents','/compare','/scanning','/impressum','/datenschutz','/agb','/scan/qa-classical','/scan/qa-retry','/report/qa-private-classical'];
   for(const width of [320,390,768,1440]){
     await c('Emulation.setDeviceMetricsOverride',{width,height:1000,deviceScaleFactor:1,mobile:width<600});
     for(const lang of ['ar','en'])for(const path of services){
@@ -96,7 +96,7 @@ try {
         await c('Input.dispatchKeyEvent',{type:'keyDown',key:'Escape',code:'Escape',windowsVirtualKeyCode:27});await pause(80);
         if(await evaluate('!!document.querySelector("aside.open")'))throw Error('Service Escape failed');
       }
-      if([390,1440].includes(width)&&['/business','/adoption','/scan/qa-classical','/monitoring'].includes(path)){
+      if([390,1440].includes(width)&&['/business','/adoption','/scan/qa-classical','/monitoring','/agents'].includes(path)){
         const shot=await c('Page.captureScreenshot',{format:'png'});await writeFile(join(output,`${path.slice(1).replaceAll('/','-')}-${lang}-${width}.png`),Buffer.from(shot.data,'base64'));
       }
     }

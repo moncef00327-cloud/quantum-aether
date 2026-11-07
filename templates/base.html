@@ -26,7 +26,8 @@
   {% for l in page_langs %}<link rel="alternate" hreflang="{{ l }}" href="{{ metadata_url(l) }}">
   {% endfor %}<link rel="alternate" hreflang="x-default" href="{{ metadata_url('en') }}">
   {% endblock %}
-  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+  <link rel="service-desc" type="application/json" href="{{ abs_url('site.agent_service_manifest') }}">
+<link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="stylesheet" href="/static/command/app.css?v=20261107-sample4">
   <link rel="stylesheet" href="/static/command/pages.css?v=20261107-sample4">
@@ -34,7 +35,7 @@
 </head>
 <body data-page="{{ request.endpoint }}">
 {% set command_title = self.title()|striptags %}
-{% set command_section = 'business' if request.endpoint in ['site.business_page','site.pricing_page','site.agency_page'] else 'monitor' if request.endpoint in ['site.monitoring','site.monitor_dashboard'] else 'tracker' if request.endpoint in ['site.adoption_page','site.countries_page','site.country_page','site.study'] else 'guides' if request.endpoint in ['site.guides_index','site.guide','site.research'] else 'scanner' %}
+{% set command_section = 'llm' if request.endpoint == 'site.agents_page' else 'business' if request.endpoint in ['site.business_page','site.pricing_page','site.agency_page'] else 'monitor' if request.endpoint in ['site.monitoring','site.monitor_dashboard'] else 'tracker' if request.endpoint in ['site.adoption_page','site.countries_page','site.country_page','site.study'] else 'guides' if request.endpoint in ['site.guides_index','site.guide','site.research'] else 'scanner' %}
 <div class="app {{ 'en' if lang != 'ar' else '' }} command-service" dir="{{ t.dir }}">
 <a class="command-skip" href="#main-content">{{ 'انتقل إلى المحتوى' if lang == 'ar' else 'Skip to content' }}</a>
 {% if lang == 'ar' %}{% include 'command/sidebar-ar.html' %}{% else %}{% include 'command/sidebar-en.html' %}{% endif %}
@@ -44,7 +45,7 @@
 <div class="content">
 <div class="service-content" id="main-content" tabindex="-1">{% block content %}{% endblock %}</div>
 <footer><span>© 2026 Quantum Aether / {{ 'أبحاث مفتوحة. تشفير قابل للتحقق.' if lang == 'ar' else 'Open research. Verifiable encryption.' }}</span>
-<div class="command-footer-links"><a href="{{ url_for('site.business_page',lang=lang) }}">{{ 'الشركات' if lang == 'ar' else ('Für Unternehmen' if lang == 'de' else 'For business') }}</a> · <a href="{{ url_for('site.pricing_page',lang=lang) }}">{{ 'الأسعار' if lang == 'ar' else 'Pricing' }}</a> · <a href="/gravity?lang={{ lang }}">Gravity</a> · <a href="/llms.txt">LLM / API</a> · <a href="{{ url_for('site.legal_page',slug='impressum',lang=legal_lang) }}">{{ t.legal_imprint }}</a> · <a href="{{ url_for('site.legal_page',slug='datenschutz',lang=legal_lang) }}">{{ t.legal_privacy }}</a> · <a href="{{ url_for('site.legal_page',slug='agb',lang=legal_lang) }}">{{ t.legal_terms }}</a>
+<div class="command-footer-links"><a href="{{ url_for('site.business_page',lang=lang) }}">{{ 'الشركات' if lang == 'ar' else ('Für Unternehmen' if lang == 'de' else 'For business') }}</a> · <a href="{{ url_for('site.pricing_page',lang=lang) }}">{{ 'الأسعار' if lang == 'ar' else 'Pricing' }}</a> · <a href="/gravity?lang={{ lang }}">Gravity</a> · <a href="{{ url_for('site.agents_page',lang=lang) }}">LLM / API</a> · <a href="{{ url_for('site.legal_page',slug='impressum',lang=legal_lang) }}">{{ t.legal_imprint }}</a> · <a href="{{ url_for('site.legal_page',slug='datenschutz',lang=legal_lang) }}">{{ t.legal_privacy }}</a> · <a href="{{ url_for('site.legal_page',slug='agb',lang=legal_lang) }}">{{ t.legal_terms }}</a>
 <div class="command-language-links">{% for l in page_langs %}<a href="{{ localized_url(l) }}" hreflang="{{ l }}" lang="{{ l }}">{{ lang_names[l] }}</a> {% endfor %}</div></div></footer>
 </div></main></div>
 <script src="/static/command/shell.js?v=20261107-sample4" defer></script>

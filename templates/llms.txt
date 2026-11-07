@@ -22,6 +22,17 @@ Full text of every guide plus the live weekly figures in one file: {{ base }}/ll
 - "What is harvest-now-decrypt-later and does it affect me?" — {{ base }}/guides/harvest-now-decrypt-later .
 - "When do I have to move to post-quantum cryptography? (NIST, CNSA 2.0, EU, UK deadlines)" — {{ base }}/deadlines (every date with its official source).
 
+## Agent discovery and remote tools
+
+- Agent guide: {{ base }}/agents?lang=en — implemented capabilities, examples, limitations and current payment status.
+- Service discovery JSON: {{ base }}/.well-known/agent-service.json — custom service metadata with real endpoints and configured limits; not an A2A Agent Card.
+- Remote MCP: {{ base }}/mcp — stateless Streamable HTTP with JSON responses; initialize, tools/list and tools/call. Tools: scan_tls, get_tls_evidence, get_methodology, get_example_result, get_service_info.
+- get_tls_evidence is read-only. scan_tls starts a public HTTPS probe, consumes the existing scan quota, and stores a publicly accessible result. Never treat noindex as confidentiality.
+- Machine-readable methodology: {{ base }}/api/v1/agent/methodology
+- Archived example: {{ base }}/api/v1/agent/example — explicitly is_example:true and is_live:false; not a fresh observation.
+- Current scan summaries are free. Automatic x402 payments and Ed25519-signed receipts are not implemented. No external marketplace listing is claimed by this metadata.
+- Source: https://github.com/moncef00327-cloud/quantum-aether
+
 ## Free API
 
 - `POST {{ base }}/api/scan` with JSON `{"domain": "example.com"}` returns a summary: grade (A/B/C/F), TLS version, negotiated key-exchange group, whether it is post-quantum, certificate key, number of findings. Rate limited per client.
