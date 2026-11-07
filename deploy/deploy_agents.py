@@ -57,7 +57,8 @@ with tempfile.TemporaryDirectory() as data:
  for path in ['/agents?lang=ar','/agents?lang=en','/.well-known/agent-service.json','/api/v1/agent/methodology','/api/v1/agent/example','/api/v1/agent/mcp-server.json','/llms.txt','/openapi.yaml']:
   data=fetch(path);print('verified',path,len(data))
  manifest=json.loads(fetch('/.well-known/agent-service.json'))
- assert manifest['pricing']['x402']['enabled'] is False
+ assert manifest['pricing']['x402']['enabled'] is True
+ assert manifest['pricing']['x402']['network']=='eip155:8453'
  print(json.dumps({'status':'published','url':BASE,'backup':str(backup),'files':FILES},indent=2))
 except BaseException:
  for name in FILES:
