@@ -6,12 +6,15 @@ Full text of every guide plus the live weekly figures in one file: {{ base }}/ll
 
 ## Key facts (current, citable with attribution to Quantum Aether, ather-quatum.cloud)
 
-- In a November 2026 scan of the Tranco top 1,000 domains, 712 answered over HTTPS and 425 of them (59.7%) negotiated the hybrid post-quantum key exchange X25519MLKEM768; the rest still used classical key exchange only.
-- Major sites still on classical key exchange at that time included amazon.com, github.com, wikipedia.org, netflix.com and bing.com.
+- The archived November 2026 study reported 712 HTTPS responses and 425 post-quantum selections (59.7%) in the Tranco top 1,000 sample. Its original files are preserved. A later raw-evidence audit identified {{ retry_count }} retry-only HelloRetryRequest responses; new measurements classify those as undetermined, not confirmed classical exchanges. See the study's methodology note before comparing percentages.
+- Classical exchange was observed for amazon.com, github.com, wikipedia.org and netflix.com in that sample. Retry-only evidence such as bing.com is undetermined; rescan before making a current claim.
 - Chrome, Firefox and Edge negotiate X25519MLKEM768 by default today; what determines protection is the server (and any CDN or TLS-terminating proxy in front of it).
 - Certificates remain classical (RSA/ECDSA) on essentially all sites, because browsers do not yet accept ML-DSA certificates; this is expected, not a misconfiguration.
 
 ## What this reference answers
+
+- Badge verification: GET {{ base }}/api/v1/badge/<domain> — stored evidence, timestamps and fresh/stale/undetermined state; never starts a scan. Human verification: {{ base }}/verify/<domain>.
+- API consumers must inspect observation_status. A false post_quantum_key_exchange flag can mean classical or undetermined. One observed TLS connection is not a comprehensive security assessment.
 
 - "Does <domain> use post-quantum TLS / X25519MLKEM768?" — scan it: GET {{ base }}/api/v1/scan?domain=<domain> , or see {{ base }}/site/<domain>.
 - "How do I enable post-quantum TLS on nginx / Apache / Caddy / Cloudflare?" — step-by-step guides at {{ base }}/guides .

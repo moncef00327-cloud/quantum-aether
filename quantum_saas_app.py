@@ -40,6 +40,8 @@ import i18n
 import quantum_vuln_scanner
 import sales_db
 import scorecard
+import scan_experience
+import badge_evidence
 from mailer import Mailer
 from paypal_client import SUBSCRIPTION_LIVE_STATUSES, PayPalClient, PayPalError, verify_capture, verify_subscription
 
@@ -91,6 +93,7 @@ def _config_from_env():
 
 def create_app(overrides=None, scanner=None, paypal=None, mailer=None, chain=None):
     app = Flask(__name__)
+    app.config['MAX_CONTENT_LENGTH'] = 128 * 1024
     app.config.update(_config_from_env())
     app.config.update(overrides or {})
     if not app.config["HASH_SALT"]:
@@ -154,11 +157,35 @@ def _inject():
     return {"t": i18n.TEXTS[lang], "lang": lang, "other_lang": "en" if lang == "ar" else "ar",
             "legal_lang": "de" if lang == "de" else "en", "lang_names": i18n.LANG_NAMES,
             "page_langs": ["en", "ar", "de"] if request.endpoint in DE_PAGES else ["en", "ar"],
-            "abs_url": lambda endpoint, **kw: public_base() + url_for(endpoint, **kw)}
+            "abs_url": lambda endpoint, **kw: public_base() + url_for(endpoint, **kw),
+            "localized_url": localized_url, "metadata_url": metadata_url,
+            "sx": scan_experience.COPY[lang]}
 
 
 def public_base():
     return current_app.config["PUBLIC_URL"] or request.url_root.rstrip("/")
+
+
+def localized_url(lang, canonical=False):
+    values = dict(request.view_args or {})
+    if request.endpoint == 'site.compare' and not canonical:
+        values.update({k: request.args[k][:4096] for k in ('a', 'b') if request.args.get(k)})
+    if request.endpoint:
+        return public_base() + url_for(request.endpoint, **values, lang=lang)
+    return public_base() + urllib.parse.quote(request.path, safe='/') + '?lang=' + lang
+
+
+def metadata_url(lang):
+    return localized_url(lang, canonical=True)
+
+
+def json_object():
+    data = request.get_json(silent=True)
+    if data is None:
+        return {}
+    if not isinstance(data, dict):
+        abort(400)
+    return data
 
 
 ADMIN_COOKIE = "qa_admin"
@@ -223,10 +250,11 @@ def perform_scan(raw_domain, source=None):
             or sales_db.count_attempts_since(conn, since) >= cfg["GLOBAL_SCANS_PER_HOUR"]):
         abort(429)
     sales_db.record_attempt(conn, chash)
+    raw_domain = quantum_vuln_scanner.normalize_domain(raw_domain)
     result = current_app.extensions["scanner"](raw_domain)
     scan_id = secrets.token_urlsafe(9)
     sales_db.create_scan(conn, scan_id, secrets.token_urlsafe(32), result, chash, is_test=is_test_request(),
-                         source=source if source in SCAN_SOURCES else None)
+                         source=source if isinstance(source, str) and source in SCAN_SOURCES else None)
     return scan_id, result
 
 
@@ -239,7 +267,10 @@ def scan_summary(scan_id, result):
         "scanned_at": result["scanned_at"],
         "tls_version": kx.get("version") or cert.get("negotiated_version"),
         "key_exchange_group": kx.get("group"),
-        "post_quantum_key_exchange": bool(kx.get("pq")),
+        "post_quantum_key_exchange": scan_experience.status(result) == 'observed_pq',
+        "observation_status": scan_experience.status(result),
+        "port": 443,
+        "limitations": scan_experience.LIMITATION,
         "certificate_key": f"{cert.get('key_algorithm')}-{cert.get('key_bits')}",
         "certificate_valid": bool(cert.get("verified")),
         "findings_in_full_report": len(result["findings"]),
@@ -318,7 +349,7 @@ def home_examples():
 @bp.get("/")
 def index():
     return render_template("index.html", error=None, domain=request.args.get("domain", "")[:253],
-                           jsonld=home_jsonld(), examples=home_examples())
+                           jsonld=home_jsonld(), examples=home_examples(), study_snapshot=study_data())
 
 
 @bp.post("/scan")
@@ -328,7 +359,7 @@ def scan_form():
         scan_id, _ = perform_scan(raw, request.form.get("src") or "home")
     except quantum_vuln_scanner.ScanError as exc:
         return render_template("index.html", error=texts()["errors"].get(exc.code, str(exc)), domain=raw,
-                               jsonld=home_jsonld(), examples=home_examples()), 400
+                               jsonld=home_jsonld(), examples=home_examples(), study_snapshot=study_data()), 400
     return redirect(url_for(".scan_page", scan_id=scan_id, lang=current_lang()), code=303)
 
 
@@ -343,6 +374,7 @@ def scan_page(scan_id):
         payments_enabled=payments_enabled(), paypal_client_id=cfg["PAYPAL_CLIENT_ID"],
         crypto_networks=crypto_pay.enabled_networks(cfg), badge=badge_snippets(scan["result"]["domain"]),
         price=cfg["PRICE"], currency=cfg["CURRENCY"],
+        observation=scan_experience.status(scan['result']), next_steps=scan_experience.advice(scan['result']),
     )
 
 
@@ -352,7 +384,8 @@ def report(token):
     lang = current_lang()
     findings = [dict(f, text=i18n.finding_text(f, lang)) for f in scan["result"]["findings"]]
     return render_template("report.html", scan=scan, r=scan["result"], findings=findings,
-                           remediation=i18n.REMEDIATION, token=token)
+                           remediation=i18n.REMEDIATION, token=token,
+                           observation=scan_experience.status(scan['result']))
 
 
 SAMPLE_FILE = os.path.join(BASE_DIR, "data", "sample_report.json")
@@ -370,7 +403,7 @@ def sample_report():
     r = sample_result()
     findings = [dict(f, text=i18n.finding_text(f, current_lang())) for f in r["findings"]]
     return render_template("report.html", scan=None, r=r, findings=findings, remediation=i18n.REMEDIATION,
-                           token=None, sample=True)
+                           token=None, sample=True, observation=scan_experience.status(r))
 
 
 @bp.get("/report/<token>/dna.txt")
@@ -401,6 +434,18 @@ STUDY_NOTABLE = ["amazon.com", "github.com", "wikipedia.org", "netflix.com", "bi
 def study_data():
     with open(STUDY_FILE, encoding="utf-8") as f:
         return json.load(f)
+
+
+@functools.lru_cache(maxsize=1)
+def study_retry_domains():
+    """Audit flags from immutable raw evidence, without rewriting the published archive."""
+    domains = set()
+    with open(adoption.RAW_STUDY_FILE, encoding='utf-8') as source:
+        for line in source:
+            row = json.loads(line)
+            if row.get('ok') and row.get('key_exchange', {}).get('hrr'):
+                domains.add(row['domain'])
+    return frozenset(domains)
 
 
 # ---------------------------------------------------------------- الصفحات القانونية (النمسا)
@@ -437,7 +482,7 @@ def paypal_create_pack():
     paypal = current_app.extensions["paypal"]
     if paypal is None:
         return jsonify(error="payments_disabled"), 503
-    data = request.get_json(silent=True) or {}
+    data = json_object()
     if data.get("consent") is not True:
         return jsonify(error="consent_required"), 400
     cfg = current_app.config
@@ -609,7 +654,7 @@ def study():
     by_domain = {s["domain"]: s for s in d["sites"]}
     notable = [by_domain[n] for n in STUDY_NOTABLE if n in by_domain and not by_domain[n]["pq"]]
     notable.sort(key=lambda s: s["rank"])
-    return render_template("study.html", d=d, pct=pct, notable=notable)
+    return render_template("study.html", d=d, pct=pct, notable=notable, retry_domains=study_retry_domains())
 
 
 @bp.get("/study/top-1000-post-quantum-tls.json")
@@ -748,7 +793,7 @@ def known_result_for(domain):
         r = scan["result"]
         tls = r["key_exchange"].get("version") or r["certificate"].get("negotiated_version")
         return ({"domain": domain, "grade": r["grade"], "group": r["key_exchange"].get("group"), "tls": tls,
-                 "pq": bool(r["key_exchange"].get("pq")), "unsure": adoption.is_unsure(r["key_exchange"], tls),
+                 "pq": scan_experience.status(r) == 'observed_pq', "unsure": adoption.is_unsure(r["key_exchange"], tls),
                  "scanned_at": r["scanned_at"]}, "scan")
     weekly = adoption.latest_for(db(), domain)
     if weekly:
@@ -757,7 +802,9 @@ def known_result_for(domain):
                  "week": weekly["week"], "rank": weekly["rank"]}, "weekly")
     site = study_by_domain().get(domain)
     if site:
-        return (dict(site, scanned_at=study_data()["scanned_on"]), "study")
+        unsure = domain in study_retry_domains()
+        return (dict(site, scanned_at=study_data()["scanned_on"], unsure=unsure,
+                     pq=bool(site['pq']) and not unsure), "study")
     return (None, None)
 
 
@@ -912,7 +959,9 @@ def terminal_report(result):
     kx, cert = result["key_exchange"], result["certificate"]
     g = result["grade"]
     color = {"A": "32", "B": "36", "C": "33", "F": "31"}.get(g, "0")
-    pq = "yes (hybrid ML-KEM)" if kx.get("pq") else "NO — classical, harvest-now-decrypt-later risk"
+    state = scan_experience.status(result)
+    pq = 'undetermined — verify with a compatible TLS client' if state == 'undetermined' else (
+        "yes (hybrid ML-KEM)" if state == 'observed_pq' else "NO — classical, harvest-now-decrypt-later risk")
     base = current_app.config["PUBLIC_URL"] or "https://ather-quatum.cloud"
     lines = [
         "",
@@ -923,6 +972,7 @@ def terminal_report(result):
         f"  post-quantum  {pq}",
         f"  TLS           {kx.get('version') or cert.get('negotiated_version') or '-'}",
         f"  certificate   {cert.get('key_algorithm')}-{cert.get('key_bits')}",
+        f"  limitations   {scan_experience.LIMITATION}",
         f"  full report   {base}/?domain={result['domain']}  (${current_app.config['PRICE']})",
         "",
     ]
@@ -957,9 +1007,9 @@ def admin():
 
 @bp.post("/api/scan")
 def api_scan():
-    data = request.get_json(silent=True) or {}
+    data = json_object()
     try:
-        scan_id, result = perform_scan(str(data.get("domain", "")), "api")
+        scan_id, result = perform_scan(data.get("domain", ""), data.get('source') or "api")
     except quantum_vuln_scanner.ScanError as exc:
         return jsonify(error=exc.code, message=str(exc)), 400
     return jsonify(scan_summary(scan_id, result)), 201
@@ -989,8 +1039,8 @@ def key_size_assessment(key_size):
 @bp.post("/api/v1/quantum-scan")
 def api_v1_quantum_scan():
     """واجهة الوكلاء: domain يجري فحصاً حقيقياً، وkey_size وحده يعيد تقييماً لحجم المفتاح دون فحص."""
-    data = request.get_json(silent=True) or {}
-    if data.get("domain"):
+    data = json_object()
+    if 'domain' in data:
         return api_scan()
     try:
         key_size = int(data.get("key_size", 2048))
@@ -1014,7 +1064,7 @@ def paypal_create_order():
     paypal = current_app.extensions["paypal"]
     if paypal is None:
         return jsonify(error="payments_disabled"), 503
-    data = request.get_json(silent=True) or {}
+    data = json_object()
     if data.get("consent") is not True:
         return jsonify(error="consent_required"), 400
     conn = db()
@@ -1115,7 +1165,7 @@ def api_v1_create_order():
     paypal = current_app.extensions["paypal"]
     if paypal is None:
         return jsonify(error="payments_disabled"), 503
-    data = request.get_json(silent=True) or {}
+    data = json_object()
     if data.get("consent_immediate_delivery") is not True:
         return jsonify(error="consent_required",
                        message="Set consent_immediate_delivery to true only after the payer has expressly agreed that "
@@ -1185,7 +1235,7 @@ def crypto_create_order():
     networks = crypto_pay.enabled_networks(current_app.config)
     if not networks:
         return jsonify(error="crypto_disabled"), 503
-    data = request.get_json(silent=True) or {}
+    data = json_object()
     if data.get("consent") is not True and data.get("consent_immediate_delivery") is not True:
         return jsonify(error="consent_required",
                        message="Set consent_immediate_delivery to true only after the payer has expressly agreed that "
@@ -1225,7 +1275,7 @@ def crypto_verify(order_id):
     net = crypto_pay.enabled_networks(current_app.config).get(key)
     if not net:
         return jsonify(error="crypto_disabled"), 503
-    data = request.get_json(silent=True) or {}
+    data = json_object()
     tx_hash = str(data.get("tx_hash", "")).strip().lower()
     if not crypto_pay.TX_RE.match(tx_hash):
         return jsonify(error="invalid_tx_hash"), 400
@@ -1324,7 +1374,7 @@ def monitor_signup():
     """الخطوة 1: ينشئ حساباً معلقاً ويعيد معرّفه ليُرفق بالاشتراك في PayPal (custom_id)."""
     if not subscriptions_enabled():
         return jsonify(error="subscriptions_disabled"), 503
-    data = request.get_json(silent=True) or {}
+    data = json_object()
     email, plan = str(data.get("email", "")).strip().lower(), str(data.get("plan", ""))
     if plan not in monitor.PLANS:
         return jsonify(error="invalid_plan"), 400
@@ -1342,7 +1392,7 @@ def monitor_activate():
     paypal = current_app.extensions["paypal"]
     if not subscriptions_enabled():
         return jsonify(error="subscriptions_disabled"), 503
-    data = request.get_json(silent=True) or {}
+    data = json_object()
     conn = db()
     account = monitor_db.get_account(conn, str(data.get("account_id", "")))
     subscription_id = str(data.get("subscription_id", ""))
@@ -1483,20 +1533,20 @@ BADGE_STYLE = {
 
 def badge_snippets(domain):
     """أكواد تضمين الشارة: HTML وMarkdown، يستعملها قالب صفحة النتيجة وصفحة النطاق."""
-    page = url_for(".index", domain=domain, _external=True)
-    img = url_for(".badge", domain=domain, _external=True)
+    page = public_base() + url_for('.badge_verify', domain=domain)
+    img = public_base() + url_for('.badge', domain=domain)
     alt = "Post-quantum TLS grade by Quantum Aether"
     return {"html": f'<a href="{page}"><img src="{img}" alt="{alt}"></a>',
             "markdown": f"[![{alt}]({img})]({page})"}
 
 
-def badge_svg(grade):
-    color, value = BADGE_STYLE.get(grade, BADGE_STYLE[None])
+def badge_svg(grade, checked_at=None):
+    color, value = {'stale': ('#64748b', 'stale: rescan'), 'undetermined': ('#64748b', 'undetermined')}.get(grade, BADGE_STYLE.get(grade, BADGE_STYLE[None]))
     label = "post-quantum TLS"
     lw, vw = 7 * len(label) + 12, 7 * len(value) + 14  # تقدير عرض النص بخط 11px
     w = lw + vw
     return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="20" role="img" aria-label="{label}: {value}">
-<title>{label}: {value}</title>
+<title>{label}: {value}</title><desc>One TLS observation, not a security guarantee. Last checked: {checked_at or 'unknown'}.</desc>
 <rect width="{lw}" height="20" fill="#1e293b"/><rect x="{lw}" width="{vw}" height="20" fill="{color}"/>
 <g fill="#fff" font-family="Verdana,DejaVu Sans,sans-serif" font-size="11" text-anchor="middle">
 <text x="{lw / 2}" y="14">{label}</text><text x="{lw + vw / 2}" y="14">{value}</text></g></svg>"""
@@ -1509,16 +1559,36 @@ def badge(domain):
         domain = quantum_vuln_scanner.normalize_domain(domain)
     except quantum_vuln_scanner.ScanError:
         abort(404)
-    since = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=BADGE_MAX_AGE_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
-    scan = sales_db.latest_scan_for_domain(db(), domain, since)
-    grade = scan["grade"] if scan else None
-    if grade is None:  # لم يُفحص يدوياً: نتيجة المتتبّع الأسبوعي إن كانت حديثة (لا نُجري فحصاً من الشارة أبداً)
-        weekly = adoption.latest_for(db(), domain)
-        if weekly and weekly["grade"] and not weekly["unsure"] and weekly["scanned_at"] >= since:
-            grade = weekly["grade"]
-    response = Response(badge_svg(grade), mimetype="image/svg+xml")
-    response.headers["Cache-Control"] = "public, max-age=86400"
+    evidence = badge_evidence.for_domain(db(), domain)
+    grade = evidence['grade'] if evidence['state'] == 'fresh' else (evidence['state'] if evidence['state'] != 'not_scanned' else None)
+    checked = badge_evidence.moment(evidence['checked_at'])
+    response = Response(badge_svg(grade, checked.isoformat() if checked else None), mimetype="image/svg+xml")
+    response.headers["Cache-Control"] = f"public, max-age={evidence['cache_seconds']}"
     response.headers["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'"
+    return response
+
+
+@bp.get('/api/v1/badge/<domain>')
+def badge_status(domain):
+    try:
+        domain = quantum_vuln_scanner.normalize_domain(domain)
+    except quantum_vuln_scanner.ScanError as exc:
+        return jsonify(error=exc.code), 400
+    evidence = badge_evidence.for_domain(db(), domain)
+    response = jsonify(dict(evidence, verification_url=public_base() + url_for('.badge_verify', domain=domain)))
+    response.headers['Cache-Control'] = f"public, max-age={evidence['cache_seconds']}"
+    return response
+
+
+@bp.get('/verify/<domain>')
+def badge_verify(domain):
+    try:
+        domain = quantum_vuln_scanner.normalize_domain(domain)
+    except quantum_vuln_scanner.ScanError:
+        abort(404)
+    response = make_response(render_template('badge_verify.html', evidence=badge_evidence.for_domain(db(), domain)))
+    response.headers['X-Robots-Tag'] = 'noindex'
+    response.headers['Cache-Control'] = 'no-store'
     return response
 
 
@@ -1612,6 +1682,7 @@ def _sitemap_pages():
         pages += [(f"/adoption/countries/{e['code']}", week_day, de_langs) for e in board["entries"]]
     pages += [(f"/guides/{slug}", g["updated"], site_langs) for slug, g in guides.GUIDES.items()]
     pages.append(("/compare", _template_day("compare.html"), site_langs))
+    pages.append(("/gravity", _template_day("gravity.html"), site_langs))
     legal_date = os.path.getmtime(os.path.join(BASE_DIR, "legal.py"))
     legal_day = dt.datetime.fromtimestamp(legal_date, dt.timezone.utc).date().isoformat()
     pages += [(f"/{slug}", legal_day, legal_langs) for slug in legal.PAGES]
@@ -1755,7 +1826,8 @@ def feed():
 
 @bp.get("/llms.txt")
 def llms_txt():
-    return Response(render_template("llms.txt", base=public_base(), price=current_app.config["PRICE"]),
+    return Response(render_template("llms.txt", base=public_base(), price=current_app.config["PRICE"],
+                                    retry_count=len(study_retry_domains())),
                     mimetype="text/plain")
 
 
@@ -1916,6 +1988,11 @@ def _security_headers(response):
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
     response.headers.setdefault("X-Frame-Options", "DENY")
     response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    if request.path.startswith(('/scan/', '/api/')) or (request.endpoint == 'site.compare' and request.args.get('a')):
+        response.headers.setdefault('Cache-Control', 'no-store')
+        response.headers.setdefault('X-Robots-Tag', 'noindex')
+    if request.path.startswith('/scan/'):
+        response.headers['Referrer-Policy'] = 'no-referrer'
     if request.path.startswith(("/report/", "/admin", "/monitor/", "/alerts/", "/pack/")):
         # رابط التقرير يحمل مفتاح الوصول: لا نخزنه ولا نرسله في Referer ولا نسمح بالفهرسة.
         response.headers["Cache-Control"] = "no-store"
@@ -1939,13 +2016,32 @@ def _not_found(_e):
 
 @bp.app_errorhandler(429)
 def _rate_limited(_e):
-    return _error(429, "rate_limited")
+    response = make_response(_error(429, "rate_limited"))
+    response.headers['Retry-After'] = '3600'
+    return response
+
+
+@bp.app_errorhandler(400)
+def _bad_request(_e):
+    if is_api_request():
+        return jsonify(error='invalid_request', message='Expected a JSON object.'), 400
+    return render_template('error.html', message=texts()['errors']['invalid_domain']), 400
+
+
+@bp.app_errorhandler(413)
+def _too_large(_e):
+    if is_api_request():
+        return jsonify(error='request_too_large'), 413
+    return render_template('error.html', message=texts()['errors']['invalid_domain']), 413
 
 
 @bp.app_errorhandler(500)
 def _server_error(_e):
     return _error(500, "server_error")
 
+
+import gravity_web
+gravity_web.register(bp, db)
 
 app = create_app()
 

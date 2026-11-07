@@ -5,11 +5,12 @@
 {% block head %}<meta name="robots" content="noindex">{% endblock %}
 {% block content %}
 <section class="card result-head" data-ev-load="result">
-  <div class="grade grade-{{ r.grade }}" aria-label="{{ t.grade }} {{ r.grade }}">{{ r.grade }}</div>
+  <div class="grade grade-{{ r.grade }}" aria-label="{{ sx.undetermined if observation == 'undetermined' else t.grade ~ ' ' ~ r.grade }}">{{ '?' if observation == 'undetermined' else r.grade }}</div>
   <div>
     <p class="muted">{{ t.result_title }}</p>
     <h1 dir="ltr" class="domain">{{ r.domain }}</h1>
-    <p class="grade-text">{{ t.grades[r.grade] }}</p>
+    <p class="grade-text">{{ sx.undetermined if observation == 'undetermined' else t.grades[r.grade] }}</p>
+    <p class="observation-status">{{ sx[observation] }}</p>
     <p class="muted small">{{ t.scanned_at }}: <span dir="ltr">{{ r.scanned_at }}</span></p>
   </div>
 </section>
@@ -20,7 +21,7 @@
     <tr><th>{{ t.tls_version }}</th><td dir="ltr">{{ kx.version or cert.negotiated_version }}</td></tr>
     <tr><th>{{ t.key_exchange }}</th>
         <td><span dir="ltr">{{ kx.group or "—" }}</span> ·
-          {% if kx.pq %}<span class="ok">{{ t.pq_yes }}</span>{% else %}<span class="warn">{{ t.pq_no }}</span>{% endif %}</td></tr>
+          {% if observation == 'undetermined' %}<span class="warn">{{ sx.undetermined }}</span>{% elif kx.pq %}<span class="ok">{{ t.pq_yes }}</span>{% else %}<span class="warn">{{ t.pq_no }}</span>{% endif %}</td></tr>
     <tr><th>{{ t.certificate }}</th><td dir="ltr">{{ cert.key_algorithm }}-{{ cert.key_bits }}</td></tr>
     <tr><th>{{ t.findings_count }}</th><td>{{ r.findings | length }}</td></tr>
   </table>
@@ -32,12 +33,21 @@
   <ul class="findings-list">
     {% for f in findings %}<li class="st-{{ f.status }}">{{ f.title }}</li>{% endfor %}
   </ul>
-  {% if not kx.pq %}
+{% if observation == 'observed_classical' %}
   <p>{{ t.free_fix_hint }}
     <a href="{{ url_for('site.guide', slug='enable-x25519mlkem768-nginx', lang=glang) }}">nginx</a> ·
     <a href="{{ url_for('site.guide', slug='post-quantum-tls-apache-caddy-haproxy-cloudflare', lang=glang) }}">Apache · Caddy · HAProxy · Cloudflare</a></p>
   {% endif %}
   <p class="muted small">{{ t.findings_paid_note }}</p>
+</section>
+
+<section class="card migration-advisor">
+  <h2>{{ sx.title }}</h2>
+  <ol>{% for step in next_steps %}<li>{{ sx[step] }}</li>{% endfor %}</ol>
+  <p>{{ sx.uncertainty }}</p>
+  {% if observation == 'observed_classical' %}<p><a href="{{ url_for('site.guide', slug='enable-x25519mlkem768-nginx', lang=lang) }}">nginx / OpenSSL</a> · <a href="{{ url_for('site.guide', slug='post-quantum-tls-apache-caddy-haproxy-cloudflare', lang=lang) }}">Apache / Caddy / HAProxy / Cloudflare</a></p>{% endif %}
+  <p class="notice">{{ sx.limitation }}</p>
+  <a class="button-link" href="{{ url_for('site.index', domain=r.domain, lang=lang) }}">{{ sx.retry }}</a>
 </section>
 
 <section class="card buy" id="buy">

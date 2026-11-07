@@ -8,6 +8,7 @@
 <section class="card">
   <h1>{{ t.study_title }}</h1>
   <p>{{ t.study_lead.format(date=d.scanned_on, reachable=d.reachable, pq=d.pq, pct=pct) }}</p>
+  <p class="notice">{{ 'أرشيف بالمنهجية الأصلية. يحتوي المصدر الخام على ' if lang == 'ar' else ('Archiv mit ursprünglicher Methodik. Die Rohdaten enthalten ' if lang == 'de' else 'Archived original methodology. The raw evidence contains ') }}{{ retry_domains|length }}{{ ' استجابة HelloRetryRequest فقط؛ تصنّفها القياسات الجديدة «غير محسومة». تبقى أرقام الدراسة وملفاتها الأصلية دون تغيير للمراجعة.' if lang == 'ar' else (' reine HelloRetryRequest-Antworten, die neue Messungen als unbestimmt einstufen. Die ursprünglichen Zahlen und Dateien bleiben zur Nachprüfung unverändert.' if lang == 'de' else ' retry-only HelloRetryRequest responses, classified as undetermined by new measurements. Original published figures and files are retained for reproducibility.') }}</p>
   <p><a href="{{ url_for('site.adoption_page', lang=lang) }}">{{ t.adoption_link }}</a></p>
 </section>
 
@@ -43,7 +44,7 @@
   <p class="muted">{{ t.study_notable_note }}</p>
   <table class="data" dir="ltr">
     <tr><th>{{ t.rank }}</th><th>{{ t.domain_col }}</th><th>{{ t.grade_col }}</th><th>{{ t.group_col }}</th><th>TLS</th></tr>
-    {% for s in notable %}<tr><td>{{ s.rank }}</td><td>{{ s.domain }}</td><td>{{ s.grade }}</td><td><code>{{ s.group }}</code></td><td>{{ s.tls }}</td></tr>{% endfor %}
+    {% for s in notable %}<tr><td>{{ s.rank }}</td><td>{{ s.domain }}</td><td>{{ sx.undetermined if s.domain in retry_domains else s.grade }}</td><td><code>{{ s.group }}</code>{% if s.domain in retry_domains %} (HRR){% endif %}</td><td>{{ s.tls }}</td></tr>{% endfor %}
   </table>
 </section>
 {% endif %}
@@ -68,7 +69,7 @@
     <summary><strong>{{ t.study_full_table }} ({{ d.reachable }})</strong></summary>
     <table class="data" dir="ltr">
       <tr><th>{{ t.rank }}</th><th>{{ t.domain_col }}</th><th>{{ t.grade_col }}</th><th>{{ t.group_col }}</th><th>TLS</th></tr>
-      {% for s in d.sites %}<tr><td>{{ s.rank }}</td><td>{{ s.domain }}</td><td>{{ s.grade }}</td><td><code>{{ s.group }}</code></td><td>{{ s.tls }}</td></tr>{% endfor %}
+      {% for s in d.sites %}<tr><td>{{ s.rank }}</td><td>{{ s.domain }}</td><td>{{ sx.undetermined if s.domain in retry_domains else s.grade }}</td><td><code>{{ s.group }}</code>{% if s.domain in retry_domains %} (HRR){% endif %}</td><td>{{ s.tls }}</td></tr>{% endfor %}
     </table>
   </details>
 </section>

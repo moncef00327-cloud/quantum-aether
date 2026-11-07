@@ -38,7 +38,7 @@ TEXTS = {
                     "(المعيار ML-KEM / FIPS 203) الذي تستخدمه Chrome وFirefox اليوم؟ وما حال شهادتك أمام خوارزمية Shor؟",
         "domain_label": "اسم النطاق",
         "scan_button": "افحص مجاناً",
-        "scanning": "جارٍ الفحص… قد يستغرق حتى 20 ثانية",
+        "scanning": "أُرسل الفحص… بانتظار استجابة الخادم",
         "checks_title": "ماذا نفحص",
         "checks": [
             "إصدار TLS وهل يدعم الخادم TLS 1.3",
@@ -198,7 +198,7 @@ TEXTS = {
                     "(ML-KEM / FIPS 203), as Chrome and Firefox do today? And how does your certificate fare against Shor's algorithm?",
         "domain_label": "Domain name",
         "scan_button": "Scan for free",
-        "scanning": "Scanning… this can take up to 20 seconds",
+        "scanning": "Scan submitted… waiting for the server response",
         "checks_title": "What we check",
         "checks": [
             "TLS version and TLS 1.3 support",
@@ -324,6 +324,12 @@ TEXTS = {
 }
 
 FINDINGS = {
+    "KX_RETRY_REQUESTED": {
+        "ar": ("طلب الخادم إعادة المصافحة؛ الدعم غير محسوم",
+               "طلب HelloRetryRequest المجموعة {group}، لكن المجسّ لم يكمل إعادة المصافحة. هذا لا يثبت تفاوض تبادل مفاتيح مقاوم للكم. أعد الفحص من عميل TLS متوافق."),
+        "en": ("Server requested a retry; support is undetermined",
+               "HelloRetryRequest requested group {group}, but the probe did not complete the retry. This does not establish negotiated post-quantum key exchange. Verify with a compatible TLS client."),
+    },
     "KX_PQ_HYBRID": {
         "ar": ("تبادل مفاتيح هجين مقاوم للكم ({group})",
                "يتفق خادمك مع المتصفحات الحديثة على مفتاح الجلسة عبر ML-KEM (FIPS 203) مدموجاً مع منحنى تقليدي. "
@@ -771,12 +777,12 @@ TEXTS["en"].update({
 
 
 TEXTS["ar"].update({
-    "hero_tagline": "في 10 ثوانٍ، اعرف هل يستخدم موقعك التشفير المقاوم للحوسبة الكمومية. مجاناً وبلا حساب.",
+    "hero_tagline": "افحص تبادل مفاتيح TLS المرصود في موقعك. ملخص مجاني، دون إنشاء حساب.",
     "try_label": "جرّب:",
     "trust_bar": "نفحص أكبر 10,000 موقع كل أسبوع · بيانات مفتوحة · مجاناً بلا حساب",
 })
 TEXTS["en"].update({
-    "hero_tagline": "In 10 seconds, find out if your HTTPS already uses post-quantum encryption. Free, no sign-up.",
+    "hero_tagline": "Check the TLS key exchange observed on your website. Free summary. No account needed.",
     "try_label": "Try:",
     "trust_bar": "We scan the top 10,000 sites every week · open dataset · free, no account",
 })
@@ -796,7 +802,7 @@ TEXTS["de"].update({
                 "(ML-KEM / FIPS 203), wie es Chrome und Firefox heute tun? Und wie steht Ihr Zertifikat gegenüber dem Shor-Algorithmus da?",
     "domain_label": "Domainname",
     "scan_button": "Kostenlos prüfen",
-    "scanning": "Prüfung läuft… das kann bis zu 20 Sekunden dauern",
+    "scanning": "Prüfung gesendet… Warten auf die Serverantwort",
     "checks_title": "Was wir prüfen",
     "checks": [
         "TLS-Version und Unterstützung von TLS 1.3",
@@ -947,7 +953,7 @@ TEXTS["de"].update({
 
 
 TEXTS["de"].update({
-    "hero_tagline": "In 10 Sekunden sehen, ob Ihr HTTPS schon quantenresistent verschlüsselt ist. Kostenlos, ohne Anmeldung.",
+    "hero_tagline": "Prüfen Sie den beobachteten TLS-Schlüsselaustausch Ihrer Website. Kostenlose Zusammenfassung, ohne Anmeldung.",
     "try_label": "Beispiel:",
     "trust_bar": "Wir prüfen jede Woche die Top-10.000-Websites · offener Datensatz · kostenlos, ohne Konto",
 })

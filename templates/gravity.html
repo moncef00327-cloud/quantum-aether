@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% set ar = lang == 'ar' %}
+{% block title %}AETHER GRAVITY ENGINE · Quantum Aether{% endblock %}
+{% block description %}{{ 'محرك اكتشاف الطلب التقني: فرص مرتبطة بأدلة عامة وأدوات TLS مفيدة.' if ar else 'Technical demand discovery: evidence-backed opportunities and practical TLS tools.' }}{% endblock %}
+{% block content %}
+<section class="hero gravity-hero">
+  <p class="eyebrow"><span class="status-dot" aria-hidden="true"></span> AETHER GRAVITY ENGINE / 01</p>
+  <h1>{{ 'اكتشف ما يحتاجه المطورون.' if ar else 'Discover what developers need.' }}</h1>
+  <p class="lead">{{ 'من أسئلة المطورين إلى أدوات يحتاجونها. نرتب النقاشات الحقيقية لتحديد ما يستحق البناء.' if ar else 'From developer questions to useful tools. Real discussions help identify what is worth building.' }}</p>
+  <a class="button-link" href="#opportunities">{{ 'استكشف الفرص' if ar else 'Explore opportunities' }}</a>
+  <a class="button-link" href="/?lang={{ 'ar' if ar else 'en' }}">{{ 'افحص موقعك' if ar else 'Check your website' }}</a>
+</section>
+<section class="gravity-metrics" aria-label="{{ 'حالة البيانات' if ar else 'Data status' }}">
+  <div class="gravity-metric"><strong>{{ evidence_count }}</strong><span>{{ 'نقاش موثّق بعد التصفية' if ar else 'Qualifying discussion links' }}</span></div>
+  <div class="gravity-metric"><strong>{{ opportunities|length }}</strong><span>{{ 'فرص تحتاج إلى مراجعة' if ar else 'Opportunities awaiting review' }}</span></div>
+  <div class="gravity-metric"><strong>{{ source_count }}</strong><span>{{ 'مصادر ممثّلة في الأدلة' if ar else 'Sources represented in evidence' }}</span></div>
+</section>
+<details class="card methodology">
+  <summary>{{ 'كيف نكتشف الفرص ونحسب الدرجات؟' if ar else 'How are opportunities discovered and scored?' }}</summary>
+  <p>{{ 'نعرض حتى 500 سجل من الرادار خلال آخر 30 يومًا. نزيل روابط التتبع والتكرار ونصنّف النقاشات حسب التقنية. الدرجات تقديرات تحريرية وليست حجم بحث أو توقعًا للمبيعات.' if ar else 'Up to 500 radar records seen in the last 30 days. Tracking links and duplicates are removed; discussions are grouped by technology. Scores are editorial heuristics, not search volumes or sales forecasts.' }}</p>
+  <p>{{ 'آخر رصد:' if ar else 'Last observed:' }} <span dir="ltr">{{ last_seen or ('لا توجد بيانات بعد' if ar else 'No data yet') }}</span></p>
+  <p>{{ 'تاريخ الرصد لا يعني تاريخ نشر النقاش. بعض تفاصيل النص غير محفوظة في الرادار، لذلك قد لا تجتاز كل السجلات التصفية.' if ar else 'Observation dates are not discussion publication dates. Radar does not retain all discussion text, so some records may not pass filtering.' }}</p>
+</details>
+<section id="opportunities">
+  <div class="section-heading"><h2>{{ 'الفرص المكتشفة' if ar else 'Discovered opportunities' }}</h2><span class="tag">{{ 'نافذة الرصد: 30 يومًا' if ar else 'Observation window: 30 days' }}</span></div>
+  {% for opportunity in opportunities %}
+  <article class="card opportunity-card">
+    <span class="tag">{{ opportunity.score }}/100</span>
+    <h3>{{ opportunity.topic|upper }} · {{ 'تشخيص توافق TLS المقاوم للكم' if ar else 'PQC TLS compatibility diagnostic' }}</h3>
+    <p>{{ opportunity.discussion_count }} {{ 'نقاشات مستقلة · بانتظار المراجعة' if ar else 'distinct discussions · awaiting review' }}</p>
+    <details><summary>{{ 'الأدلة وطريقة احتساب الدرجة' if ar else 'Evidence and scoring breakdown' }}</summary>
+      <ul>{% for evidence in opportunity.evidence %}<li><a href="{{ evidence.url }}" rel="noopener noreferrer" target="_blank">{{ evidence.title or evidence.url }}</a> · {{ evidence.source }}</li>{% endfor %}</ul>
+      <dl>{% for name, value in opportunity.score_components.items() %}<dt>{{ name|replace('_', ' ') }}</dt><dd>{{ value }}</dd>{% endfor %}</dl>
+    </details>
+    <p><a href="{{ opportunity.existing_guide }}">{{ 'الدليل المتاح حاليًا ←' if ar else 'Read the existing guide →' }}</a></p>
+  </article>
+  {% else %}
+  <div class="empty-state"><span class="empty-symbol" aria-hidden="true">⌁</span><h3>{{ 'بانتظار أدلة كافية' if ar else 'Waiting for qualifying evidence' }}</h3><p>{{ 'لا توجد نقاشات تجتاز التصفية في الفترة الحالية. يمكنك استكشاف مرصد الاعتماد أو تجربة الفحص المجاني إلى حين توفر أدلة جديدة.' if ar else 'No discussions pass the current filters in this period. Explore the adoption observatory or try a free website check while new evidence becomes available.' }}</p><a class="button-link" href="/adoption?lang={{ 'ar' if ar else 'en' }}">{{ 'استكشف بيانات الاعتماد' if ar else 'Explore adoption data' }} ↗</a></div>
+  {% endfor %}
+</section>
+<section class="grid-2">
+  <article class="card"><h2>{{ 'مرصد اعتماد TLS' if ar else 'TLS adoption observatory' }}</h2><p>{{ 'بيانات الاعتماد المرصودة والمنهجية وملفات التنزيل.' if ar else 'Observed adoption data, methodology and downloadable datasets.' }}</p><a href="/adoption?lang={{ 'ar' if ar else 'en' }}">{{ 'افتح المرصد ←' if ar else 'Open the observatory →' }}</a></article>
+  <article class="card"><h2>{{ 'أدوات المطورين والوكلاء' if ar else 'Developer and agent tools' }}</h2><p>{{ 'استخدم واجهة الفحص ووثائق التكامل الموجودة.' if ar else 'Use the existing scanner API and integration documentation.' }}</p><a href="/openapi.yaml">OpenAPI →</a> · <a href="/llms.txt">llms.txt →</a></article>
+</section>
+{% endblock %}

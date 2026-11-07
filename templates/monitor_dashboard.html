@@ -33,7 +33,7 @@
     {% for d in domains %}
     <tr>
       <td>{{ d.domain }}</td>
-      <td>{% if d.grade %}<span class="grade-chip grade-{{ d.grade }}">{{ d.grade }}</span>{% else %}—{% endif %}</td>
+      <td>{% if d.result and (d.result.key_exchange.hrr or d.result.key_exchange.error) %}<span class="warn">{{ sx.undetermined }}</span>{% elif d.grade %}<span class="grade-chip grade-{{ d.grade }}">{{ d.grade }}</span>{% else %}—{% endif %}</td>
       <td>{% if d.error %}<span class="warn">{{ d.error }}</span>{% elif d.result %}<code>{{ d.result.key_exchange.group or "?" }}</code>{% else %}<span class="muted">{{ t.dash_pending }}</span>{% endif %}</td>
       <td>{{ d.days_left if d.days_left is not none else "—" }}</td>
       <td class="small">{{ d.checked_at or "—" }}</td>

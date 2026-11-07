@@ -27,7 +27,10 @@ Three parts in one project:
 
 We scanned the [Tranco](https://tranco-list.eu/list/GQ38K/1000000) top 1,000 domains on 2026-11-03.
 Of the 712 that answered on HTTPS, **425 (59.7%) negotiate the hybrid X25519MLKEM768 key exchange**;
-the rest still use classical X25519 or ECDHE only (among them amazon.com, github.com, wikipedia.org, netflix.com and bing.com).
+The original published figures and files are retained. A later raw-evidence audit found 17
+retry-only HelloRetryRequest responses; new measurements treat these as undetermined and
+exclude them from the tracker's support-percentage denominator. Do not interpret every
+non-PQ row as a confirmed classical negotiation. The study page includes a methodology note.
 
 - Results page: https://ather-quatum.cloud/study/top-1000-post-quantum-tls
 - Data (CC BY 4.0): [`data/pq_study_top1000.json`](data/pq_study_top1000.json), raw per-domain results in `data/pq_study_top1000_raw.jsonl`

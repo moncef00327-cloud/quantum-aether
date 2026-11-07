@@ -11,11 +11,11 @@
 </section>
 {% endif %}
 <section class="card result-head">
-  <div class="grade grade-{{ r.grade }}">{{ r.grade }}</div>
+  <div class="grade grade-{{ r.grade }}">{{ '?' if observation == 'undetermined' else r.grade }}</div>
   <div>
     <p class="muted">{{ t.report_title }}</p>
     <h1 dir="ltr" class="domain">{{ r.domain }}</h1>
-    <p class="grade-text">{{ t.grades[r.grade] }}</p>
+    <p class="grade-text">{{ sx.undetermined if observation == 'undetermined' else t.grades[r.grade] }}</p>
     <p class="muted small">{{ t.scanned_at }}: <span dir="ltr">{{ r.scanned_at }}</span> · IP <span dir="ltr">{{ r.ip }}</span></p>
   </div>
   <button type="button" class="print-button no-print">{{ t.print }}</button>
@@ -31,7 +31,7 @@
   {% endfor %}
 </section>
 
-{% if not kx.pq %}
+{% if observation == 'observed_classical' %}
 <section class="card">
   <h2>{{ t.remediation_title }}</h2>
   <p>{{ t.remediation_intro }}</p>

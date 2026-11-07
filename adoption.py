@@ -160,7 +160,8 @@ def is_unsure(kx, tls):
     """True when the key-exchange probe could not tell us the group (e.g. a firewall reset our
     ClientHello) and the server speaks TLS 1.3, so post-quantum support is unknown. TLS 1.2-only
     servers cannot negotiate ML-KEM, so those stay a definite «no»."""
-    return not kx.get("group") and not kx.get("pq") and tls != "TLSv1.2"
+    return bool(kx.get('hrr') or (tls != 'TLSv1.2' and
+                (kx.get('error') or (not kx.get('group') and not kx.get('pq')))))
 
 
 EMPTY = {"ok": 0, "grade": None, "grp": None, "tls": None, "pq": 0, "unsure": 0, "ip": None, "asn": None, "as_name": None}

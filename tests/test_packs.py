@@ -7,7 +7,7 @@ import unittest
 import packs
 import quantum_saas_app
 import sales_db
-from test_monitor import FakeMailer, FakeScanner, result_for
+from tests.test_monitor import FakeMailer, FakeScanner, result_for
 
 
 class FakePayPal:

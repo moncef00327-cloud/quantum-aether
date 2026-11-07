@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex"><title>اقتراح الألوان · Quantum Aether</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f2f4f7;color:#17243b;font:18px/1.9 Tahoma,Arial,sans-serif}main{max-width:1120px;margin:auto;padding:40px 24px}h1{font-size:clamp(28px,4vw,40px);margin:0 0 12px}h2{font-size:25px}p{max-width:68ch}.intro{color:#52627b}.notice{border:1px solid #ccd4e0;background:white;padding:16px 20px;border-radius:12px}.choices{display:flex;gap:12px;flex-wrap:wrap;margin:28px 0}button{font:inherit;padding:12px 18px;border:1px solid #adbace;border-radius:10px;cursor:pointer;background:white;color:#17243b;min-height:48px}button[aria-pressed=true]{background:#17243b;color:white;border-color:#17243b}:focus-visible{outline:3px solid #ae6900;outline-offset:4px}.demo{--ink:#0b1730;--accent:#2458c4;--bg:#f4f7fc;--muted:#52627b;--text:#17243b;--highlight:#b9ddfa;background:var(--bg);color:var(--text);border:1px solid #cbd5e1;border-radius:18px;overflow:hidden}.demo header{padding:20px 28px;background:white;border-bottom:1px solid #d5dfeb;font-weight:bold;color:var(--ink)}.demo-hero{background:var(--ink);color:white;padding:32px}.demo-hero p{color:var(--highlight)}.demo-body{padding:28px;display:grid;grid-template-columns:1.4fr 1fr;gap:24px}.panel{background:white;border:1px solid #d5dfeb;border-radius:12px;padding:24px}.panel h3{margin-top:0;font-size:22px}.panel p{color:var(--muted)}.action{display:inline-block;border-radius:9px;background:var(--accent);color:white;padding:10px 22px;font-weight:bold}.success{display:inline-block;color:#146b40;background:#e9f6ed;padding:5px 12px;border-radius:6px;font-size:16px}.swatches{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:28px 0}.swatch{background:white;border:1px solid #cbd5e1;border-radius:12px;overflow:hidden}.swatch-color{height:70px}.swatch p{margin:12px 16px}.swatch code{display:block;direction:ltr;text-align:right;font-size:16px}.recommendation{background:white;border-radius:12px;padding:22px;border:1px solid #ccd4e0}a{color:#2458c4;text-underline-offset:4px}@media(max-width:650px){main{padding:25px 16px}.demo-body{grid-template-columns:1fr;padding:18px}.demo-hero{padding:24px}.swatches{grid-template-columns:repeat(2,minmax(0,1fr))}button{width:100%}}
+</style>
+</head>
+<body><main>
+<p><a href="/?lang=ar">العودة إلى الموقع ←</a></p>
+<h1>نفس الواجهة، بثلاث هويات لونية.</h1>
+<p class="intro">هذه معاينة مقترحة للألوان فقط. تغيّر الأزرار ألوان المثال أدناه؛ لا تغيّر ألوان الموقع الفعلي أو الخطوط أو التخطيط.</p>
+<p class="notice">تقييمي: الهوية الخضراء الحالية هادئة، لكن تشابه لون الأزرار مع لون النجاح يضعف الفصل بين التفاعل والنتيجة. أوصي بالكحلي والأزرق لهوية تقنية أوضح، مع بقاء الأخضر مخصصًا للنجاح.</p>
+<div class="choices" aria-label="اختيار لوحة المعاينة"><button type="button" data-palette="0" aria-pressed="true">١. كحلي وأزرق — أوصي به</button><button type="button" data-palette="1" aria-pressed="false">٢. بنفسجي وحبر داكن</button><button type="button" data-palette="2" aria-pressed="false">٣. بترولي ونحاسي</button></div>
+<section class="demo" id="demo" aria-label="مثال يوضح توزيع الألوان">
+<header>Quantum Aether · الأثير الكمومي</header>
+<div class="demo-hero"><span dir="ltr">POST-QUANTUM INTELLIGENCE</span><h2>افهم حالة التشفير في موقعك.</h2><p>هوية واضحة تترك البيانات والنتائج في المقدمة.</p></div>
+<div class="demo-body"><div class="panel"><h3>فحص جاهزية TLS</h3><p>النص الأساسي داكن، والنص التوضيحي أقل حدة، والأزرار بلون واضح.</p><span class="action">مثال على زر الفحص</span></div><div class="panel"><h3>حالة النتيجة</h3><p>لون النجاح ثابت ومستقل عن لون العلامة.</p><span class="success">مثال توضيحي: دعم مرصود</span></div></div>
+</section>
+<h2 id="palette-name">كحلي وأزرق</h2><p id="palette-description" aria-live="polite"></p>
+<div class="swatches" id="swatches"></div>
+<div class="recommendation"><strong>قاعدة الاستخدام المقترحة</strong><p>خلفيات فاتحة ومساحات بيضاء هي الغالبة، مع لون داكن للرأس والعناوين، ولون أساسي واحد للأزرار والروابط. أخضر للنجاح، كهرماني للتحذير، وأحمر للخطأ؛ لا تعتمد الحالة على اللون وحده.</p><p id="contrast"></p></div>
+<script>
+const palettes=[
+ {name:'كحلي وأزرق — الخيار الموصى به',description:'اتجاه تقني واضح؛ يفصل بين هوية المنصة وحالات نتائج الفحص.',ink:'#0B1730',accent:'#2458C4',bg:'#F4F7FC',muted:'#52627B',text:'#17243B',highlight:'#B9DDFA'},
+ {name:'بنفسجي وحبر داكن',description:'طابع بحثي مميز، مناسب لإبراز التجارب الكمومية دون تغيير تخطيط الموقع.',ink:'#211632',accent:'#7045AF',bg:'#F7F5FB',muted:'#665B75',text:'#2A2038',highlight:'#DCC6F5'},
+ {name:'بترولي ونحاسي',description:'اتجاه قريب من الهوية الحالية؛ يُستخدم النحاسي باعتدال للأزرار والروابط.',ink:'#102B32',accent:'#995018',bg:'#F7F6F2',muted:'#58686B',text:'#1A3036',highlight:'#F0D1AE'}
+];
+const labels={ink:'الرأس والعناوين',accent:'الأزرار والروابط',bg:'خلفية الصفحة',text:'النص الأساسي',muted:'النص المساعد',highlight:'النص المضيء على الداكن'};
+function luminance(hex){const c=hex.match(/[a-f\d]{2}/gi).map(v=>parseInt(v,16)/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4);return c[0]*.2126+c[1]*.7152+c[2]*.0722}
+function contrast(a,b){const x=luminance(a),y=luminance(b);return((Math.max(x,y)+.05)/(Math.min(x,y)+.05)).toFixed(1)}
+function choose(index){const palette=palettes[index];const demo=document.getElementById('demo');for(const key of Object.keys(labels))demo.style.setProperty('--'+key,palette[key]);document.getElementById('palette-name').textContent=palette.name;document.getElementById('palette-description').textContent=palette.description;const swatches=document.getElementById('swatches');swatches.replaceChildren();for(const[key,label]of Object.entries(labels)){const card=document.createElement('div');card.className='swatch';const color=document.createElement('div');color.className='swatch-color';color.style.backgroundColor=palette[key];const text=document.createElement('p');text.textContent=label;const code=document.createElement('code');code.textContent=palette[key];text.appendChild(code);card.append(color,text);swatches.appendChild(card)}document.getElementById('contrast').textContent='تباين النص الأساسي مع الخلفية: '+contrast(palette.text,palette.bg)+':1. تباين النص الأبيض على الزر: '+contrast('#FFFFFF',palette.accent)+':1. هذه قياسات للأزواج المذكورة وليست تدقيق وصول شامل.';document.querySelectorAll('[data-palette]').forEach(button=>button.setAttribute('aria-pressed',String(Number(button.dataset.palette)===index)))}
+document.querySelectorAll('[data-palette]').forEach(button=>button.addEventListener('click',()=>choose(Number(button.dataset.palette))));choose(0);
+</script>
+</main></body></html>

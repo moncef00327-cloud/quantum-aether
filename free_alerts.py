@@ -7,6 +7,7 @@ import hashlib
 import secrets
 
 import monitor
+import adoption
 
 FREE_DOMAINS_PER_EMAIL = 1  # تأكيد نطاق جديد يستبدل القديم
 REQUESTS_PER_CLIENT_PER_DAY = 5
@@ -101,8 +102,10 @@ def stop(conn, token):
 
 def _store(conn, alert_id, result=None, error=None):
     if result is not None:
+        kx = result['key_exchange']
+        pq = None if adoption.is_unsure(kx, kx.get('version') or result['certificate'].get('negotiated_version')) else int(bool(kx.get('pq')))
         conn.execute("UPDATE free_alerts SET last_checked = ?, last_grade = ?, last_pq = ?, last_days_left = ?, last_error = NULL "
-                     "WHERE id = ?", (_now(), result["grade"], int(bool(result["key_exchange"].get("pq"))),
+                     "WHERE id = ?", (_now(), result["grade"], pq,
                                       result["certificate"].get("days_left"), alert_id))
     else:
         conn.execute("UPDATE free_alerts SET last_checked = ?, last_error = ? WHERE id = ?", (_now(), str(error)[:200], alert_id))

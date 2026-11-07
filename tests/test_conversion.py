@@ -9,7 +9,7 @@ import analytics_db
 import og_image
 import quantum_saas_app
 import sales_db
-from test_crawlers import seed
+from tests.test_crawlers import seed
 
 
 class ConversionTests(unittest.TestCase):
@@ -87,7 +87,7 @@ class ConversionTests(unittest.TestCase):
         self.assertIn("A ·", svg)
         old = self.client.get("/badge/beta.test.svg").get_data(as_text=True)   # فحص قديم (>30 يوماً في الاختبار؟)
         self.assertTrue("not scanned" in old or "B ·" in old)
-        self.assertIn("not scanned", self.client.get("/badge/gamma.test.svg").get_data(as_text=True))  # غير محسوم
+        self.assertIn("undetermined", self.client.get("/badge/gamma.test.svg").get_data(as_text=True))  # observed but inconclusive, not absent
 
     def test_og_tags_point_to_images(self):
         body = self.client.get("/site/alpha.test?lang=en").get_data(as_text=True)

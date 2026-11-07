@@ -17,6 +17,8 @@ import secrets
 import socket
 import ssl
 import sys
+import time
+from urllib.parse import urlsplit
 
 import certifi
 from cryptography import x509
@@ -87,12 +89,21 @@ class TLSAlert(Exception):
 # ---------------------------------------------------------------- الإدخال والشبكة
 
 def normalize_domain(raw: str) -> str:
-    value = (raw or "").strip().lower()
-    value = re.sub(r"^[a-z][a-z0-9+.-]*://", "", value)
-    value = re.split(r"[/?#]", value, maxsplit=1)[0].rsplit("@", 1)[-1]
-    if value.startswith("["):
-        raise ScanError("invalid_domain", "enter a domain name, not an IP address")
-    value = value.split(":", 1)[0].rstrip(".")
+    if not isinstance(raw, str):
+        raise ScanError("invalid_domain", "enter a domain name or an HTTP(S) URL")
+    value = raw.strip()
+    if not value or len(value) > 4096 or "\\" in value or any(c.isspace() or ord(c) < 32 or ord(c) == 127 for c in value):
+        raise ScanError("invalid_domain", "invalid domain name")
+    try:
+        parsed = urlsplit(value if "://" in value else "//" + value)
+        if parsed.scheme not in ("", "http", "https") or parsed.username is not None or parsed.password is not None:
+            raise ValueError("unsupported scheme or credentials")
+        if parsed.port == 0:
+            raise ValueError("invalid port")
+        # A URL may be pasted, but this service always measures HTTPS on port 443.
+        value = (parsed.hostname or "").lower().rstrip(".")
+    except ValueError as exc:
+        raise ScanError("invalid_domain", "enter a domain name or an HTTP(S) URL without credentials") from exc
     try:
         value = value.encode("idna").decode("ascii")
     except UnicodeError as exc:
@@ -185,15 +196,23 @@ def build_client_hello(host: str, groups: list, key_shares: list) -> bytes:
 # ---------------------------------------------------------------- قراءة رد الخادم
 
 class _HandshakeReader:
-    def __init__(self, sock, limit: int = 65536):
+    def __init__(self, sock, limit: int = 65536, timeout: float = TIMEOUT):
         self.sock = sock
         self.buffer = b""
         self.received = 0
         self.limit = limit
+        self.deadline = time.monotonic() + timeout
 
     def _recv_exact(self, n: int) -> bytes:
+        if n < 0 or self.received + n > self.limit:
+            raise ValueError("response larger than expected")
         data = b""
         while len(data) < n:
+            remaining = self.deadline - time.monotonic()
+            if remaining <= 0:
+                raise TimeoutError('TLS probe deadline exceeded')
+            if hasattr(self.sock, 'settimeout'):
+                self.sock.settimeout(remaining)
             chunk = self.sock.recv(n - len(data))
             if not chunk:
                 raise ConnectionError("server closed the connection")
@@ -207,6 +226,8 @@ class _HandshakeReader:
         while True:
             if len(self.buffer) >= 4:
                 length = int.from_bytes(self.buffer[1:4], "big")
+                if length + 4 > self.limit:
+                    raise ValueError("handshake larger than expected")
                 if len(self.buffer) >= 4 + length:
                     msg_type, body = self.buffer[0], self.buffer[4:4 + length]
                     self.buffer = self.buffer[4 + length:]
@@ -228,24 +249,49 @@ def parse_server_hello(body: bytes) -> dict:
         raise ValueError("truncated ServerHello")
     legacy_version = int.from_bytes(body[0:2], "big")
     random = body[2:34]
+    if body[34] > 32:
+        raise ValueError("invalid ServerHello session ID")
     pos = 35 + body[34]
+    if pos + 3 > len(body):
+        raise ValueError("truncated ServerHello cipher")
     cipher = int.from_bytes(body[pos:pos + 2], "big")
+    if body[pos + 2] != 0:
+        raise ValueError("unexpected TLS compression")
     pos += 3
     extensions = {}
-    if pos + 2 <= len(body):
+    if pos < len(body):
+        if pos + 2 > len(body):
+            raise ValueError("truncated ServerHello extension length")
         end = pos + 2 + int.from_bytes(body[pos:pos + 2], "big")
+        if end != len(body):
+            raise ValueError("invalid ServerHello extension boundary")
         pos += 2
         while pos + 4 <= end:
             ext_type = int.from_bytes(body[pos:pos + 2], "big")
             ext_len = int.from_bytes(body[pos + 2:pos + 4], "big")
+            if pos + 4 + ext_len > end or ext_type in extensions:
+                raise ValueError("invalid or duplicate ServerHello extension")
             extensions[ext_type] = body[pos + 4:pos + 4 + ext_len]
             pos += 4 + ext_len
+        if pos != end:
+            raise ValueError("truncated ServerHello extension header")
     version = legacy_version
-    if len(extensions.get(0x002B, b"")) >= 2:
+    if 0x002B in extensions:
+        if len(extensions[0x002B]) != 2:
+            raise ValueError("invalid supported_versions extension")
         version = int.from_bytes(extensions[0x002B][:2], "big")
     group = None
-    if len(extensions.get(0x0033, b"")) >= 2:
-        group = int.from_bytes(extensions[0x0033][:2], "big")
+    if 0x0033 in extensions:
+        share = extensions[0x0033]
+        if random == HRR_RANDOM:
+            if len(share) != 2 or version != 0x0304:
+                raise ValueError("invalid HelloRetryRequest key share")
+        elif len(share) < 5 or int.from_bytes(share[2:4], "big") != len(share) - 4:
+            raise ValueError("truncated ServerHello key share")
+        group = int.from_bytes(share[:2], "big")
+        expected = {X25519: 32, X25519MLKEM768: 1120}.get(group)
+        if random != HRR_RANDOM and expected is not None and len(share) - 4 != expected:
+            raise ValueError("invalid key share length")
     return {"hrr": random == HRR_RANDOM, "version": version, "cipher": cipher, "group": group}
 
 
@@ -261,8 +307,8 @@ def _tls12_named_group(reader: _HandshakeReader):
     return None
 
 
-def read_server_response(sock) -> dict:
-    reader = _HandshakeReader(sock)
+def read_server_response(sock, timeout=TIMEOUT) -> dict:
+    reader = _HandshakeReader(sock, timeout=timeout)
     msg_type, body = reader.next_message()
     if msg_type != 2:
         raise ValueError(f"expected ServerHello, got handshake type {msg_type}")
@@ -292,7 +338,12 @@ def _hello_attempt(ip: str, host: str, offer_pq: bool, timeout: float) -> dict:
     with _connect(ip, timeout) as sock:
         sock.settimeout(timeout)
         sock.sendall(build_client_hello(host, groups, shares))
-        return read_server_response(sock)
+        hello = read_server_response(sock, timeout=timeout)
+        if hello['cipher'] not in CIPHER_SUITES or (hello['group'] is not None and hello['group'] not in groups):
+            raise ValueError('server selected an unoffered TLS parameter')
+        if hello['version'] not in (0x0303, 0x0304):
+            raise ValueError('server selected an unoffered TLS version')
+        return hello
 
 
 def probe_key_exchange(ip: str, host: str, timeout: float = TIMEOUT) -> dict:
@@ -314,8 +365,9 @@ def probe_key_exchange(ip: str, host: str, timeout: float = TIMEOUT) -> dict:
             "version": TLS_VERSIONS.get(hello["version"], hex(hello["version"])),
             "cipher": CIPHER_NAMES.get(hello["cipher"], hex(hello["cipher"])),
             "group": GROUP_NAMES.get(group, hex(group)) if group is not None else None,
-            "pq": group in PQ_GROUPS,
+            "pq": group in PQ_GROUPS and not hello["hrr"],
             "hrr": hello["hrr"],
+            "negotiation_observed": not hello["hrr"] and group is not None,
             "kx": hello["kx"],
         })
         return result
@@ -386,7 +438,10 @@ def probe_certificate(ip: str, host: str, timeout: float = TIMEOUT) -> dict:
             der, version, cipher = _ssl_handshake(ip, host, unverified, timeout)
     except (ssl.SSLError, OSError) as exc:
         raise ScanError("tls_failure", f"TLS handshake failed: {exc}") from exc
-    info.update(describe_certificate(x509.load_der_x509_certificate(der)))
+    try:
+        info.update(describe_certificate(x509.load_der_x509_certificate(der)))
+    except (ValueError, UnsupportedAlgorithm) as exc:
+        raise ScanError('tls_failure', 'could not parse the server certificate') from exc
     info["negotiated_version"] = version
     info["negotiated_cipher"] = cipher[0] if cipher else None
     return info
@@ -403,6 +458,8 @@ def assess(kx: dict, cert: dict) -> dict:
     version = kx.get("version") or cert.get("negotiated_version")
     if kx.get("error"):
         add("KX_PROBE_FAILED", "warning", error=kx["error"])
+    elif kx.get("hrr"):
+        add("KX_RETRY_REQUESTED", "warning", group=kx.get("group") or "?")
     elif kx.get("pq"):
         add("KX_PQ_HYBRID", "ok", group=kx.get("group") or "?")
     elif version == "TLSv1.3":
@@ -432,7 +489,7 @@ def assess(kx: dict, cert: dict) -> dict:
 
     if any(f["status"] == "critical" for f in findings):
         grade = "F"
-    elif kx.get("pq") and version == "TLSv1.3":
+    elif kx.get("pq") and not kx.get("hrr") and not kx.get("error") and version == "TLSv1.3":
         grade = "A"
     elif version == "TLSv1.3":
         grade = "B"

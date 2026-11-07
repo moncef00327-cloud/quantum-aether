@@ -5,7 +5,7 @@ import unittest
 
 import quantum_saas_app
 import sales_db
-from test_app import fake_scanner
+from tests.test_app import fake_scanner
 
 
 class OwnerClientTest(unittest.TestCase):

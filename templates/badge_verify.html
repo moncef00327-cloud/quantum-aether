@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'التحقق من شارة TLS' if lang == 'ar' else 'Verify TLS observation badge' }} · {{ evidence.domain }}{% endblock %}
+{% block head %}<meta name="robots" content="noindex">{% endblock %}
+{% block content %}
+<section class="card">
+  <p class="eyebrow">QUANTUM AETHER / VERIFICATION</p>
+  <h1>{{ 'التحقق من شارة TLS' if lang == 'ar' else 'Verify TLS observation badge' }}</h1>
+  <h2 dir="ltr">{{ evidence.domain }}</h2>
+  <p class="notice">{{ {'fresh':'بيانات حديثة ضمن صلاحية 30 يومًا', 'stale':'انتهت صلاحية القياس؛ أعد الفحص', 'undetermined':'دعم تبادل المفاتيح غير محسوم', 'not_scanned':'لا توجد نتيجة محفوظة'}[evidence.state] if lang == 'ar' else {'fresh':'Evidence within its 30-day validity window', 'stale':'Evidence expired; rescan required', 'undetermined':'Key-exchange support is undetermined', 'not_scanned':'No stored scan evidence'}[evidence.state] }}</p>
+  <dl class="evidence-facts">
+    <dt>{{ 'آخر قياس' if lang == 'ar' else 'Last measurement' }}</dt><dd dir="ltr">{{ evidence.checked_at or '—' }}</dd>
+    <dt>{{ 'انتهاء الصلاحية' if lang == 'ar' else 'Expires' }}</dt><dd dir="ltr">{{ evidence.expires_at or '—' }}</dd>
+    <dt>{{ t.grade }}</dt><dd>{{ evidence.grade or '—' }}</dd>
+    <dt>TLS</dt><dd dir="ltr">{{ evidence.tls or '—' }}</dd>
+    <dt>{{ t.key_exchange }}</dt><dd dir="ltr">{{ evidence.group or '—' }}</dd>
+  </dl>
+  <p>{{ sx.limitation }}</p>
+  <p>{{ 'التحقق يعرض بيانات محفوظة فقط، ولا يُجري فحصًا جديدًا أو يثبت ملكية النطاق.' if lang == 'ar' else 'Verification only reads stored evidence. It does not initiate a scan or establish domain ownership.' }}</p>
+  <a class="button-link" href="{{ url_for('site.index', domain=evidence.domain, lang=lang) }}">{{ t.site_scan_cta }}</a>
+  <p><a href="{{ url_for('site.badge_status', domain=evidence.domain) }}">JSON</a></p>
+</section>
+{% endblock %}

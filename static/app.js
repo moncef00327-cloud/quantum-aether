@@ -33,10 +33,19 @@
   // كل نموذج فحص (data-busy): عطّل الزر وأظهر رسالة الانتظار، فالفحص قد يستغرق حتى 20 ثانية.
   document.querySelectorAll("form[data-busy]").forEach(function (form) {
     form.addEventListener("submit", function () {
+      if (form.hasAttribute('data-async-scan') && window.fetch && window.AbortController) return;
       var button = form.querySelector("button");
       if (button) button.disabled = true;
       var busy = form.querySelector(".form-busy");
       if (busy) busy.hidden = false;
+    });
+  });
+  window.addEventListener('pageshow', function (event) {
+    if (!event.persisted) return;
+    document.querySelectorAll('form[data-busy]').forEach(function (form) {
+      form.querySelectorAll('button').forEach(function (button) { button.disabled = false; });
+      var busy = form.querySelector('.form-busy');
+      if (busy) busy.hidden = true;
     });
   });
   // أزرار النسخ: data-copy يشير إلى عنصر، والنص يُنسخ إلى الحافظة.

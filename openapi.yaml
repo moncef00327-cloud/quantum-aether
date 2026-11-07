@@ -225,6 +225,32 @@ paths:
               schema: { $ref: "#/components/schemas/ScanSummary" }
         "404":
           description: Unknown scan.
+  /api/v1/badge/{domain}:
+    get:
+      summary: Verify stored TLS badge evidence without initiating a scan
+      description: Returns fresh, stale, undetermined or not_scanned, with measurement and expiration timestamps. Does not prove ownership or comprehensive security.
+      parameters:
+        - in: path
+          name: domain
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Stored evidence only; Cache-Control never extends past the evidence expiration.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  domain: { type: string }
+                  state: { type: string, enum: [fresh, stale, undetermined, not_scanned] }
+                  grade: { type: string, nullable: true }
+                  checked_at: { type: string, nullable: true }
+                  expires_at: { type: string, nullable: true }
+                  verification_url: { type: string, format: uri }
+                  limitations: { type: string }
+        "400":
+          description: Invalid domain.
 components:
   schemas:
     ScanSummary:
@@ -239,7 +265,14 @@ components:
         scanned_at: { type: string, format: date-time }
         tls_version: { type: string, example: TLSv1.3 }
         key_exchange_group: { type: string, example: X25519MLKEM768 }
-        post_quantum_key_exchange: { type: boolean }
+        post_quantum_key_exchange:
+          type: boolean
+          description: True only when PQ exchange was observed. False may mean classical or undetermined; inspect observation_status.
+        observation_status:
+          type: string
+          enum: [observed_pq, observed_classical, undetermined]
+        port: { type: integer, enum: [443] }
+        limitations: { type: string }
         certificate_key: { type: string, example: ECDSA-256 }
         certificate_valid: { type: boolean }
         findings_in_full_report: { type: integer }

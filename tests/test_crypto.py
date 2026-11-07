@@ -8,8 +8,8 @@ from contextlib import closing
 import crypto_pay
 import quantum_saas_app
 import sales_db
-from test_app import fake_scanner
-from test_monitor import FakeMailer
+from tests.test_app import fake_scanner
+from tests.test_monitor import FakeMailer
 
 POLY_ADDR = "0xea9dfd40deeb7d91ba780a3d2a2d855599642023"
 ARB_ADDR = "0x3855475de54c955b6d0785b6d02f57291addb064"

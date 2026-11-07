@@ -8,8 +8,8 @@ import unittest
 import free_alerts
 import quantum_saas_app
 import sales_db
-from test_app import fake_scanner
-from test_monitor import FakeMailer, FakeScanner, result_for
+from tests.test_app import fake_scanner
+from tests.test_monitor import FakeMailer, FakeScanner, result_for
 
 
 class SalesBatchTest(unittest.TestCase):

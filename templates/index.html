@@ -1,30 +1,60 @@
 {% extends "base.html" %}
+{% block title %}{{ 'فحص TLS لما بعد الكم مجانًا' if lang == 'ar' else ('Kostenloser Post-Quantum-TLS-Check' if lang == 'de' else 'Free Post-Quantum TLS Checker') }} · Quantum Aether{% endblock %}
 {% block head %}{% for obj in jsonld %}
 <script type="application/ld+json">{{ obj | tojson }}</script>{% endfor %}{% endblock %}
 {% block content %}
-<section class="hero">
+<section class="hero home-hero">
+  <div class="hero-copy">
+  <p class="eyebrow"><span class="status-dot" aria-hidden="true"></span> {{ 'مرصد الويب لما بعد الكم' if lang == 'ar' else ('Das Post-Quantum-Web verstehen' if lang == 'de' else 'INTELLIGENCE FOR THE POST-QUANTUM WEB') }}</p>
   <h1>{{ t.hero_title }}</h1>
   <p class="lead">{{ t.hero_tagline }}</p>
-  <form class="scan-form" method="post" action="{{ url_for('site.scan_form', lang=lang) }}" data-busy="{{ t.scanning }}">
+  </div>
+  <div class="scanner-panel">
+  <div class="panel-heading"><span class="scanner-symbol" aria-hidden="true">⌁</span><div><h2>{{ 'ابدأ بفحص موقعك' if lang == 'ar' else ('Website jetzt prüfen' if lang == 'de' else 'Start with your website') }}</h2><p>{{ 'فحص مجاني · دون إنشاء حساب' if lang == 'ar' else ('Kostenlos · Ohne Anmeldung' if lang == 'de' else 'Free check · No account needed') }}</p></div><span class="tag">TLS</span></div>
+  <form class="scan-form" method="post" action="{{ url_for('site.scan_form', lang=lang) }}" data-busy="{{ t.scanning }}" data-async-scan data-errors="{{ t.errors | tojson | forceescape }}" data-waiting="{{ sx.waiting }}" data-slow="{{ sx.slow }}" data-invalid="{{ sx.invalid }}" data-network="{{ sx.network }}" data-rate="{{ sx.rate }}" data-failed="{{ sx.failed }}" data-retry="{{ sx.retry }}">
     <input type="hidden" name="src" value="home">
     <label for="domain">{{ t.domain_label }}</label>
     <div class="scan-row">
       <input id="domain" name="domain" type="text" inputmode="url" autocomplete="url" dir="ltr"
-             placeholder="example.com" value="{{ domain }}" required maxlength="253"{% if not domain %} autofocus{% endif %}>
-      <button type="submit">{{ t.scan_button }}</button>
+             placeholder="example.com" value="{{ domain }}" required maxlength="4096" autocapitalize="none" spellcheck="false" aria-describedby="domain-hint">
+      <button type="submit" aria-label="{{ t.scan_button }}"><span class="scan-label-wide" aria-hidden="true">{{ t.scan_button }}</span><span class="scan-label-compact" aria-hidden="true">{{ 'افحص' if lang == 'ar' else ('Prüfen' if lang == 'de' else 'Scan') }}</span></button>
     </div>
+    <p id="domain-hint" class="input-hint">{{ sx.input_hint }}</p>
     <p class="try-label">{{ t.try_label }}</p>
-    <div class="examples" dir="ltr">
+    <div class="examples" dir="ltr" role="group" aria-label="{{ t.try_label }}" tabindex="0">
       {% for ex in examples %}<button type="button" class="example-link example-chip{% if ex.grade %} {{ 'ok' if ex.pq else ('unsure' if ex.unsure else 'bad') }}{% endif %}" data-domain="{{ ex.domain }}">
         <span class="ex-domain">{{ ex.domain }}</span>{% if ex.grade %}
         <span class="ex-result">{{ ex.grade }} · {{ t.example_ready if ex.pq else (t.example_unsure if ex.unsure else t.example_not_ready) }}</span>{% endif %}
       </button>{% endfor %}
     </div>
     <p class="no-site">{{ t.hero_no_site }}</p>
-    {% if error %}<p class="form-error" role="alert" data-ev-load="error">{{ error }}</p>{% endif %}
-    <p class="form-busy" hidden>{{ t.scanning }}</p>
+    <p class="form-error" role="alert" data-scan-error tabindex="-1"{% if error %} data-ev-load="error"{% else %} hidden{% endif %}>{{ error or '' }}</p>
+    <p class="form-busy" role="status" aria-live="polite" hidden>{{ sx.waiting }}</p>
   </form>
+  <div class="scanner-footnote"><span aria-hidden="true">◇</span> {{ 'النتيجة تعكس الاتصال المرصود وقت الفحص.' if lang == 'ar' else ('Das Ergebnis zeigt die Verbindung zum Testzeitpunkt.' if lang == 'de' else 'Results reflect the connection observed at test time.') }}</div>
+  </div>
+  <div class="hero-secondary">
+  <div class="hero-links"><a href="{{ url_for('site.adoption_page', lang=lang) }}">{{ t.nav_adoption }} <svg class="link-arrow" viewBox="0 0 20 20" aria-hidden="true"><path d="m5 15 10-10M5 5h10v10"/></svg></a><a href="{{ url_for('site.sample_report', lang=lang if lang != 'de' else 'en') }}" data-ev="sample_report">{{ t.sample_link }} <svg class="link-arrow" viewBox="0 0 20 20" aria-hidden="true"><path d="m5 15 10-10M5 5h10v10"/></svg></a></div>
+  <div class="protocol-rail" dir="ltr"><span>TLS 1.3</span><span>X25519MLKEM768</span><span>OPEN DATA</span></div>
+  </div>
+  <div class="hero-trust">
   <p class="trustbar"><a href="{{ url_for('site.adoption_page', lang=lang) }}">{{ t.trust_bar }}</a></p>
+  </div>
+</section>
+
+{% if study_snapshot %}
+<section class="stats platform-metrics" aria-label="{{ 'الدراسة المنشورة' if lang == 'ar' else 'Published study snapshot' }}">
+  <div class="card stat"><h2>{{ 'نطاق في عينة الدراسة' if lang == 'ar' else ('Domains in der Stichprobe' if lang == 'de' else 'Domains in the published sample') }}</h2><p class="value">{{ '{:,}'.format(study_snapshot.total) }}</p></div>
+  <div class="card stat"><h2>{{ 'استجابت عبر HTTPS' if lang == 'ar' else ('Über HTTPS erreichbar' if lang == 'de' else 'Responded over HTTPS') }}</h2><p class="value">{{ study_snapshot.reachable }}</p></div>
+  <div class="card stat"><h2>{{ 'رُصد دعمها ضمن المستجيبة' if lang == 'ar' else ('PQ-Anteil der erreichbaren Domains' if lang == 'de' else 'PQ share of responding domains') }}</h2><p class="value">{{ (study_snapshot.pq / study_snapshot.reachable * 100)|round(1) }}%</p></div>
+</section>
+<p class="dataset-caption">Tranco · <time datetime="{{ study_snapshot.scanned_on }}">{{ study_snapshot.scanned_on }}</time> · {{ 'عينة منشورة وليست إحصاءً عالميًا مباشرًا' if lang == 'ar' else ('Veröffentlichte Stichprobe, keine globale Live-Statistik' if lang == 'de' else 'Published sample, not a global live statistic') }} · <a href="{{ url_for('site.study', lang=lang) }}">{{ t.nav_study }}</a></p>
+{% endif %}
+
+<section class="discovery-strip" aria-label="{{ 'استكشف المنصة' if lang == 'ar' else 'Explore the platform' }}">
+  <a href="/gravity?lang={{ lang }}"><span class="discovery-number">01 /</span><strong>Gravity Engine</strong><span>{{ 'من الأسئلة إلى الفرص' if lang == 'ar' else ('Von Fragen zu Chancen' if lang == 'de' else 'From questions to opportunities') }}</span><span class="discovery-arrow" aria-hidden="true"><svg class="link-arrow" viewBox="0 0 20 20"><path d="m5 15 10-10M5 5h10v10"/></svg></span></a>
+  <a href="{{ url_for('site.adoption_page', lang=lang) }}"><span class="discovery-number">02 /</span><strong>{{ t.nav_adoption }}</strong><span>{{ 'بيانات مفتوحة ومنهجية معلنة' if lang == 'ar' else ('Offene Daten, transparente Methodik' if lang == 'de' else 'Open data. Transparent methodology.') }}</span><span class="discovery-arrow" aria-hidden="true"><svg class="link-arrow" viewBox="0 0 20 20"><path d="m5 15 10-10M5 5h10v10"/></svg></span></a>
+  <a href="{{ url_for('site.guides_index', lang=lang) }}"><span class="discovery-number">03 /</span><strong>{{ t.nav_guides }}</strong><span>{{ 'خطوات عملية للمطورين' if lang == 'ar' else ('Praktische Anleitungen' if lang == 'de' else 'Practical steps for developers') }}</span><span class="discovery-arrow" aria-hidden="true"><svg class="link-arrow" viewBox="0 0 20 20"><path d="m5 15 10-10M5 5h10v10"/></svg></span></a>
 </section>
 
 <section class="card ladder">

@@ -2,6 +2,7 @@
 # منطق المراقبة الشهرية: الخطط، فحص نطاقات الحساب، اكتشاف التغيرات، ونصوص التنبيهات والرسائل.
 import concurrent.futures as cf
 import logging
+import adoption
 
 import monitor_db
 import quantum_vuln_scanner
@@ -16,6 +17,11 @@ PLANS = {
 CERT_WARN_DAYS = (14, 3)  # ننبّه مرة عند عبور كل حد
 
 ALERT_TEXT = {
+    'OBSERVATION_UNDETERMINED': {
+        'en': '{domain}: key-exchange measurement is inconclusive; support has not been confirmed or disproved',
+        'ar': '{domain}: قياس تبادل المفاتيح غير حاسم؛ لم يُثبت الدعم أو نفيه',
+        'de': '{domain}: Schlüsselaustausch unbestimmt; Unterstützung weder bestätigt noch widerlegt',
+    },
     "GRADE_CHANGED": {
         "en": "{domain}: grade changed from {old} to {new}",
         "ar": "{domain}: تغيّرت الدرجة من {old} إلى {new}",
@@ -59,15 +65,23 @@ def diff(previous, result):
     alerts = []
     kx, cert = result["key_exchange"], result["certificate"]
     group = kx.get("group") or "?"
+    uncertain = adoption.is_unsure(kx, kx.get('version') or cert.get('negotiated_version'))
+    old_result = previous.get('result') or {}
+    old_kx = old_result.get('key_exchange') or {}
+    old_tls = old_kx.get('version') or (old_result.get('certificate') or {}).get('negotiated_version')
+    old_uncertain = (bool(old_result) and adoption.is_unsure(old_kx, old_tls)) or (
+        previous.get('grade') is not None and previous.get('pq') is None)
     if previous.get("error") and previous.get("grade") is not None:
         alerts.append(("RECOVERED", {"new": result["grade"]}))
     if previous.get("grade") is None:
         return alerts  # أول فحص: لا شيء نقارن به
-    if previous["grade"] != result["grade"]:
+    if uncertain and not old_uncertain:
+        alerts.append(('OBSERVATION_UNDETERMINED', {}))
+    if not uncertain and not old_uncertain and previous["grade"] != result["grade"]:
         alerts.append(("GRADE_CHANGED", {"old": previous["grade"], "new": result["grade"]}))
-    if previous.get("pq") and not kx.get("pq"):
+    if not uncertain and not old_uncertain and previous.get("pq") and not kx.get("pq"):
         alerts.append(("PQ_LOST", {"group": group}))
-    elif previous.get("pq") == 0 and kx.get("pq"):
+    elif not uncertain and not old_uncertain and previous.get("pq") == 0 and kx.get("pq"):
         alerts.append(("PQ_GAINED", {"group": group}))
     days, old_days = cert.get("days_left"), previous.get("days_left")
     if days is not None:

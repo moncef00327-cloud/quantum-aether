@@ -115,7 +115,11 @@ class TrackerTests(unittest.TestCase):
             snap = adoption.snapshot(c)
         study = quantum_saas_app.study_data()
         self.assertEqual(snap["week"], "2026-W45")
-        self.assertEqual((snap["reachable"], snap["pq"]), (study["reachable"], study["pq"]))
+        with open(adoption.RAW_STUDY_FILE, encoding='utf-8') as source:
+            rows = (json.loads(line) for line in source)
+            retries = sum(bool(row.get('ok') and row.get('key_exchange', {}).get('hrr')) for row in rows)
+        # Preserve the archive; the new tracker excludes retry-only evidence from its denominator.
+        self.assertEqual((snap["reachable"], snap["pq"]), (study["reachable"] - retries, study["pq"]))
         self.assertIsNone(snap["changes"])
 
     def test_page_before_any_weekly_run(self):

@@ -2,6 +2,7 @@
 # تخزين اشتراكات المراقبة الشهرية: الحسابات والنطاقات المراقبة والتنبيهات (في ملف SQLite نفسه).
 import hashlib
 import json
+import adoption
 import secrets
 
 SCHEMA = """
@@ -132,10 +133,12 @@ def remove_domain(conn, account_id, domain_id):
 def save_check(conn, domain_id, result=None, error=None):
     with conn:
         if result is not None:
+            kx = result['key_exchange']
+            pq = None if adoption.is_unsure(kx, kx.get('version') or result['certificate'].get('negotiated_version')) else int(bool(kx.get('pq')))
             conn.execute(
                 "UPDATE monitor_domains SET grade = ?, pq = ?, days_left = ?, error = NULL, result_json = ?,"
                 " checked_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now') WHERE id = ?",
-                (result["grade"], int(bool(result["key_exchange"].get("pq"))), result["certificate"].get("days_left"),
+                (result["grade"], pq, result["certificate"].get("days_left"),
                  json.dumps(result, ensure_ascii=False), domain_id))
         else:
             conn.execute("UPDATE monitor_domains SET error = ?, checked_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now') WHERE id = ?",

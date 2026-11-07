@@ -2,6 +2,7 @@
 # يغلّف واجهة الموقع العامة فقط؛ لا أسرار هنا.
 import json
 import os
+import urllib.error
 import urllib.parse
 import urllib.request
 
@@ -14,8 +15,14 @@ def base_url():
 
 def _get(path):
     req = urllib.request.Request(base_url() + path, headers={"User-Agent": "quantum-aether-mcp/1.0"})
-    with urllib.request.urlopen(req, timeout=30) as r:
-        return json.loads(r.read().decode("utf-8"))
+    try:
+        with urllib.request.urlopen(req, timeout=30) as r:
+            return json.loads(r.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        try:
+            return json.loads(exc.read().decode('utf-8'))
+        except (ValueError, UnicodeError):
+            return {'error': f'http_{exc.code}'}
 
 
 def _post(path, payload):
@@ -47,19 +54,21 @@ def describe(result):
     group = result.get("key_exchange_group") or "unknown"
     scan_url = result.get("scan_url", base_url())
     price = (result.get("full_report_price") or {}).get("amount", "49.00")
+    if result.get('observation_status') == 'undetermined':
+        return (f'{domain}: post-quantum support is undetermined. The probe did not establish a negotiated group. '
+                f'Retry or verify with a compatible TLS client. One observed connection is not a comprehensive security assessment. {scan_url}')
     if result.get("post_quantum_key_exchange"):
         return (f"✅ {domain} already negotiates post-quantum key exchange ({group}). Grade {grade}. "
-                "It is ahead of the curve — future-ready and protected against \"harvest now, decrypt later\". "
-                "No action needed; re-check periodically, since a server or CDN change can silently remove it.")
+                "This was observed in one TLS measurement, not a comprehensive security assessment or a guarantee. "
+                "Re-check periodically; a server or CDN change can remove support, and the origin may differ from the edge.")
     return (
         f"⚠ {domain} uses classical key exchange ({group}) only — grade {grade}.\n"
-        "Problem: it is not keeping up with where the web is already going. Chrome, Firefox, Cloudflare and Google "
-        "negotiate post-quantum TLS by default today, and NIST standardized ML-KEM (FIPS 203) in 2024. "
-        "This site is behind that shift — and traffic captured today could be decrypted years from now, once "
+        "Problem: classical key exchange was observed in this measurement. NIST standardized ML-KEM (FIPS 203) in 2024. "
+        "Traffic captured today could be decrypted years from now, once "
         "quantum computers mature (\"harvest now, decrypt later\").\n"
-        f"Solution: the full report (${price}) gives exact fix steps for nginx, Apache, Caddy and Cloudflare to "
-        "catch up; or daily monitoring ($29/month) scans all your domains and emails you the moment protection "
-        "drops, so you stay ahead as the standard rolls out.\n"
+        f"Solution: choose the published guide for the infrastructure you actually operate, then rescan. "
+        f"A full report (${price}) and daily monitoring ($29/month) are available. "
+        "Server software and origin configuration cannot be inferred from this measurement.\n"
         f"Details and free summary: {scan_url}"
     )
 
