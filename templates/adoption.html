@@ -5,7 +5,7 @@
 {% block head %}
 <script type="application/ld+json">{{ {"@context": "https://schema.org", "@type": "Dataset", "name": t.adoption_title, "description": lead, "dateModified": s.week_start, "temporalCoverage": s.timeline[0].date ~ "/" ~ s.week_start, "license": "https://creativecommons.org/licenses/by/4.0/", "isAccessibleForFree": true, "creator": {"@type": "Organization", "name": "Quantum Aether", "url": url_for('site.index', _external=True)}, "distribution": [{"@type": "DataDownload", "encodingFormat": "application/json", "contentUrl": url_for('site.adoption_json', _external=True)}, {"@type": "DataDownload", "encodingFormat": "text/csv", "contentUrl": url_for('site.adoption_csv', _external=True)}]} | tojson }}</script>
 {% endblock %}
-{% macro host_link(domain) %}<a href="{{ url_for('site.site_page', domain=domain, lang=lang) }}">{{ domain }}</a>{% endmacro %}
+{% macro host_link(domain) %}{% if domain_discoverable(domain) %}<a href="{{ url_for('site.site_page', domain=domain, lang=lang) }}">{{ domain }}</a>{% else %}<span dir="ltr">{{ domain }}</span>{% endif %}{% endmacro %}
 {% macro change_table(rows) %}
   <table class="data" dir="ltr">
     <tr><th>{{ t.rank }}</th><th>{{ t.host_col }}</th><th>{{ t.adoption_before }}</th><th>{{ t.adoption_after }}</th></tr>

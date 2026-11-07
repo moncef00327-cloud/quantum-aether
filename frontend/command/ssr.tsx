@@ -1,0 +1,1 @@
+import React from 'react';import {renderToString} from 'react-dom/server';import App from './App';export function render(lang){globalThis.window={location:{search:'?lang='+lang,hash:''}};return renderToString(<App/>)}

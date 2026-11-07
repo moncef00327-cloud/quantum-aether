@@ -44,7 +44,7 @@ def fixture_scan(raw):
 
 def make_app(directory, port):
     app = quantum_saas_app.create_app({
-        'TESTING': True, 'DATA_DIR': directory, 'PUBLIC_URL': f'http://127.0.0.1:{port}',
+        'TESTING': True, 'TEMPLATES_AUTO_RELOAD': True, 'DATA_DIR': directory, 'PUBLIC_URL': f'http://127.0.0.1:{port}',
         'PAYPAL_CLIENT_ID': '', 'PAYPAL_CLIENT_SECRET': '', 'RESEND_API_KEY': '',
         'USDT_POLYGON_ADDR': '', 'USDC_ARBITRUM_ADDR': '',
         'OWNER_EMAIL': '', 'HASH_SALT': 'local-qa-fixture-only', 'TRUSTED_PROXIES': 0,

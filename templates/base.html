@@ -28,58 +28,27 @@
   {% endblock %}
   <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='aether.css', v='2.0.0-local') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='aether-dark.css', v='2.0.0-local') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='observatory.css', v='20261107-glass2') }}">
+  <link rel="stylesheet" href="/static/command/app.css?v=20261107-sample4">
+  <link rel="stylesheet" href="/static/command/pages.css?v=20261107-sample4">
   {% block head %}{% endblock %}
 </head>
 <body data-page="{{ request.endpoint }}">
-  <a class="skip-link" href="#main-content">{{ 'انتقل إلى المحتوى' if lang == 'ar' else ('Zum Inhalt' if lang == 'de' else 'Skip to content') }}</a>
-  <header class="site-header">
-    <div class="platform-strip"><div class="wrap"><span class="status-dot" aria-hidden="true"></span> {{ 'أبحاث مفتوحة. تشفير قابل للتحقق.' if lang == 'ar' else ('Offene Forschung. Überprüfbare Verschlüsselung.' if lang == 'de' else 'Open research. Verifiable encryption.') }}<span dir="ltr">TLS 1.3 / ML-KEM</span></div></div>
-    <div class="wrap header-row">
-      <a class="brand" href="{{ url_for('site.index', lang=lang) }}"><span class="brand-symbol" aria-hidden="true"><svg viewBox="0 0 40 40" fill="none"><path d="M20 4 34 12v16L20 36 6 28V12Z" stroke="currentColor" stroke-width="1.5"/><path d="m6 12 14 8 14-8M20 20v16M20 4v16L6 28m14-8 14 8" stroke="currentColor" stroke-width="1.5"/><circle cx="20" cy="20" r="4" fill="currentColor"/></svg></span><span>{{ t.brand }}<small>POST-QUANTUM INTELLIGENCE</small></span></a>
-      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-nav" hidden>{{ 'القائمة' if lang == 'ar' else ('Menü' if lang == 'de' else 'Menu') }} <span aria-hidden="true">☰</span></button>
-      <nav id="primary-nav" aria-label="{{ 'التنقل الرئيسي' if lang == 'ar' else 'Main navigation' }}">
-        <button type="button" class="nav-close" hidden aria-label="{{ 'إغلاق القائمة' if lang == 'ar' else ('Menü schließen' if lang == 'de' else 'Close menu') }}">×</button>
-        <a class="nav-brand" href="{{ url_for('site.index', lang=lang) }}"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 4 34 12v16L20 36 6 28V12Z" fill="none" stroke="currentColor" stroke-width="2.5"/></svg><span>Quantum Aether<small>{{ 'مرصد أمان TLS' if lang == 'ar' else 'Security Observatory' }}</small></span></a>
-        {% for endpoint, label in [('site.index', t.nav_scan), ('site.adoption_page', t.nav_adoption), ('site.monitoring', 'المراقبة' if lang == 'ar' else ('Überwachung' if lang == 'de' else 'Monitoring')), ('site.gravity_dashboard', 'Gravity'), ('site.business_page', 'للشركات' if lang == 'ar' else ('Für Unternehmen' if lang == 'de' else 'For business')), ('site.pricing_page', 'الأسعار والاشتراكات' if lang == 'ar' else ('Preise & Abos' if lang == 'de' else 'Pricing & plans'))] %}
-        <a href="{{ url_for(endpoint, lang=lang) }}"{% if request.endpoint == endpoint %} aria-current="page"{% endif %}><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="{% if endpoint == 'site.index' %}M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5M8 12h8{% elif endpoint == 'site.adoption_page' %}M4 4v16h16M8 15l4-5 4 2 5-7{% elif endpoint == 'site.monitoring' %}M4 12a8 8 0 0 1 16 0M7 12a5 5 0 0 1 10 0M12 12v8{% elif endpoint == 'site.business_page' %}M4 8h16v12H4ZM8 8V4h8v4M4 13h16{% elif endpoint == 'site.pricing_page' %}M3 5h18v14H3ZM3 10h18M7 15h4{% else %}M4 12a8 5 0 1 0 16 0 8 5 0 1 0-16 0M12 10v4{% endif %}"/></svg><span>{{ label }}</span></a>
-        {% endfor %}
-        <details class="nav-resources"><summary>{{ 'الموارد' if lang == 'ar' else ('Ressourcen' if lang == 'de' else 'Resources') }}</summary><div class="nav-dropdown">
-          {% for endpoint, label in [('site.guides_index', t.nav_guides), ('site.study', t.nav_study), ('site.compare', t.nav_compare), ('site.research', t.nav_research), ('site.openapi', t.nav_api), ('site.llms_txt', 'LLM API / llms.txt')] %}<a href="{{ url_for(endpoint, lang=lang) }}">{{ label }}</a>{% endfor %}
-        </div></details>
-        <div class="language-switch" aria-label="{{ 'اللغة' if lang == 'ar' else 'Language' }}">{% for l in page_langs %}<a class="lang" href="{{ localized_url(l) }}" hreflang="{{ l }}" lang="{{ l }}"{% if l == lang %} aria-current="true"{% endif %}>{{ lang_names[l] }}</a>{% endfor %}</div>
-      </nav>
-    </div>
-  </header>
-  <main class="wrap" id="main-content" tabindex="-1">
-    {% block content %}{% endblock %}
-  </main>
-  <nav class="mobile-dock" aria-label="{{ 'اختصارات التصفح' if lang == 'ar' else ('Schnellnavigation' if lang == 'de' else 'Quick navigation') }}">
-    {% for endpoint, label, icon in [('site.index', t.nav_scan, 'scan'), ('site.adoption_page', t.nav_adoption, 'chart'), ('site.gravity_dashboard', 'Gravity', 'orbit'), ('site.guides_index', t.nav_guides, 'book')] %}
-    <a href="{{ url_for(endpoint, lang=lang) }}"{% if request.endpoint == endpoint %} aria-current="page"{% endif %}>
-      <svg viewBox="0 0 24 24" aria-hidden="true">{% if icon == 'scan' %}<path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5M8 12h8m-4-4v8"/>{% elif icon == 'chart' %}<path d="M4 4v16h16M8 15l4-5 4 2 5-7"/>{% elif icon == 'orbit' %}<circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="10" ry="5" transform="rotate(-35 12 12)"/>{% else %}<path d="M12 5c-3-2-6-2-9-1v15c3-1 6-1 9 1 3-2 6-2 9-1V4c-3-1-6-1-9 1Zm0 0v15"/>{% endif %}</svg>
-      <span>{{ label }}</span>
-    </a>{% endfor %}
-  </nav>
-  <footer class="wrap site-footer">
-    <div class="footer-grid"><div><a class="footer-brand" href="{{ url_for('site.index', lang=lang) }}">{{ t.brand }}</a><p>{{ 'نفهم التشفير اليوم. ونستعد لما يأتي.' if lang == 'ar' else ('Verschlüsselung verstehen. Auf morgen vorbereiten.' if lang == 'de' else 'Understand encryption today. Prepare for what comes next.') }}</p></div>
-      <div><h2>{{ 'المنصة' if lang == 'ar' else ('Plattform' if lang == 'de' else 'Platform') }}</h2><a href="{{ url_for('site.index', lang=lang) }}">{{ t.nav_scan }}</a><a href="{{ url_for('site.monitoring', lang=lang) }}">{{ t.nav_monitoring }}</a><a href="/gravity?lang={{ lang }}">Gravity Engine</a><a href="{{ url_for('site.business_page', lang=lang) }}">{{ 'للشركات' if lang == 'ar' else ('Für Unternehmen' if lang == 'de' else 'For business') }}</a><a href="{{ url_for('site.pricing_page', lang=lang) }}">{{ 'الأسعار والاشتراكات' if lang == 'ar' else ('Preise & Abos' if lang == 'de' else 'Pricing & plans') }}</a></div>
-      <div><h2>{{ 'المعرفة والبيانات' if lang == 'ar' else ('Wissen & Daten' if lang == 'de' else 'Knowledge & data') }}</h2><a href="{{ url_for('site.adoption_page', lang=lang) }}">{{ t.nav_adoption }}</a><a href="{{ url_for('site.guides_index', lang=lang) }}">{{ t.nav_guides }}</a><a href="{{ url_for('site.research', lang=lang) }}">{{ t.nav_research }}</a></div></div>
-    <p>{{ t.privacy }}</p>
-    <p class="legal-links">
-      <a href="{{ url_for('site.legal_page', slug='impressum', lang=legal_lang) }}">{{ t.legal_imprint }}</a> ·
-      <a href="{{ url_for('site.legal_page', slug='datenschutz', lang=legal_lang) }}">{{ t.legal_privacy }}</a> ·
-      <a href="{{ url_for('site.legal_page', slug='agb', lang=legal_lang) }}">{{ t.legal_terms }}</a>
-    </p>
-    <p class="legal-links"><a href="{{ url_for('site.llms_txt') }}">llms.txt</a> · <a href="{{ url_for('site.openapi') }}">API</a></p>
-    <p>© {{ t.brand }} · ather-quatum.cloud</p>
-  </footer>
-  <script src="{{ url_for('static', filename='app.js', v='2.0.0-local') }}" defer></script>
-  <script src="{{ url_for('static', filename='aether-ui.js', v='20261107-business') }}" defer></script>
-  <script src="{{ url_for('static', filename='scanner-ui.js', v='2.0.0-local') }}" defer></script>
-  {% block scripts %}{% endblock %}
-</body>
-</html>
+{% set command_title = self.title()|striptags %}
+{% set command_section = 'business' if request.endpoint in ['site.business_page','site.pricing_page','site.agency_page'] else 'monitor' if request.endpoint in ['site.monitoring','site.monitor_dashboard'] else 'tracker' if request.endpoint in ['site.adoption_page','site.countries_page','site.country_page','site.study'] else 'guides' if request.endpoint in ['site.guides_index','site.guide','site.research'] else 'scanner' %}
+<div class="app {{ 'en' if lang != 'ar' else '' }} command-service" dir="{{ t.dir }}">
+<a class="command-skip" href="#main-content">{{ 'انتقل إلى المحتوى' if lang == 'ar' else 'Skip to content' }}</a>
+{% if lang == 'ar' %}{% include 'command/sidebar-ar.html' %}{% else %}{% include 'command/sidebar-en.html' %}{% endif %}
+<button class="scrim" hidden aria-label="{{ 'إغلاق القائمة' if lang == 'ar' else 'Close menu' }}"></button>
+<main id="workspace-content">
+{% if lang == 'ar' %}{% include 'command/header-ar.html' %}{% else %}{% include 'command/header-en.html' %}{% endif %}
+<div class="content">
+<div class="service-content" id="main-content" tabindex="-1">{% block content %}{% endblock %}</div>
+<footer><span>© 2026 Quantum Aether / {{ 'أبحاث مفتوحة. تشفير قابل للتحقق.' if lang == 'ar' else 'Open research. Verifiable encryption.' }}</span>
+<div class="command-footer-links"><a href="{{ url_for('site.business_page',lang=lang) }}">{{ 'الشركات' if lang == 'ar' else ('Für Unternehmen' if lang == 'de' else 'For business') }}</a> · <a href="{{ url_for('site.pricing_page',lang=lang) }}">{{ 'الأسعار' if lang == 'ar' else 'Pricing' }}</a> · <a href="/gravity?lang={{ lang }}">Gravity</a> · <a href="/llms.txt">LLM / API</a> · <a href="{{ url_for('site.legal_page',slug='impressum',lang=legal_lang) }}">{{ t.legal_imprint }}</a> · <a href="{{ url_for('site.legal_page',slug='datenschutz',lang=legal_lang) }}">{{ t.legal_privacy }}</a> · <a href="{{ url_for('site.legal_page',slug='agb',lang=legal_lang) }}">{{ t.legal_terms }}</a>
+<div class="command-language-links">{% for l in page_langs %}<a href="{{ localized_url(l) }}" hreflang="{{ l }}" lang="{{ l }}">{{ lang_names[l] }}</a> {% endfor %}</div></div></footer>
+</div></main></div>
+<script src="/static/command/shell.js?v=20261107-sample4" defer></script>
+<script src="{{ url_for('static',filename='app.js') }}" defer></script>
+<script src="{{ url_for('static',filename='scanner-ui.js') }}" defer></script>
+{% block scripts %}{% endblock %}
+</body></html>

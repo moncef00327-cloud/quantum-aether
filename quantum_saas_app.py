@@ -42,6 +42,7 @@ import quantum_vuln_scanner
 import sales_db
 import scorecard
 import scan_experience
+import search_indexing
 import badge_evidence
 from mailer import Mailer
 from paypal_client import SUBSCRIPTION_LIVE_STATUSES, PayPalClient, PayPalError, verify_capture, verify_subscription
@@ -160,7 +161,8 @@ def _inject():
             "page_langs": ["en", "ar", "de"] if request.endpoint in DE_PAGES else ["en", "ar"],
             "abs_url": lambda endpoint, **kw: public_base() + url_for(endpoint, **kw),
             "localized_url": localized_url, "metadata_url": metadata_url,
-            "sx": scan_experience.COPY[lang]}
+            "sx": scan_experience.COPY[lang],
+            "domain_discoverable": lambda domain: not search_indexing.is_excluded(domain)}
 
 
 def public_base():
@@ -169,6 +171,11 @@ def public_base():
 
 def localized_url(lang, canonical=False):
     values = dict(request.view_args or {})
+    if request.endpoint == 'site.site_page' and values.get('domain'):
+        try:
+            values['domain'] = quantum_vuln_scanner.normalize_domain(values['domain'])
+        except quantum_vuln_scanner.ScanError:
+            pass  # Invalid routes still render their existing 404/noindex response.
     if request.endpoint == 'site.compare' and not canonical:
         values.update({k: request.args[k][:4096] for k in ('a', 'b') if request.args.get(k)})
     if request.endpoint:
@@ -349,7 +356,7 @@ def home_examples():
 
 @bp.get("/")
 def index():
-    return render_template("index.html", error=None, domain=request.args.get("domain", "")[:253],
+    return render_template("index.html" if current_lang() == "de" else "command_home.html", error=None, domain=request.args.get("domain", "")[:253],
                            jsonld=home_jsonld(), examples=home_examples(), study_snapshot=study_data())
 
 
@@ -889,19 +896,25 @@ def site_page(domain):
             seen = {domain}
             for row in adoption.peers(conn, domain, network, last["week"]) + \
                     adoption.rank_neighbors(conn, last["rank"], last["week"], domain):
-                if row["domain"] not in seen:
+                if row["domain"] not in seen and not search_indexing.is_excluded(row["domain"]):
                     seen.add(row["domain"])
                     related.append(row)
             related = related[:10]
         verdict = site_verdict(domain, summary)
-        page_url = public_base() + url_for(".site_page", domain=domain)
+        page_url = metadata_url(current_lang())
         pq = "yes" if summary["pq"] else ("undetermined" if summary.get("unsure") else "no")
         modified = str(summary["scanned_at"])[:10]
         jsonld = [{"@context": "https://schema.org", "@type": "WebPage",
                    "name": f"{domain} — post-quantum TLS readiness",
                    "url": page_url, "inLanguage": current_lang(), "dateModified": modified,
                    "isPartOf": {"@type": "Dataset", "name": "Post-quantum TLS adoption tracker",
-                                "url": public_base() + url_for(".adoption_page")},
+                                "description": "Weekly measurements of post-quantum TLS adoption across ranked websites "
+                                               "and selected watchlists, including observed TLS versions, key-exchange "
+                                               "groups and readiness grades. Results describe the measured public "
+                                               "HTTPS connection, not overall application security.",
+                                "url": public_base() + url_for(".adoption_page"),
+                                "license": "https://creativecommons.org/licenses/by/4.0/",
+                                "creator": {"@type": "Organization", "name": "Quantum Aether"}},
                    "about": {"@type": "WebSite", "name": domain, "url": f"https://{domain}"},
                    "description": f"{domain} TLS grade {summary['grade']}, key exchange {summary.get('group') or 'unknown'}, "
                                   f"post-quantum key exchange: {pq}."},
@@ -915,11 +928,17 @@ def site_page(domain):
         entry = next((e for e in board["entries"] if e["code"] == code), None)
         if entry:
             country = dict(entry, name=countries.name(code, current_lang()), total=board["countries"])
+    indexing_excluded = search_indexing.is_excluded(domain)
     response = make_response(render_template(
         "site_page.html", domain=domain, summary=summary, source=source, verdict=verdict, history=history,
         related=related, network=network, snippets=badge_snippets(domain) if summary else None, jsonld=jsonld,
-        country=country),
+        country=country, indexing_excluded=indexing_excluded),
         200 if summary else 404)  # نطاق لا نعرفه (مثل wp-login.php من الماسحات) ليس صفحة حقيقية
+    if indexing_excluded:
+        response.headers['X-Robots-Tag'] = 'noindex, follow'
+        response.headers['Cache-Control'] = 'no-cache'
+        # Always deliver the new directive instead of an old-data-date 304.
+        return response
     return with_last_modified(response, summary["scanned_at"]) if summary else response
 
 
@@ -1717,7 +1736,7 @@ def _sitemap_domains():
     known = {d for d, _ in rows}
     study_day = study_data()["scanned_on"]
     rows += [(site["domain"], study_day) for site in study_data()["sites"] if site["domain"] not in known]
-    return rows
+    return [(domain, day) for domain, day in rows if not search_indexing.is_excluded(domain)]
 
 
 def _urlset(pages):

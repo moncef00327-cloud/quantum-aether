@@ -1,0 +1,8 @@
+feature,area,priority,original,clone,notes
+Review layout and glass styling,interface,must,yes,yes,Original user-owned React and CSS reused
+Arabic and English,language,must,yes,yes,56 responsive view checks
+Mobile drawer and keyboard,accessibility,must,yes,yes,Focus and Escape tested
+Scanner,core,must,preview,yes,Real POST to existing scan backend; reserved local fixture tested
+Business section,navigation,must,no,yes,Business pricing and agency links
+LLM API section,navigation,must,no,yes,llms.txt llms-full.txt openapi.yaml
+German,language,should,legacy,yes,Existing localized homepage retained

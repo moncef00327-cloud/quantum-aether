@@ -27,7 +27,7 @@
 <section class="card">
   <h2>{{ t[key] }} ({{ rows|length }})</h2>
   <ul class="related" dir="ltr">
-    {% for r in rows %}<li><a href="{{ url_for('site.site_page', domain=r.domain) }}">{{ r.domain }}</a>
+    {% for r in rows %}<li>{% if domain_discoverable(r.domain) %}<a href="{{ url_for('site.site_page', domain=r.domain) }}">{{ r.domain }}</a>{% else %}<span>{{ r.domain }}</span>{% endif %}
       <span class="muted">{{ r.grade }}{% if r.rank %} · #{{ r.rank }}{% endif %}</span></li>{% endfor %}
   </ul>
 </section>
