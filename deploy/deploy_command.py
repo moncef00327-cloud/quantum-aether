@@ -21,9 +21,11 @@ FILES = ['quantum_saas_app.py', 'agent_discovery.py', 'guides.py', 'business_pag
          'static/command/pages.css', 'static/command/shell.js']
 OBSOLETE = ['static/style.css', 'static/aether.css', 'static/aether-dark.css',
             'static/observatory.css', 'static/aether-ui.js', 'static/color-directions.html']
-# Verify local and production backend state still match before replacing the tested files.
-assert (TARGET/'quantum_saas_app.py').read_bytes() == (ROOT/'quantum_saas_app.py').read_bytes(), 'Production backend differs from tested backend'
 assert all((ROOT/name).is_file() for name in FILES)
+# Allow replacement only when every production file still matches the previous committed release.
+for name in FILES:
+    baseline = subprocess.check_output(['git', 'show', 'HEAD^:'+name], cwd=ROOT)
+    assert (TARGET/name).read_bytes() == baseline, f'Production file differs from previous release: {name}'
 BACKUP = Path(tempfile.mkdtemp(prefix='pre-command-review-', dir='/root/backups'))
 existing = []
 for name in FILES + OBSOLETE:
