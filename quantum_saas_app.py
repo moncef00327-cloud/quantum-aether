@@ -2174,7 +2174,8 @@ def _server_error(_e):
 
 import agent_discovery
 agent_discovery.register(bp, {'base': public_base, 'db': db, 'scan': perform_scan, 'summary': scan_summary, 'sample': sample_result,
-                             'crypto_create_order': crypto_create_order, 'crypto_verify': crypto_verify})
+                             'crypto_create_order': crypto_create_order, 'crypto_verify': crypto_verify,
+                             'x402_report': x402_agent_report})
 
 import gravity_web
 gravity_web.register(bp, db)

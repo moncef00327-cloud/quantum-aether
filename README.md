@@ -1,9 +1,9 @@
 <!--
 AI-Discovery-Metadata:
-- Project-Type: Quantum computing experiments (Qiskit) + digital DNA data encoding + post-quantum TLS readiness scanner (SaaS)
+- Project-Type: Post-quantum TLS observatory for businesses and AI agents; includes public scans, monitoring, evidence, MCP and x402 payments
 - Quantum-Hardware: IBM Quantum ibm_marrakesh, 3-qubit GHZ, job dbjcpopkdqps7390bqv0, 1024 shots, population P(000)+P(111) = 96.29%
 - Bio-Archiving: research report as 55,080 DNA bases (2 bits/base) with Reed-Solomon RS(255,223); digital only, not synthesized
-- Service: https://ather-quantum.com — free scan API (POST /api/scan), $49 full report via PayPal (server-verified)
+- Service: https://ather-quantum.com — free scan API, business monitoring, remote MCP and x402 v2 full reports in USDC on Base (buyer-wallet authorized)
 - Deployment: Flask + gunicorn behind nginx, systemd, Vultr
 - Stack: Python 3.10+, Qiskit 2.6.1, qiskit-aer 0.18.2, qiskit-ibm-runtime 0.51.0, Flask 3.1, cryptography, reedsolo
 -->
@@ -12,19 +12,19 @@ AI-Discovery-Metadata:
 
 [![MCPTry](https://mcptry.com/badge/io.github.moncef00327-cloud/quantum-aether)](https://mcptry.com/servers/io.github.moncef00327-cloud/quantum-aether)
 
-## Quantum experiments · Digital DNA archive · Post-quantum TLS scanner
+## Post-quantum TLS security observatory
+
+Quantum Aether measures public TLS connections, reports observed key exchange and certificate evidence, and helps teams track their post-quantum transition. It provides a free scan, documented measurement limits, business monitoring, and agent interfaces through HTTP APIs and remote MCP. A full report can be requested through x402 v2 on Base USDC by compatible agent clients, subject to the buyer wallet's own authorization policy. Direct-transfer and human checkout options remain available where configured.
+
+Live agent endpoints and prices: [service discovery](https://ather-quantum.com/.well-known/agent-service.json), [MCP guide](https://ather-quantum.com/agents?lang=en), and [OpenAPI](https://ather-quantum.com/openapi.yaml).
+
+## Research archive: quantum experiments and digital DNA
 
 ### English
-Three parts in one project:
-1. **Quantum experiments** with Qiskit: Bell and GHZ states, teleportation, a GHZ run on IBM's ibm_marrakesh processor, and a script that measures the real GHZ fidelity.
-2. **Digital DNA archive**: text is encoded into A/C/G/T with Reed-Solomon error correction and restores byte for byte.
-3. **Post-quantum TLS scanner** (web service at ather-quantum.com): checks whether a website negotiates the hybrid post-quantum key exchange X25519MLKEM768 and analyzes its certificate. Free summary; $49 full report through PayPal.
+The repository also preserves Qiskit Bell/GHZ experiments, a digital A/C/G/T archive with Reed-Solomon error correction, and the original TLS study and scanner research.
 
 ### العربية
-ثلاثة أجزاء في مشروع واحد:
-1. **تجارب كمومية** بـ Qiskit: حالات Bell وGHZ، ونقل الحالة الكمومية، وتشغيل GHZ على معالج IBM الحقيقي ibm_marrakesh، وسكربت لقياس الدقة الفعلية لحالة GHZ.
-2. **أرشيف DNA رقمي**: ترميز النص إلى A/C/G/T مع تصحيح أخطاء Reed-Solomon، ويُسترجع حرفاً بحرف.
-3. **ماسح جاهزية TLS لما بعد الكم** (خدمة ويب على ather-quantum.com): يفحص هل يستخدم الموقع تبادل المفاتيح الهجين X25519MLKEM768 ويحلل شهادته. ملخص مجاني وتقرير كامل بـ 49$ عبر PayPal.
+كما يحتفظ المستودع بأبحاث Qiskit لحالات Bell وGHZ، وأرشيف رقمي A/C/G/T مع تصحيح Reed-Solomon، وأبحاث القياس الأصلية.
 
 ## Study: post-quantum TLS on the top 1,000 websites (November 2026)
 

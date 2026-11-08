@@ -54,15 +54,21 @@ Scanner, methodology and open dataset: https://ather-quantum.com
 
 Connect a Streamable HTTP client to `https://ather-quantum.com/mcp`.
 The stateless remote service exposes `scan_tls`, `get_tls_evidence`,
-`get_methodology`, `get_example_result` and `get_service_info`.
+`get_methodology`, `get_example_result`, `get_service_info` and
+`get_full_report`. The paid report tool returns a standard x402 v2 payment
+challenge for exact USDC on Base. An x402-capable MCP client can sign and retry
+under the buyer wallet's own spend policy; the service settles before it returns
+the report. Direct-transfer tools for Polygon USDT remain available as a manual
+fallback.
 It returns JSON, does not open an SSE stream, and accepts supported versions
 2025-11-25 and 2025-06-18. Active scans consume the ordinary API scan limits
-and store public results. The remote transport does not expose purchase tools.
+and store public results. Scan results are observations, not authorization to
+execute changes on the scanned system.
 
 Agent guide: https://ather-quantum.com/agents?lang=en
 Service manifest: https://ather-quantum.com/.well-known/agent-service.json
 
-The server registration metadata was prepared for a remote-enabled release;
-this README does not assert that an external registry accepted it. The existing
-PyPI wrapper remains version 1.0.1. Automatic x402 payments and signed receipts
-are not implemented by this release.
+The MCP registry metadata declares remote server version 1.4.0. The separate
+PyPI stdio wrapper remains version 1.0.1 and uses the human-assisted checkout
+flow described by its local tools; automatic x402 payment is provided by the
+remote MCP tool. Signed scan receipts are not implemented.

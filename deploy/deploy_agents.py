@@ -5,6 +5,7 @@ import json, os, shutil, subprocess, tempfile, time, urllib.request
 ROOT=Path('/root/quantum-aether')
 TARGET=Path('/var/www/quantum_saas').resolve()
 BASE='https://ather-quantum.com'
+PREVIOUS_RELEASE='400fa95'
 FILES=[
  'quantum_saas_app.py','agent_discovery.py','crypto_pay.py','i18n.py','openapi.yaml','templates/base.html','templates/scan.html',
  'templates/command_home.html','templates/llms.txt','templates/agents.html',
@@ -13,6 +14,9 @@ FILES=[
  'static/command/app.js','static/crypto.js',
 ]
 assert all((ROOT/p).is_file() for p in FILES)
+for name in FILES:
+ baseline=subprocess.check_output(['git','show',PREVIOUS_RELEASE+':'+name],cwd=ROOT)
+ assert (TARGET/name).read_bytes()==baseline,f'Production file differs from last deployed release: {name}'
 backup=Path(tempfile.mkdtemp(prefix='pre-agents-',dir='/root/backups'))
 existing=[]
 for name in FILES:
@@ -53,6 +57,10 @@ with tempfile.TemporaryDirectory() as data:
   challenge=json.loads(__import__('base64').b64decode(r.headers['PAYMENT-REQUIRED']))
   accepted=challenge['accepts'][0]
   assert accepted['network']=='eip155:8453' and accepted['asset'].lower()=='0x833589fcd6edb6e08f4c7c32d4f71b54bda02913' and accepted['payTo'].lower()=='0x3855475de54c955b6d0785b6d02f57291addb064'
+  tools=c.post('/mcp',json={'jsonrpc':'2.0','id':1,'method':'tools/list'}).json['result']['tools']
+  assert 'get_full_report' in {tool['name'] for tool in tools}
+  mcp_challenge=c.post('/mcp',json={'jsonrpc':'2.0','id':2,'method':'tools/call','params':{'name':'get_full_report','arguments':{'scan_id':'x402-smoke'}}}).json['result']
+  assert mcp_challenge['isError'] and mcp_challenge['structuredContent']['accepts'][0]['network']=='eip155:8453'
 '''
  subprocess.run([str(TARGET/'.venv/bin/python'),'-c',check],cwd=TARGET,check=True,env=dict(os.environ,PYTHONDONTWRITEBYTECODE='1'))
  restart()

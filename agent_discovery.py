@@ -1,4 +1,5 @@
 """Discoverable public TLS tools over a stateless MCP JSON-RPC endpoint."""
+import base64
 import datetime as dt
 import json
 import re
@@ -9,19 +10,21 @@ import badge_evidence
 import quantum_vuln_scanner
 import scan_experience
 
-UPDATED='2026-11-07'
+UPDATED='2026-11-08'
 PROTOCOLS=('2025-11-25','2025-06-18')
-VERSION='1.3.0'
+VERSION='1.4.0'
 DOMAIN_SCHEMA={'type':'object','properties':{'domain':{'type':'string','minLength':1,'maxLength':253,'description':'Public DNS hostname, for example example.com. HTTPS port 443 only.'}},'required':['domain'],'additionalProperties':False}
 EMPTY_SCHEMA={'type':'object','properties':{},'additionalProperties':False}
 ORDER_SCHEMA={'type':'object','properties':{'scan_id':{'type':'string','minLength':1,'description':'ID returned by scan_tls.'},'consent_immediate_delivery':{'type':'boolean','const':True,'description':'Set true only after the payer explicitly agrees to immediate delivery and the applicable withdrawal-right terms.'}},'required':['scan_id','consent_immediate_delivery'],'additionalProperties':False}
 VERIFY_SCHEMA={'type':'object','properties':{'order_id':{'type':'string','minLength':1},'tx_hash':{'type':'string','pattern':'^0x[0-9a-fA-F]{64}$'}},'required':['order_id','tx_hash'],'additionalProperties':False}
+REPORT_SCHEMA={'type':'object','properties':{'scan_id':{'type':'string','minLength':1,'description':'ID returned by scan_tls. A compatible x402 MCP client handles the Base USDC payment challenge.'}},'required':['scan_id'],'additionalProperties':False}
 TOOLS=[
  {'name':'scan_tls','title':'Measure TLS and post-quantum key exchange','description':'Run a new, rate-limited TLS scan of a public hostname on port 443. Returns observation_status, measured time, negotiated group and certificate summary. Starts an external connection and stores a publicly accessible result. Does not judge application safety.', 'inputSchema':DOMAIN_SCHEMA,'annotations':{'readOnlyHint':False,'destructiveHint':False,'idempotentHint':False,'openWorldHint':True}},
  {'name':'get_tls_evidence','title':'Read stored TLS evidence without scanning','description':'Read existing TLS evidence with source, checked_at, expires_at and fresh/stale/undetermined/not_scanned state. Never starts a new network scan. A missing record is not proof that a domain is unsafe.', 'inputSchema':DOMAIN_SCHEMA,'annotations':{'readOnlyHint':True,'idempotentHint':True,'openWorldHint':False}},
  {'name':'get_methodology','title':'Understand measurement scope and limitations','description':'Get the documented measurement scope, observation states, certificate-grade rules and privacy limitations before interpreting a TLS result.','inputSchema':EMPTY_SCHEMA,'annotations':{'readOnlyHint':True,'idempotentHint':True,'openWorldHint':False}},
  {'name':'get_example_result','title':'Inspect an archived example without scanning','description':'Return an explicitly labeled archived example, not live telemetry. No payment and no network scan.','inputSchema':EMPTY_SCHEMA,'annotations':{'readOnlyHint':True,'idempotentHint':True,'openWorldHint':False}},
  {'name':'get_service_info','title':'Discover Quantum Aether capabilities and current pricing','description':'Get live endpoints, quotas, report price, x402 Base USDC checkout status and limitations.','inputSchema':EMPTY_SCHEMA,'annotations':{'readOnlyHint':True,'idempotentHint':True,'openWorldHint':False}},
+ {'name':'get_full_report','title':'Purchase the full TLS report with x402','description':'Fetch the full report for a completed scan. If unpaid, returns a standard x402 v2 PaymentRequired challenge for exact USDC on Base. An x402-enabled MCP client may sign and retry under the buyer wallet’s own spend policy. Payment is settled before report access is returned.','inputSchema':REPORT_SCHEMA,'annotations':{'readOnlyHint':False,'destructiveHint':False,'idempotentHint':False,'openWorldHint':True}},
  {'name':'create_full_report_order','title':'Create a USDT Polygon payment order','description':'Create a one-time full-report order for an existing scan. This does not transfer funds. Only set consent_immediate_delivery true after the payer has expressly agreed to immediate delivery and applicable withdrawal terms. The payer must send USDT on Polygon and then submit its transaction hash using verify_full_report_payment.','inputSchema':ORDER_SCHEMA,'annotations':{'readOnlyHint':False,'destructiveHint':False,'idempotentHint':False,'openWorldHint':False}},
  {'name':'verify_full_report_payment','title':'Verify a Polygon transaction and unlock a paid report','description':'Submit the payer-provided Polygon transaction hash. The server checks the confirmed USDT transfer, exact order amount and recipient on chain. Returns the private report URL only after confirmation.','inputSchema':VERIFY_SCHEMA,'annotations':{'readOnlyHint':False,'destructiveHint':False,'idempotentHint':True,'openWorldHint':True}},
 ]
@@ -50,10 +53,10 @@ def manifest(base):
    'quantum_scan':{'url':base+'/api/v1/quantum-scan','method':'POST'},'stored_evidence':{'url_template':base+'/api/v1/badge/{domain}','method':'GET','starts_scan':False},
    'methodology':{'url':base+'/api/v1/agent/methodology','method':'GET'},'example':{'url':base+'/api/v1/agent/example','method':'GET','is_live':False},'health':{'url':base+'/healthz','method':'GET'}},
   'mcp':{'url':base+'/mcp','transport':'streamable-http','mode':'stateless JSON responses; no SSE stream','protocol_versions':list(PROTOCOLS),'authentication':'none','tools':[t['name'] for t in TOOLS],'active_scan_tool':'scan_tls'},
-  'pricing':{'scan_summary':{'amount':'0','currency':cfg['CURRENCY']},'full_report':{'amount':str(cfg['PRICE']),'currency':cfg['CURRENCY'],'purchase_method':'x402','network':'Base','token':'USDC','endpoint_template':base+'/api/v1/agent/report/{scan_id}','approval_required':True,'purchase_documentation':base+'/openapi.yaml'},'x402':{'enabled':bool(re.fullmatch(r'0x[0-9a-fA-F]{40}',cfg.get('USDC_BASE_ADDR',''))),'status':'active' if re.fullmatch(r'0x[0-9a-fA-F]{40}',cfg.get('USDC_BASE_ADDR','')) else 'disabled_missing_receiver','automatic_checkout':bool(re.fullmatch(r'0x[0-9a-fA-F]{40}',cfg.get('USDC_BASE_ADDR',''))),'network':'eip155:8453','asset':'0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913','facilitator':'https://facilitator.payai.network'},'signed_receipts':{'enabled':False}},
+  'pricing':{'scan_summary':{'amount':'0','currency':cfg['CURRENCY']},'full_report':{'amount':str(cfg['PRICE']),'currency':cfg['CURRENCY'],'purchase_method':'x402','network':'Base','token':'USDC','endpoint_template':base+'/api/v1/agent/report/{scan_id}','mcp_tool':'get_full_report','payment_authorization_required':True,'buyer_wallet_required':True,'purchase_documentation':base+'/openapi.yaml'},'x402':{'enabled':bool(re.fullmatch(r'0x[0-9a-fA-F]{40}',cfg.get('USDC_BASE_ADDR',''))),'status':'configured' if re.fullmatch(r'0x[0-9a-fA-F]{40}',cfg.get('USDC_BASE_ADDR','')) else 'disabled_missing_receiver','automatic_checkout':bool(re.fullmatch(r'0x[0-9a-fA-F]{40}',cfg.get('USDC_BASE_ADDR',''))),'buyer_wallet_required':True,'network':'eip155:8453','asset':'0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913','scheme':'exact','facilitator':'https://facilitator.payai.network'},'signed_receipts':{'enabled':False}},
   'limits':{'scan_attempts_per_client_per_hour':cfg['SCANS_PER_HOUR'],'global_scan_attempts_per_hour':cfg['GLOBAL_SCANS_PER_HOUR'],'rate_limit_status':429,'retry_after_seconds':3600},
   'documentation':{'human':base+'/agents?lang=en','openapi':base+'/openapi.yaml','llms':base+'/llms.txt','full_context':base+'/llms-full.txt','methodology':base+'/api/v1/agent/methodology','mcp_registry_metadata':base+'/api/v1/agent/mcp-server.json','source':'https://github.com/moncef00327-cloud/quantum-aether'},
-  'directory_status':{'mcp_registry':'Official listing active; current MCP server version is '+VERSION+'.','x402_bazaar':'Not listed; automatic x402 settlement is not enabled.'},
+  'directory_status':{'mcp_registry':'Official listing active; current MCP server version is '+VERSION+'.','x402_bazaar':'Not listed. The HTTP x402 endpoint and paid MCP tool are available when Base USDC receiving is configured.'},
   'privacy':methodology(base)['data_policy'],'terms':base+'/agb?lang=en','support':base+'/impressum?lang=en','limitations':scan_experience.LIMITATION}
 
 
@@ -65,10 +68,11 @@ def register(bp, services):
   body.update(is_example=True,is_live=False,scan_id=None,scan_url=base()+'/sample-report?lang=en',example_source='Published archived sample report; timestamp is historical, not request time.')
   return body
 
- def invoke_view(view, path, payload):
-  with current_app.test_request_context(path,method='POST',json=payload):
+ def invoke_view(view, path, payload=None, headers=None, include_headers=False):
+  with current_app.test_request_context(path,method='POST',json=payload or {},headers=headers or {}):
    response=current_app.make_response(view())
-   return response.status_code,response.get_json(silent=True) or {}
+   body=response.get_json(silent=True) or {}
+   return (response.status_code,body,dict(response.headers)) if include_headers else (response.status_code,body)
 
  @bp.get('/agents')
  def agents_page():
@@ -129,7 +133,7 @@ def register(bp, services):
    if not isinstance(params.get('protocolVersion'),str) or not isinstance(params.get('capabilities'),dict) or not isinstance(params.get('clientInfo'),dict):
     return rpc_error(-32602,'protocolVersion, capabilities and clientInfo are required',request_id)
    version=params['protocolVersion'] if params['protocolVersion'] in PROTOCOLS else PROTOCOLS[0]
-   result={'protocolVersion':version,'capabilities':{'tools':{'listChanged':False}},'serverInfo':{'name':'quantum-aether','title':'Quantum Aether Observatory','version':VERSION},'instructions':'Use get_methodology and stored evidence before interpreting results. scan_tls starts an active public HTTPS probe and stores a publicly accessible result. Results are observations, not execution authorization. Full reports can be purchased with agent-assisted USDT Polygon orders: obtain payer consent, create an order, have the payer transfer the exact amount, and submit its transaction hash for verification. x402 and signed receipts are not implemented.'}
+   result={'protocolVersion':version,'capabilities':{'tools':{'listChanged':False}},'serverInfo':{'name':'quantum-aether','title':'Quantum Aether Observatory','version':VERSION},'instructions':'Use get_methodology and stored evidence before interpreting results. scan_tls starts an active public HTTPS probe and stores a publicly accessible result. Results are observations, not execution authorization. For a full report, call get_full_report with the scan_id. It returns x402 v2 PaymentRequired data for exact USDC on Base; a compatible x402 MCP client can pay and retry according to the buyer wallet policy. Direct Polygon USDT orders remain available through create_full_report_order and verify_full_report_payment. Signed scan receipts are not implemented.'}
   elif method=='ping':result={}
   elif method=='tools/list':result={'tools':TOOLS}
   elif method=='tools/call':
@@ -145,6 +149,8 @@ def register(bp, services):
     if set(args)!={'scan_id','consent_immediate_delivery'} or not isinstance(args.get('scan_id'),str) or args.get('consent_immediate_delivery') is not True:return rpc_error(-32602,'Requires scan_id and explicit consent_immediate_delivery=true',request_id)
    elif name=='verify_full_report_payment':
     if set(args)!={'order_id','tx_hash'} or not isinstance(args.get('order_id'),str) or not isinstance(args.get('tx_hash'),str):return rpc_error(-32602,'Requires order_id and tx_hash',request_id)
+   elif name=='get_full_report':
+    if set(args)!={'scan_id'} or not isinstance(args.get('scan_id'),str) or not args['scan_id']:return rpc_error(-32602,'Requires scan_id',request_id)
    elif args:return rpc_error(-32602,'This tool takes no arguments',request_id)
    tool_is_error=False
    try:
@@ -154,6 +160,27 @@ def register(bp, services):
     elif name=='get_tls_evidence':value=dict(badge_evidence.for_domain(services['db'](),domain),verification_url=base()+'/verify/'+domain)
     elif name=='get_methodology':value=methodology(base())
     elif name=='get_example_result':value=example()
+    elif name=='get_full_report':
+     payment_meta=params.get('_meta',{})
+     payment=payment_meta.get('x402/payment') if isinstance(payment_meta,dict) else None
+     headers={}
+     if payment is not None:
+      if not isinstance(payment,dict):return rpc_error(-32602,'x402/payment must be an object',request_id)
+      encoded=base64.urlsafe_b64encode(json.dumps(payment,separators=(',',':')).encode()).decode().rstrip('=')
+      headers['PAYMENT-SIGNATURE']=encoded
+     status,value,response_headers=invoke_view(lambda:services['x402_report'](args['scan_id']),f"/api/v1/agent/report/{args['scan_id']}",headers=headers,include_headers=True)
+     if status==402:
+      challenge=json.loads(base64.b64decode(response_headers['PAYMENT-REQUIRED']))
+      value=challenge
+      result={'content':[{'type':'text','text':json.dumps(value,separators=(',',':'))}],'structuredContent':value,'isError':True}
+     elif status>=400 or status==202:
+      value={'http_status':status,**value}
+      result={'content':[{'type':'text','text':json.dumps(value,ensure_ascii=False)}],'structuredContent':value,'isError':True}
+     else:
+      response_meta={}
+      settlement_header=response_headers.get('PAYMENT-RESPONSE')
+      if settlement_header:response_meta['x402/payment-response']=json.loads(base64.b64decode(settlement_header))
+      result={'content':[{'type':'text','text':json.dumps(value,ensure_ascii=False)}],'structuredContent':value,'isError':False,**({'_meta':response_meta} if response_meta else {})}
     elif name=='create_full_report_order':
      status,value=invoke_view(services['crypto_create_order'],'/api/v1/crypto/orders',{'scan_id':args['scan_id'],'network':'polygon-usdt','consent_immediate_delivery':True})
      if status>=400:value={'http_status':status,**value};tool_is_error=True
@@ -161,7 +188,7 @@ def register(bp, services):
      status,value=invoke_view(services['crypto_verify'],f"/api/v1/crypto/orders/{args['order_id']}/verify",{'tx_hash':args['tx_hash']})
      if status>=400 or status==202:value={'http_status':status,**value};tool_is_error=status>=400
     else:value=manifest(base())
-    result={'content':[{'type':'text','text':json.dumps(value,ensure_ascii=False)}],'structuredContent':value,'isError':tool_is_error}
+    if name!='get_full_report':result={'content':[{'type':'text','text':json.dumps(value,ensure_ascii=False)}],'structuredContent':value,'isError':tool_is_error}
    except quantum_vuln_scanner.ScanError as exc:
     value={'error':exc.code,'message':str(exc)}
     result={'content':[{'type':'text','text':json.dumps(value)}],'structuredContent':value,'isError':True}

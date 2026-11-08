@@ -29,7 +29,8 @@ class AgentDiscoveryTests(unittest.TestCase):
    self.assertEqual(m['endpoints']['scan']['url'],'https://ather-quantum.com/api/scan')
    self.assertEqual(m['endpoints']['scan']['method'],'POST')
    self.assertEqual(m['mcp']['url'],'https://ather-quantum.com/mcp')
-   self.assertFalse(m['pricing']['x402']['enabled']);self.assertFalse(m['pricing']['signed_receipts']['enabled'])
+   self.assertFalse(m['pricing']['x402']['enabled']);self.assertEqual(m['pricing']['x402']['status'],'disabled_missing_receiver')
+   self.assertIn('get_full_report',m['mcp']['tools']);self.assertFalse(m['pricing']['signed_receipts']['enabled'])
    self.assertEqual(m['limits']['scan_attempts_per_client_per_hour'],3)
    self.assertEqual(m['limits']['global_scan_attempts_per_hour'],10)
    if path.startswith('/.well-known/'):
@@ -37,6 +38,15 @@ class AgentDiscoveryTests(unittest.TestCase):
   self.app.config['PRICE']='57.50';self.app.config['CURRENCY']='EUR'
   price=self.client.get('/.well-known/agent-service.json').json['pricing']['full_report']
   self.assertEqual((price['amount'],price['currency']),('57.50','EUR'));self.scanner.assert_not_called()
+
+ def test_manifest_reports_configured_x402_truthfully(self):
+  self.app.config['USDC_BASE_ADDR']='0x'+'44'*20
+  manifest=self.client.get('/.well-known/agent-service.json').json
+  self.assertTrue(manifest['pricing']['x402']['enabled'])
+  self.assertEqual(manifest['pricing']['x402']['status'],'configured')
+  self.assertTrue(manifest['pricing']['x402']['buyer_wallet_required'])
+  self.assertEqual(manifest['pricing']['full_report']['mcp_tool'],'get_full_report')
+  self.assertIn('Not listed',manifest['directory_status']['x402_bazaar'])
 
  def test_discovery_pages_link_to_real_service_and_remain_crawlable(self):
   for lang in ['ar','en']:
@@ -63,19 +73,20 @@ class AgentDiscoveryTests(unittest.TestCase):
    self.assertEqual(response.status_code,200);result=response.json['result']
    self.assertIn(result['protocolVersion'],agent_discovery.PROTOCOLS)
    self.assertEqual(result['capabilities'],{'tools':{'listChanged':False}})
+   self.assertIn('get_full_report',result['instructions'])
    self.assertNotIn('Mcp-Session-Id',response.headers)
   self.scanner.assert_not_called()
 
  def test_tools_are_discoverable_and_read_only_calls_never_scan(self):
   tools=self.rpc('tools/list').json['result']['tools']
-  expected={'scan_tls','get_tls_evidence','get_methodology','get_example_result','get_service_info',
+  expected={'scan_tls','get_tls_evidence','get_methodology','get_example_result','get_service_info','get_full_report',
             'create_full_report_order','verify_full_report_payment'}
   self.assertEqual({t['name'] for t in tools},expected)
   read_only=[t for t in tools if t.get('annotations',{}).get('readOnlyHint') is True]
   self.assertEqual({t['name'] for t in read_only},
                    {'get_tls_evidence','get_methodology','get_example_result','get_service_info'})
   self.assertEqual({t['name'] for t in tools if not t.get('annotations',{}).get('readOnlyHint')},
-                   {'scan_tls','create_full_report_order','verify_full_report_payment'})
+                   {'scan_tls','get_full_report','create_full_report_order','verify_full_report_payment'})
   for tool in read_only:
    arguments={'domain':'example.com'} if tool['name']=='get_tls_evidence' else {}
    response=self.rpc('tools/call',{'name':tool['name'],'arguments':arguments})
@@ -99,6 +110,35 @@ class AgentDiscoveryTests(unittest.TestCase):
   self.assertEqual(second.json['result']['structuredContent']['http_status'],429)
   api=self.client.post('/api/scan',json={'domain':'example.com'});self.assertEqual(api.status_code,429)
   self.scanner.assert_called_once_with('example.com')
+
+ def test_paid_mcp_tool_exposes_x402_challenge_then_unlocks_report(self):
+  self.app.config['USDC_BASE_ADDR']='0x'+'44'*20
+  scan_id=self.client.post('/api/scan',json={'domain':'example.com'}).json['scan_id']
+  call=lambda meta=None:self.rpc('tools/call',{'name':'get_full_report','arguments':{'scan_id':scan_id},**({'_meta':meta} if meta else {})})
+  challenge_response=call()
+  self.assertEqual(challenge_response.status_code,200)
+  tool_result=challenge_response.json['result']
+  self.assertTrue(tool_result['isError'])
+  challenge=tool_result['structuredContent']
+  self.assertEqual(json.loads(tool_result['content'][0]['text']),challenge)
+  accepted=challenge['accepts'][0]
+  self.assertEqual(accepted['network'],'eip155:8453')
+  self.assertEqual(accepted['asset'].lower(),'0x833589fcd6edb6e08f4c7c32d4f71b54bda02913')
+  self.assertEqual(accepted['payTo'].lower(),self.app.config['USDC_BASE_ADDR'])
+  payload={'x402Version':2,'resource':challenge['resource'],'accepted':accepted}
+  import quantum_saas_app
+  verified=Mock();verified.raise_for_status.return_value=None;verified.json.return_value={'isValid':True}
+  settled=Mock();settled.json.return_value={'success':True,'transaction':'0x'+'ab'*32,'network':'eip155:8453'}
+  from unittest.mock import patch
+  with patch('quantum_saas_app.requests.post',side_effect=[verified,settled]) as facilitator:
+   paid=call({'x402/payment':payload})
+  self.assertFalse(paid.json['result']['isError'])
+  report=paid.json['result']['structuredContent']
+  self.assertEqual(report['status'],'COMPLETED')
+  self.assertIn('/report/',report['report_url'])
+  self.assertEqual(paid.json['result']['_meta']['x402/payment-response']['transaction'],'0x'+'ab'*32)
+  self.assertEqual(facilitator.call_count,2)
+  self.assertEqual(self.client.get(report['report_url'].replace('https://ather-quantum.com','')).status_code,200)
 
  def test_methodology_and_archived_example_are_explicit(self):
   method=self.client.get('/api/v1/agent/methodology').json
