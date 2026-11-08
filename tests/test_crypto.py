@@ -68,10 +68,12 @@ class CryptoPaymentTest(unittest.TestCase):
     def units(self, amount):
         return crypto_pay.to_units(amount, 6)
 
-    def test_scan_page_offers_both_networks(self):
+    def test_scan_page_offers_network_dropdown(self):
+        self.app.config["USDC_BASE_ADDR"] = "0x" + "33" * 20
         body = self.client.get(f"/scan/{self.scan_id}?lang=ar").get_data(as_text=True)
-        self.assertIn('data-network="polygon-usdt"', body)
-        self.assertIn('data-network="arbitrum-usdc"', body)
+        self.assertIn('class="crypto-network"', body)
+        for network in ("polygon-usdt", "arbitrum-usdc", "base-usdc"):
+            self.assertIn(f'<option value="{network}">', body)
         self.assertIn("crypto.js", body)
 
     def test_disabled_without_addresses(self):

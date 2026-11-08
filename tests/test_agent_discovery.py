@@ -47,6 +47,8 @@ class AgentDiscoveryTests(unittest.TestCase):
   for path in ['/llms.txt','/llms-full.txt','/openapi.yaml','/?lang=en','/?lang=ar']:
    response=self.client.get(path);self.assertEqual(response.status_code,200,path)
    self.assertIn('agent-service.json',response.text+response.headers.get('Link',''),path)
+  for lang in ['ar','en']:
+   self.assertIn(f'href="/business?lang={lang}"',self.client.get('/?lang='+lang).text)
   sitemap=self.client.get('/sitemap-pages.xml').text
   self.assertIn('/agents?lang=en',sitemap);self.assertIn('/agents?lang=ar',sitemap)
   self.assertIn('/agents?lang=en',self.client.get('/feed.xml').text)
@@ -65,10 +67,16 @@ class AgentDiscoveryTests(unittest.TestCase):
   self.scanner.assert_not_called()
 
  def test_tools_are_discoverable_and_read_only_calls_never_scan(self):
-  tools=self.rpc('tools/list').json['result']['tools'];self.assertEqual(len(tools),5)
-  self.assertEqual({t['name'] for t in tools},{'scan_tls','get_tls_evidence','get_methodology','get_example_result','get_service_info'})
-  for tool in tools:
-   if tool['name']=='scan_tls':continue
+  tools=self.rpc('tools/list').json['result']['tools']
+  expected={'scan_tls','get_tls_evidence','get_methodology','get_example_result','get_service_info',
+            'create_full_report_order','verify_full_report_payment'}
+  self.assertEqual({t['name'] for t in tools},expected)
+  read_only=[t for t in tools if t.get('annotations',{}).get('readOnlyHint') is True]
+  self.assertEqual({t['name'] for t in read_only},
+                   {'get_tls_evidence','get_methodology','get_example_result','get_service_info'})
+  self.assertEqual({t['name'] for t in tools if not t.get('annotations',{}).get('readOnlyHint')},
+                   {'scan_tls','create_full_report_order','verify_full_report_payment'})
+  for tool in read_only:
    arguments={'domain':'example.com'} if tool['name']=='get_tls_evidence' else {}
    response=self.rpc('tools/call',{'name':tool['name'],'arguments':arguments})
    self.assertEqual(response.status_code,200)

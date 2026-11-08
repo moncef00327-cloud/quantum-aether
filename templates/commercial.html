@@ -1,10 +1,11 @@
 {% extends "base.html" %}
-{% block title %}{{ commercial.business if section == 'business' else commercial.pricing }} · Quantum Aether{% endblock %}
-{% block description %}{{ commercial.lead }}{% endblock %}
+{% block title %}{{ commercial.business_title if section == 'business' else commercial.pricing_title }} · Quantum Aether{% endblock %}
+{% block description %}{{ commercial.business_description if section == 'business' else commercial.pricing_description }}{% endblock %}
 {% block content %}
 <section class="hero commercial-hero">
   <p class="eyebrow">{{ commercial.business if section == 'business' else commercial.pricing }}</p>
-  <h1>{{ commercial.title }}</h1><p class="lead">{{ commercial.lead }}</p>
+  <h1>{{ commercial.title if section == 'business' else commercial.pricing_heading }}</h1>
+  <p class="lead">{{ commercial.lead if section == 'business' else commercial.pricing_lead }}</p>
   <div class="commercial-actions"><a class="button-link" href="{{ url_for('site.monitoring', lang=lang) }}#subscribe">{{ commercial.choose }}</a><a href="{{ url_for('site.sample_report', lang=lang if lang != 'de' else 'en') }}">{{ commercial.sample }} ↗</a></div>
 </section>
 <section class="commercial-grid plan-grid" aria-label="{{ commercial.pricing }}">

@@ -437,6 +437,30 @@ class AdminExclusionAndSeoTest(unittest.TestCase):
             self.assertIn(f'hreflang="{lang}"', body)
         self.assertIn('hreflang="x-default" href="https://ather-quantum.com/guides?lang=en"', body)
 
+    def test_arabic_business_and_pricing_pages_have_distinct_seo_and_crawlable_routes(self):
+        client = self.app.test_client()
+        business = client.get("/business?lang=ar")
+        pricing = client.get("/pricing?lang=ar")
+        self.assertEqual((business.status_code, pricing.status_code), (200, 200))
+        business_html, pricing_html = business.get_data(as_text=True), pricing.get_data(as_text=True)
+        self.assertIn("فحص TLS للشركات ومراقبة جاهزية ما بعد الكم", business_html)
+        self.assertIn("افحص تبادل مفاتيح TLS وشهادات نطاقات شركتك", business_html)
+        self.assertIn("أسعار فحص TLS وتقارير ومراقبة النطاقات", pricing_html)
+        self.assertIn("قارن خيارات فحص TLS لما بعد الكم للشركات والوكالات", pricing_html)
+        self.assertIn('rel="canonical" href="https://ather-quantum.com/business?lang=ar"', business_html)
+        self.assertIn('rel="canonical" href="https://ather-quantum.com/pricing?lang=ar"', pricing_html)
+        for lang in ("en", "ar", "de", "x-default"):
+            self.assertIn(f'hreflang="{lang}"', business_html)
+            self.assertIn(f'hreflang="{lang}"', pricing_html)
+        sitemap = client.get("/sitemap-pages.xml").get_data(as_text=True)
+        self.assertIn("https://ather-quantum.com/business?lang=ar", sitemap)
+        self.assertIn("https://ather-quantum.com/pricing?lang=ar", sitemap)
+        from urllib.robotparser import RobotFileParser
+        robots = RobotFileParser()
+        robots.parse(client.get("/robots.txt").get_data(as_text=True).splitlines())
+        for path in ("/business", "/pricing", "/agency"):
+            self.assertTrue(robots.can_fetch("Googlebot", "https://ather-quantum.com" + path))
+
     def test_legal_pages_in_both_languages_with_placeholders(self):
         client = self.app.test_client()
         for slug in ("impressum", "datenschutz", "agb"):

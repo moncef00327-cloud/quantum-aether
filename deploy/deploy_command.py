@@ -11,7 +11,8 @@ import urllib.request
 
 ROOT = Path('/root/quantum-aether')
 TARGET = Path('/var/www/quantum_saas').resolve()
-FILES = ['templates/report.html', 'templates/base.html', 'templates/command_home.html',
+FILES = ['business_pages.py', 'templates/commercial.html', 'templates/report.html',
+         'templates/base.html', 'templates/command_home.html',
          'templates/command/ar.html', 'templates/command/en.html',
          'templates/command/sidebar-ar.html', 'templates/command/sidebar-en.html',
          'templates/command/header-ar.html', 'templates/command/header-en.html',
@@ -68,8 +69,9 @@ with tempfile.TemporaryDirectory() as data:
             response = client.get('/?lang='+lang)
             assert response.status_code == 200
             assert b'command-root' in response.data
-            assert b'20261107-sample4' in response.data
+            assert b'20261108-seo-business1' in response.data
             assert b'LLM / API' in response.data
+            assert b'/business?lang='+lang.encode() in response.data
         for path in ['/business','/pricing','/agency','/monitoring','/gravity','/guides','/llms.txt','/llms-full.txt','/openapi.yaml','/impressum','/datenschutz','/agb']:
             response = client.get(path)
             assert response.status_code == 200, path
@@ -84,21 +86,24 @@ print('Production integration checks passed')
     restart()
     for lang in ['ar','en']:
         page = fetch('/?lang='+lang)
-        assert b'command-root' in page and b'20261107-sample4' in page
+        assert b'command-root' in page and b'20261108-seo-business1' in page
         print('Verified review interface: '+lang)
     for name in ['static/command/app.js','static/command/app.css','static/command/pages.css','static/command/shell.js']:
-        assert fetch('/'+name+'?v=20261107-sample4') == (ROOT/name).read_bytes(), name
+        assert fetch('/'+name+'?v=20261108-seo-business1') == (ROOT/name).read_bytes(), name
         print('Verified exact asset: '+name)
     for path in ['/sample-report?lang=en','/sample-report?lang=ar','/business?lang=ar','/pricing?lang=en','/llms.txt','/llms-full.txt','/openapi.yaml']:
         body = fetch(path)
         if path.startswith(('/business','/pricing')):
             assert b'command-sidebar' in body and b'primary-nav' not in body and b'mobile-dock' not in body, path
         if path.startswith('/sample-report'):
-            assert b'full-report' in body and b'20261107-sample4' in body
+            assert b'full-report' in body and b'20261108-seo-business1' in body
+        if path.startswith('/business?'):
+            assert 'فحص TLS للشركات' in body.decode()
+            assert 'hreflang="ar"' in body.decode()
         print('Verified '+path)
     for name in OBSOLETE:
         try:
-            urllib.request.urlopen('https://ather-quantum.com/'+name+'?v=20261107-sample4',timeout=25)
+            urllib.request.urlopen('https://ather-quantum.com/'+name+'?v=20261108-seo-business1',timeout=25)
         except urllib.error.HTTPError as exc:
             assert exc.code == 404, name
         else:
