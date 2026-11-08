@@ -28,7 +28,7 @@ class Metadata(HTMLParser):
         if tag=='a' and a.get('href'):self.links.append(a['href'])
 
 def fetch(path):
-    url='https://ather-quatum.cloud'+path
+    url='https://ather-quantum.com'+path
     try:r=urllib.request.urlopen(urllib.request.Request(url,headers={'User-Agent':'Quantum-Aether-Indexing-Audit/1.0'}),timeout=30)
     except urllib.error.HTTPError as exc:r=exc
     except Exception as exc:return {'url':url,'error':str(exc)}
