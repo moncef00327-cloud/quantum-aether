@@ -30,7 +30,7 @@ Full text of every guide plus the live weekly figures in one file: {{ base }}/ll
 - get_tls_evidence is read-only. scan_tls starts a public HTTPS probe, consumes the existing scan quota, and stores a publicly accessible result. Never treat noindex as confidentiality.
 - Machine-readable methodology: {{ base }}/api/v1/agent/methodology
 - Archived example: {{ base }}/api/v1/agent/example — explicitly is_example:true and is_live:false; not a fresh observation.
-- Agents can pay for full reports with x402 v2 exact USDC on Base at `POST {{ base }}/api/v1/agent/report/{scan_id}`. The server verifies and settles via PayAI before releasing the report. A legacy direct-transfer path supports USDT Polygon and USDC Arbitrum. Signed scan receipts are not implemented.
+- Agents can pay for full reports with x402 v2 exact USDC on Base at `POST {{ base }}/api/v1/agent/report/{scan_id}`. The server verifies and settles via PayAI before releasing the report. Direct-transfer checkout supports USDT Polygon and USDC on Arbitrum or Base. Signed scan receipts are not implemented.
 - Source: https://github.com/moncef00327-cloud/quantum-aether
 
 ## Free API
@@ -40,7 +40,7 @@ Full text of every guide plus the live weekly figures in one file: {{ base }}/ll
 - `GET {{ base }}/api/v1/scan?domain=example.com` runs a scan over GET (easy for CLIs and agents) and returns JSON; add `&format=text` for a plain-text terminal report. Also available as `npx quantum-aether example.com`.
 - `POST {{ base }}/api/v1/quantum-scan` is the agent endpoint: `{"domain": "example.com"}` runs the same real scan; `{"key_size": 2048}` alone returns an honest assessment of that RSA key size (no network scan). Any RSA or ECC key size is breakable by Shor's algorithm; key exchange is what needs upgrading.
 - Buying the full report (${{ price }}): `POST {{ base }}/api/v1/orders` with `{"scan_id": "...", "consent_immediate_delivery": true}` (set the flag only after the payer expressly agreed to immediate delivery and to losing the right of withdrawal) returns a PayPal `approve_url` and a `status_url`. After the payer (or an agent the payer authorized in PayPal) approves, the site captures and verifies the payment automatically, and `GET status_url` returns `report_url`.
-- Paying with stablecoins instead: `POST {{ base }}/api/v1/crypto/orders` with `{"scan_id": "...", "network": "polygon-usdt" | "arbitrum-usdc", "consent_immediate_delivery": true}` returns a unique `amount` and a `pay_to` address. Send exactly that amount (USDT on Polygon PoS or native USDC on Arbitrum One), then `POST verify_url` with `{"tx_hash": "0x..."}`; the server checks the transfer on-chain and returns `report_url` once confirmed (HTTP 202 while confirming).
+- Paying with a direct stablecoin transfer instead: `POST {{ base }}/api/v1/crypto/orders` with `{"scan_id": "...", "network": "polygon-usdt" | "arbitrum-usdc" | "base-usdc", "consent_immediate_delivery": true}` returns a unique `amount` and a `pay_to` address. Send exactly that token amount on the named network, then `POST verify_url` with `{"tx_hash": "0x..."}`; the server checks the transfer on-chain and returns `report_url` once confirmed (HTTP 202 while confirming).
 - OpenAPI description: {{ base }}/openapi.yaml
 
 ## Grades

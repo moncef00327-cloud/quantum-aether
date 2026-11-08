@@ -440,6 +440,8 @@ def finding_text(finding, lang):
 TEXTS["ar"].update({
     "crypto_title": "أو ادفع بـ USDT / USDC",
     "crypto_sub": "تحويل مباشر من محفظتك أو من منصة تداول. يتحقق خادمنا من المعاملة على الشبكة نفسها ثم يفتح التقرير.",
+    "crypto_network_label": "اختر العملة والشبكة",
+    "crypto_create_order": "إنشاء طلب الدفع",
     "crypto_send": "أرسل بالضبط",
     "crypto_on": "على شبكة",
     "crypto_to": "إلى العنوان:",
@@ -466,6 +468,8 @@ TEXTS["ar"].update({
 TEXTS["en"].update({
     "crypto_title": "Or pay with USDT / USDC",
     "crypto_sub": "Direct transfer from your wallet or an exchange. Our server checks the transaction on the blockchain itself, then unlocks the report.",
+    "crypto_network_label": "Choose currency and network",
+    "crypto_create_order": "Create payment request",
     "crypto_send": "Send exactly",
     "crypto_on": "on",
     "crypto_to": "to this address:",

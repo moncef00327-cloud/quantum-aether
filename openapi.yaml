@@ -128,7 +128,7 @@ paths:
         "404": { description: Unknown order. }
   /api/v1/crypto/orders:
     post:
-      summary: Buy the full report with a stablecoin (USDT on Polygon or USDC on Arbitrum One)
+      summary: Buy the full report with a stablecoin (USDT on Polygon, USDC on Arbitrum or Base)
       description: >
         Returns a unique amount (for example 49.0137) and a receiving address. Send exactly that amount of the
         token on that network (a direct ERC-20 transfer), then POST the transaction hash to verify_url. The server
@@ -143,7 +143,7 @@ paths:
               required: [scan_id, network, consent_immediate_delivery]
               properties:
                 scan_id: { type: string }
-                network: { type: string, enum: [polygon-usdt, arbitrum-usdc] }
+                network: { type: string, enum: [polygon-usdt, arbitrum-usdc, base-usdc] }
                 consent_immediate_delivery:
                   type: boolean
                   enum: [true]

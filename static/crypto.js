@@ -13,14 +13,13 @@
     return template.replace(/\{(\w+)\}/g, function (_m, k) { return values[k] != null ? values[k] : ""; });
   }
 
-  box.querySelectorAll(".crypto-choose").forEach(function (button) {
-    button.addEventListener("click", function () {
+  box.querySelector(".crypto-create").addEventListener("click", function () {
       if (!consent || !consent.checked) { say(box.dataset.msgConsent); return; }
       say("");
       fetch("/api/crypto/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ scan_id: box.dataset.scanId, network: button.dataset.network, consent: true,
+        body: JSON.stringify({ scan_id: box.dataset.scanId, network: box.querySelector(".crypto-network").value, consent: true,
                                email: (box.querySelector(".crypto-email") || {}).value || "" })
       }).then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
         .then(function (res) {
@@ -33,7 +32,6 @@
           details.hidden = false;
         })
         .catch(function () { say(msgs.choose_failed); });
-    });
   });
 
   box.querySelector(".crypto-copy").addEventListener("click", function () {

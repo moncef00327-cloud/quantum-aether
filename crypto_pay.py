@@ -1,5 +1,5 @@
 # crypto_pay.py
-# الدفع بالعملات المستقرة (USDT على Polygon وUSDC على Arbitrum) مع تحقق مباشر من الشبكة.
+# الدفع بالعملات المستقرة على Base وPolygon وArbitrum مع تحقق مباشر من الشبكة.
 # لكل طلب مبلغ فريد (مثل 49.0137) حتى نعرف صاحب الدفعة، فعناوين المنصات (Binance/OKX) مشتركة وثابتة.
 # المشتري يرسل رقم المعاملة (tx hash) فنقرأ إيصالها من الشبكة: لا نثق بأي معلومة من المتصفح.
 import re
@@ -24,6 +24,12 @@ NETWORKS = {
         "contract": "0xaf88d065e77c8cc2239327c5edb3a432268e5831",  # USDC الأصلي (ليس USDC.e)
         "rpc": ["https://arbitrum-one-rpc.publicnode.com", "https://arb1.arbitrum.io/rpc"],
         "confirmations": 10, "explorer": "https://arbiscan.io/tx/", "config": "USDC_ARBITRUM_ADDR",
+    },
+    "base-usdc": {
+        "chain": "Base", "chain_id": 8453, "token": "USDC", "decimals": 6,
+        "contract": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+        "rpc": ["https://mainnet.base.org", "https://base-rpc.publicnode.com"],
+        "confirmations": 10, "explorer": "https://basescan.org/tx/", "config": "USDC_BASE_ADDR",
     },
 }
 

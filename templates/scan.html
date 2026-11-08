@@ -73,9 +73,12 @@
       <p class="small">{{ t.crypto_sub }}</p>
       <p><label>{{ t.crypto_email_label }}<br>
         <input type="email" class="crypto-email" dir="ltr" autocomplete="email" placeholder="you@example.com"></label></p>
-      <p>{% for key, net in crypto_networks.items() %}
-        <button type="button" class="crypto-choose" data-ev="buy_click" data-network="{{ key }}">{{ net.token }} · {{ net.chain }}</button>
-      {% endfor %}</p>
+      <label>{{ t.crypto_network_label }}<br>
+        <select class="crypto-network" aria-label="{{ t.crypto_network_label }}">
+          {% for key, net in crypto_networks.items() %}<option value="{{ key }}">{{ net.token }} · {{ net.chain }}</option>{% endfor %}
+        </select>
+      </label>
+      <p><button type="button" class="crypto-create" data-ev="buy_click">{{ t.crypto_create_order }}</button></p>
       <div class="crypto-details" hidden>
         <p>{{ t.crypto_send }} <strong dir="ltr" class="crypto-amount"></strong> <strong class="crypto-token"></strong>
            {{ t.crypto_on }} <strong class="crypto-chain"></strong></p>

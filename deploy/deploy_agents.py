@@ -6,11 +6,11 @@ ROOT=Path('/root/quantum-aether')
 TARGET=Path('/var/www/quantum_saas').resolve()
 BASE='https://ather-quatum.cloud'
 FILES=[
- 'quantum_saas_app.py','agent_discovery.py','openapi.yaml','templates/base.html',
+ 'quantum_saas_app.py','agent_discovery.py','crypto_pay.py','i18n.py','openapi.yaml','templates/base.html','templates/scan.html',
  'templates/command_home.html','templates/llms.txt','templates/agents.html',
  'templates/command/ar.html','templates/command/en.html',
  'templates/command/sidebar-ar.html','templates/command/sidebar-en.html',
- 'static/command/app.js',
+ 'static/command/app.js','static/crypto.js',
 ]
 assert all((ROOT/p).is_file() for p in FILES)
 backup=Path(tempfile.mkdtemp(prefix='pre-agents-',dir='/root/backups'))
@@ -47,6 +47,8 @@ with tempfile.TemporaryDirectory() as data:
   conn.executescript(sales_db.SCHEMA)
   sales_db.create_scan(conn,'x402-smoke','smoke-token',{'domain':'example.test','grade':'A','tls_version':'TLS 1.3','key_exchange_group':'X25519MLKEM768','post_quantum_key_exchange':True},'smoke-client',is_test=True)
   conn.close()
+  direct=c.post('/api/v1/crypto/orders',json={'scan_id':'x402-smoke','network':'base-usdc','consent_immediate_delivery':True})
+  assert direct.status_code==201 and direct.json['network']=='base-usdc' and direct.json['pay_to'].lower()=='0x3855475de54c955b6d0785b6d02f57291addb064',direct.json
   r=c.post('/api/v1/agent/report/x402-smoke',json={});assert r.status_code==402
   challenge=json.loads(__import__('base64').b64decode(r.headers['PAYMENT-REQUIRED']))
   accepted=challenge['accepts'][0]
