@@ -11,7 +11,7 @@ import urllib.request
 
 ROOT = Path('/root/quantum-aether')
 TARGET = Path('/var/www/quantum_saas').resolve()
-PREVIOUS_RELEASE = '98e44e5'
+PREVIOUS_RELEASE = '400fa95'
 FILES = ['quantum_saas_app.py', 'agent_discovery.py', 'guides.py', 'business_pages.py',
          'templates/commercial.html', 'templates/guide.html', 'templates/report.html',
          'templates/base.html', 'templates/command_home.html',
