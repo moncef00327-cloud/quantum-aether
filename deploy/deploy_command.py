@@ -11,6 +11,7 @@ import urllib.request
 
 ROOT = Path('/root/quantum-aether')
 TARGET = Path('/var/www/quantum_saas').resolve()
+PREVIOUS_RELEASE = '98e44e5'
 FILES = ['quantum_saas_app.py', 'agent_discovery.py', 'guides.py', 'business_pages.py',
          'templates/commercial.html', 'templates/guide.html', 'templates/report.html',
          'templates/base.html', 'templates/command_home.html',
@@ -22,9 +23,9 @@ FILES = ['quantum_saas_app.py', 'agent_discovery.py', 'guides.py', 'business_pag
 OBSOLETE = ['static/style.css', 'static/aether.css', 'static/aether-dark.css',
             'static/observatory.css', 'static/aether-ui.js', 'static/color-directions.html']
 assert all((ROOT/name).is_file() for name in FILES)
-# Allow replacement only when every production file still matches the previous committed release.
+# Allow replacement only when every production file still matches the last deployed release.
 for name in FILES:
-    baseline = subprocess.check_output(['git', 'show', 'HEAD^:'+name], cwd=ROOT)
+    baseline = subprocess.check_output(['git', 'show', PREVIOUS_RELEASE+':'+name], cwd=ROOT)
     assert (TARGET/name).read_bytes() == baseline, f'Production file differs from previous release: {name}'
 BACKUP = Path(tempfile.mkdtemp(prefix='pre-command-review-', dir='/root/backups'))
 existing = []
