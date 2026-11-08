@@ -118,6 +118,21 @@ class CryptoPaymentTest(unittest.TestCase):
         with closing(sales_db.connect(f"{self.tmp}/quantum_saas.db")) as c:
             self.assertEqual(sales_db.stats(c)["revenue"], {"USDT": f"{Decimal(o['amount']):.2f}"})
 
+    def test_base_usdc_payment_flow_with_simulated_chain(self):
+        receiver = "0x" + "44" * 20
+        self.app.config["USDC_BASE_ADDR"] = receiver
+        o = self.order("base-usdc").get_json()
+        self.assertEqual(o["pay_to"], receiver)
+        self.assertEqual(o["token"], "USDC")
+        self.chain.pay(TX, self.units(o["amount"]), to=receiver,
+                       contract=crypto_pay.NETWORKS["base-usdc"]["contract"], block=900)
+        self.chain.latest = 1100
+        verified = self.client.post(f"/api/crypto/orders/{o['order_id']}/verify", json={"tx_hash": TX})
+        self.assertEqual(verified.status_code, 200)
+        self.assertEqual(verified.get_json()["status"], "COMPLETED")
+        with closing(sales_db.connect(f"{self.tmp}/quantum_saas.db")) as c:
+            self.assertEqual(sales_db.stats(c)["revenue"], {"USDC": f"{Decimal(o['amount']):.2f}"})
+
     def test_rejects_wrong_amount_wrong_address_wrong_token(self):
         o = self.order().get_json()
         url = f"/api/crypto/orders/{o['order_id']}/verify"

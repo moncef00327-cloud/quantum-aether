@@ -195,4 +195,69 @@ example.com {
 """,
         },
     },
+    "enterprise-pq-tls-readiness": {
+        "updated": "2026-11-08",
+        "en": {
+            "title": "An enterprise checklist for post-quantum TLS readiness",
+            "description": "Inventory public TLS endpoints, assess hybrid key exchange, prioritize long-lived sensitive data, and track remediation without overstating scan results.",
+            "body": """
+<p>A TLS scan is a useful inventory signal, not a certification. Use this checklist to decide which public endpoints to measure, how to interpret a hybrid key exchange result, and what evidence to retain for your security team. ML-KEM is standardized in <a href="https://csrc.nist.gov/pubs/fips/203/final" rel="noopener">NIST FIPS 203</a>; adopting a standardized algorithm does not by itself validate an entire service or its implementation.</p>
+
+<h2>1. Build an endpoint inventory</h2>
+<p>List the public hostnames that carry sensitive or business-critical traffic. Include customer portals, APIs, identity services, mail gateways, administrative interfaces, and vendor-managed subdomains. Record the owner, business function, data sensitivity, and the TLS termination point for each hostname.</p>
+<p>Where a CDN, load balancer, WAF, or reverse proxy terminates TLS, record that edge separately from the origin. A public probe normally observes the connection from the probe to the public edge. It does not prove what the edge negotiates with the origin or what happens on internal links.</p>
+
+<h2>2. Measure consistently</h2>
+<ol>
+<li>Check each hostname on port 443 from the same measurement service and record the observation date and result URL.</li>
+<li>Keep the hostname, resolved address, protocol version, negotiated key-exchange group, certificate facts, and probe location together.</li>
+<li>Repeat from another vantage point or test additional addresses when DNS, geographic routing, or a CDN can send clients to different TLS configurations.</li>
+<li>Run a separate origin-side test from an authorized network if you need to assess the edge-to-origin connection.</li>
+</ol>
+<p><a href="/?lang=en">Run a public TLS check</a>, review the <a href="/sample-report?lang=en">sample report</a>, or see <a href="/business?lang=en">business monitoring options</a>.</p>
+
+<h2>3. Interpret post-quantum evidence narrowly</h2>
+<p>A negotiated hybrid group such as <code>X25519MLKEM768</code> is evidence about key establishment on that observed TLS connection. It is not evidence that the certificate is post-quantum, that every client and endpoint uses the same group, or that the application is free of vulnerabilities. Keep certificate findings, protocol policy, application security, and key-exchange results as separate controls.</p>
+<p>Prioritize systems whose encrypted data must remain confidential for many years. Coordinate upgrades with the teams operating the TLS terminator and check compatibility with older clients, middleboxes, and inspection equipment.</p>
+
+<h2>4. Track remediation and exceptions</h2>
+<p>For each finding, capture the affected hostname and TLS termination point, the observed behavior, an accountable owner, a target date, and the retest result. Treat a failed or inconclusive probe as unknown until the cause is understood; do not record it as proof that an endpoint lacks support.</p>
+<p>After a change, repeat the measurement and retain both the previous and current evidence. Recheck after CDN policy changes, certificate renewals, proxy migrations, and major server upgrades. Teams that need recurring coverage can review <a href="/monitoring?lang=en">continuous monitoring</a>.</p>
+
+<h2>Measurement limits</h2>
+<p>This service measures one public IPv4 endpoint and port 443 per scan. DNS and routing may expose other endpoints, and a CDN result describes the client-to-CDN connection rather than the origin. A scan is a point-in-time observation, not a penetration test, compliance attestation, or guarantee of security.</p>
+""",
+        },
+        "ar": {
+            "title": "قائمة تحقق للشركات لقياس جاهزية TLS لما بعد الكم",
+            "description": "احصر نقاط TLS العامة، وافهم التبادل الهجين، ورتّب البيانات طويلة الحساسية، وتابع المعالجة دون المبالغة في دلالة الفحص.",
+            "body": """
+<p>فحص TLS إشارة مفيدة للجرد، لكنه ليس شهادة اعتماد. تساعدك هذه القائمة على تحديد النطاقات التي ينبغي قياسها، وفهم نتيجة تبادل المفاتيح الهجين، وحفظ الأدلة لفريق الأمن. يحدد <a href="https://csrc.nist.gov/pubs/fips/203/final" rel="noopener">معيار NIST FIPS 203</a> خوارزمية ML-KEM؛ واتباع معيار لا يثبت وحده سلامة الخدمة كاملة أو صحة تطبيقها.</p>
+
+<h2>١. أنشئ جردًا لنقاط الاتصال</h2>
+<p>أحصِ أسماء النطاقات العامة التي تنقل بيانات حساسة أو تشغّل أعمالًا أساسية. أدرج بوابات العملاء وواجهات API وخدمات الهوية وبوابات البريد ولوحات الإدارة والنطاقات الفرعية التي يديرها الموردون. سجّل مالك كل نطاق ووظيفته وحساسية بياناته والجهة التي تنهي اتصال TLS.</p>
+<p>إذا أنهى CDN أو موازن حمل أو جدار حماية تطبيقي أو وكيل عكسي اتصال TLS، فسجّل نقطة الحافة منفصلة عن الخادم الأصلي. الفحص العام يرصد عادةً الاتصال بين أداة القياس والحافة العامة؛ ولا يثبت إعداد الاتصال من الحافة إلى الأصل أو الاتصالات الداخلية.</p>
+
+<h2>٢. قِس بطريقة ثابتة</h2>
+<ol>
+<li>افحص كل نطاق على المنفذ 443 بالأداة نفسها، واحفظ تاريخ القياس ورابط النتيجة.</li>
+<li>اجمع اسم النطاق وعنوان IP الذي جرى حله وإصدار البروتوكول ومجموعة تبادل المفاتيح المتفق عليها وبيانات الشهادة وموقع نقطة القياس.</li>
+<li>أعد القياس من نقطة أخرى أو اختبر عناوين إضافية عندما يوزع DNS أو التوجيه الجغرافي أو CDN العملاء على إعدادات TLS مختلفة.</li>
+<li>إذا أردت تقييم اتصال الحافة بالخادم الأصلي، فنفّذ فحصًا منفصلًا من شبكة مخوّلة.</li>
+</ol>
+<p><a href="/?lang=ar">ابدأ فحص TLS عامًا</a>، وراجع <a href="/sample-report?lang=ar">التقرير النموذجي</a> أو <a href="/business?lang=ar">خيارات المراقبة للشركات</a>.</p>
+
+<h2>٣. فسّر دليل ما بعد الكم ضمن حدوده</h2>
+<p>التفاوض على مجموعة هجينة مثل <code>X25519MLKEM768</code> دليل على إنشاء المفاتيح في اتصال TLS الذي جرى رصده. لكنه لا يثبت أن الشهادة مقاومة للكم، أو أن كل العملاء والنقاط تستخدم المجموعة نفسها، أو أن التطبيق خالٍ من الثغرات. تعامل مع الشهادة وسياسة البروتوكول وأمن التطبيق وتبادل المفاتيح بوصفها ضوابط منفصلة.</p>
+<p>أعطِ الأولوية للأنظمة التي يجب أن تظل بياناتها المشفرة سرية لسنوات طويلة. نسّق التحديثات مع فرق تشغيل نقطة إنهاء TLS، واختبر التوافق مع العملاء الأقدم وأجهزة الشبكة وأنظمة فحص الاتصالات.</p>
+
+<h2>٤. تابع المعالجة والاستثناءات</h2>
+<p>لكل نتيجة، سجّل اسم النطاق ونقطة إنهاء TLS المتأثرة والسلوك المرصود والمالك المسؤول والموعد المستهدف ونتيجة إعادة الفحص. إذا فشل الفحص أو لم يحسم النتيجة، فسجّلها «غير محددة» إلى أن يتضح السبب؛ لا تعتبرها دليلاً على غياب الدعم.</p>
+<p>بعد التغيير، أعد القياس واحفظ الدليلين السابق والحالي. كرر ذلك بعد تغييرات سياسة CDN وتجديد الشهادات ونقل الوكلاء والترقيات الرئيسية للخوادم. للمتابعة الدورية، راجع <a href="/monitoring?lang=ar">المراقبة المستمرة</a>.</p>
+
+<h2>حدود القياس</h2>
+<p>تقيس الخدمة نقطة IPv4 عامة واحدة والمنفذ 443 في كل فحص. قد يكشف DNS والتوجيه نقاطًا أخرى، ونتيجة CDN تصف الاتصال بين العميل وCDN لا الخادم الأصلي. الفحص ملاحظة في وقت محدد، وليس اختبار اختراق أو إقرار امتثال أو ضمانًا للأمان.</p>
+""",
+        },
+    },
 }

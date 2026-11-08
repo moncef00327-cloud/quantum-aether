@@ -249,7 +249,7 @@ def is_api_request():
     return request.path.startswith("/api/")
 
 
-SCAN_SOURCES = {"home", "example", "site", "scanbox", "compare", "api", "deadlines", "pack"}
+SCAN_SOURCES = {"home", "example", "site", "scanbox", "compare", "api", "mcp", "deadlines", "pack"}
 
 
 def perform_scan(raw_domain, source=None):

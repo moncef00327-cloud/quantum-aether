@@ -150,7 +150,7 @@ def register(bp, services):
    try:
     if name in domain_tools:domain=quantum_vuln_scanner.normalize_domain(args['domain'])
     if name=='scan_tls':
-     scan_id,raw=services['scan'](domain,'api');value=services['summary'](scan_id,raw)
+     scan_id,raw=services['scan'](domain,'mcp');value=services['summary'](scan_id,raw)
     elif name=='get_tls_evidence':value=dict(badge_evidence.for_domain(services['db'](),domain),verification_url=base()+'/verify/'+domain)
     elif name=='get_methodology':value=methodology(base())
     elif name=='get_example_result':value=example()

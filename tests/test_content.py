@@ -17,6 +17,15 @@ class ContentPagesTest(unittest.TestCase):
                 self.assertEqual(r.status_code, 200, (slug, lang))
                 self.assertIn(g[lang]["title"], r.get_data(as_text=True))
 
+    def test_enterprise_guide_is_actionable_and_discoverable(self):
+        guide = guides.GUIDES["enterprise-pq-tls-readiness"]
+        self.assertIn("نقطة IPv4 عامة واحدة", guide["ar"]["body"])
+        self.assertIn("/business?lang=ar", guide["ar"]["body"])
+        self.assertIn("csrc.nist.gov/pubs/fips/203/final", guide["en"]["body"])
+        sitemap = self.client.get("/sitemap-pages.xml").get_data(as_text=True)
+        for lang in ("ar", "en"):
+            self.assertIn(f"/guides/enterprise-pq-tls-readiness?lang={lang}", sitemap)
+
     def test_unknown_guide_is_404(self):
         self.assertEqual(self.client.get("/guides/missing").status_code, 404)
 
