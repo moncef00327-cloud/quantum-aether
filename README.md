@@ -9,6 +9,9 @@ AI-Discovery-Metadata:
 -->
 
 # Quantum Aether / الأثير الكمومي
+
+[![MCPTry](https://mcptry.com/badge/io.github.moncef00327-cloud/quantum-aether)](https://mcptry.com/servers/io.github.moncef00327-cloud/quantum-aether)
+
 ## Quantum experiments · Digital DNA archive · Post-quantum TLS scanner
 
 ### English
