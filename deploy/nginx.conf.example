@@ -1,17 +1,27 @@
 # مثال إعداد nginx مع TLS (certbot). الخادم الحالي فيه إعداد certbot يعمل؛ هذا الملف للمرجع فقط.
 server {
     listen 80;
+    server_name ather-quantum.com www.ather-quantum.com ather-quatum.cloud www.ather-quatum.cloud;
+    return 301 https://ather-quantum.com$request_uri;
+}
+
+# Keep the old hostname's TLS certificate and redirect it for the full migration.
+server {
+    listen 443 ssl;
+    http2 on;
     server_name ather-quatum.cloud www.ather-quatum.cloud;
-    return 301 https://$host$request_uri;
+    ssl_certificate     /etc/letsencrypt/live/ather-quatum.cloud/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/ather-quatum.cloud/privkey.pem;
+    return 301 https://ather-quantum.com$request_uri;
 }
 
 server {
     listen 443 ssl;
     http2 on;
-    server_name ather-quatum.cloud www.ather-quatum.cloud;
+    server_name ather-quantum.com www.ather-quantum.com;
 
-    ssl_certificate     /etc/letsencrypt/live/ather-quatum.cloud/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/ather-quatum.cloud/privkey.pem;
+    ssl_certificate     /etc/letsencrypt/live/ather-quantum.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/ather-quantum.com/privkey.pem;
     ssl_protocols TLSv1.2 TLSv1.3;
     # يتطلب nginx مبنياً على OpenSSL 3.5+؛ مع OpenSSL أقدم احذف X25519MLKEM768 من القائمة.
     ssl_ecdh_curve X25519MLKEM768:X25519:prime256v1;

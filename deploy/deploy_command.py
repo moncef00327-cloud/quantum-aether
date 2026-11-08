@@ -40,7 +40,7 @@ def restart():
 def fetch(path):
     for attempt in range(8):
         try:
-            with urllib.request.urlopen('https://ather-quatum.cloud'+path, timeout=25) as response:
+            with urllib.request.urlopen('https://ather-quantum.com'+path, timeout=25) as response:
                 assert response.status == 200
                 return response.read()
         except Exception:
@@ -98,13 +98,13 @@ print('Production integration checks passed')
         print('Verified '+path)
     for name in OBSOLETE:
         try:
-            urllib.request.urlopen('https://ather-quatum.cloud/'+name+'?v=20261107-sample4',timeout=25)
+            urllib.request.urlopen('https://ather-quantum.com/'+name+'?v=20261107-sample4',timeout=25)
         except urllib.error.HTTPError as exc:
             assert exc.code == 404, name
         else:
             raise AssertionError('Obsolete asset still served: '+name)
     print('Verified removal of all six obsolete interface assets')
-    print('Published https://ather-quatum.cloud — backup: '+str(BACKUP))
+    print('Published https://ather-quantum.com — backup: '+str(BACKUP))
 except BaseException:
     for name in FILES + OBSOLETE:
         if name in existing:

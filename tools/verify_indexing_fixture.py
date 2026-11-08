@@ -15,7 +15,7 @@ import search_indexing
 ROOT=Path(__file__).resolve().parents[1]
 OUT=ROOT/'artifacts/indexing-review'
 rows=json.loads((OUT/'weekly-public-fixture.json').read_text())
-base='https://ather-quatum.cloud'
+base='https://ather-quantum.com'
 ns={'s':'http://www.sitemaps.org/schemas/sitemap/0.9'}
 with tempfile.TemporaryDirectory(prefix='indexing-replay-') as tmp:
     app=quantum_saas_app.create_app({'TESTING':True,'DATA_DIR':tmp,'PUBLIC_URL':base,'PAYPAL_CLIENT_ID':'','PAYPAL_CLIENT_SECRET':''},scanner=lambda _: (_ for _ in ()).throw(AssertionError('No network scans')))

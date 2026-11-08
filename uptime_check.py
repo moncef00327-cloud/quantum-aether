@@ -14,7 +14,7 @@ import urllib.request
 from mailer import Mailer
 
 STATE = os.environ.get("QS_UPTIME_STATE", "/var/lib/quantum_uptime/state.json")
-PUBLIC = (os.environ.get("QS_PUBLIC_URL") or "https://ather-quatum.cloud").rstrip("/")
+PUBLIC = (os.environ.get("QS_PUBLIC_URL") or "https://ather-quantum.com").rstrip("/")
 LOCAL = "http://127.0.0.1:8000"
 FAILS_BEFORE_ACTION = 2
 UA = {"User-Agent": "QuantumAether-Uptime/1.0"}

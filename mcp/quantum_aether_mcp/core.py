@@ -6,7 +6,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-DEFAULT_BASE = "https://ather-quatum.cloud"
+DEFAULT_BASE = "https://ather-quantum.com"
 
 
 def base_url():

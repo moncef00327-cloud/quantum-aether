@@ -33,7 +33,7 @@ assert gravity.evidence_url('https://github.com/a/b/issues/1?utm_source=test', '
 PY
 systemctl is-active --quiet quantum_saas
 for path in '/?lang=en' /site/github.com; do
-  code=$(curl --max-time 25 --silent --show-error --output /dev/null --write-out '%{http_code}' "https://ather-quatum.cloud$path")
+  code=$(curl --max-time 25 --silent --show-error --output /dev/null --write-out '%{http_code}' "https://ather-quantum.com$path")
   [ "$code" = 200 ]
   echo "$path: $code"
 done

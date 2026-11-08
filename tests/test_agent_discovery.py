@@ -15,7 +15,7 @@ from tests.test_app import RESULT
 class AgentDiscoveryTests(unittest.TestCase):
  def setUp(self):
   self.tmp=tempfile.TemporaryDirectory();self.scanner=Mock(return_value=copy.deepcopy(RESULT))
-  self.app=quantum_saas_app.create_app({'TESTING':True,'DATA_DIR':self.tmp.name,'PUBLIC_URL':'https://ather-quatum.cloud','PAYPAL_CLIENT_ID':'','PAYPAL_CLIENT_SECRET':'','SCANS_PER_HOUR':3,'GLOBAL_SCANS_PER_HOUR':10},scanner=self.scanner)
+  self.app=quantum_saas_app.create_app({'TESTING':True,'DATA_DIR':self.tmp.name,'PUBLIC_URL':'https://ather-quantum.com','PAYPAL_CLIENT_ID':'','PAYPAL_CLIENT_SECRET':'','SCANS_PER_HOUR':3,'GLOBAL_SCANS_PER_HOUR':10},scanner=self.scanner)
   self.client=self.app.test_client()
  def tearDown(self):self.tmp.cleanup()
  def rpc(self,method,params=None,**kwargs):
@@ -26,9 +26,9 @@ class AgentDiscoveryTests(unittest.TestCase):
  def test_manifest_uses_real_routes_methods_and_configured_prices(self):
   for path in ['/.well-known/agent-service.json','/api/v1/agent/discovery']:
    response=self.client.get(path);self.assertEqual(response.status_code,200);m=response.json
-   self.assertEqual(m['endpoints']['scan']['url'],'https://ather-quatum.cloud/api/scan')
+   self.assertEqual(m['endpoints']['scan']['url'],'https://ather-quantum.com/api/scan')
    self.assertEqual(m['endpoints']['scan']['method'],'POST')
-   self.assertEqual(m['mcp']['url'],'https://ather-quatum.cloud/mcp')
+   self.assertEqual(m['mcp']['url'],'https://ather-quantum.com/mcp')
    self.assertFalse(m['pricing']['x402']['enabled']);self.assertFalse(m['pricing']['signed_receipts']['enabled'])
    self.assertEqual(m['limits']['scan_attempts_per_client_per_hour'],3)
    self.assertEqual(m['limits']['global_scan_attempts_per_hour'],10)
@@ -41,7 +41,7 @@ class AgentDiscoveryTests(unittest.TestCase):
  def test_discovery_pages_link_to_real_service_and_remain_crawlable(self):
   for lang in ['ar','en']:
    response=self.client.get('/agents?lang='+lang);self.assertEqual(response.status_code,200)
-   self.assertIn('WebAPI',response.text);self.assertIn('https://ather-quatum.cloud/mcp',response.text)
+   self.assertIn('WebAPI',response.text);self.assertIn('https://ather-quantum.com/mcp',response.text)
    self.assertNotIn('<meta name="robots" content="noindex',response.text)
    self.assertIn('service-desc',response.headers.get('Link',''))
   for path in ['/llms.txt','/llms-full.txt','/openapi.yaml','/?lang=en','/?lang=ar']:
@@ -52,7 +52,7 @@ class AgentDiscoveryTests(unittest.TestCase):
   self.assertIn('/agents?lang=en',self.client.get('/feed.xml').text)
   robots=RobotFileParser();robots.parse(self.client.get('/robots.txt').text.splitlines())
   for path in ['/agents','/.well-known/agent-service.json','/mcp']:
-   self.assertTrue(robots.can_fetch('Googlebot','https://ather-quatum.cloud'+path))
+   self.assertTrue(robots.can_fetch('Googlebot','https://ather-quantum.com'+path))
   self.scanner.assert_not_called()
 
  def test_initialize_negotiates_supported_protocol_without_payment(self):
@@ -108,7 +108,7 @@ class AgentDiscoveryTests(unittest.TestCase):
  def test_origin_protocol_content_type_and_notifications(self):
   bad=self.rpc('ping',headers={'Origin':'https://evil.example'})
   self.assertEqual(bad.status_code,403)
-  good=self.rpc('ping',headers={'Origin':'https://ather-quatum.cloud'})
+  good=self.rpc('ping',headers={'Origin':'https://ather-quantum.com'})
   self.assertEqual(good.status_code,200)
   version=self.rpc('ping',headers={'MCP-Protocol-Version':'unsupported'})
   self.assertEqual(version.status_code,400)
@@ -130,5 +130,5 @@ class AgentDiscoveryTests(unittest.TestCase):
 
  def test_registry_metadata_describes_real_remote_transport(self):
   data=self.client.get('/api/v1/agent/mcp-server.json').json
-  self.assertEqual(data['remotes'],[{'type':'streamable-http','url':'https://ather-quatum.cloud/mcp'}])
+  self.assertEqual(data['remotes'],[{'type':'streamable-http','url':'https://ather-quantum.com/mcp'}])
   self.assertEqual(data['name'],'io.github.moncef00327-cloud/quantum-aether')

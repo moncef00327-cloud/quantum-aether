@@ -16,9 +16,9 @@ for f in analytics_db.py sales_db.py quantum_saas_app.py monitor_job.py legal.py
 done
 systemctl restart quantum_saas; sleep 4; systemctl is-active quantum_saas
 for p in "/?lang=ar" /site/github.com /datenschutz /agb /deadlines "/agency?lang=ar" /static/pack-checkout.js; do
-  curl -s -o /dev/null -w "$p: %{http_code}\n" "https://ather-quatum.cloud$p"
+  curl -s -o /dev/null -w "$p: %{http_code}\n" "https://ather-quantum.com$p"
 done
-curl -s -o /dev/null -w "/alerts/confirm/bad (want 404): %{http_code}\n" https://ather-quatum.cloud/alerts/confirm/nope
+curl -s -o /dev/null -w "/alerts/confirm/bad (want 404): %{http_code}\n" https://ather-quantum.com/alerts/confirm/nope
 runuser -u quantum -- /var/www/quantum_saas/.venv/bin/python -c "
 import sqlite3; c=sqlite3.connect('/var/lib/quantum_saas/quantum_saas.db')
 print('packs table:', c.execute('select count(*) from packs').fetchone()[0], '| free_alerts table:', c.execute('select count(*) from free_alerts').fetchone()[0], '| scans.source column:', 'source' in [r[1] for r in c.execute('pragma table_info(scans)')])"

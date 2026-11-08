@@ -26,15 +26,15 @@ The check is the same one a browser performs: it connects to your domain on port
 
 == External services ==
 
-This plugin connects to the **Quantum Aether scanner** (https://ather-quatum.cloud), operated by Omer Alsaloum, Braunau am Inn, Austria, to check which TLS key exchange your site's public address negotiates. WordPress cannot determine this from inside the server.
+This plugin connects to the **Quantum Aether scanner** (https://ather-quantum.com), operated by Omer Alsaloum, Braunau am Inn, Austria, to check which TLS key exchange your site's public address negotiates. WordPress cannot determine this from inside the server.
 
-* **What is sent:** your site's hostname (for example `example.com`) as part of a request to `https://ather-quatum.cloud/api/v1/scan`. Like every HTTP request, it also reveals your server's IP address and the plugin's user-agent string. No visitor data, no content and no personal data are sent.
+* **What is sent:** your site's hostname (for example `example.com`) as part of a request to `https://ather-quantum.com/api/v1/scan`. Like every HTTP request, it also reveals your server's IP address and the plugin's user-agent string. No visitor data, no content and no personal data are sent.
 * **When:** only after an administrator gives consent on Tools → Quantum Ready; then once immediately, once a week, and when the administrator presses "Check again" (at most once per hour).
 * **Why:** to report the result in Site Health and on the plugin page.
-* **Terms of use:** https://ather-quatum.cloud/agb?lang=en
-* **Privacy policy:** https://ather-quatum.cloud/datenschutz?lang=en
+* **Terms of use:** https://ather-quantum.com/agb?lang=en
+* **Privacy policy:** https://ather-quantum.com/datenschutz?lang=en
 
-The scanner stores the hostname and the scan result. Results of public domains may appear in aggregate, anonymous statistics such as https://ather-quatum.cloud/adoption.
+The scanner stores the hostname and the scan result. Results of public domains may appear in aggregate, anonymous statistics such as https://ather-quantum.com/adoption.
 
 == Installation ==
 

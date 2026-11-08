@@ -13,7 +13,7 @@ done
 systemctl restart quantum_saas
 sleep 4
 systemctl is-active quantum_saas
-curl -s -o /dev/null -w "adoption page: %{http_code}\n" https://ather-quatum.cloud/adoption
+curl -s -o /dev/null -w "adoption page: %{http_code}\n" https://ather-quantum.com/adoption
 # Mark rows whose key-exchange probe was blocked (column is added on app start).
 runuser -u quantum -- /var/www/quantum_saas/.venv/bin/python - <<'PY'
 import sqlite3

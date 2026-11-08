@@ -13,7 +13,7 @@ import urllib.parse
 import urllib.request
 
 GRADES = ["A", "B", "C", "F"]
-GUIDE = "https://ather-quatum.cloud/guides/enable-x25519mlkem768-nginx"
+GUIDE = "https://ather-quantum.com/guides/enable-x25519mlkem768-nginx"
 
 
 def fetch(base, domain, timeout=60):
@@ -57,7 +57,7 @@ def summary_markdown(result):
         lines += ["Traffic to this site uses classical key exchange only, so it can be recorded today and decrypted "
                   f"later (\"harvest now, decrypt later\"). [How to enable X25519MLKEM768]({GUIDE})", ""]
     if result.get("scan_url"):
-        lines.append(f"[Full result]({result['scan_url']}) · scanned by [Quantum Aether](https://ather-quatum.cloud)")
+        lines.append(f"[Full result]({result['scan_url']}) · scanned by [Quantum Aether](https://ather-quantum.com)")
     return "\n".join(lines) + "\n"
 
 
@@ -72,7 +72,7 @@ def main(fetcher=fetch):
     domain = (os.environ.get("INPUT_DOMAIN") or "").strip()
     require_pq = (os.environ.get("INPUT_REQUIRE_PQ") or "false").strip().lower() == "true"
     min_grade = (os.environ.get("INPUT_MIN_GRADE") or "").strip().upper()
-    base = (os.environ.get("INPUT_BASE_URL") or "https://ather-quatum.cloud").strip()
+    base = (os.environ.get("INPUT_BASE_URL") or "https://ather-quantum.com").strip()
     if not domain:
         print("::error::input 'domain' is required")
         return 1

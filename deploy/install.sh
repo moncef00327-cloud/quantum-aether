@@ -12,7 +12,7 @@ ENV_FILE=/etc/quantum_saas.env
 BACKUP_DIR=/var/backups/quantum_saas
 SERVICE=quantum_saas
 APP_USER=quantum
-PUBLIC_URL="${PUBLIC_URL:-https://ather-quatum.cloud}"
+PUBLIC_URL="${PUBLIC_URL:-https://ather-quantum.com}"
 # معرّف PayPal العام الذي كان يستخدمه الموقع (ليس سراً؛ السر يُدخل عبر configure.sh).
 DEFAULT_PAYPAL_CLIENT_ID="BAA9XULdxpQX54xlR5T2qj9mQyMRk8P0Tdn4KMBW98BruBpaAUwhOIG-l_29RhutQ_5Ec859jTd9lc4yL0"
 

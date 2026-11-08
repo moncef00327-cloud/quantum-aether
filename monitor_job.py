@@ -19,7 +19,7 @@ from paypal_client import SUBSCRIPTION_LIVE_STATUSES, PayPalError
 log = logging.getLogger("quantum_saas.monitor_job")
 
 
-def sync_subscriptions(conn, paypal, mailer=None, owner="", base_url="https://ather-quatum.cloud"):
+def sync_subscriptions(conn, paypal, mailer=None, owner="", base_url="https://ather-quantum.com"):
     """يوقف الحسابات التي ألغيت أو عُلّقت في PayPal (مثلاً من حساب المشترك أو لفشل الدفع)."""
     if paypal is None:
         return
@@ -57,7 +57,7 @@ def run(app):
     cfg = app.config
     conn = sales_db.connect(os.path.join(cfg["DATA_DIR"], "quantum_saas.db"))
     try:
-        base_url = cfg["PUBLIC_URL"] or "https://ather-quatum.cloud"
+        base_url = cfg["PUBLIC_URL"] or "https://ather-quantum.com"
         sync_subscriptions(conn, app.extensions["paypal"], app.extensions["mailer"], cfg["OWNER_EMAIL"], base_url)
         accounts = conn.execute("SELECT * FROM monitor_accounts WHERE status = 'ACTIVE'").fetchall()
         total_domains = total_alerts = 0

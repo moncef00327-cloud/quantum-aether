@@ -14,7 +14,7 @@ def main():
     client = PayPalClient(os.environ["PAYPAL_CLIENT_ID"], os.environ["PAYPAL_CLIENT_SECRET"], os.environ.get("PAYPAL_ENV", "live"))
     product = client.create_product("Quantum Aether Monitoring",
                                     "Daily post-quantum TLS readiness monitoring with email alerts",
-                                    "https://ather-quatum.cloud/monitoring")
+                                    "https://ather-quantum.com/monitoring")
     print(f"# product {product['id']}")
     for name, plan in monitor.PLANS.items():
         created = client.create_plan(product["id"], f"Quantum Aether {plan['name']} (monthly)",

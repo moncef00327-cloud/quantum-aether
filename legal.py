@@ -134,7 +134,7 @@ PAGES = {
             "title": "Allgemeine Geschäftsbedingungen (AGB)",
             "body": f"""
 <h2>1. Geltungsbereich</h2>
-<p>Diese AGB gelten für alle Leistungen von {OWNER} (im Folgenden „Anbieter“) über die Website ather-quatum.cloud.</p>
+<p>Diese AGB gelten für alle Leistungen von {OWNER} (im Folgenden „Anbieter“) über die Website ather-quantum.com.</p>
 
 <h2>2. Leistungen</h2>
 <ul>
@@ -177,7 +177,7 @@ PAGES = {
             "title": "Terms and conditions",
             "body": f"""
 <h2>1. Scope</h2>
-<p>These terms apply to all services provided by {OWNER} ("provider") through the website ather-quatum.cloud.</p>
+<p>These terms apply to all services provided by {OWNER} ("provider") through the website ather-quantum.com.</p>
 
 <h2>2. Services</h2>
 <ul>

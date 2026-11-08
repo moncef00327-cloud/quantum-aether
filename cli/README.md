@@ -16,7 +16,7 @@ npx quantum-aether example.com
   post-quantum  NO — classical, harvest-now-decrypt-later risk
   TLS           TLSv1.3
   certificate   ECDSA-256
-  full report   https://ather-quatum.cloud/?domain=example.com  ($49.00)
+  full report   https://ather-quantum.com/?domain=example.com  ($49.00)
 ```
 
 JSON for scripts and agents:
@@ -28,7 +28,7 @@ npx quantum-aether example.com --json
 No Node? Same check over plain HTTP:
 
 ```sh
-curl "https://ather-quatum.cloud/api/v1/scan?domain=example.com&format=text"
+curl "https://ather-quantum.com/api/v1/scan?domain=example.com&format=text"
 ```
 
-Data and methodology: https://ather-quatum.cloud/study/top-1000-post-quantum-tls
+Data and methodology: https://ather-quantum.com/study/top-1000-post-quantum-tls

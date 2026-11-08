@@ -9,7 +9,7 @@
 ### 2. Core Pillars
 **Quantum Layer:** 3-qubit GHZ on ibm_marrakesh (job dbjcpopkdqps7390bqv0): population P(000)+P(111) = 96.29% (986/1024 shots), an upper bound on the state fidelity. Fidelity tooling is ready (`ghz_fidelity.py`).
 **Bio-Storage Layer:** the research report encoded as 55,080 DNA bases (digital encoding, RS(255,223)); it restores byte for byte. No molecule was synthesized.
-**SaaS & Cloud Layer:** post-quantum TLS readiness scanner at ather-quatum.cloud. Free grade, $49 full report via PayPal with server-side payment verification. Flask + gunicorn behind nginx on Vultr.
+**SaaS & Cloud Layer:** post-quantum TLS readiness scanner at ather-quantum.com. Free grade, $49 full report via PayPal with server-side payment verification. Flask + gunicorn behind nginx on Vultr.
 
 ### 3. Next Steps
 - Measure the GHZ fidelity on hardware (`python ghz_fidelity.py --hardware`).

@@ -51,7 +51,7 @@ def _frame(draw):
         draw.line(pts, fill=ACCENT, width=4)
     draw.ellipse([cx - 7, cy - 7, cx + 7, cy + 7], fill="#4ade80")
     draw.text((146, 68), "Quantum Aether", font=_font(FONT_BOLD, 40), fill=TEXT)
-    draw.text((60, H - 70), "ather-quatum.cloud", font=_font(FONT_REGULAR, 30), fill=MUTED)
+    draw.text((60, H - 70), "ather-quantum.com", font=_font(FONT_REGULAR, 30), fill=MUTED)
 
 
 def render_result(domain, grade, pq, unsure=False, day=""):

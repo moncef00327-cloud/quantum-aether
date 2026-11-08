@@ -40,7 +40,7 @@ class DatasetJsonLdTests(unittest.TestCase):
         self.tmp=tempfile.TemporaryDirectory()
         self.scanner=Mock(side_effect=AssertionError('Rendering metadata must never scan externally'))
         self.app=quantum_saas_app.create_app({'TESTING':True,'DATA_DIR':self.tmp.name,
-            'PUBLIC_URL':'https://ather-quatum.cloud','PAYPAL_CLIENT_ID':'','PAYPAL_CLIENT_SECRET':''},scanner=self.scanner)
+            'PUBLIC_URL':'https://ather-quantum.com','PAYPAL_CLIENT_ID':'','PAYPAL_CLIENT_SECRET':''},scanner=self.scanner)
         self.client=self.app.test_client()
         self.conn=sales_db.connect(self.tmp.name+'/quantum_saas.db')
         seed_countries(self.conn);seed_weekly(self.conn)
@@ -71,7 +71,7 @@ class DatasetJsonLdTests(unittest.TestCase):
                     page=next(d for d in docs if d.get('@type')=='WebPage')
                     dataset=page['isPartOf'];self.assertEqual(dataset['@type'],'Dataset')
                     self.assert_dataset(dataset)
-                    self.assertEqual(dataset['url'],'https://ather-quatum.cloud/adoption')
+                    self.assertEqual(dataset['url'],'https://ather-quantum.com/adoption')
                     self.assertIn('observed',dataset['description'].lower())
                     self.assertEqual(page['about']['name'],domain)
                     self.assertEqual([d['@type'] for d in docs],['WebPage','FAQPage'])
@@ -105,4 +105,4 @@ class DatasetJsonLdTests(unittest.TestCase):
         self.assertIn('/site/alpha.test?lang=en',self.client.get('/sitemap-sites-1.xml').text)
         from urllib.robotparser import RobotFileParser
         robots=RobotFileParser();robots.parse(self.client.get('/robots.txt').text.splitlines())
-        self.assertTrue(robots.can_fetch('Googlebot','https://ather-quatum.cloud/site/alpha.test?lang=en'))
+        self.assertTrue(robots.can_fetch('Googlebot','https://ather-quantum.com/site/alpha.test?lang=en'))

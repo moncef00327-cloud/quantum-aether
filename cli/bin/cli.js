@@ -4,7 +4,7 @@
 "use strict";
 const https = require("https");
 
-const BASE = process.env.QUANTUM_AETHER_BASE || "https://ather-quatum.cloud";
+const BASE = process.env.QUANTUM_AETHER_BASE || "https://ather-quantum.com";
 const args = process.argv.slice(2).filter((a) => a !== "--");
 const json = args.includes("--json");
 const domain = args.find((a) => !a.startsWith("-"));

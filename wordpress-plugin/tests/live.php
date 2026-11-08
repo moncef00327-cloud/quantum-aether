@@ -7,7 +7,7 @@ require __DIR__ . '/../quantum-ready/quantum-ready.php';
 update_option( 'quantum_ready_consent', 'granted' );
 foreach ( array( 'https://cloudflare.com', 'https://github.com', 'http://localhost' ) as $home ) {
   $GLOBALS['qr_home'] = $home;
-  $GLOBALS['qr_http'] = qr_real_get( 'https://ather-quatum.cloud/api/v1/scan?domain=' . parse_url( $home, PHP_URL_HOST ) . '&max_age=24' );
+  $GLOBALS['qr_http'] = qr_real_get( 'https://ather-quantum.com/api/v1/scan?domain=' . parse_url( $home, PHP_URL_HOST ) . '&max_age=24' );
   $r = QR_Checker::check( false ); $sh = QR_Site_Health::run();
   printf( "%-12s status=%-10s grade=%s group=%-15s | Site Health: [%s] %s\n", parse_url( $home, PHP_URL_HOST ), $r['status'], $r['grade'] ?? '-', $r['group'] ?? '-', $sh['status'], $sh['label'] );
 }

@@ -18,7 +18,7 @@ class SalesBatchTest(unittest.TestCase):
         self.mailer, self.scanner = FakeMailer(), FakeScanner()
         self.scanner.results["example.com"] = fake_scanner("example.com")   # B، كلاسيكي
         self.app = quantum_saas_app.create_app(
-            {"TESTING": True, "DATA_DIR": self.tmp, "PUBLIC_URL": "https://ather-quatum.cloud", "HASH_SALT": "s"},
+            {"TESTING": True, "DATA_DIR": self.tmp, "PUBLIC_URL": "https://ather-quantum.com", "HASH_SALT": "s"},
             scanner=self.scanner, paypal=None, mailer=self.mailer)
         self.client = self.app.test_client()
 

@@ -1003,7 +1003,7 @@ def terminal_report(result):
     state = scan_experience.status(result)
     pq = 'undetermined — verify with a compatible TLS client' if state == 'undetermined' else (
         "yes (hybrid ML-KEM)" if state == 'observed_pq' else "NO — classical, harvest-now-decrypt-later risk")
-    base = current_app.config["PUBLIC_URL"] or "https://ather-quatum.cloud"
+    base = current_app.config["PUBLIC_URL"] or "https://ather-quantum.com"
     lines = [
         "",
         f"  Quantum Aether — post-quantum TLS scan",

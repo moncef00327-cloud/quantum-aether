@@ -14,7 +14,7 @@ import search_indexing
 from tests.test_app import RESULT
 from tests.test_crawlers import seed
 
-BASE='https://ather-quatum.cloud'
+BASE='https://ather-quantum.com'
 NS={'s':'http://www.sitemaps.org/schemas/sitemap/0.9'}
 
 class HeadAndLinks(HTMLParser):
@@ -162,7 +162,7 @@ class SearchIndexingTests(unittest.TestCase):
                 self.assertEqual('noindex' in response.headers.get('X-Robots-Tag',''),host=='pornhub.com')
 
     def test_www_site_alias_points_to_same_excluded_apex_canonical(self):
-        response=self.client.get('/site/pornhub.com?lang=ar',base_url='https://www.ather-quatum.cloud')
+        response=self.client.get('/site/pornhub.com?lang=ar',base_url='https://www.ather-quantum.com')
         self.assertEqual(response.status_code,200)
         self.assertIn('noindex',response.headers['X-Robots-Tag'])
         self.assertEqual(metadata(response).canonical,[BASE+'/site/pornhub.com?lang=ar'])

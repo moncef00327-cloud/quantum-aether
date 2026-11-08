@@ -52,7 +52,7 @@ print('Production-backend template checks passed: 18 pages')
     ]:
         response = subprocess.run(['curl', '--retry', '4', '--retry-connrefused', '--retry-delay', '2',
                                    '--max-time', '25', '--fail', '--silent', '--show-error',
-                                   'https://ather-quatum.cloud' + path], check=True, capture_output=True).stdout
+                                   'https://ather-quantum.com' + path], check=True, capture_output=True).stdout
         assert marker in response, f'Missing expected content: {path}'
         print('OK ' + path)
     subprocess.run(['systemctl', 'is-active', '--quiet', 'quantum_saas'], check=True)

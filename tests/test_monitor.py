@@ -341,7 +341,7 @@ class AnalyticsTest(unittest.TestCase):
         from werkzeug.security import generate_password_hash
         self.tmp = tempfile.mkdtemp()
         self.app = quantum_saas_app.create_app(
-            {"TESTING": True, "DATA_DIR": self.tmp, "PUBLIC_URL": "https://ather-quatum.cloud",
+            {"TESTING": True, "DATA_DIR": self.tmp, "PUBLIC_URL": "https://ather-quantum.com",
              "ADMIN_PASSWORD_HASH": generate_password_hash("pw")},
             scanner=lambda raw: result_for(quantum_vuln_scanner.normalize_domain(raw)), paypal=None, mailer=FakeMailer())
         self.client = self.app.test_client()
@@ -352,7 +352,7 @@ class AnalyticsTest(unittest.TestCase):
     def test_tracks_humans_sources_and_skips_private_pages(self):
         browser = {"User-Agent": "Mozilla/5.0 Firefox/140"}
         view(self.client, "/", dict(browser, Referer="https://news.ycombinator.com/item?id=1"))
-        view(self.client, "/guides", dict(browser, Referer="https://ather-quatum.cloud/"))
+        view(self.client, "/guides", dict(browser, Referer="https://ather-quantum.com/"))
         view(self.client, "/", {"User-Agent": "Mozilla/5.0 (compatible; bingbot/2.0)"})
         self.client.get("/monitoring", headers=browser)  # HTML بلا JavaScript: لا يُحسب
         self.client.get("/robots.txt", headers=browser)
@@ -373,7 +373,7 @@ class AdminExclusionAndSeoTest(unittest.TestCase):
         from werkzeug.security import generate_password_hash
         self.tmp = tempfile.mkdtemp()
         self.app = quantum_saas_app.create_app(
-            {"TESTING": True, "DATA_DIR": self.tmp, "PUBLIC_URL": "https://ather-quatum.cloud",
+            {"TESTING": True, "DATA_DIR": self.tmp, "PUBLIC_URL": "https://ather-quantum.com",
              "ADMIN_PASSWORD_HASH": generate_password_hash("pw"), "HASH_SALT": "salt"},
             scanner=lambda raw: result_for(quantum_vuln_scanner.normalize_domain(raw)), paypal=None, mailer=FakeMailer())
         self.auth = {"Authorization": "Basic " + base64.b64encode(b"admin:pw").decode()}
@@ -435,7 +435,7 @@ class AdminExclusionAndSeoTest(unittest.TestCase):
         body = self.app.test_client().get("/guides?lang=ar").get_data(as_text=True)
         for lang in ("en", "ar", "x-default"):
             self.assertIn(f'hreflang="{lang}"', body)
-        self.assertIn('hreflang="x-default" href="https://ather-quatum.cloud/guides?lang=en"', body)
+        self.assertIn('hreflang="x-default" href="https://ather-quantum.com/guides?lang=en"', body)
 
     def test_legal_pages_in_both_languages_with_placeholders(self):
         client = self.app.test_client()
@@ -459,27 +459,27 @@ class AdminExclusionAndSeoTest(unittest.TestCase):
         index = client.get("/sitemap.xml").get_data(as_text=True)
         xml.dom.minidom.parseString(index)
         self.assertIn("<sitemapindex", index)
-        self.assertIn("https://ather-quatum.cloud/sitemap-pages.xml", index)
-        self.assertIn("https://ather-quatum.cloud/sitemap-sites-1.xml", index)
+        self.assertIn("https://ather-quantum.com/sitemap-pages.xml", index)
+        self.assertIn("https://ather-quantum.com/sitemap-sites-1.xml", index)
         body = client.get("/sitemap-pages.xml").get_data(as_text=True)
         xml.dom.minidom.parseString(body)
         self.assertIn('xmlns:xhtml="http://www.w3.org/1999/xhtml"', body)
-        self.assertIn('<xhtml:link rel="alternate" hreflang="x-default" href="https://ather-quatum.cloud/guides?lang=en"/>', body)
-        self.assertIn("https://ather-quatum.cloud/impressum?lang=de", body)
+        self.assertIn('<xhtml:link rel="alternate" hreflang="x-default" href="https://ather-quantum.com/guides?lang=en"/>', body)
+        self.assertIn("https://ather-quantum.com/impressum?lang=de", body)
         # 5 صفحات بثلاث لغات (منها /adoption و/scanning) + 6 بلغتين + compare بلغتين + 3 قانونية بلغتين
         self.assertEqual(body.count("<url>"), 7 * 3 + 2 * (3 + 3 + 1) + 2 * 3 + 2 + 2 * 3 + 2)  # +/deadlines +/agency + bilingual Gravity
-        self.assertIn("https://ather-quatum.cloud/compare?lang=en", body)
+        self.assertIn("https://ather-quantum.com/compare?lang=en", body)
         import quantum_saas_app
         sites_xml = client.get("/sitemap-sites-1.xml").get_data(as_text=True)
         xml.dom.minidom.parseString(sites_xml)
         import search_indexing
         discoverable = [s for s in quantum_saas_app.study_data()["sites"] if not search_indexing.is_excluded(s["domain"])]
         self.assertEqual(sites_xml.count("<url>"), 2 * len(discoverable))
-        self.assertIn("https://ather-quatum.cloud/site/amazon.com?lang=en", sites_xml)
+        self.assertIn("https://ather-quantum.com/site/amazon.com?lang=en", sites_xml)
         self.assertEqual(client.get("/sitemap-sites-2.xml").status_code, 404)
 
     def test_robots_points_to_sitemap(self):
-        self.assertIn("Sitemap: https://ather-quatum.cloud/sitemap.xml",
+        self.assertIn("Sitemap: https://ather-quantum.com/sitemap.xml",
                       self.app.test_client().get("/robots.txt").get_data(as_text=True))
 
 
@@ -530,7 +530,7 @@ class OrdersUtmScanBoxGermanTest(unittest.TestCase):
         from tests.test_app import FakePayPal as OrdersPayPal
         self.tmp = tempfile.mkdtemp()
         self.app = quantum_saas_app.create_app(
-            {"TESTING": True, "DATA_DIR": self.tmp, "PUBLIC_URL": "https://ather-quatum.cloud", "HASH_SALT": "salt",
+            {"TESTING": True, "DATA_DIR": self.tmp, "PUBLIC_URL": "https://ather-quantum.com", "HASH_SALT": "salt",
              "ADMIN_PASSWORD_HASH": generate_password_hash("pw"), "PAYPAL_CLIENT_ID": "cid", **PLAN_IDS},
             scanner=lambda raw: result_for(quantum_vuln_scanner.normalize_domain(raw)), paypal=OrdersPayPal(),
             mailer=FakeMailer())
@@ -620,8 +620,8 @@ class OrdersUtmScanBoxGermanTest(unittest.TestCase):
         self.assertNotIn(">Deutsch</a>", body)
         self.assertIn(">Deutsch</a>", client.get("/?lang=en").get_data(as_text=True))
         sitemap = client.get("/sitemap-pages.xml").get_data(as_text=True)
-        self.assertIn("<loc>https://ather-quatum.cloud/study/top-1000-post-quantum-tls?lang=de</loc>", sitemap)
-        self.assertIn('hreflang="de" href="https://ather-quatum.cloud/monitoring?lang=de"', sitemap)
+        self.assertIn("<loc>https://ather-quantum.com/study/top-1000-post-quantum-tls?lang=de</loc>", sitemap)
+        self.assertIn('hreflang="de" href="https://ather-quantum.com/monitoring?lang=de"', sitemap)
         self.assertNotIn("guides?lang=de", sitemap)
 
     def test_german_form_error_is_german(self):

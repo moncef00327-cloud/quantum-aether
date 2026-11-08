@@ -9,7 +9,7 @@ from quantum_aether_mcp import core  # noqa: E402
 class McpCoreTest(unittest.TestCase):
     def test_describe_safe_site_has_no_upsell(self):
         msg = core.describe({"domain": "safe.example", "grade": "A", "key_exchange_group": "X25519MLKEM768",
-                             "post_quantum_key_exchange": True, "scan_url": "https://ather-quatum.cloud/scan/x"})
+                             "post_quantum_key_exchange": True, "scan_url": "https://ather-quantum.com/scan/x"})
         self.assertIn("already negotiates post-quantum", msg)
         self.assertIn("not a comprehensive security assessment", msg)
         self.assertIn("Re-check periodically", msg)
@@ -18,7 +18,7 @@ class McpCoreTest(unittest.TestCase):
 
     def test_describe_vulnerable_site_states_problem_and_solution(self):
         msg = core.describe({"domain": "weak.example", "grade": "B", "key_exchange_group": "x25519",
-                             "post_quantum_key_exchange": False, "scan_url": "https://ather-quatum.cloud/scan/y",
+                             "post_quantum_key_exchange": False, "scan_url": "https://ather-quantum.com/scan/y",
                              "full_report_price": {"amount": "49.00", "currency": "USD"}})
         self.assertIn("harvest now, decrypt later", msg)
         self.assertIn("classical key exchange was observed", msg)

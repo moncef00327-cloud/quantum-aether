@@ -26,7 +26,7 @@ class CrawlerTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.mkdtemp()
         self.app = quantum_saas_app.create_app(
-            {"TESTING": True, "DATA_DIR": self.tmp, "PUBLIC_URL": "https://ather-quatum.cloud", "HASH_SALT": "s"},
+            {"TESTING": True, "DATA_DIR": self.tmp, "PUBLIC_URL": "https://ather-quantum.com", "HASH_SALT": "s"},
             scanner=lambda d: None, paypal=None)
         self.client = self.app.test_client()
         conn = sales_db.connect(f"{self.tmp}/quantum_saas.db")
@@ -76,7 +76,7 @@ class CrawlerTests(unittest.TestCase):
         xml.dom.minidom.parseString(index)
         body = self.client.get("/sitemap-sites-1.xml").get_data(as_text=True)
         xml.dom.minidom.parseString(body)
-        self.assertIn("<loc>https://ather-quatum.cloud/site/alpha.test?lang=en</loc><lastmod>2026-11-02</lastmod>", body)
+        self.assertIn("<loc>https://ather-quantum.com/site/alpha.test?lang=en</loc><lastmod>2026-11-02</lastmod>", body)
         self.assertNotIn("down.test", body)
         self.assertEqual(body.count("/site/alpha.test?lang=en</loc>"), 1)
 
@@ -85,7 +85,7 @@ class CrawlerTests(unittest.TestCase):
         self.assertIn("Live adoption figures (week 2026-W45", body)
         self.assertIn("## 1. Check your OpenSSL version", body)
         self.assertIn("```", body)
-        self.assertIn("https://ather-quatum.cloud/guides/harvest-now-decrypt-later", body)
+        self.assertIn("https://ather-quantum.com/guides/harvest-now-decrypt-later", body)
         self.assertNotIn("<p>", body)
         self.assertIn("llms-full.txt", self.client.get("/robots.txt").get_data(as_text=True))
         self.assertIn("llms-full.txt", self.client.get("/llms.txt").get_data(as_text=True))

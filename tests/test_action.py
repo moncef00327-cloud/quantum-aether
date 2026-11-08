@@ -10,9 +10,9 @@ scan = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(scan)
 
 PQ = {"domain": "good.example", "grade": "A", "key_exchange_group": "X25519MLKEM768",
-      "post_quantum_key_exchange": True, "scan_url": "https://ather-quatum.cloud/scan/a"}
+      "post_quantum_key_exchange": True, "scan_url": "https://ather-quantum.com/scan/a"}
 CLASSIC = {"domain": "old.example", "grade": "B", "key_exchange_group": "x25519",
-           "post_quantum_key_exchange": False, "scan_url": "https://ather-quatum.cloud/scan/b"}
+           "post_quantum_key_exchange": False, "scan_url": "https://ather-quantum.com/scan/b"}
 
 
 class ActionTest(unittest.TestCase):

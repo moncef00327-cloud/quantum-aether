@@ -33,7 +33,7 @@ class PackTest(unittest.TestCase):
         self.tmp = tempfile.mkdtemp()
         self.paypal, self.mailer, self.scanner = FakePayPal(), FakeMailer(), FakeScanner()
         self.app = quantum_saas_app.create_app(
-            {"TESTING": True, "DATA_DIR": self.tmp, "PUBLIC_URL": "https://ather-quatum.cloud", "HASH_SALT": "s",
+            {"TESTING": True, "DATA_DIR": self.tmp, "PUBLIC_URL": "https://ather-quantum.com", "HASH_SALT": "s",
              "OWNER_EMAIL": "owner@example.org", "SCANS_PER_HOUR": 100},
             scanner=self.scanner, paypal=self.paypal, mailer=self.mailer)
         self.client = self.app.test_client()
@@ -66,11 +66,11 @@ class PackTest(unittest.TestCase):
 
     def test_purchase_emails_link_and_redeems(self):
         oid, url = self.buy()
-        self.assertTrue(url.startswith("https://ather-quatum.cloud/pack/"))
+        self.assertTrue(url.startswith("https://ather-quantum.com/pack/"))
         to_buyer = [m for m in self.mailer.sent if m[0] == "agency@example.org"][0]
         self.assertIn(url, to_buyer[2])
         self.assertTrue(any(m[0] == "owner@example.org" for m in self.mailer.sent))
-        path = url.replace("https://ather-quatum.cloud", "")
+        path = url.replace("https://ather-quantum.com", "")
         page = self.client.get(path)
         self.assertIn("10 of 10 reports left", page.get_data(as_text=True))
         self.assertEqual(page.headers["Cache-Control"], "no-store")

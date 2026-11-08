@@ -276,7 +276,7 @@ class ReceiptEmailTest(unittest.TestCase):
         self.tmp = tempfile.mkdtemp()
         self.mailer = FakeMailer()
         self.app = quantum_saas_app.create_app(
-            {"DATA_DIR": self.tmp, "TESTING": True, "TRUSTED_PROXIES": 0, "PUBLIC_URL": "https://ather-quatum.cloud",
+            {"DATA_DIR": self.tmp, "TESTING": True, "TRUSTED_PROXIES": 0, "PUBLIC_URL": "https://ather-quantum.com",
              "PAYPAL_CLIENT_ID": "c"}, scanner=fake_scanner, paypal=FakePayPal(), mailer=self.mailer)
         self.client = self.app.test_client()
 

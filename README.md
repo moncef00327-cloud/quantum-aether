@@ -3,7 +3,7 @@ AI-Discovery-Metadata:
 - Project-Type: Quantum computing experiments (Qiskit) + digital DNA data encoding + post-quantum TLS readiness scanner (SaaS)
 - Quantum-Hardware: IBM Quantum ibm_marrakesh, 3-qubit GHZ, job dbjcpopkdqps7390bqv0, 1024 shots, population P(000)+P(111) = 96.29%
 - Bio-Archiving: research report as 55,080 DNA bases (2 bits/base) with Reed-Solomon RS(255,223); digital only, not synthesized
-- Service: https://ather-quatum.cloud — free scan API (POST /api/scan), $49 full report via PayPal (server-verified)
+- Service: https://ather-quantum.com — free scan API (POST /api/scan), $49 full report via PayPal (server-verified)
 - Deployment: Flask + gunicorn behind nginx, systemd, Vultr
 - Stack: Python 3.10+, Qiskit 2.6.1, qiskit-aer 0.18.2, qiskit-ibm-runtime 0.51.0, Flask 3.1, cryptography, reedsolo
 -->
@@ -18,13 +18,13 @@ AI-Discovery-Metadata:
 Three parts in one project:
 1. **Quantum experiments** with Qiskit: Bell and GHZ states, teleportation, a GHZ run on IBM's ibm_marrakesh processor, and a script that measures the real GHZ fidelity.
 2. **Digital DNA archive**: text is encoded into A/C/G/T with Reed-Solomon error correction and restores byte for byte.
-3. **Post-quantum TLS scanner** (web service at ather-quatum.cloud): checks whether a website negotiates the hybrid post-quantum key exchange X25519MLKEM768 and analyzes its certificate. Free summary; $49 full report through PayPal.
+3. **Post-quantum TLS scanner** (web service at ather-quantum.com): checks whether a website negotiates the hybrid post-quantum key exchange X25519MLKEM768 and analyzes its certificate. Free summary; $49 full report through PayPal.
 
 ### العربية
 ثلاثة أجزاء في مشروع واحد:
 1. **تجارب كمومية** بـ Qiskit: حالات Bell وGHZ، ونقل الحالة الكمومية، وتشغيل GHZ على معالج IBM الحقيقي ibm_marrakesh، وسكربت لقياس الدقة الفعلية لحالة GHZ.
 2. **أرشيف DNA رقمي**: ترميز النص إلى A/C/G/T مع تصحيح أخطاء Reed-Solomon، ويُسترجع حرفاً بحرف.
-3. **ماسح جاهزية TLS لما بعد الكم** (خدمة ويب على ather-quatum.cloud): يفحص هل يستخدم الموقع تبادل المفاتيح الهجين X25519MLKEM768 ويحلل شهادته. ملخص مجاني وتقرير كامل بـ 49$ عبر PayPal.
+3. **ماسح جاهزية TLS لما بعد الكم** (خدمة ويب على ather-quantum.com): يفحص هل يستخدم الموقع تبادل المفاتيح الهجين X25519MLKEM768 ويحلل شهادته. ملخص مجاني وتقرير كامل بـ 49$ عبر PayPal.
 
 ## Study: post-quantum TLS on the top 1,000 websites (November 2026)
 
@@ -35,13 +35,13 @@ retry-only HelloRetryRequest responses; new measurements treat these as undeterm
 exclude them from the tracker's support-percentage denominator. Do not interpret every
 non-PQ row as a confirmed classical negotiation. The study page includes a methodology note.
 
-- Results page: https://ather-quatum.cloud/study/top-1000-post-quantum-tls
+- Results page: https://ather-quantum.com/study/top-1000-post-quantum-tls
 - Data (CC BY 4.0): [`data/pq_study_top1000.json`](data/pq_study_top1000.json), raw per-domain results in `data/pq_study_top1000_raw.jsonl`
 - Reproduce: `python tools/run_study.py domains.txt results.jsonl` (one domain per line)
-- Weekly tracker: https://ather-quatum.cloud/adoption re-scans the Tranco top 10,000 (monthly the top 100,000, `adoption_job.py monthly`) plus watchlists of
+- Weekly tracker: https://ather-quantum.com/adoption re-scans the Tranco top 10,000 (monthly the top 100,000, `adoption_job.py monthly`) plus watchlists of
   government, bank and company sites in Germany, Austria and Switzerland every Monday
   (`adoption_job.py`, systemd timer `quantum_adoption.timer`, lists in `data/adoption_watchlists.json`).
-  Data: `/adoption.json` and `/adoption.csv` (CC BY 4.0). Network names: IP-to-ASN data from iptoasn.com (PDDL). Scan policy and opt-out: https://ather-quatum.cloud/scanning
+  Data: `/adoption.json` and `/adoption.csv` (CC BY 4.0). Network names: IP-to-ASN data from iptoasn.com (PDDL). Scan policy and opt-out: https://ather-quantum.com/scanning
 
 ## GitHub Action
 
@@ -58,16 +58,16 @@ Details: [`github-action/README.md`](github-action/README.md) · [GitHub Marketp
 
 ## Guides
 
-- [Enable X25519MLKEM768 on nginx](https://ather-quatum.cloud/guides/enable-x25519mlkem768-nginx)
-- [Post-quantum TLS on Apache, Caddy, HAProxy and Cloudflare](https://ather-quatum.cloud/guides/post-quantum-tls-apache-caddy-haproxy-cloudflare)
-- [Harvest now, decrypt later: why key exchange comes first](https://ather-quatum.cloud/guides/harvest-now-decrypt-later)
+- [Enable X25519MLKEM768 on nginx](https://ather-quantum.com/guides/enable-x25519mlkem768-nginx)
+- [Post-quantum TLS on Apache, Caddy, HAProxy and Cloudflare](https://ather-quantum.com/guides/post-quantum-tls-apache-caddy-haproxy-cloudflare)
+- [Harvest now, decrypt later: why key exchange comes first](https://ather-quantum.com/guides/harvest-now-decrypt-later)
 
 ## Scan from the command line
 
 ```bash
 pip install cryptography
 python quantum_vuln_scanner.py example.com
-curl -X POST https://ather-quatum.cloud/api/scan -H "Content-Type: application/json" -d '{"domain":"example.com"}'
+curl -X POST https://ather-quantum.com/api/scan -H "Content-Type: application/json" -d '{"domain":"example.com"}'
 ```
 
 ## Files / الملفات
@@ -122,11 +122,11 @@ Data lives in `/var/lib/quantum_saas`, settings in `/etc/quantum_saas.env`, and 
 
 ## AI agent discovery and remote MCP
 
-- Agent guide: https://ather-quatum.cloud/agents?lang=en
-- Service manifest: https://ather-quatum.cloud/.well-known/agent-service.json
-- Remote MCP (Streamable HTTP, stateless JSON): https://ather-quatum.cloud/mcp
-- Methodology: https://ather-quatum.cloud/api/v1/agent/methodology
-- Archived sample: https://ather-quatum.cloud/api/v1/agent/example
+- Agent guide: https://ather-quantum.com/agents?lang=en
+- Service manifest: https://ather-quantum.com/.well-known/agent-service.json
+- Remote MCP (Streamable HTTP, stateless JSON): https://ather-quantum.com/mcp
+- Methodology: https://ather-quantum.com/api/v1/agent/methodology
+- Archived sample: https://ather-quantum.com/api/v1/agent/example
 
 Remote tools: `scan_tls`, `get_tls_evidence`, `get_methodology`,
 `get_example_result`, `get_service_info`. Scan summaries are free and use the

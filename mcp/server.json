@@ -22,7 +22,7 @@
   "remotes": [
     {
       "type": "streamable-http",
-      "url": "https://ather-quatum.cloud/mcp"
+      "url": "https://ather-quantum.com/mcp"
     }
   ]
 }

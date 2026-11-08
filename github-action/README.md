@@ -31,7 +31,7 @@ jobs:
 | `domain` | — | Hostname to check (required) |
 | `require-post-quantum` | `false` | Fail the job if X25519MLKEM768 is not negotiated |
 | `min-grade` | empty | Fail the job if the grade is worse than `A`, `B`, `C` or `F` |
-| `base-url` | `https://ather-quatum.cloud` | Scanner URL |
+| `base-url` | `https://ather-quantum.com` | Scanner URL |
 
 ## Outputs
 
@@ -43,4 +43,4 @@ jobs:
 - Unavailable scans fail the job, including rate limits, server errors and incomplete responses.
 - The runner sends the domain to the hosted API. Its server probes the first public IPv4 address on port 443 from one location. CDN and anycast results can vary by location.
 
-Methodology and open data: https://ather-quatum.cloud/adoption
+Methodology and open data: https://ather-quantum.com/adoption

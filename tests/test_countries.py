@@ -35,7 +35,7 @@ class CountriesTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.mkdtemp()
         self.app = quantum_saas_app.create_app(
-            {"TESTING": True, "DATA_DIR": self.tmp, "PUBLIC_URL": "https://ather-quatum.cloud", "HASH_SALT": "s"},
+            {"TESTING": True, "DATA_DIR": self.tmp, "PUBLIC_URL": "https://ather-quantum.com", "HASH_SALT": "s"},
             scanner=lambda d: None, paypal=None)
         self.client = self.app.test_client()
         conn = sales_db.connect(f"{self.tmp}/quantum_saas.db")
@@ -67,7 +67,7 @@ class CountriesTest(unittest.TestCase):
         de = self.client.get("/adoption/countries/de?lang=en").get_data(as_text=True)
         self.assertIn("60.0% of Germany", de)
         self.assertIn('href="/site/de0.de"', de)
-        self.assertIn("https://ather-quatum.cloud/og/country/de.png", de)
+        self.assertIn("https://ather-quantum.com/og/country/de.png", de)
         self.assertIn("Undetermined", de)
         self.assertEqual(self.client.get("/adoption/countries/at").status_code, 404)
         self.assertIn("Deutschland", self.client.get("/adoption/countries/de?lang=de").get_data(as_text=True))

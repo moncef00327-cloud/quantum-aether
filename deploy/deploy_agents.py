@@ -4,7 +4,7 @@ import json, os, shutil, subprocess, tempfile, time, urllib.request
 
 ROOT=Path('/root/quantum-aether')
 TARGET=Path('/var/www/quantum_saas').resolve()
-BASE='https://ather-quatum.cloud'
+BASE='https://ather-quantum.com'
 FILES=[
  'quantum_saas_app.py','agent_discovery.py','crypto_pay.py','i18n.py','openapi.yaml','templates/base.html','templates/scan.html',
  'templates/command_home.html','templates/llms.txt','templates/agents.html',

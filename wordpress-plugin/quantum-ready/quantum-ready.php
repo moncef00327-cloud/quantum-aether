@@ -1,13 +1,13 @@
 <?php
 /**
  * Plugin Name:       Quantum Ready – Post-Quantum TLS Check
- * Plugin URI:        https://ather-quatum.cloud/adoption
+ * Plugin URI:        https://ather-quantum.com/adoption
  * Description:       Shows in Site Health whether your site's HTTPS already uses post-quantum key exchange (X25519MLKEM768), and gives you a ready-made request for your hosting provider. The external check runs only after you consent.
  * Version:           1.0.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Quantum Aether
- * Author URI:        https://ather-quatum.cloud
+ * Author URI:        https://ather-quantum.com
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:       quantum-ready

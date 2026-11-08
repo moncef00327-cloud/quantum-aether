@@ -10,8 +10,8 @@ import re
 import urllib.parse
 import urllib.request
 
-USER_AGENT = "QuantumAetherRadar/1.0 (+https://ather-quatum.cloud)"
-BASE = "https://ather-quatum.cloud"
+USER_AGENT = "QuantumAetherRadar/1.0 (+https://ather-quantum.com)"
+BASE = "https://ather-quantum.com"
 
 QUERIES = ["X25519MLKEM768", "MLKEM768", "ML-KEM TLS", "post-quantum TLS", "post quantum nginx",
            "hybrid key exchange TLS"]

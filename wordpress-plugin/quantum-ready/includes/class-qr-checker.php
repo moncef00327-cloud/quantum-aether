@@ -2,7 +2,7 @@
 /**
  * External check client.
  *
- * Asks the Quantum Aether scanner (https://ather-quatum.cloud) which TLS key-exchange group this
+ * Asks the Quantum Aether scanner (https://ather-quantum.com) which TLS key-exchange group this
  * site's public hostname negotiates. Only the hostname is sent, and only after the site admin
  * granted consent (see QR_Admin). The result is stored in one option; nothing else is kept.
  *
@@ -26,7 +26,7 @@ class QR_Checker {
 	 * @return string
 	 */
 	public static function api_base() {
-		return untrailingslashit( apply_filters( 'quantum_ready_api_base', 'https://ather-quatum.cloud' ) );
+		return untrailingslashit( apply_filters( 'quantum_ready_api_base', 'https://ather-quantum.com' ) );
 	}
 
 	/**

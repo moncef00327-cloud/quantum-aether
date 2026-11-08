@@ -24,7 +24,7 @@ EXPECTED={
  'templates/adoption.html':'5f9c00aa13c9ccc9db8a8be81a1b700bdc87708cf4863877ea96d7da35eb0b43',
  'templates/site_page.html':'d48b7ece4cd1a84e07bd48c675673a99720ed2ecda3cd8a4a403db920a7087d5',
 }
-BASE='https://ather-quatum.cloud'
+BASE='https://ather-quantum.com'
 NS={'s':'http://www.sitemaps.org/schemas/sitemap/0.9'}
 HOSTS={r['domain'] for r in json.loads((ROOT/'data/indexing_exclusions.json').read_text())['domains']}
 
@@ -95,7 +95,7 @@ from pathlib import Path
 import quantum_saas_app,sales_db
 from tests.test_countries import seed
 with tempfile.TemporaryDirectory() as tmp:
- app=quantum_saas_app.create_app({'TESTING':True,'DATA_DIR':tmp,'PUBLIC_URL':'https://ather-quatum.cloud','PAYPAL_CLIENT_ID':'','PAYPAL_CLIENT_SECRET':''},scanner=lambda _: (_ for _ in ()).throw(AssertionError('No live scanning')))
+ app=quantum_saas_app.create_app({'TESTING':True,'DATA_DIR':tmp,'PUBLIC_URL':'https://ather-quantum.com','PAYPAL_CLIENT_ID':'','PAYPAL_CLIENT_SECRET':''},scanner=lambda _: (_ for _ in ()).throw(AssertionError('No live scanning')))
  conn=sales_db.connect(tmp+'/quantum_saas.db');seed(conn);conn.close()
  with app.test_client() as c:
   for path in ['/site/github.com?lang=en','/adoption','/adoption/countries','/study/top-1000-post-quantum-tls','/sample-report','/business','/pricing']:

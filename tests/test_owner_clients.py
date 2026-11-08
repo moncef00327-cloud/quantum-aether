@@ -12,7 +12,7 @@ class OwnerClientTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.mkdtemp()
         self.app = quantum_saas_app.create_app(
-            {"TESTING": True, "DATA_DIR": self.tmp, "PUBLIC_URL": "https://ather-quatum.cloud", "HASH_SALT": "s"},
+            {"TESTING": True, "DATA_DIR": self.tmp, "PUBLIC_URL": "https://ather-quantum.com", "HASH_SALT": "s"},
             scanner=fake_scanner, paypal=None)
         with self.app.test_request_context():
             self.cookie = quantum_saas_app.admin_cookie_value()

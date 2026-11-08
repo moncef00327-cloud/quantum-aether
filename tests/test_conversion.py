@@ -16,7 +16,7 @@ class ConversionTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.mkdtemp()
         self.app = quantum_saas_app.create_app(
-            {"TESTING": True, "DATA_DIR": self.tmp, "PUBLIC_URL": "https://ather-quatum.cloud", "HASH_SALT": "s"},
+            {"TESTING": True, "DATA_DIR": self.tmp, "PUBLIC_URL": "https://ather-quantum.com", "HASH_SALT": "s"},
             scanner=self.scanner, paypal=None)
         self.client = self.app.test_client()
         conn = sales_db.connect(f"{self.tmp}/quantum_saas.db")
@@ -91,10 +91,10 @@ class ConversionTests(unittest.TestCase):
 
     def test_og_tags_point_to_images(self):
         body = self.client.get("/site/alpha.test?lang=en").get_data(as_text=True)
-        self.assertIn('property="og:image" content="https://ather-quatum.cloud/og/site/alpha.test.png"', body)
+        self.assertIn('property="og:image" content="https://ather-quantum.com/og/site/alpha.test.png"', body)
         self.assertIn('content="summary_large_image"', body)
         home = self.client.get("/?lang=en").get_data(as_text=True)
-        self.assertIn('content="https://ather-quatum.cloud/og/default.png"', home)
+        self.assertIn('content="https://ather-quantum.com/og/default.png"', home)
 
     @unittest.skipUnless(og_image.available(), "Pillow not installed")
     def test_og_images_render_and_cache(self):

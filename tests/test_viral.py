@@ -16,7 +16,7 @@ class ViralFeaturesTest(unittest.TestCase):
             d = q.normalize_domain(raw)
             return fake_scanner(raw) if d == "example.com" else result_for(d, grade="A")
         self.app = quantum_saas_app.create_app(
-            {"TESTING": True, "DATA_DIR": self.tmp, "PUBLIC_URL": "https://ather-quatum.cloud", "HASH_SALT": "s"},
+            {"TESTING": True, "DATA_DIR": self.tmp, "PUBLIC_URL": "https://ather-quantum.com", "HASH_SALT": "s"},
             scanner=scanner, paypal=None)
         self.client = self.app.test_client()
 

@@ -20,6 +20,6 @@ systemctl enable --now quantum_uptime.timer quantum_scorecard.timer
 systemctl start quantum_uptime.service && journalctl -u quantum_uptime.service -n 2 --no-pager -o cat
 systemctl list-timers quantum_uptime.timer quantum_scorecard.timer --no-pager | head -4
 for p in / /site/github.com /llms-full.txt /adoption; do
-  curl -s -o /dev/null -w "$p: %{http_code} %{time_total}s\n" "https://ather-quatum.cloud$p"
+  curl -s -o /dev/null -w "$p: %{http_code} %{time_total}s\n" "https://ather-quantum.com$p"
 done
 echo "backup: $B"

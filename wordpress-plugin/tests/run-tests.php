@@ -5,8 +5,8 @@ require __DIR__ . '/../quantum-ready/quantum-ready.php';
 $fails = 0; $n = 0;
 function ok( $cond, $msg ) { global $fails, $n; $n++; if ( ! $cond ) { $fails++; echo "FAIL: $msg\n"; } }
 function http( $code, $body ) { return array( 'response' => array( 'code' => $code ), 'body' => json_encode( $body ) ); }
-$PQ = array( 'grade' => 'A', 'post_quantum_key_exchange' => true, 'key_exchange_group' => 'X25519MLKEM768', 'tls_version' => 'TLSv1.3', 'scan_url' => 'https://ather-quatum.cloud/scan/a' );
-$CL = array( 'grade' => 'B', 'post_quantum_key_exchange' => false, 'key_exchange_group' => 'x25519', 'tls_version' => 'TLSv1.3', 'scan_url' => 'https://ather-quatum.cloud/scan/b' );
+$PQ = array( 'grade' => 'A', 'post_quantum_key_exchange' => true, 'key_exchange_group' => 'X25519MLKEM768', 'tls_version' => 'TLSv1.3', 'scan_url' => 'https://ather-quantum.com/scan/a' );
+$CL = array( 'grade' => 'B', 'post_quantum_key_exchange' => false, 'key_exchange_group' => 'x25519', 'tls_version' => 'TLSv1.3', 'scan_url' => 'https://ather-quantum.com/scan/b' );
 
 // 1. activation: consent pending, nothing sent
 ( $GLOBALS['qr_activate'] )();
@@ -21,7 +21,7 @@ ok( $sh['status'] === 'recommended' && strpos( $sh['label'], 'not been checked' 
 update_option( 'quantum_ready_consent', 'granted' );
 $r = QR_Checker::check( true );
 ok( $r['status'] === 'hybrid' && $r['group'] === 'X25519MLKEM768', 'hybrid result stored' );
-ok( strpos( $GLOBALS['qr_urls'][0], 'https://ather-quatum.cloud/api/v1/scan?domain=shop.example.org&max_age=1' ) === 0, 'manual check URL: ' . $GLOBALS['qr_urls'][0] );
+ok( strpos( $GLOBALS['qr_urls'][0], 'https://ather-quantum.com/api/v1/scan?domain=shop.example.org&max_age=1' ) === 0, 'manual check URL: ' . $GLOBALS['qr_urls'][0] );
 $sh = QR_Site_Health::run();
 ok( $sh['status'] === 'good' && $sh['badge']['color'] === 'green', 'site health good for hybrid' );
 

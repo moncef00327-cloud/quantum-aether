@@ -30,7 +30,7 @@ def ensure_database(path, max_age_days=MAX_AGE_DAYS, fetch=None):
 
 
 def _download(url):
-    req = urllib.request.Request(url, headers={"User-Agent": "QuantumAether/1.0 (+https://ather-quatum.cloud/scanning)"})
+    req = urllib.request.Request(url, headers={"User-Agent": "QuantumAether/1.0 (+https://ather-quantum.com/scanning)"})
     with urllib.request.urlopen(req, timeout=120) as r:
         return r.read()
 

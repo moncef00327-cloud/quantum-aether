@@ -20,7 +20,7 @@ inputs:
   base-url:
     description: "Scanner base URL"
     required: false
-    default: "https://ather-quatum.cloud"
+    default: "https://ather-quantum.com"
 
 outputs:
   grade:

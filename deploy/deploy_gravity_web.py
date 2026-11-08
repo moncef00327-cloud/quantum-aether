@@ -45,7 +45,7 @@ try:
     for path in ['/?lang=en', '/gravity?lang=ar', '/gravity?lang=en']:
         response = subprocess.run(['curl', '--retry', '4', '--retry-connrefused', '--retry-delay', '2',
                                    '--max-time', '25', '--fail', '--silent', '--show-error',
-                                   'https://ather-quatum.cloud' + path], check=True, capture_output=True).stdout
+                                   'https://ather-quantum.com' + path], check=True, capture_output=True).stdout
         assert b'AETHER GRAVITY ENGINE' in response, f'Page marker missing: {path}'
         print(f'OK {path}')
     print(f'Backup: {backup}')

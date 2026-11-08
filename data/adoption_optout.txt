@@ -1,2 +1,2 @@
 # Hostnames excluded from the /adoption scans at their owner's request (one per line; subdomains included).
-# Requests: see https://ather-quatum.cloud/scanning
+# Requests: see https://ather-quantum.com/scanning
