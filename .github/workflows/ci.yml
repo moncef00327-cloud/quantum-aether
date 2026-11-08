@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main, 'feat/**']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python:
+    name: Python tests and dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - name: Install application and audit dependencies
+        run: python -m pip install -r requirements.txt pip-audit
+      - name: Run complete Python test suite
+        run: python -m unittest discover -s tests
+      - name: Audit Python dependencies
+        run: pip-audit -r requirements.txt
+
+  frontend:
+    name: Frontend build and Node dependency audit
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend/command
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/command/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - name: Audit Node dependencies
+        run: npm audit --audit-level=high
