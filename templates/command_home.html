@@ -14,10 +14,10 @@
 <link rel="service-desc" type="application/json" href="{{ abs_url('site.agent_service_manifest') }}">
 <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
 <link rel="preload" href="/static/fonts/noto-arabic.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/static/command/app.css?v=20261108-agent-journey1">
+<link rel="stylesheet" href="/static/command/app.css?v=20261109-hosting1">
 {% for obj in jsonld %}<script type="application/ld+json">{{ obj | tojson }}</script>{% endfor %}
 </head>
 <body><div id="command-root">{% if lang == "ar" %}{% include "command/ar.html" %}{% else %}{% include "command/en.html" %}{% endif %}</div>
 <noscript><main><p><strong>Quantum Aether</strong></p><p>{{ t.hero_sub }}</p><form action="/scan?lang={{ lang }}" method="post"><label for="domain-noscript">{{ t.domain_label }}</label><input id="domain-noscript" name="domain" value="{{ domain }}" placeholder="example.com" required><button>{{ t.scan_button }}</button></form><nav><a href="/business?lang={{ lang }}">{{ 'الشركات' if lang == 'ar' else 'For business' }}</a> · <a href="/pricing?lang={{ lang }}">{{ 'الأسعار' if lang == 'ar' else 'Pricing' }}</a> · <a href="/agency?lang={{ lang }}">Agency</a> · <a href="/llms.txt">LLM / API</a> · <a href="/adoption?lang={{ lang }}">{{ t.nav_adoption }}</a> · <a href="/guides?lang={{ lang }}">{{ t.nav_guides }}</a></nav></main></noscript>
-<script type="module" src="/static/command/app.js?v=20261109-tracking1"></script>
+<script type="module" src="/static/command/app.js?v=20261109-hosting1"></script>
 </body></html>
