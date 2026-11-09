@@ -66,7 +66,7 @@ class SearchIndexingTests(unittest.TestCase):
         self.assertEqual(metadata(response).canonical,[BASE+'/site/pornhub.com?lang=ar'])
 
     def test_no_substring_suffix_or_automatic_subdomain_classification(self):
-        for host in ['xxx-industry.test','xxx.com','erome.com','onlyfans.com','xhamster46.desi',
+        for host in ['xxx-industry.test','xxx-ordinary.test','erome.com','onlyfans.com','xhamster999.test',
                      'news.pornhub.com','www.pornhub.com','pornhub.com.example','notpornhub.com','']:
             with self.subTest(host=host):self.assertFalse(search_indexing.is_excluded(host))
         response=self.client.get('/site/xxx-industry.test?lang=en&q=pornhub.com&search=xxx')
@@ -171,6 +171,6 @@ class SearchIndexingTests(unittest.TestCase):
         entries=json.loads(search_indexing.POLICY_FILE.read_text())['domains']
         self.assertEqual(len(entries),len(search_indexing.reviewed_hosts()))
         for entry in entries:
-            self.assertEqual(entry['classification'],'confirmed_pornographic')
+            self.assertIn(entry['classification'],search_indexing.CLASSIFICATIONS)
             self.assertTrue(entry['reviewed_on']);self.assertTrue(entry['review_method'])
             self.assertTrue(all(s['url'].startswith('https://') and s['publisher'] and s['locator'] for s in entry['sources']))

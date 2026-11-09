@@ -400,9 +400,9 @@ def peers(conn, domain, as_name, week, limit=6):
     """نطاقات على الشبكة نفسها في الأسبوع نفسه (روابط داخلية ذات صلة)، الأعلى ترتيباً أولاً."""
     if not as_name:
         return []
-    cur = conn.execute("SELECT domain, grade, pq, unsure FROM adoption_results WHERE week = ? AND as_name = ? "
-                       "AND ok = 1 AND domain <> ? AND rank IS NOT NULL ORDER BY rank LIMIT ?",
-                       (week, as_name, domain, limit))
+    cur = conn.execute("SELECT domain, rank, sector, grade, pq, unsure FROM adoption_results WHERE week = ? "
+                       "AND as_name = ? AND ok = 1 AND domain <> ? AND (rank IS NOT NULL OR sector IS NOT NULL) "
+                       "ORDER BY rank IS NULL, rank LIMIT ?", (week, as_name, domain, limit))
     return [dict(r) for r in cur]
 
 
@@ -422,6 +422,6 @@ def site_domains(conn):
     all_weeks = weeks(conn)
     if not all_weeks:
         return []
-    cur = conn.execute("SELECT domain, substr(scanned_at, 1, 10) FROM adoption_results WHERE week = ? AND ok = 1 "
-                       "ORDER BY rank IS NULL, rank, domain", (all_weeks[-1],))
-    return [(d, day) for d, day in cur]
+    cur = conn.execute("SELECT domain, substr(scanned_at, 1, 10), rank, sector FROM adoption_results "
+                       "WHERE week = ? AND ok = 1 ORDER BY rank IS NULL, rank, domain", (all_weeks[-1],))
+    return [tuple(r) for r in cur]

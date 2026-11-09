@@ -880,6 +880,16 @@ def site_verdict(domain, summary):
             f"(Quantum Aether grade {summary['grade']}), so recorded traffic is exposed to harvest-now-decrypt-later.")
 
 
+def site_is_indexable(domain):
+    """Index a /site/ page only for the top INDEX_MAX_RANK tracked sites or a watchlist (sector) domain.
+    Decided by tracker/study rank, never by a live scan (otherwise any visitor could mint an indexed page)."""
+    weekly = adoption.latest_for(db(), domain)
+    if weekly:
+        return search_indexing.is_indexable(domain, weekly["rank"], weekly.get("sector"))
+    site = study_by_domain().get(domain)
+    return search_indexing.is_indexable(domain, site.get("rank") if site else None)
+
+
 @bp.get("/site/<domain>")
 def site_page(domain):
     """صفحة عامة قابلة للفهرسة لكل نطاق: تعرض ما نعرفه عنه وتدعو لفحص حيّ. لا تُجري فحصاً."""
@@ -895,13 +905,10 @@ def site_page(domain):
         last = history[-1] if history else None
         network = last["as_name"] if last else None
         if last:
-            seen = {domain}
-            for row in adoption.peers(conn, domain, network, last["week"]) + \
-                    adoption.rank_neighbors(conn, last["rank"], last["week"], domain):
-                if row["domain"] not in seen and not search_indexing.is_excluded(row["domain"]):
-                    seen.add(row["domain"])
-                    related.append(row)
-            related = related[:10]
+            # Same hosting network only, and only pages we index. Tranco rank neighbours were removed: they put
+            # unrelated (often adult) site names on our pages, so Google showed them for those sites' names.
+            related = [row for row in adoption.peers(conn, domain, network, last["week"], limit=40)
+                       if search_indexing.is_indexable(row["domain"], row["rank"], row["sector"])][:8]
         verdict = site_verdict(domain, summary)
         page_url = metadata_url(current_lang())
         pq = "yes" if summary["pq"] else ("undetermined" if summary.get("unsure") else "no")
@@ -930,7 +937,7 @@ def site_page(domain):
         entry = next((e for e in board["entries"] if e["code"] == code), None)
         if entry:
             country = dict(entry, name=countries.name(code, current_lang()), total=board["countries"])
-    indexing_excluded = search_indexing.is_excluded(domain)
+    indexing_excluded = not (summary and site_is_indexable(domain))
     response = make_response(render_template(
         "site_page.html", domain=domain, summary=summary, source=source, verdict=verdict, history=history,
         related=related, network=network, snippets=badge_snippets(domain) if summary else None, jsonld=jsonld,
@@ -1817,11 +1824,13 @@ def _sitemap_pages():
 
 def _sitemap_domains():
     """كل النطاقات التي لها صفحة /site/ مفهرسة: المتتبّع الأسبوعي (بتاريخ فحصها) ثم ما تبقى من الدراسة."""
-    rows = adoption.site_domains(db())
-    known = {d for d, _ in rows}
+    weekly = adoption.site_domains(db())
+    known = {d for d, _, _, _ in weekly}
+    rows = [(d, day) for d, day, rank, sector in weekly if search_indexing.is_indexable(d, rank, sector)]
     study_day = study_data()["scanned_on"]
-    rows += [(site["domain"], study_day) for site in study_data()["sites"] if site["domain"] not in known]
-    return [(domain, day) for domain, day in rows if not search_indexing.is_excluded(domain)]
+    rows += [(site["domain"], study_day) for site in study_data()["sites"]
+             if site["domain"] not in known and search_indexing.is_indexable(site["domain"], site.get("rank"))]
+    return rows
 
 
 def _urlset(pages):

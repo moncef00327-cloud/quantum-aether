@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ domain }} — {{ t.site_title }}{% endblock %}
+{% block title %}{{ t.site_question.format(domain=domain) }}{% if summary %} {{ t.site_title_grade.format(grade=summary.grade) }}{% endif %}{% endblock %}
 {% block og_image %}{% if summary %}{{ abs_url('site.og_site', domain=domain) }}{% else %}{{ super() }}{% endif %}{% endblock %}
 {% block description %}{{ t.site_meta.format(domain=domain) }}{% endblock %}
 {% block head %}{% if not summary or indexing_excluded %}<meta name="robots" content="noindex, follow">{% endif %}{% if jsonld %}{% for obj in jsonld %}

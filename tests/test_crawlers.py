@@ -11,11 +11,15 @@ import sales_db
 
 def seed(conn):
     rows = [
-        ("2026-W44", "alpha.test", 5001, 1, "B", "X25519", "TLSv1.3", 0, 0, "CLOUDFLARENET", "2026-10-27T01:00:00Z"),
-        ("2026-W45", "alpha.test", 5001, 1, "A", "X25519MLKEM768", "TLSv1.3", 1, 0, "CLOUDFLARENET", "2026-11-02T01:00:00Z"),
-        ("2026-W45", "beta.test", 5002, 1, "B", "X25519", "TLSv1.3", 0, 0, "CLOUDFLARENET", "2026-11-02T01:00:00Z"),
-        ("2026-W45", "gamma.test", 5003, 1, "B", None, "TLSv1.3", 0, 1, "AMAZON-02", "2026-11-02T01:00:00Z"),
-        ("2026-W45", "down.test", 5004, 0, None, None, None, 0, 0, None, "2026-11-02T01:00:00Z"),
+        ("2026-W44", "alpha.test", 501, 1, "B", "X25519", "TLSv1.3", 0, 0, "CLOUDFLARENET", "2026-10-27T01:00:00Z"),
+        ("2026-W45", "alpha.test", 501, 1, "A", "X25519MLKEM768", "TLSv1.3", 1, 0, "CLOUDFLARENET", "2026-11-02T01:00:00Z"),
+        ("2026-W45", "beta.test", 502, 1, "B", "X25519", "TLSv1.3", 0, 0, "CLOUDFLARENET", "2026-11-02T01:00:00Z"),
+        ("2026-W45", "gamma.test", 503, 1, "B", None, "TLSv1.3", 0, 1, "AMAZON-02", "2026-11-02T01:00:00Z"),
+        ("2026-W45", "down.test", 504, 0, None, None, None, 0, 0, None, "2026-11-02T01:00:00Z"),
+        # outside the top 1000: page stays reachable but is not indexed
+        ("2026-W45", "longtail.test", 5005, 1, "B", "X25519", "TLSv1.3", 0, 0, "CLOUDFLARENET", "2026-11-02T01:00:00Z"),
+        # direct rank neighbour on another network: no longer linked
+        ("2026-W45", "neighbour.test", 500, 1, "B", "X25519", "TLSv1.3", 0, 0, "OTHER-NET", "2026-11-02T01:00:00Z"),
     ]
     with conn:
         conn.executemany("INSERT INTO adoption_results (week, domain, rank, ok, grade, grp, tls, pq, unsure, as_name, scanned_at) "
@@ -60,6 +64,26 @@ class CrawlerTests(unittest.TestCase):
         res = self.client.get("/site/wp-login.php")
         self.assertEqual(res.status_code, 404)
         self.assertIn("noindex", res.get_data(as_text=True))
+
+    def test_related_links_skip_rank_neighbours_and_long_tail(self):
+        body = self.client.get("/site/alpha.test?lang=en").get_data(as_text=True)
+        self.assertIn('href="/site/beta.test"', body)
+        self.assertNotIn("neighbour.test", body)
+        self.assertNotIn("longtail.test", body)
+        self.assertIn("<title>Does alpha.test use post-quantum TLS? (grade A)</title>", body)
+
+    def test_long_tail_page_is_reachable_but_noindex_and_not_in_sitemap(self):
+        res = self.client.get("/site/longtail.test?lang=en")
+        self.assertEqual(res.status_code, 200)
+        self.assertIn("noindex", res.headers["X-Robots-Tag"])
+        self.assertIn('<meta name="robots" content="noindex', res.get_data(as_text=True))
+        self.assertNotIn("longtail.test", self.client.get("/sitemap-sites-1.xml").get_data(as_text=True))
+
+    def test_live_scan_alone_does_not_make_page_indexable(self):
+        with self.app.test_request_context():
+            self.assertFalse(quantum_saas_app.site_is_indexable("random-shop.test"))
+            self.assertTrue(quantum_saas_app.site_is_indexable("alpha.test"))
+            self.assertFalse(quantum_saas_app.site_is_indexable("longtail.test"))
 
     def test_last_modified_and_304(self):
         res = self.client.get("/site/alpha.test?lang=en")
