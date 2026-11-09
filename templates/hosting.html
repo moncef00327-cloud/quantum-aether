@@ -22,7 +22,10 @@
   <p>{{ t.hosting_why }}</p>
   <p>{{ t.hosting_fix }}
     <a href="{{ url_for('site.guide', slug='enable-x25519mlkem768-nginx', lang=lang if lang != 'de' else 'en') }}">nginx</a> ·
-    <a href="{{ url_for('site.guide', slug='post-quantum-tls-apache-caddy-haproxy-cloudflare', lang=lang if lang != 'de' else 'en') }}">Apache · Caddy · HAProxy</a></p>
+    <a href="{{ url_for('site.guide', slug='post-quantum-tls-apache-caddy-haproxy-cloudflare', lang=lang if lang != 'de' else 'en') }}">Apache · Caddy · HAProxy</a> ·
+    <a href="{{ url_for('site.guide', slug='aws-alb-cloudfront-post-quantum-tls', lang=lang if lang != 'de' else 'en') }}">AWS</a> ·
+    <a href="{{ url_for('site.guide', slug='nodejs-post-quantum-tls-x25519mlkem768', lang=lang if lang != 'de' else 'en') }}">Node.js</a> ·
+    <a href="{{ url_for('site.guide', slug='java-post-quantum-tls-jdk27', lang=lang if lang != 'de' else 'en') }}">Java</a></p>
 </section>
 {% include "_scan_box.html" %}
 {% endblock %}

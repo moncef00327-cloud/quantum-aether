@@ -260,4 +260,191 @@ example.com {
 """,
         },
     },
+    "aws-alb-cloudfront-post-quantum-tls": {
+        "updated": "2026-11-09",
+        "en": {
+            "title": "Post-quantum TLS on AWS: Application Load Balancer, NLB and CloudFront",
+            "description": "Which AWS endpoints negotiate X25519MLKEM768, the exact ELB security policy to select, and why load balancers created with Terraform, CDK or the CLI are still classical.",
+            "body": """
+<p>In our <a href="/adoption/hosting?lang=en">hosting tracker</a>, only about 7% of top-10,000 sites on AWS's EC2 network (AS14618) negotiate post-quantum key exchange, against about 61% on AS16509, where CloudFront and the load balancers live. On AWS the answer depends on <em>which</em> endpoint terminates TLS and <em>how</em> it was created.</p>
+
+<h2>CloudFront: already on</h2>
+<p>For connections between browsers and CloudFront, AWS lists <code>X25519MLKEM768</code> and <code>SecP256r1MLKEM768</code> as supported quantum-safe key exchanges. There is nothing to configure. Two limits: hybrid key exchange works only over <strong>TLS 1.3</strong>, and it covers the viewer connection, not the separate connection from CloudFront to your origin.</p>
+
+<h2>Application and Network Load Balancers: choose a PQ policy</h2>
+<p>ELB security policies with <code>PQ</code> in their name offer hybrid post-quantum key exchange (<code>X25519MLKEM768</code>, <code>SecP256r1MLKEM768</code>, <code>SecP384r1MLKEM1024</code>) alongside the classical groups, so older clients keep working. AWS recommends:</p>
+<pre dir="ltr">ELBSecurityPolicy-TLS13-1-2-Res-PQ-2025-09        # TLS 1.3 + 1.2, hybrid PQ
+ELBSecurityPolicy-TLS13-1-2-Res-FIPS-PQ-2025-09   # same, FIPS</pre>
+<p><strong>The trap:</strong> the console now defaults to the PQ policy, but listeners created with the AWS CLI, CloudFormation or the CDK still default to <code>ELBSecurityPolicy-2016-08</code>, which has no post-quantum key exchange. Infrastructure-as-code setups are therefore usually classical until you set the policy explicitly.</p>
+<p>AWS CLI:</p>
+<pre dir="ltr">aws elbv2 modify-listener \\
+  --listener-arn arn:aws:elasticloadbalancing:...:listener/app/my-alb/... \\
+  --ssl-policy ELBSecurityPolicy-TLS13-1-2-Res-PQ-2025-09</pre>
+<p>Terraform:</p>
+<pre dir="ltr">resource "aws_lb_listener" "https" {
+  # ...
+  protocol   = "HTTPS"
+  ssl_policy = "ELBSecurityPolicy-TLS13-1-2-Res-PQ-2025-09"
+}</pre>
+<p>Application Load Balancers do not support custom security policies, so pick one of the predefined <code>PQ</code> policies.</p>
+
+<h2>EC2 instances and containers: it is your OpenSSL</h2>
+<p>If TLS ends on the instance itself (nginx, Apache, Node.js, Java), AWS has no say: the server software and its TLS library decide. Ubuntu 22.04 and 24.04 ship OpenSSL 3.0, which cannot negotiate ML-KEM. Either upgrade to a stack with OpenSSL 3.5 (see the <a href="/guides/enable-x25519mlkem768-nginx?lang=en">nginx guide</a>) or put a PQ-enabled ALB or CloudFront in front.</p>
+
+<h2>Verify</h2>
+<pre dir="ltr">openssl s_client -connect example.com:443 -groups X25519MLKEM768 &lt;/dev/null 2&gt;/dev/null | grep -i group</pre>
+<p>This needs an OpenSSL 3.5 client. Or run the <a href="/?lang=en">free scan</a>; grade A means TLS 1.3 with a hybrid post-quantum key exchange. ALB connection logs also record the negotiated key exchange (log field 13).</p>
+<p class="muted small">Sources: AWS documentation "Security policies for your Application Load Balancer" and "Supported protocols and ciphers between viewers and CloudFront", checked 2026-11-09.</p>
+""",
+        },
+        "ar": {
+            "title": "TLS المقاوم للكم على AWS: موازن التحميل ALB وNLB وCloudFront",
+            "description": "أي نقاط AWS تتفق على X25519MLKEM768، وسياسة ELB الدقيقة التي تختارها، ولماذا تبقى موازنات التحميل المنشأة بـ Terraform أو CDK أو CLI كلاسيكية.",
+            "body": """
+<p>في <a href="/adoption/hosting?lang=ar">متتبّع الاستضافة</a> نجد أن نحو 7% فقط من مواقع أكبر 10,000 موقع على شبكة خوادم EC2 (AS14618) تتفق على تبادل مفاتيح ما بعد الكم، مقابل نحو 61% على AS16509 حيث يعمل CloudFront وموازنات التحميل. على AWS يتوقف الأمر على <em>أي</em> نقطة تُنهي اتصال TLS و<em>كيف</em> أُنشئت.</p>
+
+<h2>CloudFront: مفعّل أصلاً</h2>
+<p>للاتصال بين المتصفح وCloudFront تذكر AWS أن <code>X25519MLKEM768</code> و<code>SecP256r1MLKEM768</code> مدعومان. لا شيء تضبطه. حدّان: التبادل الهجين يعمل فقط مع <strong>TLS 1.3</strong>، ويشمل اتصال الزائر لا الاتصال المنفصل من CloudFront إلى خادمك الأصلي.</p>
+
+<h2>موازنات التحميل ALB وNLB: اختر سياسة PQ</h2>
+<p>سياسات أمان ELB التي في اسمها <code>PQ</code> تعرض تبادل المفاتيح الهجين (<code>X25519MLKEM768</code> و<code>SecP256r1MLKEM768</code> و<code>SecP384r1MLKEM1024</code>) إلى جانب المجموعات الكلاسيكية، فتبقى العملاء القديمة تعمل. توصي AWS بـ:</p>
+<pre dir="ltr">ELBSecurityPolicy-TLS13-1-2-Res-PQ-2025-09        # TLS 1.3 + 1.2, hybrid PQ
+ELBSecurityPolicy-TLS13-1-2-Res-FIPS-PQ-2025-09   # same, FIPS</pre>
+<p><strong>الفخ:</strong> لوحة التحكم تختار سياسة PQ افتراضياً الآن، لكن المستمعات (listeners) المنشأة بـ AWS CLI أو CloudFormation أو CDK ما زالت تأخذ افتراضياً <code>ELBSecurityPolicy-2016-08</code> التي لا تدعم ما بعد الكم. لذلك تبقى إعدادات البنية ككود كلاسيكية عادةً حتى تحدد السياسة صراحة.</p>
+<p>AWS CLI:</p>
+<pre dir="ltr">aws elbv2 modify-listener \\
+  --listener-arn arn:aws:elasticloadbalancing:...:listener/app/my-alb/... \\
+  --ssl-policy ELBSecurityPolicy-TLS13-1-2-Res-PQ-2025-09</pre>
+<p>Terraform:</p>
+<pre dir="ltr">resource "aws_lb_listener" "https" {
+  # ...
+  protocol   = "HTTPS"
+  ssl_policy = "ELBSecurityPolicy-TLS13-1-2-Res-PQ-2025-09"
+}</pre>
+<p>موازن ALB لا يقبل سياسات مخصصة، فاختر إحدى سياسات <code>PQ</code> الجاهزة.</p>
+
+<h2>خوادم EC2 والحاويات: القرار لـ OpenSSL عندك</h2>
+<p>إذا انتهى TLS على الخادم نفسه (nginx أو Apache أو Node.js أو Java) فلا دور لـ AWS: برنامج الخادم ومكتبة TLS فيه هما من يقرر. Ubuntu 22.04 و24.04 يأتيان بـ OpenSSL 3.0 الذي لا يدعم ML-KEM. إما أن ترقّي إلى بيئة فيها OpenSSL 3.5 (انظر <a href="/guides/enable-x25519mlkem768-nginx?lang=ar">دليل nginx</a>)، أو تضع ALB أو CloudFront مفعّلاً أمام الخادم.</p>
+
+<h2>التحقق</h2>
+<pre dir="ltr">openssl s_client -connect example.com:443 -groups X25519MLKEM768 &lt;/dev/null 2&gt;/dev/null | grep -i group</pre>
+<p>يحتاج عميل OpenSSL 3.5. أو استخدم <a href="/?lang=ar">الفحص المجاني</a>: الدرجة A تعني TLS 1.3 مع تبادل مفاتيح هجين. وسجلات اتصال ALB تسجّل أيضاً تبادل المفاتيح المتفق عليه (الحقل 13).</p>
+<p class="muted small">المصادر: وثائق AWS «Security policies for your Application Load Balancer» و«Supported protocols and ciphers between viewers and CloudFront»، راجعناها في 2026-11-09.</p>
+""",
+        },
+    },
+    "nodejs-post-quantum-tls-x25519mlkem768": {
+        "updated": "2026-11-09",
+        "en": {
+            "title": "Post-quantum TLS in Node.js (X25519MLKEM768): versions, config and checks",
+            "description": "Node.js 24 official builds include OpenSSL 3.5, which offers X25519MLKEM768 by default. How to check your build, avoid the ecdhCurve trap and verify the handshake.",
+            "body": """
+<p>Node.js does its own TLS through the OpenSSL library it was built with. Since <strong>OpenSSL 3.5</strong>, the default TLS key shares offer the hybrid <code>X25519MLKEM768</code> and plain X25519, so a Node.js HTTPS server on OpenSSL 3.5 is post-quantum ready without code changes.</p>
+
+<h2>1. Check which OpenSSL your Node.js uses</h2>
+<pre dir="ltr">node -p process.versions.openssl</pre>
+<p>Official Node.js 24 LTS binaries include OpenSSL 3.5. Node.js packages from Linux distributions are often linked against the system OpenSSL instead (3.0 on Ubuntu 22.04 and 24.04), so the same Node major version can behave differently. Anything below 3.5 cannot negotiate ML-KEM.</p>
+
+<h2>2. Don't pin the curve list</h2>
+<p>By default <code>ecdhCurve</code> is <code>'auto'</code>, which uses OpenSSL's defaults and therefore includes the hybrid group. Old hardening snippets often set something like <code>ecdhCurve: 'prime256v1'</code>, which silently removes it. Either delete the option or list the hybrid group first:</p>
+<pre dir="ltr">const https = require('node:https');
+https.createServer({
+  key, cert,
+  minVersion: 'TLSv1.2',
+  ecdhCurve: 'X25519MLKEM768:X25519:prime256v1',
+}, app).listen(443);</pre>
+
+<h2>3. Behind a proxy, the proxy decides</h2>
+<p>If nginx, a load balancer or a CDN terminates TLS in front of Node.js, browsers never talk TLS to Node.js directly; configure that layer instead (<a href="/guides/enable-x25519mlkem768-nginx?lang=en">nginx</a>, <a href="/guides/aws-alb-cloudfront-post-quantum-tls?lang=en">AWS ALB/CloudFront</a>).</p>
+
+<h2>4. Outgoing requests</h2>
+<p>The same rule applies when Node.js is the client (<code>fetch</code>, <code>https.request</code>): on OpenSSL 3.5 it offers X25519MLKEM768 to servers that support it.</p>
+
+<h2>Verify</h2>
+<pre dir="ltr">openssl s_client -connect example.com:443 -groups X25519MLKEM768 &lt;/dev/null 2&gt;/dev/null | grep -i group</pre>
+<p>Or run the <a href="/?lang=en">free scan</a>; grade A means TLS 1.3 with a hybrid post-quantum key exchange.</p>
+<p class="muted small">Sources: Node.js "v22 to v24" migration guide; OpenSSL 3.5 release notes. Checked 2026-11-09.</p>
+""",
+        },
+        "ar": {
+            "title": "TLS المقاوم للكم في Node.js (X25519MLKEM768): الإصدارات والإعداد والتحقق",
+            "description": "نسخ Node.js 24 الرسمية تأتي مع OpenSSL 3.5 الذي يعرض X25519MLKEM768 افتراضياً. كيف تتحقق من نسختك، وتتجنب فخ ecdhCurve، وتتأكد من الاتصال.",
+            "body": """
+<p>يتولى Node.js تشفير TLS بنفسه عبر مكتبة OpenSSL التي بُني عليها. منذ <strong>OpenSSL 3.5</strong> تعرض مفاتيح TLS الافتراضية المجموعة الهجينة <code>X25519MLKEM768</code> وX25519 العادي، فخادم HTTPS في Node.js على OpenSSL 3.5 جاهز لما بعد الكم دون تعديل في الكود.</p>
+
+<h2>1. تحقق من نسخة OpenSSL في Node.js عندك</h2>
+<pre dir="ltr">node -p process.versions.openssl</pre>
+<p>نسخ Node.js 24 LTS الرسمية تأتي مع OpenSSL 3.5. أما حزم Node.js من توزيعات Linux فغالباً مربوطة بـ OpenSSL النظام (3.0 في Ubuntu 22.04 و24.04)، فقد يتصرف الإصدار نفسه بشكل مختلف. أي نسخة أقل من 3.5 لا تدعم ML-KEM.</p>
+
+<h2>2. لا تثبّت قائمة المنحنيات</h2>
+<p>القيمة الافتراضية لـ <code>ecdhCurve</code> هي <code>'auto'</code> فتستخدم إعدادات OpenSSL وتشمل المجموعة الهجينة. مقتطفات الحماية القديمة تضع غالباً <code>ecdhCurve: 'prime256v1'</code> فتحذفها دون أن تشعر. احذف الخيار، أو ضع المجموعة الهجينة أولاً:</p>
+<pre dir="ltr">const https = require('node:https');
+https.createServer({
+  key, cert,
+  minVersion: 'TLSv1.2',
+  ecdhCurve: 'X25519MLKEM768:X25519:prime256v1',
+}, app).listen(443);</pre>
+
+<h2>3. خلف وكيل، الوكيل هو من يقرر</h2>
+<p>إذا كان nginx أو موازن تحميل أو CDN يُنهي TLS أمام Node.js فالمتصفح لا يتصل بـ Node.js مباشرة؛ اضبط تلك الطبقة بدلاً منه (<a href="/guides/enable-x25519mlkem768-nginx?lang=ar">nginx</a>، <a href="/guides/aws-alb-cloudfront-post-quantum-tls?lang=ar">AWS ALB/CloudFront</a>).</p>
+
+<h2>4. الطلبات الصادرة</h2>
+<p>القاعدة نفسها حين يكون Node.js هو العميل (<code>fetch</code> و<code>https.request</code>): على OpenSSL 3.5 يعرض X25519MLKEM768 على الخوادم التي تدعمه.</p>
+
+<h2>التحقق</h2>
+<pre dir="ltr">openssl s_client -connect example.com:443 -groups X25519MLKEM768 &lt;/dev/null 2&gt;/dev/null | grep -i group</pre>
+<p>أو استخدم <a href="/?lang=ar">الفحص المجاني</a>: الدرجة A تعني TLS 1.3 مع تبادل مفاتيح هجين.</p>
+<p class="muted small">المصادر: دليل الترحيل «v22 to v24» من Node.js، وملاحظات إصدار OpenSSL 3.5. راجعناها في 2026-11-09.</p>
+""",
+        },
+    },
+    "java-post-quantum-tls-jdk27": {
+        "updated": "2026-11-09",
+        "en": {
+            "title": "Post-quantum TLS in Java: X25519MLKEM768 in JDK 27 (JEP 527)",
+            "description": "JDK 27 adds hybrid ML-KEM key exchange to TLS 1.3 and enables X25519MLKEM768 by default. What changes for Tomcat, Spring Boot and HTTP clients, and what to do on JDK 21 or 25.",
+            "body": """
+<p><strong>JEP 527</strong> brings hybrid post-quantum key exchange to Java's built-in TLS (SunJSSE) in <strong>JDK 27</strong>, released in September 2026. It adds three hybrid groups, <code>X25519MLKEM768</code>, <code>SecP256r1MLKEM768</code> and <code>SecP384r1MLKEM1024</code>, and enables <code>X25519MLKEM768</code> by default next to the classical groups.</p>
+
+<h2>What you get without code changes</h2>
+<p>Applications using the standard <code>javax.net.ssl</code> APIs (embedded Tomcat, Jetty or Undertow on JSSE, <code>java.net.http.HttpClient</code>, <code>HttpsURLConnection</code>) negotiate X25519MLKEM768 on JDK 27 automatically, as long as they do not override the named groups. As a client, JDK 27 sends two key shares: one X25519MLKEM768 and one x25519.</p>
+
+<h2>Check for overrides</h2>
+<p>Look for the system property <code>jdk.tls.namedGroups</code> (in start scripts, <code>JAVA_TOOL_OPTIONS</code> or container env) and for <code>SSLParameters.setNamedGroups(...)</code> in code. A list without the hybrid group turns it off. If you set it, put the hybrid group first:</p>
+<pre dir="ltr">-Djdk.tls.namedGroups=X25519MLKEM768,x25519,secp256r1,secp384r1</pre>
+
+<h2>On JDK 21 or JDK 25 (LTS)</h2>
+<p>These releases have no hybrid ML-KEM key exchange in SunJSSE. JDK 27 is a short-term release, so many teams will stay on an LTS. The practical route is to terminate TLS in front of the JVM on a component that supports it: nginx with OpenSSL 3.5, a PQ-enabled AWS load balancer or a CDN (see <a href="/guides/enable-x25519mlkem768-nginx?lang=en">nginx</a> and <a href="/guides/aws-alb-cloudfront-post-quantum-tls?lang=en">AWS</a>).</p>
+
+<h2>Verify</h2>
+<pre dir="ltr">java -version
+openssl s_client -connect example.com:443 -groups X25519MLKEM768 &lt;/dev/null 2&gt;/dev/null | grep -i group</pre>
+<p>Or run the <a href="/?lang=en">free scan</a>; grade A means TLS 1.3 with a hybrid post-quantum key exchange.</p>
+<p class="muted small">Sources: OpenJDK JEP 527 and the Inside Java article "Post-Quantum Hybrid Key Exchange for TLS 1.3" (2026-02-17). Checked 2026-11-09.</p>
+""",
+        },
+        "ar": {
+            "title": "TLS المقاوم للكم في Java: ‏X25519MLKEM768 في JDK 27 (JEP 527)",
+            "description": "يضيف JDK 27 تبادل المفاتيح الهجين ML-KEM إلى TLS 1.3 ويفعّل X25519MLKEM768 افتراضياً. ما الذي يتغير في Tomcat وSpring Boot وعملاء HTTP، وماذا تفعل على JDK 21 أو 25.",
+            "body": """
+<p>يضيف <strong>JEP 527</strong> تبادل المفاتيح الهجين لما بعد الكم إلى TLS المدمج في Java ‏(SunJSSE) في <strong>JDK 27</strong> الذي صدر في سبتمبر 2026. يضيف ثلاث مجموعات هجينة: <code>X25519MLKEM768</code> و<code>SecP256r1MLKEM768</code> و<code>SecP384r1MLKEM1024</code>، ويفعّل <code>X25519MLKEM768</code> افتراضياً بجانب المجموعات الكلاسيكية.</p>
+
+<h2>ما تحصل عليه دون تعديل الكود</h2>
+<p>التطبيقات التي تستخدم واجهات <code>javax.net.ssl</code> القياسية (Tomcat أو Jetty أو Undertow المدمجة على JSSE، و<code>java.net.http.HttpClient</code>، و<code>HttpsURLConnection</code>) تتفق على X25519MLKEM768 تلقائياً على JDK 27 ما لم تغيّر قائمة المجموعات. وكعميل يرسل JDK 27 مفتاحين: واحد X25519MLKEM768 وآخر x25519.</p>
+
+<h2>ابحث عن الإعدادات التي تلغيه</h2>
+<p>ابحث عن الخاصية <code>jdk.tls.namedGroups</code> (في سكربتات التشغيل أو <code>JAVA_TOOL_OPTIONS</code> أو متغيرات الحاوية) وعن <code>SSLParameters.setNamedGroups(...)</code> في الكود. قائمة لا تحتوي المجموعة الهجينة تلغيها. إن ضبطتها فضع المجموعة الهجينة أولاً:</p>
+<pre dir="ltr">-Djdk.tls.namedGroups=X25519MLKEM768,x25519,secp256r1,secp384r1</pre>
+
+<h2>على JDK 21 أو JDK 25 (LTS)</h2>
+<p>هذه الإصدارات لا تملك تبادل المفاتيح الهجين في SunJSSE. وJDK 27 إصدار قصير الدعم، فكثير من الفرق ستبقى على إصدار LTS. الحل العملي أن يُنهى TLS أمام JVM على مكوّن يدعمه: nginx مع OpenSSL 3.5، أو موازن تحميل AWS مفعّل، أو CDN (انظر <a href="/guides/enable-x25519mlkem768-nginx?lang=ar">nginx</a> و<a href="/guides/aws-alb-cloudfront-post-quantum-tls?lang=ar">AWS</a>).</p>
+
+<h2>التحقق</h2>
+<pre dir="ltr">java -version
+openssl s_client -connect example.com:443 -groups X25519MLKEM768 &lt;/dev/null 2&gt;/dev/null | grep -i group</pre>
+<p>أو استخدم <a href="/?lang=ar">الفحص المجاني</a>: الدرجة A تعني TLS 1.3 مع تبادل مفاتيح هجين.</p>
+<p class="muted small">المصادر: OpenJDK JEP 527، ومقال Inside Java «Post-Quantum Hybrid Key Exchange for TLS 1.3» ‏(2026-02-17). راجعناها في 2026-11-09.</p>
+""",
+        },
+    },
 }

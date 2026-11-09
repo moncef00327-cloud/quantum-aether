@@ -491,7 +491,7 @@ class AdminExclusionAndSeoTest(unittest.TestCase):
         self.assertIn('<xhtml:link rel="alternate" hreflang="x-default" href="https://ather-quantum.com/guides?lang=en"/>', body)
         self.assertIn("https://ather-quantum.com/impressum?lang=de", body)
         # 5 صفحات بثلاث لغات (منها /adoption و/scanning) + 6 بلغتين + compare بلغتين + 3 قانونية بلغتين
-        self.assertEqual(body.count("<url>"), 7 * 3 + 2 * (3 + 3 + 1) + 2 * 3 + 2 + 2 * 3 + 2 + 2 - 2)  # +/deadlines +/agency + bilingual Gravity + enterprise guide; -/research (noindex, off-topic)
+        self.assertEqual(body.count("<url>"), 7 * 3 + 2 * (3 + 3 + 1) + 2 * 3 + 2 + 2 * 3 + 2 + 2 - 2 + 2 * 3)  # +/deadlines +/agency + bilingual Gravity + enterprise guide; -/research (noindex, off-topic); +AWS/Node.js/Java guides
         self.assertIn("https://ather-quantum.com/compare?lang=en", body)
         import quantum_saas_app
         sites_xml = client.get("/sitemap-sites-1.xml").get_data(as_text=True)
