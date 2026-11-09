@@ -1,16 +1,16 @@
 {% extends "base.html" %}
 {% block title %}{{ t.hosting_title }} · {{ t.brand }}{% endblock %}
 {% block description %}{{ t.hosting_meta }}{% endblock %}
-{% block head %}{% for obj in jsonld %}<script type="application/ld+json">{{ obj | tojson }}</script>{% endfor %}{% endblock %}
+{% block head %}<style>.hosting-table th,.hosting-table td{overflow-wrap:normal;word-break:normal}.hosting-table td.n,.hosting-table th.n{white-space:nowrap;text-align:end}.hosting-table .asn{display:block}</style>{% for obj in jsonld %}<script type="application/ld+json">{{ obj | tojson }}</script>{% endfor %}{% endblock %}
 {% block content %}
 <section class="card">
   <h1>{{ t.hosting_title }}</h1>
   <p class="lead">{{ t.hosting_lead.format(sites=p.sites, period=iso(p.period)) }}</p>
-  <table class="data" dir="ltr">
-    <tr><th>#</th><th>{{ t.hosting_col_net }}</th><th>{{ t.hosting_col_sites }}</th><th>{{ t.hosting_col_ready }}</th><th>{{ t.hosting_col_pct }}</th></tr>
-    {% for r in p.rows %}<tr><td>{{ loop.index }}</td><td>{{ r.name or "?" }} <span class="muted small">AS{{ r.asn }}</span></td>
-      <td>{{ r.reachable }}</td><td>{{ r.pq }}</td>
-      <td><strong class="{{ 'pq-on' if r.pct >= 50 else 'pq-off' }}">{{ r.pct }}%</strong></td></tr>{% endfor %}
+  <table class="data hosting-table" dir="ltr">
+    <tr><th>{{ t.hosting_col_net }}</th><th class="n">{{ t.hosting_col_sites }}</th><th class="n">{{ t.hosting_col_pct }}</th></tr>
+    {% for r in p.rows %}<tr><td>{{ r.name or "?" }} <span class="muted small asn">AS{{ r.asn }}</span></td>
+      <td class="n">{{ r.pq }}/{{ r.reachable }}</td>
+      <td class="n"><strong class="{{ 'pq-on' if r.pct >= 50 else 'pq-off' }}">{{ r.pct }}%</strong></td></tr>{% endfor %}
   </table>
   <p class="muted small">{{ t.hosting_caveat.format(min=min_sites) }}
     · <a href="{{ url_for('site.hosting_json') }}">JSON (CC BY 4.0)</a>
