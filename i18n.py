@@ -670,12 +670,16 @@ TEXTS["en"]["scanbox_title"] = "Scan your site now, free"
 # متاحة للصفحة الرئيسية والدراسة وصفحة الشركات فقط؛ أي نص غير مترجم هنا يبقى بالإنجليزية.
 DE_ENDPOINTS = {"site.business_page", "site.pricing_page", "site.index", "site.scan_form", "site.study", "site.monitoring", "site.monitor_login",
                 "site.adoption_page", "site.scanning_page", "site.deadlines_page", "site.agency_page",
-                "site.countries_page", "site.country_page"}
+                "site.countries_page", "site.country_page", "site.hosting_page"}
 
 TEXTS["ar"].update({
     "copy": "نسخ", "copied": "تم النسخ ✓",
     "nav_compare": "قارن",
     "site_title": "جاهزية TLS لما بعد الكم",
+    "home_title": "فحص مجاني: هل يدعم موقعك TLS المقاوم للحوسبة الكمومية؟",
+    "home_meta": "افحص مجاناً ودون حساب هل يتفق خادمك مع المتصفحات على X25519MLKEM768 (ML-KEM)، مع الدرجة وخطوات الإصلاح. مرصد أسبوعي لأكبر 10,000 موقع.",
+    "research_meta": "تجارب كمومية حقيقية على حواسيب IBM: حالات Bell وGHZ ونتائجها الخام.",
+    "sample_meta": "مثال حقيقي للتقرير الكامل لـ github.com: تبادل المفاتيح، الشهادة، النتائج وخطوات الإصلاح بالأوامر.",
     "site_question": "هل يستخدم {domain} تشفير TLS المقاوم للحوسبة الكمومية؟",
     "site_title_grade": "(الدرجة {grade})",
     "site_meta": "هل يستخدم {domain} تبادل المفاتيح الهجين المقاوم للحوسبة الكمومية؟ النتيجة وطريقة الإصلاح.",
@@ -689,7 +693,7 @@ TEXTS["ar"].update({
     "site_network": "الشبكة المشغّلة",
     "site_related": "مواقع ذات صلة",
     "site_rank": "ترتيب Tranco",
-    "compare_title": "قارن موقعين",
+    "compare_title": "قارن جاهزية موقعين لـ TLS ما بعد الكم",
     "compare_sub": "افحص موقعين جنباً إلى جنب وشارك النتيجة.",
     "compare_vs": "مقابل",
     "compare_button": "قارن",
@@ -698,6 +702,10 @@ TEXTS["en"].update({
     "copy": "Copy", "copied": "Copied ✓",
     "nav_compare": "Compare",
     "site_title": "Post-quantum TLS readiness",
+    "home_title": "Free post-quantum TLS check (X25519MLKEM768)",
+    "home_meta": "Free, no-account check: does your server negotiate X25519MLKEM768 (ML-KEM) with browsers? Grade, findings and fix steps, plus a weekly top-10k tracker.",
+    "research_meta": "Real quantum experiments on IBM hardware: Bell and GHZ states with raw results.",
+    "sample_meta": "A real full report for github.com: key exchange, certificate, findings and copy-paste fix steps.",
     "site_question": "Does {domain} use post-quantum TLS?",
     "site_title_grade": "(grade {grade})",
     "site_meta": "Does {domain} use hybrid post-quantum key exchange? Grade and how to fix it.",
@@ -711,7 +719,7 @@ TEXTS["en"].update({
     "site_network": "Hosting network",
     "site_related": "Related sites",
     "site_rank": "Tranco rank",
-    "compare_title": "Compare two sites",
+    "compare_title": "Compare the post-quantum TLS of two sites",
     "compare_sub": "Scan two sites side by side and share the result.",
     "compare_vs": "vs",
     "compare_button": "Compare",
@@ -917,7 +925,7 @@ TEXTS["de"].update({
 TEXTS["de"].update({
     "copy": "Kopieren", "copied": "Kopiert ✓",
     "nav_compare": "Vergleichen",
-    "compare_title": "Zwei Websites vergleichen",
+    "compare_title": "Post-Quantum-TLS zweier Websites vergleichen",
     "compare_sub": "Zwei Websites nebeneinander prüfen und das Ergebnis teilen.",
     "compare_vs": "gegen",
     "compare_button": "Vergleichen",
@@ -1376,4 +1384,45 @@ TEXTS["de"].update({
     "country_share": "{name} liegt bei Post-Quanten-TLS auf Platz {rank} von {total} Ländern: {pct} % der Top-Websites sind bereit.",
     "country_ready": "Bereit (Post-Quanten-Schlüsselaustausch)", "country_not_ready": "Noch nicht bereit (klassischer Schlüsselaustausch)", "country_unsure": "Unklar (Prüfung blockiert)",
     "countries_link": "Rangliste nach Ländern",
+})
+
+# /adoption/hosting (2026-11-09): readiness by hosting network / CDN
+TEXTS["en"].update({
+    "hosting_title": "Which hosting providers and CDNs support post-quantum TLS?",
+    "hosting_meta": "Share of the top 10,000 websites on each hosting network and CDN that negotiate X25519MLKEM768. Cloudflare, Akamai, AWS, Google, Hetzner, OVH and more, updated weekly.",
+    "hosting_lead": "We group {sites} measured websites from the Tranco top 10,000 by the network that answers their HTTPS ({period}), and count how many negotiate the hybrid post-quantum key exchange X25519MLKEM768.",
+    "hosting_why_title": "Why the gap is so large",
+    "hosting_why": "On CDNs and edge networks (Cloudflare, Akamai, Fastly, Google's front ends) the provider terminates TLS and turned post-quantum key exchange on for everyone. On cloud servers and classic hosting (for example EC2 instances, Hetzner, OVH, DigitalOcean) each customer's own server software decides: Ubuntu 22.04 and 24.04 still ship OpenSSL 3.0, which cannot negotiate ML-KEM. So a low share on a hosting network usually reflects its customers' operating systems, not a choice by the provider.",
+    "hosting_fix": "Running your own server? Check it in one click, then follow the guide for nginx or for Apache, Caddy and HAProxy.",
+    "hosting_col_net": "Network", "hosting_col_sites": "Sites", "hosting_col_ready": "Post-quantum", "hosting_col_pct": "Share",
+    "hosting_caveat": "Network = the autonomous system (AS) that answered the site's IP address; a site behind a CDN counts for the CDN. Only networks with at least {min} measured sites are listed.",
+    "hosting_faq_q": "Which hosting providers support post-quantum TLS?",
+    "hosting_faq_a": "As of {period}, the networks with the highest share of post-quantum ready sites among the Tranco top 10,000 were {top}. The lowest were {bottom}.",
+    "hosting_link": "Readiness by hosting provider",
+})
+TEXTS["ar"].update({
+    "hosting_title": "أي شركات الاستضافة وشبكات CDN تدعم TLS المقاوم للحوسبة الكمومية؟",
+    "hosting_meta": "نسبة المواقع ضمن أكبر 10,000 موقع على كل شبكة استضافة وCDN التي تتفق على X25519MLKEM768: Cloudflare وAkamai وAWS وGoogle وHetzner وOVH وغيرها، أسبوعياً.",
+    "hosting_lead": "نجمع {sites} موقعاً مقيساً من أكبر 10,000 موقع (Tranco) حسب الشبكة التي تجيب على اتصال HTTPS ({period})، ونحسب كم منها يتفق على تبادل المفاتيح الهجين X25519MLKEM768.",
+    "hosting_why_title": "لماذا الفرق كبير إلى هذا الحد",
+    "hosting_why": "في شبكات CDN والشبكات الطرفية (Cloudflare وAkamai وFastly وواجهات Google) يُنهي المزوّد اتصال TLS بنفسه وقد فعّل تبادل المفاتيح لما بعد الكم للجميع. أما على الخوادم السحابية والاستضافة التقليدية (مثل خوادم EC2 وHetzner وOVH وDigitalOcean) فبرنامج خادم كل عميل هو الذي يقرر: Ubuntu 22.04 و24.04 ما زالا يأتيان بـ OpenSSL 3.0 الذي لا يدعم ML-KEM. لذلك تعكس النسبة المنخفضة على شبكة استضافة غالباً أنظمة عملائها، لا قراراً من المزوّد.",
+    "hosting_fix": "تدير خادمك بنفسك؟ افحصه بنقرة، ثم اتبع دليل nginx أو دليل Apache وCaddy وHAProxy.",
+    "hosting_col_net": "الشبكة", "hosting_col_sites": "المواقع", "hosting_col_ready": "ما بعد الكم", "hosting_col_pct": "النسبة",
+    "hosting_caveat": "الشبكة = النظام المستقل (AS) الذي أجاب على عنوان IP للموقع؛ الموقع خلف CDN يُحسب للـ CDN. نعرض فقط الشبكات التي فيها {min} موقعاً مقيساً على الأقل.",
+    "hosting_faq_q": "أي شركات الاستضافة تدعم TLS المقاوم للحوسبة الكمومية؟",
+    "hosting_faq_a": "حتى {period}، كانت أعلى الشبكات نسبةً في المواقع الجاهزة ضمن أكبر 10,000 موقع: {top}. وأدناها: {bottom}.",
+    "hosting_link": "الجاهزية حسب شركة الاستضافة",
+})
+TEXTS["de"].update({
+    "hosting_title": "Welche Hoster und CDNs unterstützen Post-Quanten-TLS?",
+    "hosting_meta": "Anteil der Top-10.000-Websites je Hoster und CDN, die X25519MLKEM768 aushandeln: Cloudflare, Akamai, AWS, Google, Hetzner, OVH und mehr, wöchentlich aktualisiert.",
+    "hosting_lead": "Wir gruppieren {sites} gemessene Websites aus den Tranco-Top-10.000 nach dem Netz, das ihr HTTPS beantwortet ({period}), und zählen, wie viele den hybriden Post-Quanten-Schlüsselaustausch X25519MLKEM768 aushandeln.",
+    "hosting_why_title": "Warum der Unterschied so groß ist",
+    "hosting_why": "Bei CDNs und Edge-Netzen (Cloudflare, Akamai, Fastly, Google-Frontends) terminiert der Anbieter TLS selbst und hat Post-Quanten-Schlüsselaustausch für alle aktiviert. Bei Cloud-Servern und klassischem Hosting (z. B. EC2, Hetzner, OVH, DigitalOcean) entscheidet die Serversoftware jedes Kunden: Ubuntu 22.04 und 24.04 liefern noch OpenSSL 3.0, das kein ML-KEM kann. Ein niedriger Anteil spiegelt daher meist die Betriebssysteme der Kunden wider, nicht eine Entscheidung des Hosters.",
+    "hosting_fix": "Eigener Server? Mit einem Klick prüfen, dann der Anleitung für nginx oder für Apache, Caddy und HAProxy folgen.",
+    "hosting_col_net": "Netz", "hosting_col_sites": "Websites", "hosting_col_ready": "Post-Quanten", "hosting_col_pct": "Anteil",
+    "hosting_caveat": "Netz = das autonome System (AS), das auf die IP-Adresse der Website antwortet; eine Website hinter einem CDN zählt für das CDN. Aufgeführt sind nur Netze mit mindestens {min} gemessenen Websites.",
+    "hosting_faq_q": "Welche Hoster unterstützen Post-Quanten-TLS?",
+    "hosting_faq_a": "Stand {period} hatten unter den Tranco-Top-10.000 diese Netze den höchsten Anteil bereiter Websites: {top}. Den niedrigsten: {bottom}.",
+    "hosting_link": "Bereitschaft nach Hoster",
 })

@@ -749,6 +749,44 @@ def adoption_page():
     return render_template("adoption.html", s=adoption_snapshot(), iso=iso)
 
 
+def hosting_board():
+    """Readiness per hosting network / CDN; reuses the snapshot's provider rows (same fingerprint cache)."""
+    snap = adoption_snapshot()
+    return (snap or {}).get("providers")
+
+
+@bp.get("/adoption/hosting")
+def hosting_page():
+    board = hosting_board() or abort(404)
+    lang = current_lang()
+    iso = (lambda value: f"\u2066{value}\u2069") if lang == "ar" else str
+    rows = board["rows"]
+    ranked = sorted(rows, key=lambda r: (-r["pct"], -r["reachable"]))
+    fmt = lambda rs: ", ".join(f"{r['name']} (AS{r['asn']}, {r['pct']}%)" for r in rs)
+    t = i18n.TEXTS[lang] if lang in i18n.TEXTS else i18n.TEXTS["en"]
+    jsonld = [{"@context": "https://schema.org", "@type": "Dataset", "name": "Post-quantum TLS readiness by hosting network",
+               "description": "Share of Tranco top-10,000 websites on each hosting network / CDN (autonomous system) that "
+                              "negotiate the hybrid post-quantum key exchange X25519MLKEM768, updated weekly.",
+               "url": public_base() + url_for(".hosting_page"), "license": "https://creativecommons.org/licenses/by/4.0/",
+               "temporalCoverage": str(board["period"]), "creator": {"@type": "Organization", "name": "Quantum Aether"},
+               "distribution": {"@type": "DataDownload", "encodingFormat": "application/json",
+                                "contentUrl": public_base() + url_for(".hosting_json")}},
+              {"@context": "https://schema.org", "@type": "FAQPage",
+               "mainEntity": [{"@type": "Question", "name": t["hosting_faq_q"],
+                               "acceptedAnswer": {"@type": "Answer", "text": t["hosting_faq_a"].format(
+                                   period=board["period"], top=fmt(ranked[:3]), bottom=fmt(ranked[-3:]))}}]}]
+    return render_template("hosting.html", p=board, iso=iso, jsonld=jsonld, min_sites=adoption.PROVIDER_MIN_SITES)
+
+
+@bp.get("/adoption/hosting.json")
+def hosting_json():
+    board = hosting_board() or abort(404)
+    body = dict(board, license="CC BY 4.0", source=public_base() + url_for(".hosting_page"),
+                method="Network = autonomous system announcing each Tranco top-10,000 site's IPv4 address (iptoasn.com). "
+                       "pct = share of measured sites on that network that negotiated X25519MLKEM768.")
+    return _open_data(jsonify(body))
+
+
 @bp.get("/adoption/countries")
 def countries_page():
     board = cached_countries() or abort(404)
@@ -1796,7 +1834,6 @@ def _sitemap_pages():
     site_langs, de_langs, legal_langs = ("en", "ar"), ("en", "ar", "de"), legal.LANGS
     pages = [("/", _template_day("index.html"), de_langs), ("/monitoring", _template_day("monitoring.html"), de_langs),
              ("/sample-report", sample_result()["scanned_at"][:10], site_langs),
-             ("/research", _template_day("research.html"), site_langs),
              ("/guides", max(g["updated"] for g in guides.GUIDES.values()), site_langs),
              ("/study/top-1000-post-quantum-tls", study_data()["scanned_on"], de_langs)]
     adoption_weeks = adoption.weeks(db())
@@ -1811,6 +1848,7 @@ def _sitemap_pages():
     if board:
         week_day = adoption.week_monday(board["week"]).isoformat()
         pages.append(("/adoption/countries", week_day, de_langs))
+        pages.append(("/adoption/hosting", week_day, de_langs))
         pages += [(f"/adoption/countries/{e['code']}", week_day, de_langs) for e in board["entries"]]
     pages += [(f"/guides/{slug}", g["updated"], site_langs) for slug, g in guides.GUIDES.items()]
     pages.append(("/compare", _template_day("compare.html"), site_langs))

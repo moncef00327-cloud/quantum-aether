@@ -2,14 +2,14 @@
 <html lang="{{ lang }}" dir="{{ t.dir }}">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{{ 'مرصد أمان TLS لما بعد الكم' if lang == 'ar' else 'Post-Quantum TLS Security Observatory' }} · Quantum Aether</title>
-<meta name="description" content="{{ t.hero_sub }}">
+<title>{{ t.home_title }} · Quantum Aether</title>
+<meta name="description" content="{{ t.home_meta }}">
 <meta name="google-site-verification" content="lomNrWcm6STSBOBFYRuatxcSN8DGmceimGw_y79Sc7o">
 <link rel="canonical" href="{{ metadata_url(lang) }}">
-{% for l in page_langs %}<link rel="alternate" hreflang="{{ l }}" href="{{ metadata_url(l) }}">{% endfor %}
+{% for l in page_langs %}<link rel="alternate" hreflang="{{ l }}" href="{{ metadata_url(l) }}">{% endfor %}<link rel="alternate" hreflang="x-default" href="{{ metadata_url('en') }}">
 <meta name="twitter:card" content="summary_large_image"><link rel="alternate" type="application/atom+xml" href="/feed.xml" title="Quantum Aether">
-<meta property="og:title" content="Quantum Aether · Security Observatory">
-<meta property="og:description" content="{{ t.hero_sub }}"><meta property="og:type" content="website">
+<meta property="og:title" content="{{ t.home_title }} · Quantum Aether">
+<meta property="og:description" content="{{ t.home_meta }}"><meta property="og:type" content="website">
 <meta property="og:url" content="{{ metadata_url(lang) }}"><meta property="og:image" content="{{ abs_url('site.og_default') }}">
 <link rel="service-desc" type="application/json" href="{{ abs_url('site.agent_service_manifest') }}">
 <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
@@ -18,6 +18,6 @@
 {% for obj in jsonld %}<script type="application/ld+json">{{ obj | tojson }}</script>{% endfor %}
 </head>
 <body><div id="command-root">{% if lang == "ar" %}{% include "command/ar.html" %}{% else %}{% include "command/en.html" %}{% endif %}</div>
-<noscript><main><h1>Quantum Aether</h1><p>{{ t.hero_sub }}</p><form action="/scan?lang={{ lang }}" method="post"><label for="domain">{{ t.domain_label }}</label><input id="domain" name="domain" value="{{ domain }}" placeholder="example.com" required><button>{{ t.scan_button }}</button></form><nav><a href="/business?lang={{ lang }}">{{ 'الشركات' if lang == 'ar' else 'For business' }}</a> · <a href="/pricing?lang={{ lang }}">{{ 'الأسعار' if lang == 'ar' else 'Pricing' }}</a> · <a href="/agency?lang={{ lang }}">Agency</a> · <a href="/llms.txt">LLM / API</a> · <a href="/adoption?lang={{ lang }}">{{ t.nav_adoption }}</a> · <a href="/guides?lang={{ lang }}">{{ t.nav_guides }}</a></nav></main></noscript>
+<noscript><main><p><strong>Quantum Aether</strong></p><p>{{ t.hero_sub }}</p><form action="/scan?lang={{ lang }}" method="post"><label for="domain-noscript">{{ t.domain_label }}</label><input id="domain-noscript" name="domain" value="{{ domain }}" placeholder="example.com" required><button>{{ t.scan_button }}</button></form><nav><a href="/business?lang={{ lang }}">{{ 'الشركات' if lang == 'ar' else 'For business' }}</a> · <a href="/pricing?lang={{ lang }}">{{ 'الأسعار' if lang == 'ar' else 'Pricing' }}</a> · <a href="/agency?lang={{ lang }}">Agency</a> · <a href="/llms.txt">LLM / API</a> · <a href="/adoption?lang={{ lang }}">{{ t.nav_adoption }}</a> · <a href="/guides?lang={{ lang }}">{{ t.nav_guides }}</a></nav></main></noscript>
 <script type="module" src="/static/command/app.js?v=20261109-tracking1"></script>
 </body></html>

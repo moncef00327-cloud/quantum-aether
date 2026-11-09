@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% set kx = r.key_exchange %}{% set cert = r.certificate %}
 {% block title %}{% if sample %}{{ t.sample_title }}{% else %}{{ t.report_title }}{% endif %} · {{ r.domain }}{% endblock %}
+{% block description %}{% if sample %}{{ t.sample_meta }}{% else %}{{ t.hero_sub }}{% endif %}{% endblock %}
 {% block head %}{% if not sample %}<meta name="robots" content="noindex">{% endif %}{% endblock %}
 {% block content %}
 <div class="full-report">

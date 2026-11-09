@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 {% block title %}{{ t.research_title }} · {{ t.brand }}{% endblock %}
+{% block description %}{{ t.research_meta }}{% endblock %}
+{% block head %}<meta name="robots" content="noindex, follow">{% endblock %}
 {% block content %}
 <section class="card">
   <h1>{{ t.research_title }}</h1>
