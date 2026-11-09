@@ -1,0 +1,29 @@
+ather-quantum.com {
+    encode zstd gzip
+    reverse_proxy 127.0.0.1:8000
+}
+
+www.ather-quantum.com {
+    redir https://ather-quantum.com{uri} 301
+}
+
+scanning.ather-quantum.com {
+    redir https://ather-quantum.com/scanning 301
+}
+
+ather-quatum.cloud, www.ather-quatum.cloud {
+    @machine path /api/* /mcp /mcp/* /sse /sse/* /messages /messages/*
+    handle @machine {
+        # Old published clients (MCP 1.0.1, CLI) use Python urllib, which cannot follow 307/308 for POST:
+        # serve the API here directly instead of redirecting. Never indexed.
+        header X-Robots-Tag "noindex"
+        reverse_proxy 127.0.0.1:8000
+    }
+    handle {
+        redir https://ather-quantum.com{uri} 301
+    }
+}
+
+scanning.ather-quatum.cloud {
+    redir https://ather-quantum.com/scanning 301
+}
