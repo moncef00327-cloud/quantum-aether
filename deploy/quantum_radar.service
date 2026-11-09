@@ -10,7 +10,7 @@ Group=quantum
 WorkingDirectory=/var/www/quantum_saas
 EnvironmentFile=/etc/quantum_saas.env
 Environment=PYTHONDONTWRITEBYTECODE=1
-ExecStart=/var/www/quantum_saas/.venv/bin/python3 radar_job.py
+ExecStart=/var/www/quantum_saas/.venv312/bin/python3 radar_job.py
 TimeoutStartSec=15min
 NoNewPrivileges=true
 PrivateTmp=true
