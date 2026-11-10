@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "scope": "Excluded content: pornographic and gambling hosts. Excluded hosts are not scanned by the weekly tracker, are removed from statistics, datasets and exports, and their /site/ pages answer 410 Gone to all clients including crawlers. Classifications: confirmed_pornographic, confirmed_gambling. Exact hosts only; no keyword matching. Known UT1 false positives kept in the tracker (2026-11-10 review): 51.la, afrointroductions.com, beboo.ru, cosmopolitan.com, datezone.com, dmm.com, fanfox.net, flashscore.com.br, flashscore.fr, hotornot.com, livescore.in, match.com, mundodeportivo.com, nyaa.si, perchance.org, pixiv.net, playtika.com, pocketoption.com, questionablequesting.com, romeo.com, sa.com, sofascore.com, sotwe.com, toomics.com, tumbex.com, videa.hu.",
+  "scope": "Excluded content: pornographic and gambling hosts. Excluded hosts are not scanned by the weekly tracker, are removed from statistics, datasets and exports, and their /site/ pages answer 410 Gone to all clients including crawlers. Classifications: confirmed_pornographic, confirmed_gambling. Exact hosts only; no keyword matching. Known UT1 false positives kept in the tracker (2026-11-10 review): 51.la, afrointroductions.com, beboo.ru, cosmopolitan.com, datezone.com, dmm.com, fanfox.net, flashscore.com.br, flashscore.fr, hotornot.com, livescore.in, match.com, mundodeportivo.com, nyaa.si, perchance.org, pixiv.net, playtika.com, pocketoption.com, questionablequesting.com, romeo.com, sa.com, sofascore.com, sotwe.com, toomics.com, tumbex.com, videa.hu. Keyword candidates are never excluded automatically (they caught nflxvideo.net, jeuxvideo.com, xxxlutz.de); each is reviewed by hand.",
   "domains": [
     {
       "domain": "pornhub.com",
@@ -36231,6 +36231,608 @@
           "publisher": "Université Toulouse Capitole (UT1 blacklists)",
           "published_on": "2026-11-10",
           "locator": "Listed in UT1 category 'adult' (domains file downloaded 2026-11-10)."
+        }
+      ]
+    },
+    {
+      "domain": "sexiveo.com",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://sexiveo.com/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
+        }
+      ]
+    },
+    {
+      "domain": "xxxvideosex.net",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://xxxvideosex.net/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
+        }
+      ]
+    },
+    {
+      "domain": "xxxvideo.sex",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://xxxvideo.sex/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
+        }
+      ]
+    },
+    {
+      "domain": "xnxx-aflam.com",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://xnxx-aflam.com/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
+        }
+      ]
+    },
+    {
+      "domain": "mmporns.com",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://mmporns.com/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
+        }
+      ]
+    },
+    {
+      "domain": "uzporno.website",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://uzporno.website/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
+        }
+      ]
+    },
+    {
+      "domain": "sex-studentki.vodka",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://sex-studentki.vodka/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
+        }
+      ]
+    },
+    {
+      "domain": "sexalarab.net",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://sexalarab.net/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
+        }
+      ]
+    },
+    {
+      "domain": "tvoe-porno.click",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://tvoe-porno.click/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
+        }
+      ]
+    },
+    {
+      "domain": "sex1x.to",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://sex1x.to/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
+        }
+      ]
+    },
+    {
+      "domain": "josporn.red",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://josporn.red/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
+        }
+      ]
+    },
+    {
+      "domain": "tvoe-porno.online",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://tvoe-porno.online/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
+        }
+      ]
+    },
+    {
+      "domain": "haysex.cam",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://haysex.cam/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
+        }
+      ]
+    },
+    {
+      "domain": "xarxxx.com",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://xarxxx.com/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
+        }
+      ]
+    },
+    {
+      "domain": "sex-zbzoob.com",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://sex-zbzoob.com/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
+        }
+      ]
+    },
+    {
+      "domain": "some.porn",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://some.porn/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
+        }
+      ]
+    },
+    {
+      "domain": "nsfwph.org",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://nsfwph.org/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
+        }
+      ]
+    },
+    {
+      "domain": "animeshentai.biz",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://animeshentai.biz/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
+        }
+      ]
+    },
+    {
+      "domain": "sexumahat.com",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://sexumahat.com/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
+        }
+      ]
+    },
+    {
+      "domain": "xxxaraby.net",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://xxxaraby.net/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
+        }
+      ]
+    },
+    {
+      "domain": "porngangg.com",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://porngangg.com/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
+        }
+      ]
+    },
+    {
+      "domain": "pornobatsa.org",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://pornobatsa.org/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
+        }
+      ]
+    },
+    {
+      "domain": "xxxlumaxxx.com",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://xxxlumaxxx.com/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
+        }
+      ]
+    },
+    {
+      "domain": "youx.xxx",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://youx.xxx/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
+        }
+      ]
+    },
+    {
+      "domain": "megatube.xxx",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://megatube.xxx/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
+        }
+      ]
+    },
+    {
+      "domain": "xhamster.best",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://xhamster.best/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
+        }
+      ]
+    },
+    {
+      "domain": "xlivesex.com",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://xlivesex.com/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
+        }
+      ]
+    },
+    {
+      "domain": "xxxi.porn",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://xxxi.porn/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
+        }
+      ]
+    },
+    {
+      "domain": "hentaihaven.xxx",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://hentaihaven.xxx/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
+        }
+      ]
+    },
+    {
+      "domain": "sexchatters.com",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://sexchatters.com/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
+        }
+      ]
+    },
+    {
+      "domain": "txxx.me",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://txxx.me/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
+        }
+      ]
+    },
+    {
+      "domain": "desu.xxx",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://desu.xxx/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
+        }
+      ]
+    },
+    {
+      "domain": "nhentai.xxx",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://nhentai.xxx/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
+        }
+      ]
+    },
+    {
+      "domain": "inporn.com",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://inporn.com/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
+        }
+      ]
+    },
+    {
+      "domain": "filmesporno.xxx",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://filmesporno.xxx/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
+        }
+      ]
+    },
+    {
+      "domain": "tporn.xxx",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://tporn.xxx/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
+        }
+      ]
+    },
+    {
+      "domain": "66lottery.vip",
+      "classification": "confirmed_gambling",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://66lottery.vip/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
+        }
+      ]
+    },
+    {
+      "domain": "keralalotterytoday.com",
+      "classification": "confirmed_gambling",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://keralalotterytoday.com/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
+        }
+      ]
+    },
+    {
+      "domain": "lotteryusa.com",
+      "classification": "confirmed_gambling",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://lotteryusa.com/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
+        }
+      ]
+    },
+    {
+      "domain": "nagalandstatelottery.in",
+      "classification": "confirmed_gambling",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://nagalandstatelottery.in/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
+        }
+      ]
+    },
+    {
+      "domain": "1wcasino.com",
+      "classification": "confirmed_gambling",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://1wcasino.com/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
+        }
+      ]
+    },
+    {
+      "domain": "casino50.com",
+      "classification": "confirmed_gambling",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://casino50.com/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
+        }
+      ]
+    },
+    {
+      "domain": "floridalottery.com",
+      "classification": "confirmed_gambling",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual hostname review of strong-keyword candidates in the Tranco top 20k (not in UT1); exact host only",
+      "sources": [
+        {
+          "url": "https://floridalottery.com/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic or gambling content."
         }
       ]
     }
