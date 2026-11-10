@@ -5013,6 +5013,20 @@
           "locator": "Homepage carries the RTA-5042-1996-1400-1577-RTA adult label"
         }
       ]
+    },
+    {
+      "domain": "onlyfans.com",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-10",
+      "review_method": "owner decision 2026-11-10 after GSC review (SafeSearch risk); manual review of cited regulator publication; exact host only",
+      "sources": [
+        {
+          "url": "https://www.ofcom.org.uk/online-safety/protecting-children/ofcom-fines-provider-of-onlyfans-1.05-million",
+          "publisher": "Ofcom",
+          "published_on": "2025-03-27",
+          "locator": "Ofcom's age-assurance enforcement against OnlyFans concerned preventing children accessing pornography on the site."
+        }
+      ]
     }
   ]
 }

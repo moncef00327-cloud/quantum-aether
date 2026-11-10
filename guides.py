@@ -260,6 +260,150 @@ example.com {
 """,
         },
     },
+    "nis2-dora-post-quantum-cryptography": {
+        "updated": "2026-11-10",
+        "en": {
+            "title": "NIS2 and DORA: what they require for cryptography, and where post-quantum TLS fits",
+            "description": "What NIS2, its implementing regulation, Germany's BSIG and the DORA technical standard actually say about cryptography, with exact article references, and what evidence a post-quantum TLS check can and cannot provide.",
+            "body": """
+<p>Neither NIS2 nor DORA names a post-quantum algorithm or sets a post-quantum deadline. Both do require a documented cryptography policy that keeps pace with the state of the art, and the DORA technical standard explicitly mentions threats from quantum advancements. This page lists what the texts say, with article references, so you can check them yourself. It is not legal advice.</p>
+
+<h2>NIS2 (Directive (EU) 2022/2555)</h2>
+<ul>
+<li><strong>Article 21(1):</strong> essential and important entities must take appropriate and proportionate measures, "taking into account the state-of-the-art".</li>
+<li><strong>Article 21(2)(h):</strong> the minimum measures include "policies and procedures regarding the use of cryptography and, where appropriate, encryption".</li>
+</ul>
+<p><strong>Implementing Regulation (EU) 2024/2690</strong> details these measures for DNS providers, TLD registries, cloud, data centre and CDN providers, managed (security) service providers, online marketplaces, search engines, social networks and trust service providers. Point 9 of its annex requires that the cryptography policy set out the approved protocols and algorithms "following, where appropriate, a cryptographic agility approach" (9.2(b)), and that entities review and update it "at planned intervals, taking into account the state of the art in cryptography" (9.3).</p>
+<p><strong>Germany:</strong> the NIS2 implementation act (NIS2UmsuCG) has applied since 6 December 2025. Under <a href="https://www.gesetze-im-internet.de/bsig_2025/__30.html" rel="noopener">§ 30 BSIG</a>, measures "sollen den Stand der Technik einhalten" (paragraph 2), and point 8 requires "Konzepte und Prozesse für den Einsatz von kryptographischen Verfahren".</p>
+
+<h2>DORA (Regulation (EU) 2022/2554)</h2>
+<p>DORA has applied to financial entities since 17 January 2025. Its ICT risk-management standard, <strong>Delegated Regulation (EU) 2024/1774</strong>, is the most specific text on this topic:</p>
+<ul>
+<li><strong>Article 6(2):</strong> the encryption policy must cover data in transit and "traffic with external parties".</li>
+<li><strong>Article 6(4):</strong> the policy must include provisions for "updating or changing, where necessary, the cryptographic technology on the basis of developments in cryptanalysis".</li>
+<li><strong>Article 6(3)–(5):</strong> an entity that cannot follow leading practices or cannot update its cryptography must adopt mitigation and monitoring measures, record them and give "a reasoned explanation".</li>
+<li><strong>Article 7(4):</strong> a register of certificates, at least for ICT assets supporting critical or important functions.</li>
+<li><strong>Recital 9:</strong> financial entities should follow a flexible approach to cryptographic threats, "including threats from quantum advancements".</li>
+</ul>
+
+<h2>What this means in practice</h2>
+<p>Expect auditors to ask for a cryptographic inventory, a plan to replace algorithms that quantum computers will break, and documented reasons for any exception. Public TLS endpoints are usually the easiest place to start:</p>
+<ol>
+<li><strong>Key exchange first.</strong> Recorded traffic can be decrypted later once quantum computers exist (<a href="/guides/harvest-now-decrypt-later?lang=en">harvest now, decrypt later</a>). The hybrid group <code>X25519MLKEM768</code> (ML-KEM, <a href="https://csrc.nist.gov/pubs/fips/203/final" rel="noopener">NIST FIPS 203</a>) is already supported by current browsers, major CDNs and recent server software. See the <a href="/guides?lang=en">configuration guides</a>.</li>
+<li><strong>Record evidence per endpoint:</strong> hostname, date, negotiated group, TLS version and who terminates TLS (CDN, load balancer or origin).</li>
+<li><strong>Document exceptions.</strong> For an endpoint you cannot upgrade yet (legacy appliance, vendor platform), record the reason, the mitigation and a target date. That matches the "reasoned explanation" in DORA Article 6(5).</li>
+<li><strong>Repeat the check</strong> after CDN, proxy or certificate changes, and at your policy's planned review interval.</li>
+</ol>
+<p>For timelines (NIST IR 8547, the EU coordinated roadmap, CNSA 2.0), see <a href="/deadlines?lang=en">post-quantum deadlines</a>.</p>
+
+<h2>What a TLS check does not prove</h2>
+<p>A public scan observes one public endpoint on port 443 at one point in time. It does not cover internal links, the CDN-to-origin connection, certificates and signatures, stored data or key management. It is evidence for one line of your inventory, not a NIS2 or DORA compliance attestation. <a href="/?lang=en">Check a domain</a>, or see <a href="/business?lang=en">business monitoring</a> for many hosts.</p>
+
+<h2>Sources</h2>
+<ul>
+<li><a href="https://eur-lex.europa.eu/eli/dir/2022/2555/oj" rel="noopener">Directive (EU) 2022/2555 (NIS2)</a>, Article 21</li>
+<li><a href="https://eur-lex.europa.eu/eli/reg_impl/2024/2690/oj" rel="noopener">Implementing Regulation (EU) 2024/2690</a>, Annex point 9</li>
+<li><a href="https://www.gesetze-im-internet.de/bsig_2025/__30.html" rel="noopener">§ 30 BSIG (Germany)</a></li>
+<li><a href="https://eur-lex.europa.eu/eli/reg/2022/2554/oj" rel="noopener">Regulation (EU) 2022/2554 (DORA)</a></li>
+<li><a href="https://eur-lex.europa.eu/eli/reg_del/2024/1774/oj" rel="noopener">Delegated Regulation (EU) 2024/1774</a>, recital 9, Articles 6 and 7</li>
+</ul>
+""",
+        },
+        "ar": {
+            "title": "NIS2 وDORA: ماذا تشترطان في التشفير، وأين يقع TLS لما بعد الكم",
+            "description": "ما تقوله فعلاً NIS2 ولائحتها التنفيذية وقانون BSIG الألماني والمعيار التقني لـ DORA عن التشفير، مع أرقام المواد، وما يثبته فحص TLS لما بعد الكم وما لا يثبته.",
+            "body": """
+<p>لا تذكر NIS2 ولا DORA خوارزمية ما بعد كمومية بالاسم، ولا تحددان موعداً للانتقال. لكن كلتيهما تشترط سياسة تشفير موثّقة تواكب أحدث ما وصلت إليه التقنية، والمعيار التقني لـ DORA يذكر صراحةً التهديدات الناتجة عن تقدّم الحوسبة الكمومية. تجمع هذه الصفحة النصوص مع أرقام المواد لتتحقق منها بنفسك. وهي ليست استشارة قانونية.</p>
+
+<h2>NIS2 (التوجيه الأوروبي 2022/2555)</h2>
+<ul>
+<li><strong>المادة 21(1):</strong> على الجهات الأساسية والمهمة اتخاذ تدابير مناسبة ومتناسبة مع مراعاة أحدث ما وصلت إليه التقنية (state-of-the-art).</li>
+<li><strong>المادة 21(2)(h):</strong> من التدابير الدنيا وضع سياسات وإجراءات لاستخدام التشفير، والتعمية حيث يلزم.</li>
+</ul>
+<p><strong>اللائحة التنفيذية 2024/2690</strong> تفصّل هذه التدابير لمزوّدي DNS وسجلات النطاقات العليا والحوسبة السحابية ومراكز البيانات وشبكات CDN والخدمات المُدارة والأمنية المُدارة والأسواق الإلكترونية ومحركات البحث والشبكات الاجتماعية وخدمات الثقة. البند 9 من ملحقها يشترط أن تحدد سياسة التشفير البروتوكولات والخوارزميات المعتمدة وفق نهج «المرونة التشفيرية» (cryptographic agility) حيث يكون مناسباً (9.2(b))، وأن تُراجع وتُحدَّث على فترات مخططة مع مراعاة أحدث ما وصل إليه علم التشفير (9.3).</p>
+<p><strong>ألمانيا:</strong> قانون تطبيق NIS2 (NIS2UmsuCG) نافذ منذ 6 ديسمبر 2025. تنص <a href="https://www.gesetze-im-internet.de/bsig_2025/__30.html" rel="noopener">المادة 30 من BSIG</a> على أن تلتزم التدابير بأحدث ما وصلت إليه التقنية (الفقرة 2)، ويشترط البند 8 وضع مفاهيم وإجراءات لاستخدام أساليب التشفير.</p>
+
+<h2>DORA (اللائحة الأوروبية 2022/2554)</h2>
+<p>تسري DORA على المؤسسات المالية منذ 17 يناير 2025. ومعيارها التقني لإدارة مخاطر تقنية المعلومات، <strong>اللائحة المفوَّضة 2024/1774</strong>، هو النص الأكثر تحديداً في هذا الموضوع:</p>
+<ul>
+<li><strong>المادة 6(2):</strong> يجب أن تشمل سياسة التشفير البيانات أثناء النقل والاتصالات مع الأطراف الخارجية.</li>
+<li><strong>المادة 6(4):</strong> يجب أن تتضمن السياسة أحكاماً لتحديث تقنية التشفير أو تغييرها عند الحاجة بناءً على التطورات في تحليل الشفرات (cryptanalysis).</li>
+<li><strong>المادة 6(3) إلى 6(5):</strong> الجهة التي لا تستطيع اتباع أفضل الممارسات أو تحديث تشفيرها عليها اتخاذ تدابير تخفيف ومراقبة، وتسجيلها مع تبرير مُعلَّل.</li>
+<li><strong>المادة 7(4):</strong> سجلّ للشهادات، على الأقل للأصول التي تدعم الوظائف الحرجة أو المهمة.</li>
+<li><strong>الحيثية 9:</strong> على المؤسسات المالية اتباع نهج مرن تجاه التهديدات التشفيرية، بما فيها التهديدات الناتجة عن تقدّم الحوسبة الكمومية.</li>
+</ul>
+
+<h2>ماذا يعني ذلك عملياً</h2>
+<p>توقّع أن يطلب المدققون حصراً لأنظمة التشفير، وخطة لاستبدال الخوارزميات التي سيكسرها الحاسوب الكمومي، وتبريراً موثّقاً لأي استثناء. ونقاط TLS العامة هي عادةً أسهل مكان للبدء:</p>
+<ol>
+<li><strong>ابدأ بتبادل المفاتيح.</strong> الاتصالات المسجّلة اليوم يمكن فكّها لاحقاً عند ظهور الحاسوب الكمومي (<a href="/guides/harvest-now-decrypt-later?lang=ar">احصد الآن وفكّ لاحقاً</a>). المجموعة الهجينة <code>X25519MLKEM768</code> (خوارزمية ML-KEM في <a href="https://csrc.nist.gov/pubs/fips/203/final" rel="noopener">NIST FIPS 203</a>) مدعومة بالفعل في المتصفحات الحالية وشبكات CDN الكبرى وإصدارات الخوادم الحديثة. راجع <a href="/guides?lang=ar">أدلة الإعداد</a>.</li>
+<li><strong>سجّل دليلاً لكل نقطة اتصال:</strong> اسم النطاق والتاريخ والمجموعة المتفق عليها وإصدار TLS والجهة التي تنهي اتصال TLS (CDN أو موازن حمل أو الخادم الأصلي).</li>
+<li><strong>وثّق الاستثناءات.</strong> لكل نقطة لا يمكن ترقيتها بعد (جهاز قديم أو منصة مورّد)، سجّل السبب والتدبير البديل والموعد المستهدف. وهذا يوافق «التبرير المُعلَّل» في المادة 6(5) من DORA.</li>
+<li><strong>أعد الفحص</strong> بعد تغييرات CDN أو الوكيل أو الشهادات، وفي موعد المراجعة الدورية لسياستك.</li>
+</ol>
+<p>للمواعيد (NIST IR 8547 وخارطة الطريق الأوروبية وCNSA 2.0) راجع <a href="/deadlines?lang=ar">مواعيد الانتقال إلى ما بعد الكم</a>.</p>
+
+<h2>ما لا يثبته فحص TLS</h2>
+<p>الفحص العام يرصد نقطة عامة واحدة على المنفذ 443 في وقت محدد. لا يغطي الاتصالات الداخلية، ولا الاتصال بين CDN والخادم الأصلي، ولا الشهادات والتواقيع، ولا البيانات المخزنة أو إدارة المفاتيح. هو دليل لسطر واحد في حصرك، لا شهادة امتثال لـ NIS2 أو DORA. <a href="/?lang=ar">افحص نطاقاً</a>، أو راجع <a href="/business?lang=ar">المراقبة للشركات</a> لعدد كبير من النطاقات.</p>
+
+<h2>المصادر</h2>
+<ul>
+<li><a href="https://eur-lex.europa.eu/eli/dir/2022/2555/oj" rel="noopener">التوجيه (EU) 2022/2555 (NIS2)</a>، المادة 21</li>
+<li><a href="https://eur-lex.europa.eu/eli/reg_impl/2024/2690/oj" rel="noopener">اللائحة التنفيذية (EU) 2024/2690</a>، البند 9 من الملحق</li>
+<li><a href="https://www.gesetze-im-internet.de/bsig_2025/__30.html" rel="noopener">المادة 30 من BSIG (ألمانيا)</a></li>
+<li><a href="https://eur-lex.europa.eu/eli/reg/2022/2554/oj" rel="noopener">اللائحة (EU) 2022/2554 (DORA)</a></li>
+<li><a href="https://eur-lex.europa.eu/eli/reg_del/2024/1774/oj" rel="noopener">اللائحة المفوَّضة (EU) 2024/1774</a>، الحيثية 9 والمادتان 6 و7</li>
+</ul>
+""",
+        },
+        "de": {
+            "title": "NIS2 und DORA: Was sie für Kryptografie verlangen und wo Post-Quanten-TLS ansetzt",
+            "description": "Was NIS2, die Durchführungsverordnung, das BSIG und der technische DORA-Standard tatsächlich zur Kryptografie sagen, mit genauen Fundstellen, und welche Nachweise eine Post-Quanten-TLS-Prüfung liefern kann und welche nicht.",
+            "body": """
+<p>Weder NIS2 noch DORA nennen einen Post-Quanten-Algorithmus oder eine Post-Quanten-Frist. Beide verlangen aber ein dokumentiertes Kryptografie-Konzept, das mit dem Stand der Technik Schritt hält, und der technische DORA-Standard nennt ausdrücklich Bedrohungen durch Fortschritte der Quantentechnologie. Diese Seite fasst die Texte mit Fundstellen zusammen, damit Sie sie selbst prüfen können. Sie ist keine Rechtsberatung.</p>
+
+<h2>NIS2 (Richtlinie (EU) 2022/2555)</h2>
+<ul>
+<li><strong>Artikel 21 Absatz 1:</strong> Wesentliche und wichtige Einrichtungen ergreifen geeignete und verhältnismäßige Maßnahmen unter Berücksichtigung des Stands der Technik.</li>
+<li><strong>Artikel 21 Absatz 2 Buchstabe h:</strong> Zu den Mindestmaßnahmen gehören „Konzepte und Verfahren für den Einsatz von Kryptografie und gegebenenfalls Verschlüsselung“.</li>
+</ul>
+<p>Die <strong>Durchführungsverordnung (EU) 2024/2690</strong> konkretisiert diese Maßnahmen für DNS-Diensteanbieter, TLD-Namenregister, Cloud-, Rechenzentrums- und CDN-Anbieter, Anbieter verwalteter (Sicherheits-)Dienste, Online-Marktplätze, Suchmaschinen, soziale Netzwerke und Vertrauensdiensteanbieter. Nummer 9 des Anhangs verlangt, dass das Konzept die zugelassenen Protokolle und Algorithmen „soweit angemessen – nach einem Krypto-Agilitätsansatz“ festlegt (9.2 b) und dass die Einrichtungen es „in geplanten Zeitabständen“ überprüfen und dabei „dem Stand der Technik im Bereich der Kryptografie Rechnung tragen“ (9.3).</p>
+<p><strong>Deutschland:</strong> Das NIS2-Umsetzungsgesetz (NIS2UmsuCG) gilt seit dem 6. Dezember 2025. Nach <a href="https://www.gesetze-im-internet.de/bsig_2025/__30.html" rel="noopener">§ 30 BSIG</a> „sollen [Maßnahmen] den Stand der Technik einhalten“ (Absatz 2), und Nummer 8 verlangt „Konzepte und Prozesse für den Einsatz von kryptographischen Verfahren“.</p>
+
+<h2>DORA (Verordnung (EU) 2022/2554)</h2>
+<p>DORA gilt für Finanzunternehmen seit dem 17. Januar 2025. Der technische Regulierungsstandard zum IKT-Risikomanagement, die <strong>Delegierte Verordnung (EU) 2024/1774</strong>, ist hier am konkretesten:</p>
+<ul>
+<li><strong>Artikel 6 Absatz 2:</strong> Die Verschlüsselungsrichtlinie muss Daten bei der Übertragung und den Datenverkehr mit externen Parteien abdecken.</li>
+<li><strong>Artikel 6 Absatz 4:</strong> Die Richtlinie muss regeln, „wie die kryptografische Technologie aufgrund von Entwicklungen im Bereich der Kryptoanalyse gegebenenfalls zu aktualisieren oder zu ändern ist“.</li>
+<li><strong>Artikel 6 Absätze 3 bis 5:</strong> Wer führende Praktiken nicht einhalten oder die Kryptografie nicht aktualisieren kann, ergreift Abhilfe- und Überwachungsmaßnahmen, dokumentiert sie und begründet dies.</li>
+<li><strong>Artikel 7 Absatz 4:</strong> ein Register der Zertifikate, mindestens für IKT-Assets, die kritische oder wichtige Funktionen unterstützen.</li>
+<li><strong>Erwägungsgrund 9:</strong> Finanzunternehmen sollen einen flexiblen Ansatz verfolgen, um kryptografische Bedrohungen zu bewältigen, „einschließlich Bedrohungen aufgrund der Fortschritte im Bereich der Quantentechnologie“.</li>
+</ul>
+
+<h2>Was das in der Praxis bedeutet</h2>
+<p>Rechnen Sie damit, dass Prüfer ein Kryptografie-Inventar, einen Plan zum Ersatz quantenanfälliger Verfahren und begründete Ausnahmen sehen wollen. Öffentliche TLS-Endpunkte sind meist der einfachste Einstieg:</p>
+<ol>
+<li><strong>Zuerst der Schlüsselaustausch.</strong> Heute aufgezeichneter Verkehr kann später mit Quantencomputern entschlüsselt werden (<a href="/guides/harvest-now-decrypt-later?lang=en">„harvest now, decrypt later“</a>). Die hybride Gruppe <code>X25519MLKEM768</code> (ML-KEM, <a href="https://csrc.nist.gov/pubs/fips/203/final" rel="noopener">NIST FIPS 203</a>) unterstützen aktuelle Browser, große CDNs und neuere Serversoftware bereits. Siehe die <a href="/guides?lang=en">Konfigurationsanleitungen</a> (Englisch).</li>
+<li><strong>Nachweis je Endpunkt festhalten:</strong> Hostname, Datum, ausgehandelte Gruppe, TLS-Version und wer TLS terminiert (CDN, Load Balancer oder Origin).</li>
+<li><strong>Ausnahmen dokumentieren.</strong> Für Endpunkte, die sich noch nicht umstellen lassen (Altgeräte, Herstellerplattformen), Grund, Ausgleichsmaßnahme und Zieltermin festhalten. Das entspricht der Begründungspflicht in Artikel 6 Absatz 5 der Delegierten Verordnung (EU) 2024/1774.</li>
+<li><strong>Erneut prüfen</strong> nach Änderungen an CDN, Proxy oder Zertifikaten sowie im geplanten Überprüfungsintervall Ihres Konzepts.</li>
+</ol>
+<p>Zu Fristen (NIST IR 8547, EU-Roadmap, CNSA 2.0) siehe <a href="/deadlines?lang=de">Post-Quanten-Fristen</a>.</p>
+
+<h2>Was eine TLS-Prüfung nicht belegt</h2>
+<p>Ein öffentlicher Scan beobachtet einen öffentlichen Endpunkt auf Port 443 zu einem Zeitpunkt. Er deckt keine internen Verbindungen, nicht die Verbindung vom CDN zum Origin, keine Zertifikate und Signaturen, keine gespeicherten Daten und kein Schlüsselmanagement ab. Er ist ein Nachweis für eine Zeile Ihres Inventars, keine NIS2- oder DORA-Konformitätsbestätigung. <a href="/?lang=de">Domain prüfen</a> oder <a href="/business?lang=de">Monitoring für Unternehmen</a> ansehen.</p>
+
+<h2>Quellen</h2>
+<ul>
+<li><a href="https://eur-lex.europa.eu/eli/dir/2022/2555/oj?locale=de" rel="noopener">Richtlinie (EU) 2022/2555 (NIS2)</a>, Artikel 21</li>
+<li><a href="https://eur-lex.europa.eu/eli/reg_impl/2024/2690/oj?locale=de" rel="noopener">Durchführungsverordnung (EU) 2024/2690</a>, Anhang Nummer 9</li>
+<li><a href="https://www.gesetze-im-internet.de/bsig_2025/__30.html" rel="noopener">§ 30 BSIG</a></li>
+<li><a href="https://eur-lex.europa.eu/eli/reg/2022/2554/oj?locale=de" rel="noopener">Verordnung (EU) 2022/2554 (DORA)</a></li>
+<li><a href="https://eur-lex.europa.eu/eli/reg_del/2024/1774/oj?locale=de" rel="noopener">Delegierte Verordnung (EU) 2024/1774</a>, Erwägungsgrund 9, Artikel 6 und 7</li>
+</ul>
+""",
+        },
+    },
     "aws-alb-cloudfront-post-quantum-tls": {
         "updated": "2026-11-09",
         "en": {

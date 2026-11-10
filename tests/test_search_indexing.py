@@ -66,7 +66,7 @@ class SearchIndexingTests(unittest.TestCase):
         self.assertEqual(metadata(response).canonical,[BASE+'/site/pornhub.com?lang=ar'])
 
     def test_no_substring_suffix_or_automatic_subdomain_classification(self):
-        for host in ['xxx-industry.test','xxx-ordinary.test','erome.com','onlyfans.com','xhamster999.test',
+        for host in ['xxx-industry.test','xxx-ordinary.test','erome.com','xhamster999.test',
                      'news.pornhub.com','www.pornhub.com','pornhub.com.example','notpornhub.com','']:
             with self.subTest(host=host):self.assertFalse(search_indexing.is_excluded(host))
         response=self.client.get('/site/xxx-industry.test?lang=en&q=pornhub.com&search=xxx')
@@ -90,7 +90,7 @@ class SearchIndexingTests(unittest.TestCase):
             xml=ET.tostring(doc,encoding='unicode')
             for host in search_indexing.reviewed_hosts():self.assertNotIn('/site/'+host+'?',xml)
         self.assertIn(BASE+'/site/alpha.test?lang=en',locations)
-        self.assertIn(BASE+'/site/onlyfans.com?lang=ar',locations)
+        self.assertNotIn(BASE+'/site/onlyfans.com?lang=ar',locations)  # reviewed exclusion since 2026-11-10
         self.assertIn(BASE+'/site/xxx-industry.test?lang=en',locations)
         self.assertEqual(len(locations),len(set(locations)))
 
@@ -112,7 +112,7 @@ class SearchIndexingTests(unittest.TestCase):
         self.assertIn('pornhub.com',json.dumps(data))
 
     def test_study_guides_weekly_and_ordinary_domain_pages_remain_indexable(self):
-        for path in ['/study/top-1000-post-quantum-tls','/adoption','/guides','/guides/enable-x25519mlkem768-nginx','/site/alpha.test','/site/onlyfans.com']:
+        for path in ['/study/top-1000-post-quantum-tls','/adoption','/guides','/guides/enable-x25519mlkem768-nginx','/site/alpha.test','/site/beta.test']:
             for lang in ['en','ar']:
                 with self.subTest(path=path,lang=lang):
                     response=self.client.get(path+'?lang='+lang)

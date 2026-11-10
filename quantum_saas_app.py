@@ -132,8 +132,14 @@ def _close_db(_exc):
         conn.close()
 
 
+def guide_has_german():
+    """A single guide may carry a German version (key "de"); only then is ?lang=de served and linked."""
+    return (request.endpoint == "site.guide"
+            and "de" in guides.GUIDES.get((request.view_args or {}).get("slug"), {}))
+
+
 def german_allowed():
-    return request.endpoint in i18n.DE_ENDPOINTS
+    return request.endpoint in i18n.DE_ENDPOINTS or guide_has_german()
 
 
 def current_lang():
@@ -160,7 +166,7 @@ def _inject():
     lang = current_lang()
     return {"t": i18n.TEXTS[lang], "lang": lang, "other_lang": "en" if lang == "ar" else "ar",
             "legal_lang": "de" if lang == "de" else "en", "lang_names": i18n.LANG_NAMES,
-            "page_langs": ["en", "ar", "de"] if request.endpoint in DE_PAGES else ["en", "ar"],
+            "page_langs": ["en", "ar", "de"] if request.endpoint in DE_PAGES or guide_has_german() else ["en", "ar"],
             "abs_url": lambda endpoint, **kw: public_base() + url_for(endpoint, **kw),
             "localized_url": localized_url, "metadata_url": metadata_url,
             "sx": scan_experience.COPY[lang],
@@ -1850,7 +1856,7 @@ def _sitemap_pages():
         pages.append(("/adoption/countries", week_day, de_langs))
         pages.append(("/adoption/hosting", week_day, de_langs))
         pages += [(f"/adoption/countries/{e['code']}", week_day, de_langs) for e in board["entries"]]
-    pages += [(f"/guides/{slug}", g["updated"], site_langs) for slug, g in guides.GUIDES.items()]
+    pages += [(f"/guides/{slug}", g["updated"], de_langs if "de" in g else site_langs) for slug, g in guides.GUIDES.items()]
     pages.append(("/compare", _template_day("compare.html"), site_langs))
     pages.append(("/agents", agent_discovery.UPDATED, site_langs))
     legal_date = os.path.getmtime(os.path.join(BASE_DIR, "legal.py"))
