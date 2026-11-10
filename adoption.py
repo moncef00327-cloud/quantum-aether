@@ -133,11 +133,10 @@ def load_targets(limit=WEEKLY_TOP, watchlists=None, optout=None, tranco_path=TRA
         for domain in sector.get("domains", []):
             sector_of.setdefault(domain.lower(), key)
     targets, seen = [], set()
-    # Excluded content (pornographic, gambling) is not scanned; the next Tranco ranks take its place,
-    # so the weekly sample keeps `limit` sites.
-    for rank, domain in load_tranco(limit * 2, tranco_path):
-        if len(targets) >= limit:
-            break
+    # Excluded content (pornographic, gambling) is not scanned. Its place is taken by the watch-list sectors
+    # "finance-worldwide" and "government-worldwide" (the highest-ranked such sites beyond the top `limit`),
+    # so "top N" statistics only ever cover real Tranco ranks.
+    for rank, domain in load_tranco(limit, tranco_path):
         if domain in seen or opted_out(domain, optout) or search_indexing.is_excluded(domain):
             continue
         targets.append({"domain": domain, "rank": rank, "sector": sector_of.get(domain)})

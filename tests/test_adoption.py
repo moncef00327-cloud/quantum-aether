@@ -81,7 +81,8 @@ class UnitTests(unittest.TestCase):
         targets = adoption.load_targets()
         domains = [t["domain"] for t in targets]
         self.assertEqual(len(domains), len(set(domains)))
-        self.assertEqual(sum(1 for t in targets if t["rank"]), adoption.WEEKLY_TOP)
+        self.assertEqual(sum(1 for t in targets if t["rank"]),
+                         sum(1 for r, d in adoption.load_tranco(adoption.WEEKLY_TOP) if not search_indexing.is_excluded(d)))
         study = [d for d in (json.loads(l)["domain"] for l in open(adoption.RAW_STUDY_FILE)) if not search_indexing.is_excluded(d)]
         self.assertEqual([t["domain"] for t in targets[:len(study)]], study)   # الدراسة نفسها، بلا المحتوى المستبعد
         self.assertFalse(any(search_indexing.is_excluded(t["domain"]) for t in targets))  # والمستبعد يُعوَّض بالتالي

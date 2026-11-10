@@ -90,7 +90,8 @@ def leaderboard(conn):
         return None
 
     def rows_of(week):
-        cur = conn.execute("SELECT domain, ok, pq, unsure FROM adoption_results WHERE week = ?", (week,))
+        # Tranco-ranked sites only: watch-list sectors (banks, government) would skew a country comparison.
+        cur = conn.execute("SELECT domain, ok, pq, unsure FROM adoption_results WHERE week = ? AND rank IS NOT NULL", (week,))
         return [dict(r) for r in cur]
 
     current = _stats(rows_of(weeks[-1]))
@@ -116,7 +117,7 @@ def leaderboard(conn):
 def country_sites(conn, code, week):
     """مواقع دولة واحدة في أسبوع: الجاهزة ثم غير الجاهزة، كلٌّ حسب ترتيب Tranco."""
     cur = conn.execute("SELECT domain, rank, grade, grp, pq, unsure, as_name FROM adoption_results "
-                       "WHERE week = ? AND ok = 1 AND domain LIKE ? ORDER BY rank IS NULL, rank", (week, f"%.{code}"))
+                       "WHERE week = ? AND ok = 1 AND rank IS NOT NULL AND domain LIKE ? ORDER BY rank", (week, f"%.{code}"))
     rows = [dict(r) for r in cur if code_of(r["domain"]) == code]
     return {"ready": [r for r in rows if r["pq"] and not r["unsure"]],
             "not_ready": [r for r in rows if not r["pq"] and not r["unsure"]],

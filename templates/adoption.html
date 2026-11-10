@@ -93,6 +93,7 @@
   <h3>{{ sector.labels[lang] or sector.labels.en or sector.key }}</h3>
   {% if sector.rows %}
   <p class="muted">{{ t.adoption_enabled_of.format(pq=sector.pq, reachable=sector.reachable) }}{% if sector.unsure %} · {{ t.adoption_unsure_count.format(n=sector.unsure) }}{% endif %}</p>
+  {% if sector.rows | length > 100 %}<details><summary>{{ t.adoption_show_all.format(n=sector.rows | length) }}</summary>{% endif %}
   <table class="data" dir="ltr">
     <tr><th>{{ t.host_col }}</th><th>{{ t.adoption_status_col }}</th><th>{{ t.grade_col }}</th><th>{{ t.group_col }}</th></tr>
     {% for r in sector.rows %}<tr><td>{{ host_link(r.domain) }}</td>
@@ -103,6 +104,7 @@
       <td>{% if r.ok and not r.unsure %}<span class="grade-chip grade-{{ r.grade }}">{{ r.grade }}</span>{% endif %}</td>
       <td>{% if r.ok and not r.unsure %}<code>{{ r.grp or r.tls or "?" }}</code>{% endif %}</td></tr>{% endfor %}
   </table>
+  {% if sector.rows | length > 100 %}</details>{% endif %}
   {% endif %}
 </section>
 {% endfor %}

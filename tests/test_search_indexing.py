@@ -102,11 +102,14 @@ class SearchIndexingTests(unittest.TestCase):
         self.assertNotIn('pornhub.com',self.client.get('/adoption.csv').get_data(as_text=True))
         self.assertIn('ordinary.example',self.client.get('/adoption.csv').get_data(as_text=True))
 
-    def test_targets_skip_excluded_and_keep_sample_size(self):
-        targets=adoption.load_targets(limit=1000,watchlists={})
-        self.assertEqual(len(targets),1000)
+    def test_targets_skip_excluded_and_replacements_are_separate_sectors(self):
+        targets=adoption.load_targets()
         self.assertFalse(any(search_indexing.is_excluded(t['domain']) for t in targets))
-        self.assertGreater(max(t['rank'] for t in targets),1000)
+        ranked=[t for t in targets if t['rank']]
+        self.assertLessEqual(max(t['rank'] for t in ranked),adoption.WEEKLY_TOP)  # "top N" stays real Tranco ranks
+        excluded_in_top=sum(1 for r,d in adoption.load_tranco(adoption.WEEKLY_TOP) if search_indexing.is_excluded(d))
+        replacements=[t for t in targets if t['sector'] in ('finance-worldwide','government-worldwide')]
+        self.assertEqual(len(replacements),excluded_in_top)  # same number of sites, of interest to our audience
 
     def test_study_guides_weekly_and_ordinary_domain_pages_remain_indexable(self):
         for path in ['/study/top-1000-post-quantum-tls','/adoption','/guides','/guides/enable-x25519mlkem768-nginx','/site/alpha.test','/site/beta.test']:
