@@ -453,8 +453,36 @@ STUDY_NOTABLE = ["amazon.com", "github.com", "wikipedia.org", "netflix.com", "bi
 
 @functools.lru_cache(maxsize=1)
 def study_data():
+    return _study_filtered(frozenset(search_indexing.reviewed_hosts()))
+
+
+@functools.lru_cache(maxsize=2)
+def _study_filtered(excluded):
+    """The published study without excluded content (pornographic, gambling): sites and every aggregate are
+    recomputed from the immutable raw evidence, so numbers and lists stay consistent."""
+    import collections
     with open(STUDY_FILE, encoding="utf-8") as f:
-        return json.load(f)
+        d = json.load(f)
+    rows = []
+    with open(adoption.RAW_STUDY_FILE, encoding="utf-8") as source:
+        rows = [json.loads(line) for line in source]
+    kept = [r for r in rows if r["domain"] not in excluded]
+    ok = [r for r in kept if r.get("ok")]
+    kx = lambda r: r.get("key_exchange") or {}
+    cert = lambda r: r.get("certificate") or {}
+    d.update({
+        "total": len(kept), "excluded": len(rows) - len(kept), "reachable": len(ok), "unreachable": len(kept) - len(ok),
+        "pq": sum(1 for r in ok if kx(r).get("pq")),
+        "grades": dict(sorted(collections.Counter(r.get("grade") for r in ok).items())),
+        "groups": [list(x) for x in collections.Counter(kx(r).get("group") or "?" for r in ok).most_common()],
+        "versions": [list(x) for x in collections.Counter(kx(r).get("version") or cert(r).get("negotiated_version") for r in ok).most_common()],
+        "cert_keys": [list(x) for x in collections.Counter(f"{cert(r).get('key_algorithm')}-{cert(r).get('key_bits')}" for r in ok).most_common()],
+        "cert_invalid": sum(1 for r in ok if not cert(r).get("verified")),
+        "top100_reachable": sum(1 for r in ok if r["rank"] <= 100),
+        "top100_pq": sum(1 for r in ok if r["rank"] <= 100 and kx(r).get("pq")),
+        "sites": [s for s in d["sites"] if s["domain"] not in excluded],
+    })
+    return d
 
 
 @functools.lru_cache(maxsize=1)
@@ -1098,6 +1126,8 @@ def site_page(domain):
         domain = quantum_vuln_scanner.normalize_domain(domain)
     except quantum_vuln_scanner.ScanError:
         abort(404)
+    if search_indexing.is_excluded(domain):
+        abort(410)  # excluded content (pornographic, gambling): gone for every client, crawlers included
     summary, source = known_result_for(domain)
     jsonld, verdict, history, related, network = None, None, [], [], None
     if summary:
@@ -1890,6 +1920,8 @@ def badge(domain):
         domain = quantum_vuln_scanner.normalize_domain(domain)
     except quantum_vuln_scanner.ScanError:
         abort(404)
+    if search_indexing.is_excluded(domain):
+        abort(404)
     evidence = badge_evidence.for_domain(db(), domain)
     grade = evidence['grade'] if evidence['state'] == 'fresh' else (evidence['state'] if evidence['state'] != 'not_scanned' else None)
     checked = badge_evidence.moment(evidence['checked_at'])
@@ -1945,6 +1977,8 @@ def og_site(domain):
     try:
         domain = quantum_vuln_scanner.normalize_domain(domain)
     except quantum_vuln_scanner.ScanError:
+        abort(404)
+    if search_indexing.is_excluded(domain):
         abort(404)
     summary, _ = known_result_for(domain)
     if not summary:
@@ -2364,6 +2398,14 @@ def _error(status, key):
 @bp.app_errorhandler(404)
 def _not_found(_e):
     return _error(404, "not_found")
+
+
+@bp.app_errorhandler(410)
+def _gone(_e):
+    """Minimal body on purpose: no canonical, og:url or links that would repeat the excluded host name."""
+    response = Response("410 Gone\n", status=410, mimetype="text/plain")
+    response.headers["X-Robots-Tag"] = "noindex, nofollow"
+    return response
 
 
 @bp.app_errorhandler(429)

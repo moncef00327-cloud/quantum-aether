@@ -10,6 +10,7 @@ import unittest
 from contextlib import closing
 
 import adoption
+import search_indexing
 import adoption_job
 import quantum_saas_app
 import quantum_vuln_scanner
@@ -81,8 +82,9 @@ class UnitTests(unittest.TestCase):
         domains = [t["domain"] for t in targets]
         self.assertEqual(len(domains), len(set(domains)))
         self.assertEqual(sum(1 for t in targets if t["rank"]), adoption.WEEKLY_TOP)
-        study = [json.loads(l)["domain"] for l in open(adoption.RAW_STUDY_FILE)]
-        self.assertEqual([t["domain"] for t in targets[:1000]], study)   # الأكبر 1000 هي قائمة الدراسة نفسها
+        study = [d for d in (json.loads(l)["domain"] for l in open(adoption.RAW_STUDY_FILE)) if not search_indexing.is_excluded(d)]
+        self.assertEqual([t["domain"] for t in targets[:len(study)]], study)   # الدراسة نفسها، بلا المحتوى المستبعد
+        self.assertFalse(any(search_indexing.is_excluded(t["domain"]) for t in targets))  # والمستبعد يُعوَّض بالتالي
         watch = {d for s in adoption.load_watchlists().values() for d in s["domains"]}
         self.assertTrue(watch <= set(domains))
         for domain in watch:  # كل اسم في قوائم المراقبة صالح للماسح
@@ -110,14 +112,15 @@ class TrackerTests(unittest.TestCase):
 
     def test_seed_matches_published_study_and_runs_once(self):
         with self.conn() as c:
-            self.assertEqual(adoption.seed_from_study(c), 1000)
+            self.assertEqual(adoption.seed_from_study(c), quantum_saas_app.study_data()["total"])
             self.assertEqual(adoption.seed_from_study(c), 0)
             snap = adoption.snapshot(c)
         study = quantum_saas_app.study_data()
         self.assertEqual(snap["week"], "2026-W45")
         with open(adoption.RAW_STUDY_FILE, encoding='utf-8') as source:
             rows = (json.loads(line) for line in source)
-            retries = sum(bool(row.get('ok') and row.get('key_exchange', {}).get('hrr')) for row in rows)
+            retries = sum(bool(row.get('ok') and row.get('key_exchange', {}).get('hrr')) for row in rows
+                          if not search_indexing.is_excluded(row['domain']))
         # Preserve the archive; the new tracker excludes retry-only evidence from its denominator.
         self.assertEqual((snap["reachable"], snap["pq"]), (study["reachable"] - retries, study["pq"]))
         self.assertIsNone(snap["changes"])
@@ -189,7 +192,7 @@ class TrackerTests(unittest.TestCase):
         self.assertEqual(r.mimetype, "text/csv")
         self.assertEqual(r.headers["Access-Control-Allow-Origin"], "*")
         rows = list(csv.DictReader(io.StringIO(r.get_data(as_text=True))))
-        self.assertEqual(len(rows), 1000)
+        self.assertEqual(len(rows), quantum_saas_app.study_data()["total"])  # seeded study minus excluded content
         self.assertIn("/adoption?lang=de", self.client.get("/sitemap-pages.xml").get_data(as_text=True))
         self.assertIn("/adoption#2026-W45", self.client.get("/feed.xml").get_data(as_text=True))
         self.assertIn("/adoption.json", self.client.get("/llms.txt").get_data(as_text=True))

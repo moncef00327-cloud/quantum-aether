@@ -1,4 +1,4 @@
-"""Selective, evidence-reviewed exclusions without crawler or dataset restrictions."""
+"""Excluded content (pornographic, gambling): gone for every client, removed from data, replaced in the weekly sample."""
 import copy
 from html.parser import HTMLParser
 import json
@@ -8,6 +8,7 @@ from unittest.mock import Mock, patch
 from urllib.robotparser import RobotFileParser
 import xml.etree.ElementTree as ET
 
+import adoption
 import quantum_saas_app
 import sales_db
 import search_indexing
@@ -45,40 +46,32 @@ class SearchIndexingTests(unittest.TestCase):
             self.conn.execute("UPDATE adoption_results SET sector='review-fixture'")
     def tearDown(self):self.conn.close();self.tmp.cleanup()
 
-    def test_every_reviewed_host_is_noindex_crawlable_in_each_language_and_default(self):
-        robots=RobotFileParser();robots.parse(self.client.get('/robots.txt').text.splitlines())
-        for host in search_indexing.reviewed_hosts():
+    def test_every_excluded_host_is_gone_for_every_client(self):
+        hosts=sorted(search_indexing.reviewed_hosts())
+        for host in hosts[:40]+hosts[-40:]:
             for suffix in ['', '?lang=en','?lang=ar','?lang=de','?lang=en&utm_source=search']:
                 with self.subTest(host=host,suffix=suffix):
-                    path='/site/'+host+suffix;response=self.client.get(path);doc=metadata(response)
-                    self.assertEqual(response.status_code,200)
+                    response=self.client.get('/site/'+host+suffix)
+                    self.assertEqual(response.status_code,410)
                     self.assertIn('noindex',response.headers['X-Robots-Tag'])
-                    self.assertTrue(any('noindex' in tag for tag in doc.robots))
-                    self.assertTrue(robots.can_fetch('Googlebot',BASE+path))
-                    lang='ar' if suffix=='?lang=ar' else 'en'
-                    self.assertEqual(doc.canonical,[BASE+'/site/'+host+'?lang='+lang])
+                    self.assertNotIn('/site/'+host+'?lang', response.get_data(as_text=True))
         self.scanner.assert_not_called()
 
-    def test_normalized_host_and_canonical_receive_same_policy(self):
-        response=self.client.get('/site/PORNHUB.COM.?lang=ar')
-        self.assertEqual(response.status_code,200)
-        self.assertIn('noindex',response.headers['X-Robots-Tag'])
-        self.assertEqual(metadata(response).canonical,[BASE+'/site/pornhub.com?lang=ar'])
+    def test_normalized_host_and_www_alias_are_gone(self):
+        self.assertEqual(self.client.get('/site/PORNHUB.COM.?lang=ar').status_code,410)
+        self.assertEqual(self.client.get('/site/pornhub.com?lang=ar',base_url='https://www.ather-quantum.com').status_code,410)
+        self.assertEqual(self.client.head('/site/pornhub.com?lang=ar').status_code,410)
+        self.assertEqual(self.client.get('/site/pornhub.com?lang=en',headers={'If-Modified-Since':'Mon, 02 Nov 2099 01:00:00 GMT'}).status_code,410)
+        self.assertEqual(self.client.get('/badge/pornhub.com.svg').status_code,404)
+        self.assertEqual(self.client.get('/og/site/pornhub.com.png').status_code,404)
 
     def test_no_substring_suffix_or_automatic_subdomain_classification(self):
-        for host in ['xxx-industry.test','xxx-ordinary.test','erome.com','xhamster999.test',
+        for host in ['xxx-industry.test','xxx-ordinary.test','xhamster999.test',
                      'news.pornhub.com','www.pornhub.com','pornhub.com.example','notpornhub.com','']:
             with self.subTest(host=host):self.assertFalse(search_indexing.is_excluded(host))
         response=self.client.get('/site/xxx-industry.test?lang=en&q=pornhub.com&search=xxx')
         self.assertEqual(response.status_code,200);self.assertNotIn('noindex',response.headers.get('X-Robots-Tag',''))
         self.assertFalse(metadata(response).robots)
-
-    def test_excluded_pages_deliver_directives_even_for_old_conditional_requests(self):
-        response=self.client.get('/site/pornhub.com?lang=en',headers={'If-Modified-Since':'Mon, 02 Nov 2099 01:00:00 GMT'})
-        self.assertEqual(response.status_code,200);self.assertIn('noindex',response.headers['X-Robots-Tag'])
-        self.assertTrue(response.data)
-        head=self.client.head('/site/pornhub.com?lang=ar')
-        self.assertEqual(head.status_code,200);self.assertIn('noindex',head.headers['X-Robots-Tag'])
 
     def test_sitemap_excludes_only_reviewed_hosts_across_all_chunks(self):
         index=ET.fromstring(self.client.get('/sitemap.xml').data)
@@ -100,16 +93,20 @@ class SearchIndexingTests(unittest.TestCase):
         for host in search_indexing.reviewed_hosts():
             self.assertFalse(any('/site/'+host in link for link in links))
 
-    @patch('adoption.load_watchlists',return_value={'review-fixture': {'labels': {'en':'Review fixture','ar':'عينة مراجعة','de':'Testdaten'}, 'domains':[]}})
-    def test_adoption_keeps_data_but_not_excluded_domain_links(self,_watchlists):
+    def test_purge_removes_excluded_rows_from_every_dataset(self):
+        self.assertGreater(adoption.purge_excluded(self.conn),0)
         for lang in ['en','ar','de']:
-            response=self.client.get('/adoption?lang='+lang);doc=metadata(response)
-            self.assertEqual(response.status_code,200);self.assertFalse(doc.robots)
-            self.assertIn('pornhub.com',response.text)
-            self.assertFalse(any('/site/pornhub.com' in link for link in doc.links))
-            self.assertTrue(any('/site/alpha.test' in link for link in doc.links))
-        data=self.client.get('/adoption.json').json
-        self.assertIn('pornhub.com',json.dumps(data))
+            response=self.client.get('/adoption?lang='+lang)
+            self.assertEqual(response.status_code,200);self.assertNotIn('pornhub.com',response.text)
+        self.assertNotIn('pornhub.com',json.dumps(self.client.get('/adoption.json').json))
+        self.assertNotIn('pornhub.com',self.client.get('/adoption.csv').get_data(as_text=True))
+        self.assertIn('ordinary.example',self.client.get('/adoption.csv').get_data(as_text=True))
+
+    def test_targets_skip_excluded_and_keep_sample_size(self):
+        targets=adoption.load_targets(limit=1000,watchlists={})
+        self.assertEqual(len(targets),1000)
+        self.assertFalse(any(search_indexing.is_excluded(t['domain']) for t in targets))
+        self.assertGreater(max(t['rank'] for t in targets),1000)
 
     def test_study_guides_weekly_and_ordinary_domain_pages_remain_indexable(self):
         for path in ['/study/top-1000-post-quantum-tls','/adoption','/guides','/guides/enable-x25519mlkem768-nginx','/site/alpha.test','/site/beta.test']:
@@ -120,20 +117,15 @@ class SearchIndexingTests(unittest.TestCase):
                     self.assertNotIn('noindex',response.headers.get('X-Robots-Tag',''))
                     self.assertFalse(metadata(response).robots)
         response=self.client.get('/study/top-1000-post-quantum-tls?lang=en')
-        self.assertIn('pornhub.com',response.text)
+        self.assertNotIn('pornhub.com',response.text)
+        self.assertNotIn('pornhub.com',json.dumps(self.client.get('/study/top-1000-post-quantum-tls.json').json))
 
     def test_exclusion_is_independent_of_measurement_source(self):
-        with self.app.test_request_context('/site/pornhub.com'):
-            self.assertEqual(quantum_saas_app.known_result_for('pornhub.com')[1],'weekly')
         result=copy.deepcopy(RESULT);result['domain']='pornhub.com'
         sales_db.create_scan(self.conn,'reviewed-scan','test-report-token',result,'local-test',is_test=True)
-        with self.app.test_request_context('/site/pornhub.com'):
-            self.assertEqual(quantum_saas_app.known_result_for('pornhub.com')[1],'scan')
-        self.assertIn('noindex',self.client.get('/site/pornhub.com').headers['X-Robots-Tag'])
+        self.assertEqual(self.client.get('/site/pornhub.com').status_code,410)
         with patch('adoption.latest_for',return_value=None),patch('sales_db.latest_scan_for_domain',return_value=None):
-            with self.app.test_request_context('/site/pornhub.com'):
-                self.assertEqual(quantum_saas_app.known_result_for('pornhub.com')[1],'study')
-            self.assertIn('noindex',self.client.get('/site/pornhub.com').headers['X-Robots-Tag'])
+            self.assertEqual(self.client.get('/site/pornhub.com').status_code,410)
 
     def test_ordinary_domain_conditional_get_still_works(self):
         first=self.client.get('/site/alpha.test?lang=en')
@@ -154,18 +146,10 @@ class SearchIndexingTests(unittest.TestCase):
             self.assertFalse(any('/site/de0.de' in link for link in metadata(response).links))
             self.assertTrue(any('/site/de1.de' in link for link in metadata(response).links))
 
-    def test_user_agent_does_not_change_indexing_policy_or_access(self):
-        for host in ['pornhub.com','alpha.test']:
-            for agent in ['Mozilla/5.0','Googlebot','Bingbot']:
-                response=self.client.get('/site/'+host+'?lang=en',headers={'User-Agent':agent})
-                self.assertEqual(response.status_code,200)
-                self.assertEqual('noindex' in response.headers.get('X-Robots-Tag',''),host=='pornhub.com')
-
-    def test_www_site_alias_points_to_same_excluded_apex_canonical(self):
-        response=self.client.get('/site/pornhub.com?lang=ar',base_url='https://www.ather-quantum.com')
-        self.assertEqual(response.status_code,200)
-        self.assertIn('noindex',response.headers['X-Robots-Tag'])
-        self.assertEqual(metadata(response).canonical,[BASE+'/site/pornhub.com?lang=ar'])
+    def test_user_agent_does_not_change_policy(self):
+        for agent in ['Mozilla/5.0','Googlebot','Bingbot','GPTBot','ClaudeBot']:
+            self.assertEqual(self.client.get('/site/pornhub.com?lang=en',headers={'User-Agent':agent}).status_code,410)
+            self.assertEqual(self.client.get('/site/alpha.test?lang=en',headers={'User-Agent':agent}).status_code,200)
 
     def test_every_policy_entry_has_reviewable_evidence(self):
         entries=json.loads(search_indexing.POLICY_FILE.read_text())['domains']
@@ -174,3 +158,14 @@ class SearchIndexingTests(unittest.TestCase):
             self.assertIn(entry['classification'],search_indexing.CLASSIFICATIONS)
             self.assertTrue(entry['reviewed_on']);self.assertTrue(entry['review_method'])
             self.assertTrue(all(s['url'].startswith('https://') and s['publisher'] and s['locator'] for s in entry['sources']))
+
+
+class StudyRecomputeTests(unittest.TestCase):
+    def test_recompute_without_exclusions_matches_published_study(self):
+        published=json.load(open(quantum_saas_app.STUDY_FILE))
+        d=quantum_saas_app._study_filtered(frozenset())
+        for key in ['total','reachable','pq','grades','groups','versions','cert_keys','cert_invalid','top100_reachable','top100_pq']:
+            self.assertEqual(d[key],published[key],key)
+        filtered=quantum_saas_app.study_data()
+        self.assertGreater(filtered['excluded'],0)
+        self.assertFalse(any(search_indexing.is_excluded(s['domain']) for s in filtered['sites']))

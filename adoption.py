@@ -9,6 +9,8 @@ import io
 import json
 import os
 
+import search_indexing
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 RAW_STUDY_FILE = os.path.join(BASE_DIR, "data", "pq_study_top1000_raw.jsonl")
 TRANCO_FILE = os.path.join(BASE_DIR, "data", "tranco_GQ38K_top100k.csv")
@@ -131,13 +133,17 @@ def load_targets(limit=WEEKLY_TOP, watchlists=None, optout=None, tranco_path=TRA
         for domain in sector.get("domains", []):
             sector_of.setdefault(domain.lower(), key)
     targets, seen = [], set()
-    for rank, domain in load_tranco(limit, tranco_path):
-        if domain in seen or opted_out(domain, optout):
+    # Excluded content (pornographic, gambling) is not scanned; the next Tranco ranks take its place,
+    # so the weekly sample keeps `limit` sites.
+    for rank, domain in load_tranco(limit * 2, tranco_path):
+        if len(targets) >= limit:
+            break
+        if domain in seen or opted_out(domain, optout) or search_indexing.is_excluded(domain):
             continue
         targets.append({"domain": domain, "rank": rank, "sector": sector_of.get(domain)})
         seen.add(domain)
     for domain, key in sector_of.items():
-        if domain not in seen and not opted_out(domain, optout):
+        if domain not in seen and not opted_out(domain, optout) and not search_indexing.is_excluded(domain):
             targets.append({"domain": domain, "rank": None, "sector": key})
             seen.add(domain)
     return targets
@@ -186,7 +192,7 @@ def seed_from_study(conn, raw_path=RAW_STUDY_FILE):
     """أول أسبوع = بيانات الدراسة المنشورة. لا يفعل شيئاً إن وُجدت بيانات."""
     if conn.execute("SELECT 1 FROM adoption_results LIMIT 1").fetchone():
         return 0
-    rows = _raw_study_rows(raw_path)
+    rows = [r for r in _raw_study_rows(raw_path) if not search_indexing.is_excluded(r["domain"])]
     sector_of = {}
     for key, sector in load_watchlists().items():
         for domain in sector.get("domains", []):
@@ -246,7 +252,21 @@ def run_month(conn, scanner, targets, day=None, workers=32, asn_lookup=None, bat
     return {"month": month, "targets": len(targets), "answered": answered}
 
 
+def purge_excluded(conn):
+    """Removes excluded content (pornographic, gambling) from every stored week and month. Returns rows deleted."""
+    hosts = sorted(search_indexing.reviewed_hosts())
+    deleted = 0
+    with conn:
+        for i in range(0, len(hosts), 500):
+            chunk = hosts[i:i + 500]
+            marks = ",".join("?" * len(chunk))
+            deleted += conn.execute(f"DELETE FROM adoption_results WHERE domain IN ({marks})", chunk).rowcount
+            deleted += conn.execute(f"DELETE FROM adoption_monthly WHERE domain IN ({marks})", chunk).rowcount
+    return deleted
+
+
 def prune(conn, keep_weeks=KEEP_WEEKS, keep_months=KEEP_MONTHS):
+    purge_excluded(conn)
     keep_w = weeks(conn)[-keep_weeks:]
     keep_m = [r[0] for r in conn.execute("SELECT DISTINCT month FROM adoption_monthly ORDER BY month")][-keep_months:]
     with conn:
