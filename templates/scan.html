@@ -27,6 +27,27 @@
   </table>
 </section>
 
+{% set dbase = r.domain[4:] if r.domain.startswith("www.") and r.domain.count(".") >= 2 else r.domain %}
+<section class="card discovery" id="discovery" data-api="{{ url_for('site.discovery_api', scan_id=scan.id) }}"
+         data-msg='{{ {"running": t.disc_running, "result": t.disc_result, "none": t.disc_none, "failed": t.disc_failed, "rate_limited": t.disc_limited, "busy": t.disc_busy} | tojson | forceescape }}'>
+  <h2>{{ t.disc_title }}</h2>
+  <p>{{ t.disc_sub.format(base=dbase) }}</p>
+  <p><button type="button" class="disc-start" data-ev="disc_start">{{ t.disc_button }}</button></p>
+  <p class="disc-status" role="status" aria-live="polite"></p>
+  <div class="disc-request" hidden>
+    <h3>{{ t.disc_list_title }}</h3>
+    <p>{{ t.disc_list_sub.format(base=dbase) }}</p>
+    <form method="post" action="{{ url_for('site.discovery_request', lang=lang) }}" class="alert-form">
+      <input type="hidden" name="scan_id" value="{{ scan.id }}">
+      <p><label><input type="checkbox" name="consent" value="1" required>
+        <span>{{ t.disc_consent }} (<a href="{{ url_for('site.legal_page', slug='datenschutz', lang=legal_lang) }}" target="_blank">{{ t.legal_privacy }}</a>)</span></label></p>
+      <p><input type="email" name="email" required maxlength="254" placeholder="you@{{ dbase }}" dir="ltr"
+             aria-label="{{ t.disc_email_label.format(base=dbase) }}">
+        <button type="submit" data-ev="disc_email">{{ t.disc_list_button }}</button></p>
+    </form>
+  </div>
+</section>
+
 {% set glang = lang if lang in ("en", "ar") else "en" %}
 <section class="card">
   <h2>{{ t.findings_title }}</h2>
@@ -145,6 +166,7 @@
 <p><a class="button-link" href="{{ url_for('site.index', lang=lang) }}">{{ t.scan_again }}</a></p>
 {% endblock %}
 {% block scripts %}
+<script src="{{ url_for('static', filename='discovery.js') }}" defer></script>
 {% if payments_enabled and not paid %}
 <script src="https://www.paypal.com/sdk/js?client-id={{ paypal_client_id | urlencode }}&currency={{ currency }}&intent=capture"></script>
 <script src="{{ url_for('static', filename='checkout.js') }}"></script>

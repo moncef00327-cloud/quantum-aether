@@ -8,6 +8,7 @@ from decimal import Decimal
 import adoption
 import analytics_db
 import free_alerts
+import discovery
 import packs
 import monitor_db
 
@@ -57,6 +58,7 @@ def connect(path: str) -> sqlite3.Connection:
     conn.executescript(SCHEMA)
     monitor_db.init(conn)
     free_alerts.init(conn)
+    discovery.init(conn)
     packs.init(conn)
     analytics_db.init(conn)
     analytics_db.init_events(conn)

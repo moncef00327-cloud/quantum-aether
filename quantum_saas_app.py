@@ -34,6 +34,7 @@ import monitor
 import countries
 import deadlines
 import free_alerts
+import discovery
 import packs
 import business_pages
 import monitor_db
@@ -95,7 +96,7 @@ def _config_from_env():
     }
 
 
-def create_app(overrides=None, scanner=None, paypal=None, mailer=None, chain=None):
+def create_app(overrides=None, scanner=None, paypal=None, mailer=None, chain=None, discovery_http=None, discovery_probe=None):
     app = Flask(__name__)
     app.config['MAX_CONTENT_LENGTH'] = 128 * 1024
     app.config.update(_config_from_env())
@@ -110,6 +111,8 @@ def create_app(overrides=None, scanner=None, paypal=None, mailer=None, chain=Non
     app.extensions["scanner"] = scanner or quantum_vuln_scanner.scan
     app.extensions["paypal"] = paypal
     app.extensions["chain"] = chain or crypto_pay.ChainClient()
+    app.extensions["discovery_http"] = discovery_http or requests.Session()
+    app.extensions["discovery_probe"] = discovery_probe or discovery.probe_host
     app.extensions["mailer"] = mailer or Mailer(app.config["RESEND_API_KEY"], app.config["MAIL_FROM"],
                                                      app.config["REPLY_TO"])
     app.register_blueprint(bp)
@@ -606,6 +609,84 @@ def pack_redeem(token):
             error = texts()["pack_empty"]
     return render_template("pack.html", pack=packs.by_token(conn, token), token=token,
                            reports=packs.redeemed(conn, pack["id"]), error=error), 400
+
+
+# ---------------------------------------------------------------- كشف النطاقات الفرعية (أعداد علناً، القائمة لبريد على النطاق)
+
+def _discovery_base(scan_id):
+    scan = sales_db.get_scan(db(), scan_id) or abort(404)
+    return discovery.base_domain(scan["result"]["domain"])
+
+
+@bp.get("/api/discovery/<scan_id>")
+def discovery_api(scan_id):
+    base = _discovery_base(scan_id)
+    return jsonify(dict(discovery.public_summary(discovery.get(db(), base)), base=base))
+
+
+@bp.post("/api/discovery/<scan_id>")
+def discovery_start(scan_id):
+    base = _discovery_base(scan_id)
+    state = discovery.start(db(), base, client_hash())
+    if state == "started":
+        path = os.path.join(current_app.config["DATA_DIR"], "quantum_saas.db")
+        thread = discovery.run_in_background(lambda: sales_db.connect(path), base,
+                                             current_app.extensions["discovery_http"],
+                                             current_app.extensions["discovery_probe"])
+        if current_app.config.get("TESTING"):
+            thread.join()
+    summary = dict(discovery.public_summary(discovery.get(db(), base)), base=base, state=state)
+    return jsonify(summary), (429 if state in ("rate_limited", "busy") else 200)
+
+
+def _discovery_page(state, base, status=200, **kw):
+    return render_template("discovery.html", state=state, base=base, **kw), status
+
+
+@bp.post("/discovery/request")
+def discovery_request():
+    email = (request.form.get("email") or "").strip()[:254]
+    base = _discovery_base(request.form.get("scan_id") or "")
+    d = discovery.get(db(), base)
+    if not request.form.get("consent"):
+        return _discovery_page("consent_missing", base, 400)
+    if not EMAIL_RE.match(email):
+        return _discovery_page("bad_email", base, 400)
+    if not discovery.email_matches(email, base):
+        return _discovery_page("wrong_domain", base, 400)
+    if not discovery.fresh(d):
+        return _discovery_page("not_ready", base, 400)
+    mailer = current_app.extensions["mailer"]
+    if not mailer.enabled:
+        return _discovery_page("unavailable", base, 503)
+    token, reason = discovery.request_list(db(), email, base, current_lang(), client_hash())
+    if reason:
+        return _discovery_page(reason, base, 429)
+    url = public_base() + url_for(".discovery_list", token=token, lang=current_lang())
+    subject, text = discovery.confirm_email(current_lang(), base, url, public_base())
+    if not mailer.send(email, subject, text):
+        return _discovery_page("unavailable", base, 503)
+    return _discovery_page("check_inbox", base)
+
+
+@bp.route("/discovery/list/<token>", methods=["GET", "POST"])
+def discovery_list(token):
+    """GET يعرض زراً و POST يفتح القائمة: ماسحات الروابط في البريد لا تؤكد نيابة عن أحد."""
+    req = discovery.get_request(db(), token) or abort(404)
+    if request.method == "GET" and req["status"] != "CONFIRMED":
+        return _discovery_page("confirm_prompt", req["base"])
+    first = req["status"] != "CONFIRMED"
+    req = discovery.confirm_request(db(), token)
+    d = discovery.get(db(), req["base"])
+    if not d or d["status"] != "DONE":
+        return _discovery_page("not_ready", req["base"], 410)
+    owner = current_app.config["OWNER_EMAIL"]
+    if first and owner and not is_test_request():
+        current_app.extensions["mailer"].send(
+            owner, f"[Quantum Aether] Subdomain list lead: {req['base']}",
+            f"A visitor confirmed a work address at {req['base']} and opened the subdomain list.\n"
+            f"Email: {req['email']}\nResponding: {d['responding']} · not PQ: {d['not_pq']} · PQ: {d['pq']}\n")
+    return _discovery_page("list", req["base"], d=d)
 
 
 # ---------------------------------------------------------------- «نبّهني مجاناً» (نطاق واحد، أسبوعياً، تأكيد مزدوج)
@@ -2180,7 +2261,7 @@ def _security_headers(response):
     if request.path == '/gravity':
         # لوحة داخلية لفرص الطلب، ليست صفحة منتج: لا تُفهرس.
         response.headers['X-Robots-Tag'] = 'noindex, nofollow'
-    if request.path.startswith(("/report/", "/admin", "/monitor/", "/alerts/", "/pack/")):
+    if request.path.startswith(("/report/", "/admin", "/monitor/", "/alerts/", "/pack/", "/discovery/")):
         # رابط التقرير يحمل مفتاح الوصول: لا نخزنه ولا نرسله في Referer ولا نسمح بالفهرسة.
         response.headers["Cache-Control"] = "no-store"
         response.headers["Referrer-Policy"] = "no-referrer"

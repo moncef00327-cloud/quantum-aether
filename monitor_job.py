@@ -9,6 +9,7 @@ import sys
 import requests
 
 import analytics_db
+import discovery
 import free_alerts
 import monitor
 import monitor_db
@@ -66,6 +67,7 @@ def run(app):
             total_domains += monitor.check_account(conn, account, scanner=app.extensions["scanner"])
             total_alerts += send_alerts(conn, account, app.extensions["mailer"], base_url)
         free_checked, free_sent = free_alerts.run(conn, app.extensions["scanner"], app.extensions["mailer"], base_url)
+        discovery.prune(conn)
         log.info("free alerts: checked %d, emailed %d", free_checked, free_sent)
         analytics_db.prune(conn, (dt.date.today() - dt.timedelta(days=180)).isoformat())  # نحتفظ بستة أشهر
         log.info("checked %d accounts, %d domains, %d alerts", len(accounts), total_domains, total_alerts)

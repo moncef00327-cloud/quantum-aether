@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}{{ t.disc_page_title.format(base=base) }} · {{ t.brand }}{% endblock %}
+{% block head %}<meta name="robots" content="noindex, nofollow">{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>{{ t.disc_page_title.format(base=base) }}</h1>
+  {% if state == "list" %}
+  <p>{{ t.disc_result.format(responding=d.responding, base=base, not_pq=d.not_pq, pq=d.pq, unknown=d.unknown) }}</p>
+  <table class="kv discovery-table">
+    <tr><th>{{ t.disc_col_host }}</th><th>{{ t.disc_col_status }}</th><th>{{ t.disc_col_group }}</th></tr>
+    {% for h in d.hosts %}
+    <tr><td dir="ltr"><bdi>{{ h.host }}</bdi></td>
+        <td class="{{ 'ok' if h.status == 'pq' else 'warn' }}">{{ t.disc_status[h.status] }}</td>
+        <td dir="ltr">{{ h.group or "—" }}</td></tr>
+    {% endfor %}
+  </table>
+  <p class="muted small">{{ t.disc_page_note.format(when=(d.finished_at or "")[:10]) }}</p>
+  <p><a href="{{ url_for('site.monitoring', lang=lang) }}" data-ev="monitoring_cta">{{ t.disc_cta }} →</a></p>
+  {% else %}
+  <p>{{ t.disc_states[state].format(base=base) }}</p>
+  {% if state == "confirm_prompt" %}
+  <form method="post"><button type="submit">{{ t.disc_open_button }}</button></form>
+  {% endif %}
+  {% endif %}
+  <p><a href="{{ url_for('site.index', lang=lang) }}">{{ t.scan_again }}</a></p>
+</section>
+{% endblock %}
