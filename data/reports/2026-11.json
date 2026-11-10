@@ -1,0 +1,294 @@
+{
+ "id": "2026-11",
+ "published": "2026-11-10",
+ "week": "2026-W46",
+ "week_start": "2026-11-09",
+ "previous_week": "2026-W45",
+ "top1000": {
+  "week": "2026-W46",
+  "date": "2026-11-09",
+  "reachable": 699,
+  "pq": 431,
+  "pct": 61.7
+ },
+ "top1000_previous": {
+  "week": "2026-W45",
+  "date": "2026-11-02",
+  "reachable": 715,
+  "pq": 427,
+  "pct": 59.7
+ },
+ "top10k": {
+  "top": 10000,
+  "reachable": 7784,
+  "pq": 4800,
+  "pct": 61.7
+ },
+ "sectors": [
+  {
+   "key": "government-dach",
+   "labels": {
+    "en": "Government (Germany, Austria, Switzerland)",
+    "ar": "الجهات الحكومية (ألمانيا والنمسا وسويسرا)",
+    "de": "Behörden (Deutschland, Österreich, Schweiz)"
+   },
+   "measured": 9,
+   "pq": 8,
+   "pct": 88.9,
+   "classical": [
+    "www.parlament.gv.at"
+   ]
+  },
+  {
+   "key": "banks-dach",
+   "labels": {
+    "en": "Banks and central banks (DACH)",
+    "ar": "البنوك والبنوك المركزية (ألمانيا والنمسا وسويسرا)",
+    "de": "Banken und Zentralbanken (DACH)"
+   },
+   "measured": 17,
+   "pq": 12,
+   "pct": 70.6,
+   "classical": [
+    "www.bawag.at",
+    "www.comdirect.de",
+    "www.commerzbank.de",
+    "www.raiffeisen.at",
+    "www.zkb.ch"
+   ]
+  },
+  {
+   "key": "companies-dach",
+   "labels": {
+    "en": "Large companies (DACH)",
+    "ar": "شركات كبرى (ألمانيا والنمسا وسويسرا)",
+    "de": "Große Unternehmen (DACH)"
+   },
+   "measured": 20,
+   "pq": 18,
+   "pct": 90.0,
+   "classical": [
+    "www.a1.net",
+    "www.swisscom.ch"
+   ]
+  },
+  {
+   "key": "banks-europe",
+   "labels": {
+    "en": "Banks and central banks (Europe, outside DACH)",
+    "ar": "البنوك والبنوك المركزية (أوروبا، خارج ألمانيا والنمسا وسويسرا)",
+    "de": "Banken und Zentralbanken (Europa, ohne DACH)"
+   },
+   "measured": 84,
+   "pq": 61,
+   "pct": 72.6,
+   "classical": [
+    "www.abnamro.nl",
+    "www.bancaditalia.it",
+    "www.bancobpm.it",
+    "www.bcl.lu",
+    "www.bde.es",
+    "www.belfius.be",
+    "www.boursobank.com",
+    "www.bper.it",
+    "www.cnb.cz",
+    "www.credit-agricole.fr",
+    "www.creditmutuel.fr",
+    "www.csas.cz",
+    "www.kb.cz",
+    "www.millenniumbcp.pt",
+    "www.mnb.hu",
+    "www.mps.it",
+    "www.op.fi",
+    "www.otpbank.hu",
+    "www.pekao.com.pl",
+    "www.pkobp.pl",
+    "www.santander.pl",
+    "www.spuerkeess.lu",
+    "www.suomenpankki.fi"
+   ]
+  }
+ ],
+ "providers": [
+  {
+   "asn": 13335,
+   "name": "Cloudflare, Inc.",
+   "sites": 2230,
+   "pq": 2169,
+   "pct": 97.3
+  },
+  {
+   "asn": 16509,
+   "name": "Amazon.com, Inc.",
+   "sites": 1409,
+   "pq": 860,
+   "pct": 61.0
+  },
+  {
+   "asn": 54113,
+   "name": "Fastly, Inc.",
+   "sites": 330,
+   "pq": 272,
+   "pct": 82.4
+  },
+  {
+   "asn": 396982,
+   "name": "Google LLC",
+   "sites": 266,
+   "pq": 225,
+   "pct": 84.6
+  },
+  {
+   "asn": 14618,
+   "name": "Amazon.com, Inc.",
+   "sites": 259,
+   "pq": 18,
+   "pct": 6.9
+  },
+  {
+   "asn": 20940,
+   "name": "Akamai International B.V.",
+   "sites": 240,
+   "pq": 237,
+   "pct": 98.8
+  },
+  {
+   "asn": 15169,
+   "name": "Google LLC",
+   "sites": 206,
+   "pq": 203,
+   "pct": 98.5
+  },
+  {
+   "asn": 16625,
+   "name": "Akamai Technologies, Inc.",
+   "sites": 176,
+   "pq": 163,
+   "pct": 92.6
+  },
+  {
+   "asn": 8075,
+   "name": "Microsoft Corporation",
+   "sites": 135,
+   "pq": 56,
+   "pct": 41.5
+  },
+  {
+   "asn": 209242,
+   "name": "Cloudflare London, LLC",
+   "sites": 118,
+   "pq": 118,
+   "pct": 100.0
+  }
+ ],
+ "providers_period": "2026-W46",
+ "countries_top": [
+  {
+   "code": "AR",
+   "measured": 24,
+   "pct": 75.0
+  },
+  {
+   "code": "SE",
+   "measured": 26,
+   "pct": 69.2
+  },
+  {
+   "code": "GR",
+   "measured": 35,
+   "pct": 68.6
+  },
+  {
+   "code": "ES",
+   "measured": 52,
+   "pct": 67.3
+  },
+  {
+   "code": "BE",
+   "measured": 26,
+   "pct": 65.4
+  }
+ ],
+ "countries_bottom": [
+  {
+   "code": "CA",
+   "measured": 40,
+   "pct": 40.0
+  },
+  {
+   "code": "IR",
+   "measured": 31,
+   "pct": 38.7
+  },
+  {
+   "code": "CZ",
+   "measured": 33,
+   "pct": 36.4
+  },
+  {
+   "code": "CN",
+   "measured": 51,
+   "pct": 19.6
+  },
+  {
+   "code": "RU",
+   "measured": 236,
+   "pct": 15.3
+  }
+ ],
+ "countries_min_sites": 20,
+ "adopted_count": 23,
+ "dropped_count": 2,
+ "adopted": [
+  {
+   "domain": "inmobi.com",
+   "rank": 460
+  },
+  {
+   "domain": "cnbc.com",
+   "rank": 483
+  },
+  {
+   "domain": "airbnb.com",
+   "rank": 809
+  },
+  {
+   "domain": "latimes.com",
+   "rank": 916
+  },
+  {
+   "domain": "tube8.fr",
+   "rank": 1667
+  },
+  {
+   "domain": "fidelity.com",
+   "rank": 1999
+  },
+  {
+   "domain": "administracionelectronica.gob.es",
+   "rank": 2160
+  },
+  {
+   "domain": "vervegroupinc.net",
+   "rank": 3486
+  },
+  {
+   "domain": "zoho.eu",
+   "rank": 4109
+  },
+  {
+   "domain": "mehrnews.com",
+   "rank": 6050
+  }
+ ],
+ "dropped": [
+  {
+   "domain": "beboo.ru",
+   "rank": 1277
+  },
+  {
+   "domain": "go.link",
+   "rank": 8432
+  }
+ ]
+}

@@ -36,6 +36,7 @@ import deadlines
 import free_alerts
 import discovery
 import config_gen
+import reports
 import packs
 import business_pages
 import monitor_db
@@ -157,7 +158,7 @@ def current_lang():
 
 
 # الصفحات التي لها نسخة ألمانية فعلية (لمبدّل اللغة وhreflang وخريطة الموقع).
-DE_PAGES = {"site.pq_config", "site.pq_config_server", "site.index", "site.study", "site.monitoring", "site.adoption_page", "site.scanning_page", "site.deadlines_page",
+DE_PAGES = {"site.monthly_report", "site.press_page", "site.pq_config", "site.pq_config_server", "site.index", "site.study", "site.monitoring", "site.adoption_page", "site.scanning_page", "site.deadlines_page",
             "site.business_page", "site.pricing_page", "site.agency_page", "site.countries_page", "site.country_page"}
 
 
@@ -479,6 +480,67 @@ def legal_page(slug):
     t = dict(i18n.TEXTS["en"], dir="ltr", other_lang="English" if lang == "de" else "Deutsch")
     return render_template("legal.html", page=legal.PAGES[slug][lang], t=t, lang=lang, other_lang=other,
                            legal_lang=lang, page_langs=list(legal.LANGS))
+
+
+MONTHS = {"en": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+          "ar": ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"],
+          "de": ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"]}
+
+
+def _month_name(report_id, lang):
+    year, month = report_id.split("-")
+    return f"{MONTHS[lang][int(month) - 1]} {year}"
+
+
+def _report_or_404(report_id):
+    if not re.fullmatch(r"\d{4}-\d{2}", report_id or ""):
+        abort(404)
+    return reports.load(report_id) or abort(404)
+
+
+@bp.get("/reports")
+def reports_latest():
+    latest = reports.ids()
+    if not latest:
+        abort(404)
+    return redirect(url_for(".monthly_report", report_id=latest[0], lang=current_lang()), code=302)
+
+
+@bp.get("/reports/<report_id>.json")
+def report_json(report_id):
+    r = _report_or_404(report_id)
+    response = jsonify(dict(r, license="CC BY 4.0", source=public_base() + url_for(".monthly_report", report_id=report_id)))
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    return response
+
+
+@bp.get("/reports/<report_id>/<name>.svg")
+def report_chart(report_id, name):
+    r = _report_or_404(report_id)
+    svg = reports.chart(r, name) if name in reports.CHARTS else None
+    if svg is None:
+        abort(404)
+    response = Response(svg, mimetype="image/svg+xml")
+    response.headers["Content-Disposition"] = f'inline; filename="quantum-aether-{report_id}-{name}.svg"'
+    response.headers["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'"
+    return response
+
+
+@bp.get("/reports/<report_id>")
+def monthly_report(report_id):
+    r = _report_or_404(report_id)
+    lang = current_lang()
+    return render_template("monthly_report.html", r=r, facts=reports.findings(r, lang), charts=reports.CHARTS,
+                           month_name=_month_name(report_id, lang))
+
+
+@bp.get("/press")
+def press_page():
+    lang = current_lang()
+    latest = reports.ids()
+    r = reports.load(latest[0]) if latest else None
+    return render_template("press.html", r=r, facts=reports.findings(r, lang) if r else [], charts=reports.CHARTS,
+                           month_name=_month_name(r["id"], lang) if r else "")
 
 
 @bp.get("/tools/pq-tls-config")
@@ -1937,6 +1999,7 @@ def _sitemap_pages():
              ("/sample-report", sample_result()["scanned_at"][:10], site_langs),
              ("/guides", max(g["updated"] for g in guides.GUIDES.values()), site_langs),
              ("/tools/pq-tls-config", _template_day("pq_config.html"), de_langs),
+             ("/press", _template_day("press.html"), de_langs),
              ("/study/top-1000-post-quantum-tls", study_data()["scanned_on"], de_langs)]
     adoption_weeks = adoption.weeks(db())
     pages.append(("/adoption", adoption.week_monday(adoption_weeks[-1]).isoformat() if adoption_weeks
@@ -1954,6 +2017,7 @@ def _sitemap_pages():
         pages += [(f"/adoption/countries/{e['code']}", week_day, de_langs) for e in board["entries"]]
     pages += [(f"/guides/{slug}", g["updated"], de_langs if "de" in g else site_langs) for slug, g in guides.GUIDES.items()]
     pages += [(f"/tools/pq-tls-config/{key}", _template_day("pq_config.html"), de_langs) for key in config_gen.SERVERS]
+    pages += [(f"/reports/{rid}", reports.load(rid)["published"], de_langs) for rid in reports.ids()]
     pages.append(("/compare", _template_day("compare.html"), site_langs))
     pages.append(("/agents", agent_discovery.UPDATED, site_langs))
     legal_date = os.path.getmtime(os.path.join(BASE_DIR, "legal.py"))
@@ -2063,6 +2127,10 @@ def feed():
                     "Public TLS and post-quantum observations through HTTP API and remote MCP, with evidence, examples and measurement limits."))
     for slug, g in guides.GUIDES.items():
         entries.append((f"{base}/guides/{slug}", g["updated"], g["en"]["title"], g["en"]["description"]))
+    for rid in reports.ids():
+        rep = reports.load(rid)
+        entries.append((f"{base}/reports/{rid}", rep["published"], f"State of post-quantum TLS: {_month_name(rid, 'en')}",
+                        (reports.findings(rep, "en") or [""])[0]))
     entries.append((f"{base}/deadlines", deadlines.UPDATED, deadlines.TEXT["en"]["title"], deadlines.TEXT["en"]["description"]))
     board = cached_countries()
     if board and board["entries"]:

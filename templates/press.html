@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}{{ t.press_title }} · {{ t.brand }}{% endblock %}
+{% block description %}{{ t.press_meta }}{% endblock %}
+{% block content %}
+<section class="card prose">
+  <h1>{{ t.press_title }}</h1>
+  <p>{{ t.press_intro }}</p>
+  {% if r %}
+  <h2>{{ t.press_latest.format(month=month_name) }}</h2>
+  <ul>{% for f in facts %}<li>{{ f }}</li>{% endfor %}</ul>
+  <p><a href="{{ url_for('site.monthly_report', report_id=r.id, lang=lang) }}">{{ t.press_read }} →</a></p>
+  <h2>{{ t.press_assets }}</h2>
+  <ul>
+    {% for c in charts %}<li><a href="{{ url_for('site.report_chart', report_id=r.id, name=c) }}" download>{{ t.rep_chart_alt[c] }} (SVG)</a></li>{% endfor %}
+    <li><a href="{{ url_for('site.report_json', report_id=r.id) }}">{{ t.rep_data }} (JSON)</a></li>
+    <li><a href="/adoption.csv">{{ t.rep_full_data }} (CSV)</a></li>
+  </ul>
+  {% endif %}
+  <h2>{{ t.press_about_title }}</h2>
+  <p>{{ t.press_about }}</p>
+  <h2>{{ t.rep_method }}</h2>
+  <p>{{ t.rep_method_body }}</p>
+  <h2>{{ t.press_terms_title }}</h2>
+  <p>{{ t.press_terms }}</p>
+  <h2>{{ t.press_contact_title }}</h2>
+  <p>{{ t.press_contact }} <a href="{{ url_for('site.legal_page', slug='impressum', lang=legal_lang) }}">{{ t.legal_imprint }}</a></p>
+</section>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}{{ t.rep_title.format(month=month_name) }} · {{ t.brand }}{% endblock %}
+{% block description %}{{ facts[0] if facts else t.rep_meta }}{% endblock %}
+{% block head %}
+<script type="application/ld+json">{{ {"@context": "https://schema.org", "@type": "Report", "name": t.rep_title.format(month=month_name), "datePublished": r.published, "inLanguage": lang, "license": "https://creativecommons.org/licenses/by/4.0/", "publisher": {"@type": "Organization", "name": "Quantum Aether"}, "isBasedOn": abs_url('site.report_json', report_id=r.id)} | tojson }}</script>
+{% endblock %}
+{% block content %}
+<article class="card prose">
+  <p class="muted small">{{ t.rep_kicker }} · <time datetime="{{ r.published }}">{{ r.published }}</time> · <span dir="ltr">{{ r.week }}</span></p>
+  <h1>{{ t.rep_title.format(month=month_name) }}</h1>
+  <h2>{{ t.rep_findings }}</h2>
+  <ol>{% for f in facts %}<li>{{ f }}</li>{% endfor %}</ol>
+
+  <h2>{{ t.rep_charts }}</h2>
+  {% for c in charts %}
+  <figure><img src="{{ url_for('site.report_chart', report_id=r.id, name=c) }}" alt="{{ t.rep_chart_alt[c] }}" style="max-width:100%;height:auto;border-radius:6px" loading="lazy">
+    <figcaption class="muted small"><a href="{{ url_for('site.report_chart', report_id=r.id, name=c) }}" download>{{ t.rep_download }} (SVG)</a></figcaption></figure>
+  {% endfor %}
+
+  <h2>{{ t.rep_sectors }}</h2>
+  <table class="kv">
+    <tr><th>{{ t.rep_group }}</th><th>{{ t.rep_measured }}</th><th>{{ t.rep_share }}</th></tr>
+    {% if r.top1000 %}<tr><td>{{ t.rep_top1000 }}</td><td>{{ r.top1000.reachable }}</td><td>{{ r.top1000.pct }}%</td></tr>{% endif %}
+    {% if r.top10k %}<tr><td>{{ t.rep_top10k }}</td><td>{{ r.top10k.reachable }}</td><td>{{ r.top10k.pct }}%</td></tr>{% endif %}
+    {% for s in r.sectors if s.measured %}<tr><td>{{ s.labels[lang] or s.labels.en }}</td><td>{{ s.measured }}</td><td>{{ s.pct }}%</td></tr>{% endfor %}
+  </table>
+  {% for s in r.sectors if s.classical %}
+  <details><summary>{{ t.rep_classical.format(group=s.labels[lang] or s.labels.en, n=s.classical|length) }}</summary>
+    <p dir="ltr">{% for d in s.classical %}<a href="{{ url_for('site.site_page', domain=d, lang=lang if lang != 'de' else 'en') }}">{{ d }}</a>{% if not loop.last %} · {% endif %}{% endfor %}</p></details>
+  {% endfor %}
+
+  <h2>{{ t.rep_providers }}</h2>
+  <table class="kv">
+    <tr><th>{{ t.rep_network }}</th><th>{{ t.rep_sites }}</th><th>{{ t.rep_share }}</th></tr>
+    {% for p in r.providers %}<tr><td dir="ltr">{{ p.name }} (AS{{ p.asn }})</td><td>{{ p.sites }}</td><td>{{ p.pct }}%</td></tr>{% endfor %}
+  </table>
+
+  {% if r.adopted %}
+  <h2>{{ t.rep_movers }}</h2>
+  <p>{{ t.rep_adopted.format(n=r.adopted_count) }}</p>
+  <p dir="ltr">{% for a in r.adopted %}<a href="{{ url_for('site.site_page', domain=a.domain, lang=lang if lang != 'de' else 'en') }}">{{ a.domain }}</a> <span class="muted">#{{ a.rank }}</span>{% if not loop.last %} · {% endif %}{% endfor %}</p>
+  {% endif %}
+
+  <h2>{{ t.rep_method }}</h2>
+  <p>{{ t.rep_method_body }}</p>
+  <h2>{{ t.rep_cite }}</h2>
+  <pre id="cite"><code>Quantum Aether, "{{ t.rep_title.format(month=month_name) }}", {{ r.published }}. {{ abs_url('site.monthly_report', report_id=r.id) }} (CC BY 4.0)</code></pre>
+  <p><a href="{{ url_for('site.report_json', report_id=r.id) }}">{{ t.rep_data }} (JSON)</a> · <a href="/adoption.csv">{{ t.rep_full_data }} (CSV)</a> · <a href="{{ url_for('site.press_page', lang=lang) }}">{{ t.press_title }}</a> · <a href="{{ url_for('site.adoption_page', lang=lang) }}">{{ t.nav_adoption }}</a></p>
+</article>
+{% include "_scan_box.html" %}
+{% endblock %}
