@@ -7,6 +7,10 @@
   <p>{{ t.guides_intro }}</p>
 </section>
 <section class="card">
+  <h2><a href="{{ url_for('site.pq_config', lang=lang) }}">{{ t.cfg_title }}</a></h2>
+  <p class="muted">{{ t.cfg_meta }}</p>
+</section>
+<section class="card">
   <h2><a href="{{ url_for('site.study', lang=lang) }}">{{ t.study_title }}</a></h2>
 </section>
 <section class="card">

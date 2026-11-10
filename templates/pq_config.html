@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}{{ (t.cfg_server_title.format(name=s.name) if s else t.cfg_title) }} · {{ t.brand }}{% endblock %}
+{% block description %}{{ t.cfg_server_meta.format(name=s.name) if s else t.cfg_meta }}{% endblock %}
+{% set glang = lang if lang in ("en", "ar") else "en" %}
+{% block content %}
+<section class="card">
+  <h1>{{ t.cfg_server_title.format(name=s.name) if s else t.cfg_title }}</h1>
+  <p>{{ t.cfg_intro }}</p>
+  <nav class="related" aria-label="{{ t.cfg_pick }}">
+    {% for key, srv in servers.items() %}
+    <a href="{{ url_for('site.pq_config_server', server=key, lang=lang) }}"{% if key == server %} aria-current="page"{% endif %}>{{ srv.name }}</a>
+    {% endfor %}
+  </nav>
+</section>
+{% if s %}
+{% if s.variants | length > 1 %}
+<section class="card">
+  <h2>{{ t.cfg_which }}</h2>
+  <form method="get" action="{{ url_for('site.pq_config_server', server=server) }}" class="cfg-variant">
+    <input type="hidden" name="lang" value="{{ lang }}">
+    {% for key, v in s.variants.items() %}
+    <p><label style="display:flex;gap:10px;align-items:center"><input type="radio" name="v" value="{{ key }}"{% if key == vkey %} checked{% endif %}> {{ v.label[lang] }}</label></p>
+    {% endfor %}
+    <button type="submit">{{ t.cfg_show }}</button>
+  </form>
+</section>
+{% endif %}
+<section class="card">
+  {% if not v.ok %}<p class="notice warn">{{ t.cfg_not_possible }}</p>{% endif %}
+  {% for st in v.steps %}
+  <h2>{{ titles[st.kind][lang] }}</h2>
+  {% if st.code %}
+  <div class="snippet-head"><span class="muted small" dir="ltr">{{ s.name }}</span>
+    <button type="button" class="copy-btn" data-ev="cfg_copy" data-copy="#cfg-{{ loop.index }}" data-done="{{ t.copied }}">{{ t["copy"] }}</button></div>
+  <pre id="cfg-{{ loop.index }}"><code>{{ st.code }}</code></pre>
+  {% endif %}
+  {% if st.note %}<p>{{ rich(st.note[lang]) }}</p>{% endif %}
+  {% if st.kind == "config" and st.code and v.ok %}<p class="muted small">{{ rich(pin_warning[lang]) }}</p>{% endif %}
+  {% endfor %}
+  <p><a href="{{ url_for('site.guide', slug=s.guide, lang=glang) }}">{{ t.cfg_full_guide }} →</a></p>
+</section>
+{% endif %}
+<section class="card">
+  <h2>{{ t.cfg_after_title }}</h2>
+  <p>{{ t.cfg_after }}</p>
+</section>
+{% include "_scan_box.html" %}
+{% endblock %}

@@ -668,7 +668,7 @@ TEXTS["en"]["scanbox_title"] = "Scan your site now, free"
 
 # ---------------------------------------------------------------- الألمانية (Sie)
 # متاحة للصفحة الرئيسية والدراسة وصفحة الشركات فقط؛ أي نص غير مترجم هنا يبقى بالإنجليزية.
-DE_ENDPOINTS = {"site.business_page", "site.pricing_page", "site.index", "site.scan_form", "site.study", "site.monitoring", "site.monitor_login",
+DE_ENDPOINTS = {"site.pq_config", "site.pq_config_server", "site.business_page", "site.pricing_page", "site.index", "site.scan_form", "site.study", "site.monitoring", "site.monitor_login",
                 "site.adoption_page", "site.scanning_page", "site.deadlines_page", "site.agency_page",
                 "site.countries_page", "site.country_page", "site.hosting_page"}
 
@@ -1524,4 +1524,49 @@ TEXTS["de"].update({
     "disc_col_host": "Host", "disc_col_status": "Post-Quanten-Schlüsselaustausch", "disc_col_group": "Gruppe",
     "disc_status": {"pq": "Ja", "not_pq": "Nein", "unknown": "Unbestimmt"},
     "disc_cta": "Täglich prüfen lassen, mit E-Mail bei Änderungen? Die Überwachung umfasst bis zu 100 Domains.",
+})
+
+
+# مولّد إعدادات TLS ما بعد الكمومي (/tools/pq-tls-config)
+TEXTS["en"].update({
+    "cfg_title": "Post-quantum TLS configuration generator",
+    "cfg_meta": "Copy-ready settings to enable the hybrid X25519MLKEM768 key exchange on nginx, Apache, HAProxy, Caddy, Go, Node.js, Java, Python, AWS load balancers, CloudFront and Cloudflare, with the version each one needs.",
+    "cfg_server_title": "Enable post-quantum TLS on {name} (X25519MLKEM768)",
+    "cfg_server_meta": "Copy-ready {name} settings for the hybrid X25519MLKEM768 key exchange, the version it needs, and how to verify it.",
+    "cfg_intro": "Choose your server or platform. You get the version check, the configuration, and how to verify that browsers now negotiate X25519MLKEM768.",
+    "cfg_pick": "Servers and platforms",
+    "cfg_which": "Which version do you run?",
+    "cfg_show": "Show settings",
+    "cfg_not_possible": "This version cannot negotiate post-quantum key exchange. A configuration change alone will not help; see the options below.",
+    "cfg_full_guide": "Full guide with background and pitfalls",
+    "cfg_after_title": "After the change",
+    "cfg_after": "Run a free check of your domain below. Grade A means TLS 1.3 with hybrid post-quantum key exchange. The result page can also check every subdomain listed in public certificate logs, so you can see which hosts still need the same change.",
+})
+TEXTS["ar"].update({
+    "cfg_title": "مولّد إعدادات TLS لما بعد الكم",
+    "cfg_meta": "إعدادات جاهزة للنسخ لتفعيل تبادل المفاتيح الهجين X25519MLKEM768 على nginx وApache وHAProxy وCaddy وGo وNode.js وJava وPython وموازنات حمل AWS وCloudFront وCloudflare، مع الإصدار الذي يحتاجه كل منها.",
+    "cfg_server_title": "فعّل TLS ما بعد الكمومي على {name}: X25519MLKEM768",
+    "cfg_server_meta": "إعدادات {name} جاهزة للنسخ لتبادل المفاتيح الهجين X25519MLKEM768، والإصدار المطلوب، وطريقة التحقق.",
+    "cfg_intro": "اختر خادمك أو منصتك. تحصل على طريقة فحص الإصدار، والإعدادات، وكيف تتأكد أن المتصفحات صارت تتفاوض على X25519MLKEM768.",
+    "cfg_pick": "الخوادم والمنصات",
+    "cfg_which": "أي إصدار تستخدم؟",
+    "cfg_show": "اعرض الإعدادات",
+    "cfg_not_possible": "هذا الإصدار لا يستطيع التفاوض على تبادل مفاتيح ما بعد كمومي. تغيير الإعدادات وحده لن يفيد؛ راجع الخيارات أدناه.",
+    "cfg_full_guide": "الدليل الكامل مع الخلفية والأخطاء الشائعة",
+    "cfg_after_title": "بعد التغيير",
+    "cfg_after": "افحص نطاقك مجاناً أدناه. الدرجة A تعني TLS 1.3 مع تبادل مفاتيح هجين ما بعد كمومي. ويمكنك من صفحة النتيجة فحص كل النطاقات الفرعية المذكورة في سجلات الشهادات العامة، لتعرف أي خوادم ما زالت تحتاج التغيير نفسه.",
+})
+TEXTS["de"].update({
+    "cfg_title": "Post-Quanten-TLS-Konfigurationsgenerator",
+    "cfg_meta": "Kopierfertige Einstellungen für den hybriden Schlüsselaustausch X25519MLKEM768 auf nginx, Apache, HAProxy, Caddy, Go, Node.js, Java, Python, AWS Load Balancern, CloudFront und Cloudflare, mit der jeweils nötigen Version.",
+    "cfg_server_title": "Post-Quanten-TLS auf {name} aktivieren (X25519MLKEM768)",
+    "cfg_server_meta": "Kopierfertige {name}-Einstellungen für den hybriden Schlüsselaustausch X25519MLKEM768, die nötige Version und die Prüfung.",
+    "cfg_intro": "Wählen Sie Ihren Server oder Ihre Plattform. Sie erhalten die Versionsprüfung, die Konfiguration und die Kontrolle, ob Browser jetzt X25519MLKEM768 aushandeln.",
+    "cfg_pick": "Server und Plattformen",
+    "cfg_which": "Welche Version nutzen Sie?",
+    "cfg_show": "Einstellungen anzeigen",
+    "cfg_not_possible": "Diese Version kann keinen Post-Quanten-Schlüsselaustausch aushandeln. Eine Konfigurationsänderung allein hilft nicht; siehe die Optionen unten.",
+    "cfg_full_guide": "Vollständige Anleitung mit Hintergrund und Fallstricken (Englisch)",
+    "cfg_after_title": "Nach der Änderung",
+    "cfg_after": "Prüfen Sie Ihre Domain unten kostenlos. Note A bedeutet TLS 1.3 mit hybridem Post-Quanten-Schlüsselaustausch. Auf der Ergebnisseite können Sie zudem alle Subdomains aus öffentlichen Zertifikatslogs prüfen und sehen, welche Hosts dieselbe Änderung noch brauchen.",
 })
