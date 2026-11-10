@@ -7,22 +7,22 @@
  "top1000": {
   "week": "2026-W46",
   "date": "2026-11-09",
-  "reachable": 699,
-  "pq": 431,
-  "pct": 61.7
+  "reachable": 689,
+  "pq": 422,
+  "pct": 61.2
  },
  "top1000_previous": {
   "week": "2026-W45",
   "date": "2026-11-02",
-  "reachable": 715,
-  "pq": 427,
-  "pct": 59.7
+  "reachable": 705,
+  "pq": 418,
+  "pct": 59.3
  },
  "top10k": {
   "top": 10000,
-  "reachable": 7784,
-  "pq": 4800,
-  "pct": 61.7
+  "reachable": 7256,
+  "pq": 4395,
+  "pct": 60.6
  },
  "sectors": [
   {
@@ -113,131 +113,131 @@
   {
    "asn": 13335,
    "name": "Cloudflare, Inc.",
-   "sites": 2230,
-   "pq": 2169,
+   "sites": 2013,
+   "pq": 1959,
    "pct": 97.3
   },
   {
    "asn": 16509,
    "name": "Amazon.com, Inc.",
-   "sites": 1409,
-   "pq": 860,
-   "pct": 61.0
+   "sites": 1463,
+   "pq": 884,
+   "pct": 60.4
   },
   {
    "asn": 54113,
    "name": "Fastly, Inc.",
-   "sites": 330,
-   "pq": 272,
-   "pct": 82.4
+   "sites": 342,
+   "pq": 283,
+   "pct": 82.7
   },
   {
    "asn": 396982,
    "name": "Google LLC",
-   "sites": 266,
+   "sites": 267,
    "pq": 225,
-   "pct": 84.6
+   "pct": 84.3
   },
   {
    "asn": 14618,
    "name": "Amazon.com, Inc.",
-   "sites": 259,
-   "pq": 18,
-   "pct": 6.9
+   "sites": 263,
+   "pq": 17,
+   "pct": 6.5
   },
   {
    "asn": 20940,
    "name": "Akamai International B.V.",
-   "sites": 240,
-   "pq": 237,
+   "sites": 241,
+   "pq": 238,
    "pct": 98.8
   },
   {
    "asn": 15169,
    "name": "Google LLC",
-   "sites": 206,
-   "pq": 203,
-   "pct": 98.5
+   "sites": 231,
+   "pq": 228,
+   "pct": 98.7
   },
   {
    "asn": 16625,
    "name": "Akamai Technologies, Inc.",
-   "sites": 176,
-   "pq": 163,
-   "pct": 92.6
+   "sites": 182,
+   "pq": 168,
+   "pct": 92.3
   },
   {
    "asn": 8075,
    "name": "Microsoft Corporation",
-   "sites": 135,
-   "pq": 56,
-   "pct": 41.5
+   "sites": 144,
+   "pq": 59,
+   "pct": 41.0
   },
   {
    "asn": 209242,
    "name": "Cloudflare London, LLC",
-   "sites": 118,
-   "pq": 118,
+   "sites": 121,
+   "pq": 121,
    "pct": 100.0
   }
  ],
  "providers_period": "2026-W46",
  "countries_top": [
   {
-   "code": "AR",
-   "measured": 24,
-   "pct": 75.0
-  },
-  {
    "code": "SE",
-   "measured": 26,
-   "pct": 69.2
+   "measured": 28,
+   "pct": 67.9
   },
   {
    "code": "GR",
-   "measured": 35,
-   "pct": 68.6
+   "measured": 34,
+   "pct": 67.6
+  },
+  {
+   "code": "AR",
+   "measured": 21,
+   "pct": 66.7
   },
   {
    "code": "ES",
-   "measured": 52,
-   "pct": 67.3
+   "measured": 51,
+   "pct": 64.7
   },
   {
-   "code": "BE",
-   "measured": 26,
-   "pct": 65.4
+   "code": "GB",
+   "measured": 89,
+   "pct": 64.0
   }
  ],
  "countries_bottom": [
   {
-   "code": "CA",
-   "measured": 40,
-   "pct": 40.0
+   "code": "IR",
+   "measured": 34,
+   "pct": 41.2
   },
   {
-   "code": "IR",
-   "measured": 31,
-   "pct": 38.7
+   "code": "CA",
+   "measured": 42,
+   "pct": 40.5
   },
   {
    "code": "CZ",
-   "measured": 33,
-   "pct": 36.4
+   "measured": 31,
+   "pct": 35.5
   },
   {
    "code": "CN",
-   "measured": 51,
-   "pct": 19.6
+   "measured": 53,
+   "pct": 18.9
   },
   {
    "code": "RU",
-   "measured": 236,
-   "pct": 15.3
+   "measured": 243,
+   "pct": 14.4
   }
  ],
  "countries_min_sites": 20,
- "adopted_count": 23,
+ "adopted_count": 21,
  "dropped_count": 2,
  "adopted": [
   {
@@ -255,10 +255,6 @@
   {
    "domain": "latimes.com",
    "rank": 916
-  },
-  {
-   "domain": "tube8.fr",
-   "rank": 1667
   },
   {
    "domain": "fidelity.com",
@@ -279,6 +275,10 @@
   {
    "domain": "mehrnews.com",
    "rank": 6050
+  },
+  {
+   "domain": "kerala.gov.in",
+   "rank": 6183
   }
  ],
  "dropped": [
