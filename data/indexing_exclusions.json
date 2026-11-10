@@ -36835,6 +36835,48 @@
           "locator": "The hostname itself names pornographic or gambling content."
         }
       ]
+    },
+    {
+      "domain": "hxhani.com",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual review after appearing in Search Console queries; exact host only",
+      "sources": [
+        {
+          "url": "https://hxhani.com/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "Homepage title (fetched 2026-11-10): 'HANIME | ... Hentai SubthaiHD'."
+        }
+      ]
+    },
+    {
+      "domain": "tamilkamaveri2.com",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual review after appearing in Search Console queries; exact host only",
+      "sources": [
+        {
+          "url": "https://tamilkamaveri2.com/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "Homepage title (fetched 2026-11-10): 'Tamil Sex Stories & Tamil Kamakathaikal'."
+        }
+      ]
+    },
+    {
+      "domain": "tubepussy.org",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-10",
+      "review_method": "manual review after appearing in Search Console queries; exact host only",
+      "sources": [
+        {
+          "url": "https://tubepussy.org/",
+          "publisher": "Quantum Aether manual review",
+          "published_on": "2026-11-10",
+          "locator": "The hostname itself names pornographic content (homepage behind a Cloudflare challenge)."
+        }
+      ]
     }
   ]
 }
