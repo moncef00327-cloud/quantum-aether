@@ -447,4 +447,230 @@ openssl s_client -connect example.com:443 -groups X25519MLKEM768 &lt;/dev/null 2
 """,
         },
     },
+
+    "go-post-quantum-tls-x25519mlkem768": {
+        "updated": "2026-11-10",
+        "en": {
+            "title": "Post-quantum TLS in Go (crypto/tls): X25519MLKEM768 and the go.mod trap",
+            "description": "Go 1.24+ enables X25519MLKEM768 by default, but only if your go.mod says go 1.24 or newer. How to check, fix CurvePreferences and verify the handshake.",
+            "body": """
+<p>Go does TLS in its own standard library (<code>crypto/tls</code>), not through OpenSSL. Since <strong>Go 1.24</strong> the default key exchange list includes the hybrid <code>X25519MLKEM768</code>, the same group Chrome and Firefox offer. Go 1.26 added <code>SecP256r1MLKEM768</code> and <code>SecP384r1MLKEM1024</code> to the defaults. This covers Go servers (<code>net/http</code> with <code>ListenAndServeTLS</code>) and Go clients (<code>http.Get</code>). Tools written in Go, such as Caddy and Traefik, follow the same rules in their own builds.</p>
+
+<h2>1. The trap: the <code>go</code> line in go.mod</h2>
+<p>Go keeps old behaviour for old modules. The defaults come from the <code>go</code> line of your main module, not from the toolchain you build with. We tested this with Go 1.27.3 against cloudflare.com:</p>
+<pre dir="ltr">go.mod "go 1.22"  →  X25519            (no post-quantum)
+go.mod "go 1.23"  →  X25519            (no post-quantum)
+go.mod "go 1.24"  →  X25519MLKEM768
+go.mod "go 1.25"  →  X25519MLKEM768</pre>
+<p>So a service built with the newest Go can still be classical-only. Fix it by raising the line (<code>go mod edit -go=1.24</code> or newer), or, if you cannot yet, by adding this line to go.mod:</p>
+<pre dir="ltr">godebug tlsmlkem=1</pre>
+
+<h2>2. Don't pin CurvePreferences</h2>
+<p>When <code>tls.Config.CurvePreferences</code> is empty, Go uses its defaults. Old hardening code often sets an explicit list, which silently removes the hybrid group. Delete the field, or put the hybrid group first:</p>
+<pre dir="ltr">srv := &amp;http.Server{
+    Addr: ":443",
+    TLSConfig: &amp;tls.Config{
+        CurvePreferences: []tls.CurveID{
+            tls.X25519MLKEM768, tls.X25519, tls.CurveP256,
+        },
+    },
+}
+log.Fatal(srv.ListenAndServeTLS("cert.pem", "key.pem"))</pre>
+<p>In our test, a Go server with <code>CurvePreferences: {X25519, CurveP256}</code> negotiated only X25519 with a Go client that offered ML-KEM; with the list empty it negotiated X25519MLKEM768.</p>
+
+<h2>3. Check for GODEBUG in the environment</h2>
+<p><code>GODEBUG=tlsmlkem=0</code> (and <code>tlssecpmlkem=0</code> for the Go 1.26 groups) turns the defaults off. It is sometimes set to work around old middleboxes that drop the larger ClientHello. Look in Dockerfiles, systemd units and Kubernetes manifests. Since Go 1.27, groups listed explicitly in CurvePreferences still work even with these settings.</p>
+
+<h2>4. Behind a proxy, the proxy decides</h2>
+<p>If nginx, a load balancer or a CDN terminates TLS in front of your Go service, configure that layer instead (<a href="/guides/enable-x25519mlkem768-nginx?lang=en">nginx</a>, <a href="/guides/aws-alb-cloudfront-post-quantum-tls?lang=en">AWS ALB/CloudFront</a>).</p>
+
+<h2>Verify</h2>
+<p>Print the negotiated group from Go itself:</p>
+<pre dir="ltr">c, err := tls.Dial("tcp", "example.com:443", &amp;tls.Config{})
+if err != nil { log.Fatal(err) }
+fmt.Println(c.ConnectionState().CurveID) // X25519MLKEM768</pre>
+<p>Or run the <a href="/?lang=en">free scan</a>; grade A means TLS 1.3 with a hybrid post-quantum key exchange. More ways to check: <a href="/guides/check-website-post-quantum-tls?lang=en">how to check any website</a>.</p>
+<p class="muted small">Sources: Go crypto/tls documentation (Config.CurvePreferences), "GODEBUG history" and Go 1.27 release notes; our own tests with Go 1.27.3. Checked 2026-11-10.</p>
+""",
+        },
+        "ar": {
+            "title": "TLS المقاوم للكم في Go ‏(crypto/tls): ‏X25519MLKEM768 وفخ go.mod",
+            "description": "Go 1.24 وما بعده يفعّل X25519MLKEM768 افتراضياً، لكن بشرط أن يكون سطر go في go.mod هو 1.24 أو أحدث. كيف تتحقق، وتصلح CurvePreferences، وتتأكد من الاتصال.",
+            "body": """
+<p>يتولى Go تشفير TLS في مكتبته القياسية (<code>crypto/tls</code>) دون OpenSSL. منذ <strong>Go 1.24</strong> تشمل قائمة تبادل المفاتيح الافتراضية المجموعة الهجينة <code>X25519MLKEM768</code>، وهي نفسها التي يعرضها Chrome وFirefox. وأضاف Go 1.26 المجموعتين <code>SecP256r1MLKEM768</code> و<code>SecP384r1MLKEM1024</code> إلى القائمة الافتراضية. هذا يشمل خوادم Go ‏(<code>net/http</code> مع <code>ListenAndServeTLS</code>) والعملاء (<code>http.Get</code>). والأدوات المكتوبة بـ Go مثل Caddy وTraefik تتبع القواعد نفسها في نسخها.</p>
+
+<h2>1. الفخ: سطر <code>go</code> في go.mod</h2>
+<p>يحافظ Go على السلوك القديم للوحدات القديمة. الإعدادات الافتراضية تأتي من سطر <code>go</code> في الوحدة الرئيسية، لا من نسخة Go التي تبني بها. جرّبنا ذلك بـ Go 1.27.3 على cloudflare.com:</p>
+<pre dir="ltr">go.mod "go 1.22"  →  X25519            (no post-quantum)
+go.mod "go 1.23"  →  X25519            (no post-quantum)
+go.mod "go 1.24"  →  X25519MLKEM768
+go.mod "go 1.25"  →  X25519MLKEM768</pre>
+<p>أي أن خدمة مبنية بأحدث Go قد تبقى كلاسيكية فقط. الحل أن ترفع السطر (<code>go mod edit -go=1.24</code> أو أحدث)، أو إن لم تستطع بعد، أن تضيف هذا السطر إلى go.mod:</p>
+<pre dir="ltr">godebug tlsmlkem=1</pre>
+
+<h2>2. لا تثبّت CurvePreferences</h2>
+<p>إذا كان الحقل <code>tls.Config.CurvePreferences</code> فارغاً استخدم Go قائمته الافتراضية. كود الحماية القديم يضع غالباً قائمة صريحة تحذف المجموعة الهجينة دون أن تشعر. احذف الحقل، أو ضع المجموعة الهجينة أولاً:</p>
+<pre dir="ltr">srv := &amp;http.Server{
+    Addr: ":443",
+    TLSConfig: &amp;tls.Config{
+        CurvePreferences: []tls.CurveID{
+            tls.X25519MLKEM768, tls.X25519, tls.CurveP256,
+        },
+    },
+}
+log.Fatal(srv.ListenAndServeTLS("cert.pem", "key.pem"))</pre>
+<p>في تجربتنا، خادم Go مع <code>CurvePreferences: {X25519, CurveP256}</code> اتفق على X25519 فقط مع عميل يعرض ML-KEM، ومع قائمة فارغة اتفق على X25519MLKEM768.</p>
+
+<h2>3. ابحث عن GODEBUG في البيئة</h2>
+<p>الإعداد <code>GODEBUG=tlsmlkem=0</code> (و<code>tlssecpmlkem=0</code> لمجموعات Go 1.26) يلغي القائمة الافتراضية. يُضبط أحياناً لتجاوز أجهزة شبكة قديمة تُسقط رسالة ClientHello الأكبر. ابحث عنه في ملفات Docker ووحدات systemd وملفات Kubernetes. ومنذ Go 1.27 تعمل المجموعات المكتوبة صراحة في CurvePreferences حتى مع هذا الإعداد.</p>
+
+<h2>4. خلف وكيل، الوكيل هو من يقرر</h2>
+<p>إذا كان nginx أو موازن تحميل أو CDN يُنهي TLS أمام خدمة Go فاضبط تلك الطبقة بدلاً منها (<a href="/guides/enable-x25519mlkem768-nginx?lang=ar">nginx</a>، <a href="/guides/aws-alb-cloudfront-post-quantum-tls?lang=ar">AWS ALB/CloudFront</a>).</p>
+
+<h2>التحقق</h2>
+<p>اطبع المجموعة المتفق عليها من Go نفسه:</p>
+<pre dir="ltr">c, err := tls.Dial("tcp", "example.com:443", &amp;tls.Config{})
+if err != nil { log.Fatal(err) }
+fmt.Println(c.ConnectionState().CurveID) // X25519MLKEM768</pre>
+<p>أو استخدم <a href="/?lang=ar">الفحص المجاني</a>: الدرجة A تعني TLS 1.3 مع تبادل مفاتيح هجين. طرق أخرى: <a href="/guides/check-website-post-quantum-tls?lang=ar">كيف تفحص أي موقع</a>.</p>
+<p class="muted small">المصادر: توثيق crypto/tls في Go ‏(Config.CurvePreferences)، وصفحة «GODEBUG history»، وملاحظات إصدار Go 1.27، وتجاربنا بـ Go 1.27.3. راجعناها في 2026-11-10.</p>
+""",
+        },
+    },
+    "python-post-quantum-tls-x25519mlkem768": {
+        "updated": "2026-11-10",
+        "en": {
+            "title": "Post-quantum TLS in Python (ssl, requests, httpx): it depends on OpenSSL",
+            "description": "Python's ssl module offers X25519MLKEM768 when it is linked to OpenSSL 3.5, whatever the Python version. How to check, the Python 3.15 set_groups() API, and verification.",
+            "body": """
+<p>Python's <code>ssl</code> module, and everything built on it (<code>urllib</code>, <code>requests</code>, <code>httpx</code>, <code>aiohttp</code>, uvicorn and gunicorn with TLS), uses the OpenSSL library Python was linked to. Since <strong>OpenSSL 3.5</strong>, OpenSSL's defaults offer the hybrid <code>X25519MLKEM768</code>. So the question is not "which Python?" but "which OpenSSL?".</p>
+
+<h2>1. Check which OpenSSL your Python uses</h2>
+<pre dir="ltr">python3 -c "import ssl; print(ssl.OPENSSL_VERSION)"</pre>
+<p>We tested the same Python 3.12.16 two ways. Linked to OpenSSL 3.0.2 (Ubuntu 22.04's system Python), it connected to a server with plain x25519. Linked to OpenSSL 3.5.9, it negotiated X25519MLKEM768, with no code change. The python.org installers for Windows and macOS moved from OpenSSL 3.0 to 3.5.9 in 2026 (for example Python 3.13.16, released 30 September 2026), and the Pythons that uv installs ship with 3.5 as well. Linux distribution Pythons use the system OpenSSL (3.0 on Ubuntu 22.04 and 24.04).</p>
+
+<h2>2. Python 3.15: control and read the group</h2>
+<p>Python 3.15 (October 2026) adds <code>SSLContext.set_groups()</code>, <code>SSLContext.get_groups()</code> and <code>SSLSocket.group()</code>. Earlier versions have only <code>set_ecdh_curve()</code>, which takes a single classical curve. Watch out for servers that call <code>set_ecdh_curve('prime256v1')</code>: in our test it removed the hybrid group, and a client offering X25519MLKEM768 ended up on secp256r1. Delete the call and keep the defaults.</p>
+<pre dir="ltr">import ssl, socket
+ctx = ssl.create_default_context()
+# optional, Python 3.15+: hybrid first, classical fallback
+ctx.set_groups("X25519MLKEM768:X25519:prime256v1")
+with socket.create_connection(("example.com", 443)) as s:
+    with ctx.wrap_socket(s, server_hostname="example.com") as t:
+        print(t.version(), t.group())   # TLSv1.3 X25519MLKEM768</pre>
+<p>Like other "hardening" lists, <code>set_groups("X25519:prime256v1")</code> removes the hybrid group: in our test the same connection then used x25519.</p>
+
+<h2>3. Behind a proxy, the proxy decides</h2>
+<p>Most Python web apps (Django, Flask, FastAPI) sit behind nginx, a load balancer or a CDN that terminates TLS. Browsers never talk TLS to Python directly, so configure that layer (<a href="/guides/enable-x25519mlkem768-nginx?lang=en">nginx</a>, <a href="/guides/aws-alb-cloudfront-post-quantum-tls?lang=en">AWS ALB/CloudFront</a>). The OpenSSL version still matters for your outgoing requests to APIs.</p>
+
+<h2>Verify</h2>
+<p>On Python 3.15, use the snippet above. On older versions, check <code>ssl.OPENSSL_VERSION</code> is 3.5 or newer, or run the <a href="/?lang=en">free scan</a> against your site; grade A means TLS 1.3 with a hybrid post-quantum key exchange. More ways: <a href="/guides/check-website-post-quantum-tls?lang=en">how to check any website</a>.</p>
+<p class="muted small">Sources: Python 3.15 "What's New" (ssl) and ssl module docs; OpenSSL 3.5 release notes; our own tests with Python 3.12.16 and 3.15.2. Checked 2026-11-10.</p>
+""",
+        },
+        "ar": {
+            "title": "TLS المقاوم للكم في Python ‏(ssl وrequests وhttpx): الأمر يعتمد على OpenSSL",
+            "description": "وحدة ssl في Python تعرض X25519MLKEM768 حين تكون مربوطة بـ OpenSSL 3.5، مهما كان إصدار Python. كيف تتحقق، وواجهة set_groups() في Python 3.15، والتأكد من الاتصال.",
+            "body": """
+<p>وحدة <code>ssl</code> في Python، وكل ما بُني عليها (<code>urllib</code> و<code>requests</code> و<code>httpx</code> و<code>aiohttp</code> وuvicorn وgunicorn مع TLS)، تستخدم مكتبة OpenSSL التي رُبط بها Python. منذ <strong>OpenSSL 3.5</strong> تعرض إعدادات OpenSSL الافتراضية المجموعة الهجينة <code>X25519MLKEM768</code>. فالسؤال ليس «أي Python؟» بل «أي OpenSSL؟».</p>
+
+<h2>1. تحقق من نسخة OpenSSL في Python عندك</h2>
+<pre dir="ltr">python3 -c "import ssl; print(ssl.OPENSSL_VERSION)"</pre>
+<p>جرّبنا Python 3.12.16 نفسه بطريقتين. مربوطاً بـ OpenSSL 3.0.2 (Python النظام في Ubuntu 22.04) اتصل بالخادم بـ x25519 العادي. ومربوطاً بـ OpenSSL 3.5.9 اتفق على X25519MLKEM768 دون أي تعديل في الكود. مثبّتات python.org لـ Windows وmacOS انتقلت من OpenSSL 3.0 إلى 3.5.9 في 2026 (مثلاً Python 3.13.16 الصادر في 30 سبتمبر 2026)، ونسخ Python التي يثبّتها uv تأتي مع 3.5 أيضاً. أما Python توزيعات Linux فيستخدم OpenSSL النظام (3.0 في Ubuntu 22.04 و24.04).</p>
+
+<h2>2. Python 3.15: تحكّم في المجموعة واقرأها</h2>
+<p>يضيف Python 3.15 ‏(أكتوبر 2026) الدوال <code>SSLContext.set_groups()</code> و<code>SSLContext.get_groups()</code> و<code>SSLSocket.group()</code>. الإصدارات الأقدم فيها <code>set_ecdh_curve()</code> فقط، وهي تأخذ منحنياً كلاسيكياً واحداً. انتبه للخوادم التي تستدعي <code>set_ecdh_curve('prime256v1')</code>: في تجربتنا حذف هذا الاستدعاء المجموعة الهجينة، فانتهى عميل يعرض X25519MLKEM768 إلى secp256r1. احذف الاستدعاء واترك الافتراضي.</p>
+<pre dir="ltr">import ssl, socket
+ctx = ssl.create_default_context()
+# optional, Python 3.15+: hybrid first, classical fallback
+ctx.set_groups("X25519MLKEM768:X25519:prime256v1")
+with socket.create_connection(("example.com", 443)) as s:
+    with ctx.wrap_socket(s, server_hostname="example.com") as t:
+        print(t.version(), t.group())   # TLSv1.3 X25519MLKEM768</pre>
+<p>ومثل قوائم «الحماية» الأخرى، <code>set_groups("X25519:prime256v1")</code> تحذف المجموعة الهجينة: في تجربتنا صار الاتصال نفسه يستخدم x25519.</p>
+
+<h2>3. خلف وكيل، الوكيل هو من يقرر</h2>
+<p>معظم تطبيقات Python ‏(Django وFlask وFastAPI) تعمل خلف nginx أو موازن تحميل أو CDN يُنهي TLS، فالمتصفح لا يتصل بـ Python مباشرة؛ اضبط تلك الطبقة (<a href="/guides/enable-x25519mlkem768-nginx?lang=ar">nginx</a>، <a href="/guides/aws-alb-cloudfront-post-quantum-tls?lang=ar">AWS ALB/CloudFront</a>). لكن نسخة OpenSSL تبقى مهمة لطلباتك الصادرة إلى الواجهات البرمجية.</p>
+
+<h2>التحقق</h2>
+<p>على Python 3.15 استخدم المقتطف أعلاه. وعلى الإصدارات الأقدم تأكد أن <code>ssl.OPENSSL_VERSION</code> هي 3.5 أو أحدث، أو استخدم <a href="/?lang=ar">الفحص المجاني</a> على موقعك: الدرجة A تعني TLS 1.3 مع تبادل مفاتيح هجين. طرق أخرى: <a href="/guides/check-website-post-quantum-tls?lang=ar">كيف تفحص أي موقع</a>.</p>
+<p class="muted small">المصادر: صفحة «What's New» لـ Python 3.15 ‏(ssl) وتوثيق وحدة ssl، وملاحظات إصدار OpenSSL 3.5، وتجاربنا بـ Python 3.12.16 و3.15.2. راجعناها في 2026-11-10.</p>
+""",
+        },
+    },
+    "check-website-post-quantum-tls": {
+        "updated": "2026-11-10",
+        "en": {
+            "title": "How to check if a website uses post-quantum TLS (X25519MLKEM768)",
+            "description": "Four ways to see whether a site negotiates the hybrid ML-KEM key exchange: Chrome DevTools, openssl s_client, a few lines of Go or Python, and a free online scan.",
+            "body": """
+<p>A connection is protected against "harvest now, decrypt later" when the browser and the server agree on a hybrid post-quantum key exchange, today almost always <code>X25519MLKEM768</code>. The padlock does not tell you this. Here are four ways to check.</p>
+
+<h2>1. Online, no install</h2>
+<p>Enter the domain in the <a href="/?lang=en">free scan</a>. Grade A means TLS 1.3 with a hybrid post-quantum key exchange; the report also flags problems such as middleboxes that drop the larger ClientHello. To compare two sites side by side, use <a href="/compare?lang=en">compare</a>.</p>
+
+<h2>2. Chrome or Edge DevTools</h2>
+<ol>
+<li>Open the site, press F12 (or Ctrl+Shift+I, Cmd+Option+I on Mac).</li>
+<li>Open the <strong>Privacy and security</strong> panel (older versions call it <strong>Security</strong>). If you don't see it: Ctrl+Shift+P, type <code>privacy</code>, choose "Show privacy and security".</li>
+<li>Reload the page, then click the site's origin in the left column.</li>
+<li>Under <strong>Connection</strong>, read <strong>Key exchange</strong>. <code>X25519MLKEM768</code> means post-quantum; <code>X25519</code> means classical only.</li>
+</ol>
+<p>Chrome offers X25519MLKEM768 by default since version 131, so what you see is decided by the server.</p>
+
+<h2>3. Command line (OpenSSL 3.5+)</h2>
+<pre dir="ltr">openssl version   # must be 3.5 or newer
+openssl s_client -connect example.com:443 -groups X25519MLKEM768 &lt;/dev/null 2&gt;/dev/null | grep -i group</pre>
+<p>With <code>-groups X25519MLKEM768</code> the client offers only the hybrid group, so a classical-only server fails the handshake instead of silently falling back. OpenSSL 3.0 to 3.4 cannot test this; their output says nothing about ML-KEM.</p>
+
+<h2>4. A few lines of code</h2>
+<p>Go 1.24+ (with <code>go 1.24</code> or newer in go.mod):</p>
+<pre dir="ltr">c, err := tls.Dial("tcp", "example.com:443", &amp;tls.Config{})
+if err != nil { log.Fatal(err) }
+fmt.Println(c.ConnectionState().CurveID)</pre>
+<p>Python 3.15 linked to OpenSSL 3.5:</p>
+<pre dir="ltr">python3 -c "import ssl,socket; h='example.com'; t=ssl.create_default_context().wrap_socket(socket.create_connection((h,443)),server_hostname=h); print(t.group())"</pre>
+
+<h2>Result says X25519?</h2>
+<p>Then the server, load balancer or CDN that terminates TLS does not support it yet. Guides: <a href="/guides/enable-x25519mlkem768-nginx?lang=en">nginx</a>, <a href="/guides/post-quantum-tls-apache-caddy-haproxy-cloudflare?lang=en">Apache, Caddy, HAProxy, Cloudflare</a>, <a href="/guides/aws-alb-cloudfront-post-quantum-tls?lang=en">AWS</a>, <a href="/guides/nodejs-post-quantum-tls-x25519mlkem768?lang=en">Node.js</a>, <a href="/guides/java-post-quantum-tls-jdk27?lang=en">Java</a>, <a href="/guides/go-post-quantum-tls-x25519mlkem768?lang=en">Go</a>, <a href="/guides/python-post-quantum-tls-x25519mlkem768?lang=en">Python</a>. To see which hosting networks are ready, see <a href="/adoption/hosting?lang=en">readiness by hosting provider</a>.</p>
+<p class="muted small">Sources: Chrome DevTools documentation and devtools-frontend source (Security panel "Connection / Key exchange"); OpenSSL 3.5 s_client; Go crypto/tls and Python ssl docs. Checked 2026-11-10.</p>
+""",
+        },
+        "ar": {
+            "title": "كيف تعرف إن كان موقع يستخدم TLS المقاوم للكم (X25519MLKEM768)",
+            "description": "أربع طرق لتعرف هل يتفق الموقع على تبادل المفاتيح الهجين ML-KEM: أدوات المطوّر في Chrome، وopenssl s_client، وأسطر قليلة بـ Go أو Python، وفحص مجاني على الإنترنت.",
+            "body": """
+<p>الاتصال محمي من «احفظ الآن، فُكّ لاحقاً» حين يتفق المتصفح والخادم على تبادل مفاتيح هجين لما بعد الكم، وهو اليوم غالباً <code>X25519MLKEM768</code>. رمز القفل في المتصفح لا يخبرك بذلك. إليك أربع طرق للتحقق.</p>
+
+<h2>1. على الإنترنت دون تثبيت</h2>
+<p>اكتب النطاق في <a href="/?lang=ar">الفحص المجاني</a>. الدرجة A تعني TLS 1.3 مع تبادل مفاتيح هجين، ويشير التقرير أيضاً إلى مشاكل مثل أجهزة الشبكة التي تُسقط رسالة ClientHello الأكبر. ولمقارنة موقعين جنباً إلى جنب استخدم <a href="/compare?lang=ar">المقارنة</a>.</p>
+
+<h2>2. أدوات المطوّر في Chrome أو Edge</h2>
+<ol>
+<li>افتح الموقع واضغط F12 (أو Ctrl+Shift+I، وفي Mac ‏Cmd+Option+I).</li>
+<li>افتح لوحة <strong>Privacy and security</strong> (اسمها في الإصدارات الأقدم <strong>Security</strong>). إن لم تجدها: اضغط Ctrl+Shift+P واكتب <code>privacy</code> واختر «Show privacy and security».</li>
+<li>أعد تحميل الصفحة، ثم اضغط على عنوان الموقع في العمود الأيسر.</li>
+<li>تحت <strong>Connection</strong> اقرأ <strong>Key exchange</strong>. القيمة <code>X25519MLKEM768</code> تعني مقاوماً للكم، و<code>X25519</code> تعني كلاسيكياً فقط.</li>
+</ol>
+<p>Chrome يعرض X25519MLKEM768 افتراضياً منذ الإصدار 131، فما تراه يقرره الخادم.</p>
+
+<h2>3. سطر الأوامر (OpenSSL 3.5 أو أحدث)</h2>
+<pre dir="ltr">openssl version   # must be 3.5 or newer
+openssl s_client -connect example.com:443 -groups X25519MLKEM768 &lt;/dev/null 2&gt;/dev/null | grep -i group</pre>
+<p>مع <code>-groups X25519MLKEM768</code> يعرض العميل المجموعة الهجينة فقط، فالخادم الكلاسيكي يفشل في الاتصال بدل أن يرجع بصمت إلى X25519. نسخ OpenSSL من 3.0 إلى 3.4 لا تستطيع هذا الفحص، ولا يذكر ناتجها ML-KEM أصلاً.</p>
+
+<h2>4. أسطر قليلة من الكود</h2>
+<p>Go 1.24 أو أحدث (مع <code>go 1.24</code> أو أحدث في go.mod):</p>
+<pre dir="ltr">c, err := tls.Dial("tcp", "example.com:443", &amp;tls.Config{})
+if err != nil { log.Fatal(err) }
+fmt.Println(c.ConnectionState().CurveID)</pre>
+<p>Python 3.15 مربوطاً بـ OpenSSL 3.5:</p>
+<pre dir="ltr">python3 -c "import ssl,socket; h='example.com'; t=ssl.create_default_context().wrap_socket(socket.create_connection((h,443)),server_hostname=h); print(t.group())"</pre>
+
+<h2>النتيجة X25519؟</h2>
+<p>إذن الخادم أو موازن التحميل أو CDN الذي يُنهي TLS لا يدعمه بعد. الأدلة: <a href="/guides/enable-x25519mlkem768-nginx?lang=ar">nginx</a>، <a href="/guides/post-quantum-tls-apache-caddy-haproxy-cloudflare?lang=ar">Apache وCaddy وHAProxy وCloudflare</a>، <a href="/guides/aws-alb-cloudfront-post-quantum-tls?lang=ar">AWS</a>، <a href="/guides/nodejs-post-quantum-tls-x25519mlkem768?lang=ar">Node.js</a>، <a href="/guides/java-post-quantum-tls-jdk27?lang=ar">Java</a>، <a href="/guides/go-post-quantum-tls-x25519mlkem768?lang=ar">Go</a>، <a href="/guides/python-post-quantum-tls-x25519mlkem768?lang=ar">Python</a>. ولمعرفة شبكات الاستضافة الجاهزة انظر <a href="/adoption/hosting?lang=ar">الجاهزية حسب الاستضافة</a>.</p>
+<p class="muted small">المصادر: توثيق أدوات المطوّر في Chrome وكود devtools-frontend (لوحة Security: ‏Connection / Key exchange)، وأداة s_client في OpenSSL 3.5، وتوثيق crypto/tls في Go وssl في Python. راجعناها في 2026-11-10.</p>
+""",
+        },
+    },
 }
