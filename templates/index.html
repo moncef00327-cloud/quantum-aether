@@ -52,9 +52,8 @@
 {% endif %}
 
 <section class="discovery-strip" aria-label="{{ 'استكشف المنصة' if lang == 'ar' else 'Explore the platform' }}">
-  <a href="/gravity?lang={{ lang }}"><span class="discovery-number">01 /</span><strong>Gravity Engine</strong><span>{{ 'من الأسئلة إلى الفرص' if lang == 'ar' else ('Von Fragen zu Chancen' if lang == 'de' else 'From questions to opportunities') }}</span><span class="discovery-arrow" aria-hidden="true"><svg class="link-arrow" viewBox="0 0 20 20"><path d="m5 15 10-10M5 5h10v10"/></svg></span></a>
-  <a href="{{ url_for('site.adoption_page', lang=lang) }}"><span class="discovery-number">02 /</span><strong>{{ t.nav_adoption }}</strong><span>{{ 'بيانات مفتوحة ومنهجية معلنة' if lang == 'ar' else ('Offene Daten, transparente Methodik' if lang == 'de' else 'Open data. Transparent methodology.') }}</span><span class="discovery-arrow" aria-hidden="true"><svg class="link-arrow" viewBox="0 0 20 20"><path d="m5 15 10-10M5 5h10v10"/></svg></span></a>
-  <a href="{{ url_for('site.guides_index', lang=lang) }}"><span class="discovery-number">03 /</span><strong>{{ t.nav_guides }}</strong><span>{{ 'خطوات عملية للمطورين' if lang == 'ar' else ('Praktische Anleitungen' if lang == 'de' else 'Practical steps for developers') }}</span><span class="discovery-arrow" aria-hidden="true"><svg class="link-arrow" viewBox="0 0 20 20"><path d="m5 15 10-10M5 5h10v10"/></svg></span></a>
+  <a href="{{ url_for('site.adoption_page', lang=lang) }}"><span class="discovery-number">01 /</span><strong>{{ t.nav_adoption }}</strong><span>{{ 'بيانات مفتوحة ومنهجية معلنة' if lang == 'ar' else ('Offene Daten, transparente Methodik' if lang == 'de' else 'Open data. Transparent methodology.') }}</span><span class="discovery-arrow" aria-hidden="true"><svg class="link-arrow" viewBox="0 0 20 20"><path d="m5 15 10-10M5 5h10v10"/></svg></span></a>
+  <a href="{{ url_for('site.guides_index', lang=lang) }}"><span class="discovery-number">02 /</span><strong>{{ t.nav_guides }}</strong><span>{{ 'خطوات عملية للمطورين' if lang == 'ar' else ('Praktische Anleitungen' if lang == 'de' else 'Practical steps for developers') }}</span><span class="discovery-arrow" aria-hidden="true"><svg class="link-arrow" viewBox="0 0 20 20"><path d="m5 15 10-10M5 5h10v10"/></svg></span></a>
 </section>
 
 <section class="card ladder">

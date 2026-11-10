@@ -27,3 +27,6 @@ class GravityWebTests(unittest.TestCase):
             self.assertEqual(response.status_code, 200)
             self.assertIn('https://github.com/a/b/issues/1', response.get_data(as_text=True))
             self.assertNotIn('Waiting for qualifying evidence', response.get_data(as_text=True))
+            self.assertIn('noindex', response.headers.get('X-Robots-Tag', ''))
+            self.assertNotIn('/gravity', client.get('/sitemap-pages.xml').get_data(as_text=True))
+            self.assertNotIn('/gravity', client.get('/guides?lang=en').get_data(as_text=True))

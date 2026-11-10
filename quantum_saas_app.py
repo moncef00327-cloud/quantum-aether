@@ -1852,7 +1852,6 @@ def _sitemap_pages():
         pages += [(f"/adoption/countries/{e['code']}", week_day, de_langs) for e in board["entries"]]
     pages += [(f"/guides/{slug}", g["updated"], site_langs) for slug, g in guides.GUIDES.items()]
     pages.append(("/compare", _template_day("compare.html"), site_langs))
-    pages.append(("/gravity", _template_day("gravity.html"), site_langs))
     pages.append(("/agents", agent_discovery.UPDATED, site_langs))
     legal_date = os.path.getmtime(os.path.join(BASE_DIR, "legal.py"))
     legal_day = dt.datetime.fromtimestamp(legal_date, dt.timezone.utc).date().isoformat()
@@ -2172,6 +2171,9 @@ def _security_headers(response):
         response.headers.setdefault('X-Robots-Tag', 'noindex')
     if request.path.startswith('/scan/'):
         response.headers['Referrer-Policy'] = 'no-referrer'
+    if request.path == '/gravity':
+        # لوحة داخلية لفرص الطلب، ليست صفحة منتج: لا تُفهرس.
+        response.headers['X-Robots-Tag'] = 'noindex, nofollow'
     if request.path.startswith(("/report/", "/admin", "/monitor/", "/alerts/", "/pack/")):
         # رابط التقرير يحمل مفتاح الوصول: لا نخزنه ولا نرسله في Referer ولا نسمح بالفهرسة.
         response.headers["Cache-Control"] = "no-store"
