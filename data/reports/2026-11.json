@@ -20,8 +20,8 @@
  },
  "top10k": {
   "top": 10000,
-  "reachable": 7256,
-  "pq": 4395,
+  "reachable": 7254,
+  "pq": 4393,
   "pct": 60.6
  },
  "sectors": [
@@ -113,30 +113,30 @@
   {
    "asn": 13335,
    "name": "Cloudflare, Inc.",
-   "sites": 2013,
-   "pq": 1959,
+   "sites": 2010,
+   "pq": 1956,
    "pct": 97.3
   },
   {
    "asn": 16509,
    "name": "Amazon.com, Inc.",
-   "sites": 1463,
+   "sites": 1464,
    "pq": 884,
    "pct": 60.4
   },
   {
    "asn": 54113,
    "name": "Fastly, Inc.",
-   "sites": 342,
-   "pq": 283,
-   "pct": 82.7
+   "sites": 343,
+   "pq": 284,
+   "pct": 82.8
   },
   {
    "asn": 396982,
    "name": "Google LLC",
-   "sites": 267,
-   "pq": 225,
-   "pct": 84.3
+   "sites": 266,
+   "pq": 224,
+   "pct": 84.2
   },
   {
    "asn": 14618,
@@ -155,8 +155,8 @@
   {
    "asn": 15169,
    "name": "Google LLC",
-   "sites": 231,
-   "pq": 228,
+   "sites": 232,
+   "pq": 229,
    "pct": 98.7
   },
   {
