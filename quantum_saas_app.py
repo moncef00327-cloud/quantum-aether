@@ -21,6 +21,7 @@ import requests
 from flask import (Blueprint, Flask, Response, abort, current_app, g, jsonify, make_response, redirect,
                    render_template, request, send_file, url_for)
 from werkzeug.middleware.proxy_fix import ProxyFix
+from werkzeug.exceptions import HTTPException
 from werkzeug.security import check_password_hash
 
 import adoption
@@ -2416,8 +2417,23 @@ def _error(status, key):
     return render_template("error.html", message=texts()[key]), status
 
 
+TRAILING_LINK_JUNK = "`'\").,;:!>]}*"
+
+
 @bp.app_errorhandler(404)
 def _not_found(_e):
+    # Links pasted into Reddit/HN/Markdown often carry a trailing backtick, bracket or full stop
+    # (seen: /study/top-1000-post-quantum-tls%60 from reddit.com). Send those visitors to the real page.
+    if request.method in ("GET", "HEAD"):
+        cleaned = request.path.rstrip(TRAILING_LINK_JUNK)
+        if cleaned and cleaned != request.path:
+            try:
+                current_app.url_map.bind("").match(cleaned, method="GET")
+            except HTTPException:
+                pass
+            else:
+                query = request.query_string.decode("latin-1")
+                return redirect(cleaned + ("?" + query if query else ""), code=301)
     return _error(404, "not_found")
 
 
