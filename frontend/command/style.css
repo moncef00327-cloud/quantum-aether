@@ -282,3 +282,43 @@ body{background:#110b20}
 .qa-grade-head strong{font-size:1.6rem}
 .qa-grade-card .qa-card-sub{display:none}
 }
+/* ==== Neon body: glowing text + interactions below the hero ==== */
+.app{background:radial-gradient(40% 30% at 90% 5%,rgba(34,211,238,.10),transparent 70%),radial-gradient(40% 30% at 5% 40%,rgba(236,72,153,.10),transparent 70%),radial-gradient(40% 30% at 80% 85%,rgba(168,85,247,.12),transparent 70%),#070816}
+body{background:#070816}
+.panel,.metrics{background:linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.08);transition:border-color .3s,box-shadow .3s}
+@media(hover:hover){.panel:hover{border-color:rgba(192,132,252,.5);box-shadow:0 0 0 1px rgba(192,132,252,.2),0 0 28px rgba(192,132,252,.18)}}
+.paneltitle h3,.resource h2,.service-content h1{color:#fff;text-shadow:0 0 14px rgba(192,132,252,.5)}
+.paneltitle p,.mapfoot span{color:#c9c6e4}
+.paneltitle .badge,.maptag{border-color:rgba(103,232,249,.45);color:#a5f3fc;box-shadow:0 0 12px rgba(103,232,249,.18)}
+/* metrics: glowing gradient numbers that count up */
+.metrics strong{background:linear-gradient(100deg,#f0abfc,#c084fc 45%,#67e8f9);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 12px rgba(192,132,252,.45));font-variant-numeric:tabular-nums}
+.metrics article>div{color:#d4d6ee}.metrics article p{color:#bdb9dc}.metrics article svg{color:#67e8f9;filter:drop-shadow(0 0 6px rgba(103,232,249,.6))}
+/* journey steps */
+.journey b{border-color:#f472b6!important;color:#fff;box-shadow:0 0 12px rgba(244,114,182,.45),inset 0 0 8px rgba(244,114,182,.25);text-shadow:0 0 8px rgba(244,114,182,.8)}
+.journey span{color:#e7e4f7}
+/* what we measure: rows are links that light up */
+a.check{color:inherit;text-decoration:none;border-radius:12px;padding-inline:12px;margin-inline:8px;transition:background .25s,box-shadow .25s}
+.check h4{color:#fff;font-size:14px;text-shadow:0 0 10px rgba(192,132,252,.35)}
+.check p{color:#c9c6e4;font-size:12px}
+.check>span{border:1px solid rgba(192,132,252,.6)!important;color:#f5d0fe!important;box-shadow:0 0 10px rgba(192,132,252,.3);transition:box-shadow .25s,border-color .25s}
+.check>svg{color:#a5f3fc;transition:transform .25s,filter .25s;flex-shrink:0;margin-inline-start:auto}
+a.check:active,a.check:focus-visible{background:rgba(192,132,252,.10);box-shadow:inset 0 0 0 1px rgba(192,132,252,.45),0 0 22px rgba(192,132,252,.2);outline:none}
+a.check:active>span,a.check:focus-visible>span{border-color:#f472b6!important;box-shadow:0 0 16px rgba(244,114,182,.6)}
+a.check:active>svg,a.check:focus-visible>svg{transform:translate(3px,-3px);filter:drop-shadow(0 0 6px #67e8f9)}
+[dir=rtl] a.check:active>svg,[dir=rtl] a.check:focus-visible>svg{transform:translate(-3px,-3px)}
+@media(hover:hover){a.check:hover{background:rgba(192,132,252,.08);box-shadow:inset 0 0 0 1px rgba(192,132,252,.35)}a.check:hover>span{border-color:#f472b6!important;box-shadow:0 0 16px rgba(244,114,182,.6)}a.check:hover>svg{transform:translate(3px,-3px);filter:drop-shadow(0 0 6px #67e8f9)}[dir=rtl] a.check:hover>svg{transform:translate(-3px,-3px)}}
+/* map: pulsing nodes, flowing arcs */
+.world svg>g:last-of-type circle,.world svg g circle[r="2.7"]{filter:drop-shadow(0 0 4px #f0abfc)}
+.world svg g circle[r="7"]{transform-box:fill-box;transform-origin:center;animation:qa-pulse 2.4s ease-out infinite;stroke:#f0abfc}
+.world svg g:nth-of-type(3n) circle[r="7"]{animation-delay:.8s}.world svg g:nth-of-type(3n+1) circle[r="7"]{animation-delay:1.6s}
+@keyframes qa-pulse{0%{transform:scale(.6);opacity:.9}100%{transform:scale(2.2);opacity:0}}
+.world path[stroke-dasharray]{animation:qa-flow 2.5s linear infinite;stroke:#67e8f9}
+@keyframes qa-flow{to{stroke-dashoffset:-16}}
+.mapfoot a{color:#a5f3fc;text-shadow:0 0 10px rgba(103,232,249,.5)}
+/* resources / footer */
+.resource .icon{color:#f0abfc;filter:drop-shadow(0 0 8px rgba(240,171,252,.6))}
+footer a{transition:color .2s,text-shadow .2s}
+footer a:active,footer a:focus-visible{color:#a5f3fc;text-shadow:0 0 10px rgba(103,232,249,.7)}
+@media(hover:hover){footer a:hover{color:#a5f3fc;text-shadow:0 0 10px rgba(103,232,249,.7)}}
+footer p,footer span{color:#bdb9dc}
+@media(prefers-reduced-motion:reduce){.world svg g circle[r="7"],.world path[stroke-dasharray]{animation:none}}
