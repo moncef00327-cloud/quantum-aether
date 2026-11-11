@@ -160,6 +160,15 @@ def _ext(ext_type: int, data: bytes) -> bytes:
     return _u16(ext_type) + _vec16(data)
 
 
+def mlkem_encapsulation_key(k: int = 3) -> bytes:
+    """مفتاح تغليف ML-KEM صالح الصيغة لأي مستوى: k=2 (512) أو 3 (768) أو 4 (1024)."""
+    coefficients = [secrets.randbelow(3329) for _ in range(256 * k)]
+    packed = bytearray()
+    for a, b in zip(coefficients[0::2], coefficients[1::2]):
+        packed += bytes((a & 0xFF, (a >> 8) | ((b & 0x0F) << 4), b >> 4))
+    return bytes(packed) + secrets.token_bytes(32)
+
+
 def mlkem768_encapsulation_key() -> bytes:
     """مفتاح تغليف ML-KEM-768 صالح الصيغة (FIPS 203): 3x256 معاملاً < q مرمّزة 12 بت + بذرة 32 بايت.
 
@@ -172,7 +181,41 @@ def mlkem768_encapsulation_key() -> bytes:
     return bytes(packed) + secrets.token_bytes(32)
 
 
-def build_client_hello(host: str, groups: list, key_shares: list) -> bytes:
+def _ec_share(curve) -> bytes:
+    return ec.generate_private_key(curve).public_key().public_bytes(Encoding.X962, PublicFormat.UncompressedPoint)
+
+
+def key_share_for(group: int) -> bytes:
+    """حصة مفتاح صالحة الصيغة لمجموعة يطلبها الخادم في HelloRetryRequest (لا نحتاج المفتاح السري:
+    الفحص يتوقف عند ServerHello). ترتيب الهجين حسب draft-ietf-tls-ecdhe-mlkem."""
+    x25519_raw = lambda: x25519.X25519PrivateKey.generate().public_key().public_bytes(Encoding.Raw, PublicFormat.Raw)
+    factories = {
+        X25519: x25519_raw,
+        0x0017: lambda: _ec_share(ec.SECP256R1()),
+        0x0018: lambda: _ec_share(ec.SECP384R1()),
+        0x0019: lambda: _ec_share(ec.SECP521R1()),
+        0x0200: lambda: mlkem_encapsulation_key(2),
+        0x0201: lambda: mlkem_encapsulation_key(3),
+        0x0202: lambda: mlkem_encapsulation_key(4),
+        X25519MLKEM768: lambda: mlkem_encapsulation_key(3) + x25519_raw(),
+        0x11EB: lambda: _ec_share(ec.SECP256R1()) + mlkem_encapsulation_key(3),
+        0x11ED: lambda: _ec_share(ec.SECP384R1()) + mlkem_encapsulation_key(4),
+    }
+    if group not in factories:
+        raise ValueError(f"cannot build a key share for group {group:#06x}")
+    return factories[group]()
+
+
+# طول حصة الخادم في ServerHello لكل مجموعة نعرضها (للتحقق من سلامة الرد)
+SERVER_SHARE_LENGTHS = {
+    X25519: 32, 0x0017: 65, 0x0018: 97, 0x0019: 133,
+    0x0200: 768, 0x0201: 1088, 0x0202: 1568,
+    X25519MLKEM768: 1120, 0x11EB: 65 + 1088, 0x11ED: 97 + 1568,
+}
+
+
+def build_client_hello(host: str, groups: list, key_shares: list, client_random: bytes = None,
+                       session_id: bytes = None, cookie: bytes = None, record_version: int = 0x0301) -> bytes:
     extensions = b"".join([
         _ext(0x0000, _vec16(b"\x00" + _vec16(host.encode("ascii")))),  # server_name
         _ext(0x000A, _vec16(b"".join(_u16(g) for g in groups))),      # supported_groups
@@ -182,15 +225,17 @@ def build_client_hello(host: str, groups: list, key_shares: list) -> bytes:
         _ext(0x0017, b""),                                             # extended_master_secret
         _ext(0x002B, _vec8(_u16(0x0304) + _u16(0x0303))),              # supported_versions
         _ext(0x002D, _vec8(b"\x01")),                                  # psk_key_exchange_modes
+        _ext(0x002C, cookie) if cookie is not None else b"",          # cookie (echoed from HelloRetryRequest)
         _ext(0x0033, _vec16(b"".join(_u16(g) + _vec16(k) for g, k in key_shares))),
         _ext(0xFF01, b"\x00"),                                         # renegotiation_info
     ])
     body = (
-        _u16(0x0303) + secrets.token_bytes(32) + _vec8(secrets.token_bytes(32))
+        _u16(0x0303) + (client_random or secrets.token_bytes(32)) + _vec8(session_id or secrets.token_bytes(32))
         + _vec16(b"".join(_u16(c) for c in CIPHER_SUITES)) + _vec8(b"\x00") + _vec16(extensions)
     )
     handshake = b"\x01" + len(body).to_bytes(3, "big") + body
-    return b"\x16\x03\x01" + _u16(len(handshake)) + handshake
+    # RFC 8446 5.1: 0x0301 is allowed on the first ClientHello; a retried one carries 0x0303.
+    return b"\x16" + _u16(record_version) + _u16(len(handshake)) + handshake
 
 
 # ---------------------------------------------------------------- قراءة رد الخادم
@@ -289,10 +334,11 @@ def parse_server_hello(body: bytes) -> dict:
         elif len(share) < 5 or int.from_bytes(share[2:4], "big") != len(share) - 4:
             raise ValueError("truncated ServerHello key share")
         group = int.from_bytes(share[:2], "big")
-        expected = {X25519: 32, X25519MLKEM768: 1120}.get(group)
+        expected = SERVER_SHARE_LENGTHS.get(group)
         if random != HRR_RANDOM and expected is not None and len(share) - 4 != expected:
             raise ValueError("invalid key share length")
-    return {"hrr": random == HRR_RANDOM, "version": version, "cipher": cipher, "group": group}
+    return {"hrr": random == HRR_RANDOM, "version": version, "cipher": cipher, "group": group,
+            "cookie": extensions.get(0x002C)}
 
 
 def _tls12_named_group(reader: _HandshakeReader):
@@ -327,23 +373,52 @@ def read_server_response(sock, timeout=TIMEOUT) -> dict:
 
 # ---------------------------------------------------------------- المجسّات
 
+PQ_OFFER = [X25519MLKEM768, X25519, 0x0017, 0x0018, 0x11EB, 0x11ED, 0x0201, 0x0202]
+CLASSICAL_OFFER = [X25519, 0x0017, 0x0018]
+
+
 def _hello_attempt(ip: str, host: str, offer_pq: bool, timeout: float) -> dict:
     x25519_public = x25519.X25519PrivateKey.generate().public_key().public_bytes(Encoding.Raw, PublicFormat.Raw)
     if offer_pq:
-        groups = [X25519MLKEM768, X25519, 0x0017, 0x0018, 0x11EB, 0x11ED]
+        groups = PQ_OFFER
         shares = [(X25519MLKEM768, mlkem768_encapsulation_key() + x25519_public), (X25519, x25519_public)]
     else:
-        groups = [X25519, 0x0017, 0x0018]
+        groups = CLASSICAL_OFFER
         shares = [(X25519, x25519_public)]
+    client_random, session_id = secrets.token_bytes(32), secrets.token_bytes(32)
     with _connect(ip, timeout) as sock:
         sock.settimeout(timeout)
-        sock.sendall(build_client_hello(host, groups, shares))
+        sock.sendall(build_client_hello(host, groups, shares, client_random, session_id))
         hello = read_server_response(sock, timeout=timeout)
-        if hello['cipher'] not in CIPHER_SUITES or (hello['group'] is not None and hello['group'] not in groups):
-            raise ValueError('server selected an unoffered TLS parameter')
-        if hello['version'] not in (0x0303, 0x0304):
-            raise ValueError('server selected an unoffered TLS version')
-        return hello
+        _check_offered(hello, groups)
+        if not hello["hrr"]:
+            return hello
+        # HelloRetryRequest: the server named the group it wants. Answer once on the same connection,
+        # as browsers do (RFC 8446 4.1.2): same random and session ID, one key share for that group,
+        # the server's cookie echoed. If this fails, the result stays "retry requested" (undetermined).
+        requested = hello["group"]
+        if requested is None or requested in {g for g, _ in shares}:
+            return hello
+        try:
+            retry = build_client_hello(host, groups, [(requested, key_share_for(requested))],
+                                       client_random, session_id, hello.get("cookie"), record_version=0x0303)
+            sock.sendall(retry)
+            second = read_server_response(sock, timeout=timeout)
+            _check_offered(second, groups)
+            if second["hrr"] or second["group"] != requested or second["cipher"] != hello["cipher"]:
+                raise ValueError("server answered the retried ClientHello inconsistently")
+        except (TLSAlert, ConnectionError, ValueError, OSError) as exc:
+            hello["retry_error"] = str(exc)
+            return hello
+        second["retried_for"] = requested
+        return second
+
+
+def _check_offered(hello: dict, groups: list) -> None:
+    if hello['cipher'] not in CIPHER_SUITES or (hello['group'] is not None and hello['group'] not in groups):
+        raise ValueError('server selected an unoffered TLS parameter')
+    if hello['version'] not in (0x0303, 0x0304):
+        raise ValueError('server selected an unoffered TLS version')
 
 
 def probe_key_exchange(ip: str, host: str, timeout: float = TIMEOUT) -> dict:
@@ -370,6 +445,10 @@ def probe_key_exchange(ip: str, host: str, timeout: float = TIMEOUT) -> dict:
             "negotiation_observed": not hello["hrr"] and group is not None,
             "kx": hello["kx"],
         })
+        if hello.get("retried_for") is not None:
+            result["hello_retry"] = GROUP_NAMES.get(hello["retried_for"], hex(hello["retried_for"]))
+        if hello.get("retry_error"):
+            result["hello_retry_error"] = hello["retry_error"]
         return result
     return result
 

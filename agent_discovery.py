@@ -33,7 +33,7 @@ TOOLS=[
 def methodology(base):
  return {'name':'Quantum Aether TLS observation methodology','version':VERSION,'updated':UPDATED,
   'description':'Measures one public HTTPS connection from the Quantum Aether server to a public IPv4 address, or IPv6 fallback, on port 443. Observes the negotiated TLS protocol and key-exchange group and performs a separate standard certificate handshake.',
-  'key_exchange':{'hybrid_group':'X25519MLKEM768','evidence':'A completed observed ServerHello selection; a retry-only HelloRetryRequest is undetermined.'},
+  'key_exchange':{'hybrid_group':'X25519MLKEM768','evidence':'A completed observed ServerHello selection. A HelloRetryRequest is answered once, as browsers do, and the final selection is recorded; only a retry that still fails is undetermined.'},
   'observation_states':{'observed_pq':'Hybrid post-quantum key exchange was observed.','observed_classical':'A classical key-exchange selection was observed.','undetermined':'The probe could not establish a completed selection; do not treat this as proof of classical-only support.'},
   'grades':{'A':'TLS 1.3 and observed hybrid key exchange, subject to certificate and protocol findings.','B':'TLS 1.3 without an observed hybrid exchange; read observation_status before concluding classical-only support.','C':'TLS 1.2 without a more severe finding.','F':'A severe certificate, legacy-protocol or weak-key finding.'},
   'limitations':scan_experience.LIMITATION,

@@ -6,7 +6,7 @@ Full text of every guide plus the live weekly figures in one file: {{ base }}/ll
 
 ## Key facts (current, citable with attribution to Quantum Aether, ather-quantum.com)
 
-- The archived November 2026 study reported 712 HTTPS responses and 425 post-quantum selections (59.7%) in the Tranco top 1,000 sample. Its original files are preserved. A later raw-evidence audit identified {{ retry_count }} retry-only HelloRetryRequest responses; new measurements classify those as undetermined, not confirmed classical exchanges. See the study's methodology note before comparing percentages.
+- The archived November 2026 study reported 712 HTTPS responses and 425 post-quantum selections (59.7%) in the Tranco top 1,000 sample. Its original files are preserved. A later raw-evidence audit identified {{ retry_count }} retry-only HelloRetryRequest responses; new measurements (from 2026-W47) answer the retry once, as browsers do, and record the server's final selection; only retries that still fail are undetermined. See the study's methodology note before comparing percentages.
 - Classical exchange was observed for amazon.com, github.com, wikipedia.org and netflix.com in that sample. Retry-only evidence such as bing.com is undetermined; rescan before making a current claim.
 - Chrome, Firefox and Edge negotiate X25519MLKEM768 by default today; what determines protection is the server (and any CDN or TLS-terminating proxy in front of it).
 - Certificates remain classical (RSA/ECDSA) on essentially all sites, because browsers do not yet accept ML-DSA certificates; this is expected, not a misconfiguration.
