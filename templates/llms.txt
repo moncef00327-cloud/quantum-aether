@@ -27,6 +27,7 @@ Full text of every guide plus the live weekly figures in one file: {{ base }}/ll
 - Agent guide: {{ base }}/agents?lang=en — implemented capabilities, examples, limitations and current payment status.
 - Service discovery JSON: {{ base }}/.well-known/agent-service.json — custom service metadata with real endpoints and configured limits; not an A2A Agent Card.
 - Remote MCP: {{ base }}/mcp — stateless Streamable HTTP with JSON responses; initialize, tools/list and tools/call. Tools: scan_tls, get_tls_evidence, get_methodology, get_example_result, get_service_info.
+- Microsoft Copilot Studio: add {{ base }}/mcp as a Model Context Protocol tool with authentication None. Microsoft Security Copilot: custom plugin manifest at {{ base }}/security-copilot.yaml (read and scan tools only).
 - get_tls_evidence is read-only. scan_tls starts a public HTTPS probe, consumes the existing scan quota, and stores a publicly accessible result. Never treat noindex as confidentiality.
 - Machine-readable methodology: {{ base }}/api/v1/agent/methodology
 - Archived example: {{ base }}/api/v1/agent/example — explicitly is_example:true and is_live:false; not a fresh observation.

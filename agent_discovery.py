@@ -11,7 +11,7 @@ import quantum_vuln_scanner
 import scan_experience
 
 UPDATED='2026-11-08'
-PROTOCOLS=('2025-11-25','2025-06-18')
+PROTOCOLS=('2025-11-25','2025-06-18','2025-03-26')  # 2025-03-26 introduced Streamable HTTP; many enterprise clients still speak it
 VERSION='1.4.0'
 DOMAIN_SCHEMA={'type':'object','properties':{'domain':{'type':'string','minLength':1,'maxLength':253,'description':'Public DNS hostname, for example example.com. HTTPS port 443 only.'}},'required':['domain'],'additionalProperties':False}
 EMPTY_SCHEMA={'type':'object','properties':{},'additionalProperties':False}
@@ -60,6 +60,25 @@ def manifest(base):
   'privacy':methodology(base)['data_policy'],'terms':base+'/agb?lang=en','support':base+'/impressum?lang=en','limitations':scan_experience.LIMITATION}
 
 
+SECURITY_COPILOT_TOOLS='scan_tls,get_tls_evidence,get_methodology,get_example_result,get_service_info'
+SECURITY_COPILOT_YAML="""Descriptor:
+  Name: QuantumAetherPostQuantumTLS
+  DisplayName: Quantum Aether post-quantum TLS check
+  Description: Checks whether a public HTTPS server negotiates the hybrid post-quantum key exchange X25519MLKEM768 (ML-KEM), with TLS version, certificate summary, grade and stored evidence.
+  DescriptionForModel: Use get_tls_evidence to read stored, timestamped evidence for a public hostname without scanning. Use scan_tls only when the user asks for a new measurement of a public hostname on port 443; it starts an external probe and stores a publicly accessible result. Call get_methodology before interpreting results. One observation of one public connection is not a full security assessment.
+  SupportedAuthTypes:
+    - None
+SkillGroups:
+  - Format: MCP
+    Settings:
+      Endpoint: {base}/mcp
+      UseStreamableHttp: true
+      UsePluginAuth: true
+      TimeoutInSeconds: 60
+      AllowedTools: """+SECURITY_COPILOT_TOOLS+"""
+"""
+
+
 def register(bp, services):
  base=services['base']
  def example():
@@ -83,6 +102,16 @@ def register(bp, services):
  def agent_service_manifest():
   response=jsonify(manifest(base()));response.headers['Cache-Control']='public, max-age=300'
   response.headers['Link']=f'<{base()}/.well-known/agent-service.json>; rel="canonical"'
+  return response
+
+ @bp.get('/security-copilot.yaml')
+ def security_copilot_manifest():
+  # Microsoft Security Copilot custom plugin (Format: MCP), per learn.microsoft.com/copilot/security/plugin-mcp.
+  # Read and scan tools only; payment tools are deliberately not allowed.
+  body=SECURITY_COPILOT_YAML.replace('{base}',base())
+  response=Response(body,mimetype='application/yaml')
+  response.headers['Cache-Control']='public, max-age=300'
+  response.headers['X-Robots-Tag']='noindex'
   return response
 
  @bp.get('/api/v1/agent/methodology')
