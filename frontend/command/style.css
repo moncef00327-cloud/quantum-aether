@@ -372,3 +372,22 @@ a.check:active>span,a.check:focus-visible>span{border-color:var(--qa-cyan)!impor
 .service-content .tag{background:rgba(138,229,247,.06)!important;border-color:var(--qa-line)!important;color:var(--qa-text-2)!important}
 .service-content .commercial-price,.service-content .commercial-price bdi{color:var(--qa-cyan)!important;text-shadow:0 0 14px rgba(138,229,247,.35)}
 .service-content .commercial-featured{border-color:var(--qa-line-strong)!important;box-shadow:0 0 24px rgba(138,229,247,.12)!important}
+/* ==== Fix pass: example label, validated bar colour, scanner-first mobile order ==== */
+.qa-example-tag{margin-inline-start:auto;align-self:flex-start;padding:3px 9px;border-radius:999px;border:1px solid rgba(252,211,77,.55);color:#fde68a;font-size:11px;font-weight:600;letter-spacing:.02em;background:rgba(252,211,77,.08)}
+.qa-neon .qa-bar{fill:#0ea5c6}.qa-neon .qa-bar:hover{fill:#22d3ee}
+.qa-neon .qa-metric-big{background:linear-gradient(100deg,#ffffff,#8ae5f7);-webkit-background-clip:text;background-clip:text}
+@media(max-width:600px){
+/* one grid for the whole hero so the scanner can sit right under the headline */
+.qa-neon{display:grid;grid-template-columns:1fr 1fr;column-gap:10px;row-gap:12px}
+.qa-neon .qa-hero-grid,.qa-neon .qa-hero-bottom-cards{display:contents}
+.qa-neon .qa-hero-content{grid-column:1/-1;order:1}
+.qa-neon .qa-scan-card{grid-column:1/-1;order:2}
+.qa-neon .qa-shield-stage{grid-column:1/-1;order:3;height:170px}
+.qa-neon .qa-metrics-card{order:4}
+.qa-neon .qa-grade-card{order:5}
+.qa-neon .qa-grade-card:has(.qa-details[open]){grid-column:1/-1}
+.qa-holo{width:150px}
+.qa-neon .qa-hero-content p{margin-bottom:.4rem}
+.qa-example-tag{font-size:10px;padding:2px 7px}
+.qa-grade-head{flex-wrap:wrap;row-gap:6px}
+}
