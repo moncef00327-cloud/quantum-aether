@@ -1119,6 +1119,25 @@ def site_is_indexable(domain):
     return search_indexing.is_indexable(domain, site.get("rank") if site else None)
 
 
+def site_fix_guides(network, pq, lang):
+    """Guides to link from /site/<domain>: the one for the site's hosting network first, then the general ones."""
+    net = (network or "").lower()
+    if "amazon" in net:
+        first = "aws-alb-cloudfront-post-quantum-tls"
+    elif "cloudflare" in net:
+        first = "post-quantum-tls-apache-caddy-haproxy-cloudflare"
+    else:
+        first = "enable-x25519mlkem768-nginx"
+    rest = ["check-website-post-quantum-tls", "harvest-now-decrypt-later"] if pq else \
+        ["enable-x25519mlkem768-nginx", "post-quantum-tls-apache-caddy-haproxy-cloudflare", "check-website-post-quantum-tls"]
+    out = []
+    for slug in [first] + rest:
+        g = guides.GUIDES.get(slug)
+        if g and slug not in [o["slug"] for o in out]:
+            out.append({"slug": slug, "title": (g.get(lang) or g["en"])["title"]})
+    return out[:3]
+
+
 @bp.get("/site/<domain>")
 def site_page(domain):
     """صفحة عامة قابلة للفهرسة لكل نطاق: تعرض ما نعرفه عنه وتدعو لفحص حيّ. لا تُجري فحصاً."""
@@ -1172,7 +1191,8 @@ def site_page(domain):
     response = make_response(render_template(
         "site_page.html", domain=domain, summary=summary, source=source, verdict=verdict, history=history,
         related=related, network=network, snippets=badge_snippets(domain) if summary else None, jsonld=jsonld,
-        country=country, indexing_excluded=indexing_excluded),
+        country=country, indexing_excluded=indexing_excluded,
+        fix_guides=site_fix_guides(network, summary["pq"], current_lang()) if summary else []),
         200 if summary else 404)  # نطاق لا نعرفه (مثل wp-login.php من الماسحات) ليس صفحة حقيقية
     if indexing_excluded:
         response.headers['X-Robots-Tag'] = 'noindex, follow'

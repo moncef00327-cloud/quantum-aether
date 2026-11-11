@@ -36877,6 +36877,20 @@
           "locator": "The hostname itself names pornographic content (homepage behind a Cloudflare challenge)."
         }
       ]
+    },
+    {
+      "domain": "kamareels2.com",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-11",
+      "review_method": "homepage evidence (adult label/title) or manual hostname review; exact host only; requested by owner after Search Console showed navigational queries",
+      "sources": [
+        {
+          "url": "https://kamareels2.com/",
+          "publisher": "site homepage (fetched by Quantum Aether)",
+          "published_on": "2026-11-11",
+          "locator": "Homepage title: Indian sex reels - 3sex.com - Kama Reels"
+        }
+      ]
     }
   ]
 }

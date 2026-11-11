@@ -49,6 +49,15 @@
 </section>
 {% endif %}
 
+{% if fix_guides %}
+<section class="card">
+  <h2>{{ t.site_fix_title if not summary.pq else t.site_learn_title }}</h2>
+  <p>{{ t.site_fix_intro if not summary.pq else t.site_learn_intro }}</p>
+  <ul class="related">
+    {% for g in fix_guides %}<li><a href="{{ url_for('site.guide', slug=g.slug, lang=lang) }}">{{ g.title }}</a></li>{% endfor %}
+  </ul>
+</section>
+{% endif %}
 <section class="card">
   <h2>{{ t.badge_title }}</h2>
   <p><img src="{{ url_for('site.badge', domain=domain) }}" alt="post-quantum TLS: {{ summary.grade }}"></p>
