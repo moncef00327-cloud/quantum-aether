@@ -18,7 +18,7 @@ class TrailingJunkTests(unittest.TestCase):
         self.tmp.cleanup()
 
     def test_trailing_punctuation_redirects_to_the_page(self):
-        for junk in ['%60', '`', ')', '.', ',', '%22', "'", ').', '`.']:
+        for junk in ['%60', '`', ')', '.', ',', '%22', "'", ').', '`.', '/', '/.']:
             with self.subTest(junk=junk):
                 r = self.client.get('/study/top-1000-post-quantum-tls' + junk + '?lang=en')
                 self.assertEqual(r.status_code, 301)
@@ -34,6 +34,9 @@ class TrailingJunkTests(unittest.TestCase):
         r = self.client.get('/guides/does-not-exist)', follow_redirects=True)
         self.assertEqual(r.status_code, 404)
         self.assertEqual(len(r.history), 1)
+
+    def test_home_is_not_redirected(self):
+        self.assertEqual(self.client.get('/?lang=en').status_code, 200)
 
     def test_post_is_never_redirected(self):
         self.assertNotEqual(self.client.post('/study/top-1000-post-quantum-tls%60').status_code, 301)

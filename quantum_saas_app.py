@@ -2417,7 +2417,7 @@ def _error(status, key):
     return render_template("error.html", message=texts()[key]), status
 
 
-TRAILING_LINK_JUNK = "`'\").,;:!>]}*"
+TRAILING_LINK_JUNK = "`'\").,;:!>]}*/"
 
 
 @bp.app_errorhandler(404)
