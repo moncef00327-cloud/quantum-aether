@@ -1129,7 +1129,8 @@ def site_fix_guides(network, pq, lang):
     else:
         first = "enable-x25519mlkem768-nginx"
     rest = ["check-website-post-quantum-tls", "harvest-now-decrypt-later"] if pq else \
-        ["enable-x25519mlkem768-nginx", "post-quantum-tls-apache-caddy-haproxy-cloudflare", "check-website-post-quantum-tls"]
+        ["ubuntu-openssl-3-0-post-quantum-tls", "enable-x25519mlkem768-nginx",
+         "post-quantum-tls-apache-caddy-haproxy-cloudflare", "check-website-post-quantum-tls"]
     out = []
     for slug in [first] + rest:
         g = guides.GUIDES.get(slug)

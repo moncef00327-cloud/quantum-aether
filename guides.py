@@ -14,7 +14,7 @@ GUIDES = {
 <p>nginx gets its TLS from the OpenSSL library it was built against. ML-KEM arrived in <strong>OpenSSL 3.5</strong>.</p>
 <pre dir="ltr">nginx -V 2>&amp;1 | grep -o 'OpenSSL [0-9.]*'
 openssl version</pre>
-<p>If either shows 3.0, 3.1, 3.2, 3.3 or 3.4, nginx cannot negotiate ML-KEM no matter what you put in the config. Ubuntu 22.04 and 24.04 ship OpenSSL 3.0; Debian 13 (trixie) ships 3.5. Your options are to upgrade the OS, use an nginx build linked against OpenSSL 3.5, or put a post-quantum capable proxy or CDN in front (see the <a href="/guides/post-quantum-tls-apache-caddy-haproxy-cloudflare?lang=en">other servers guide</a>).</p>
+<p>If either shows 3.0, 3.1, 3.2, 3.3 or 3.4, nginx cannot negotiate ML-KEM no matter what you put in the config. Ubuntu 22.04 and 24.04 ship OpenSSL 3.0; Debian 13 (trixie) ships 3.5. On Ubuntu, the <a href="/guides/ubuntu-openssl-3-0-post-quantum-tls?lang=en">Ubuntu / OpenSSL 3.0 guide</a> walks through all three ways out. Your options are to upgrade the OS, use an nginx build linked against OpenSSL 3.5, or put a post-quantum capable proxy or CDN in front (see the <a href="/guides/post-quantum-tls-apache-caddy-haproxy-cloudflare?lang=en">other servers guide</a>).</p>
 
 <h2>2. Configure nginx</h2>
 <p>With OpenSSL 3.5, X25519MLKEM768 is in the default group list, so nginx's default <code>ssl_ecdh_curve auto</code> already offers it. The common mistake is an explicit curve list copied from an old hardening guide, which silently removes it. Make the list explicit and put the hybrid group first:</p>
@@ -50,7 +50,7 @@ openssl version</pre>
 <p>يأخذ nginx تشفير TLS من مكتبة OpenSSL التي بُني عليها. دعم ML-KEM وصل في <strong>OpenSSL 3.5</strong>.</p>
 <pre dir="ltr">nginx -V 2>&amp;1 | grep -o 'OpenSSL [0-9.]*'
 openssl version</pre>
-<p>إذا ظهر 3.0 أو 3.1 أو 3.2 أو 3.3 أو 3.4 فلن يستطيع nginx استخدام ML-KEM مهما كتبت في الإعدادات. Ubuntu 22.04 و24.04 يأتيان بـ OpenSSL 3.0، وDebian 13 (trixie) يأتي بـ 3.5. الحلول: ترقية النظام، أو نسخة nginx مبنية على OpenSSL 3.5، أو وضع وكيل أو CDN يدعم ما بعد الكم أمام الخادم (انظر <a href="/guides/post-quantum-tls-apache-caddy-haproxy-cloudflare?lang=ar">دليل الخوادم الأخرى</a>).</p>
+<p>إذا ظهر 3.0 أو 3.1 أو 3.2 أو 3.3 أو 3.4 فلن يستطيع nginx استخدام ML-KEM مهما كتبت في الإعدادات. Ubuntu 22.04 و24.04 يأتيان بـ OpenSSL 3.0، وDebian 13 (trixie) يأتي بـ 3.5. على Ubuntu يشرح <a href="/guides/ubuntu-openssl-3-0-post-quantum-tls?lang=ar">دليل Ubuntu وOpenSSL 3.0</a> الطرق الثلاثة بالتفصيل. الحلول: ترقية النظام، أو نسخة nginx مبنية على OpenSSL 3.5، أو وضع وكيل أو CDN يدعم ما بعد الكم أمام الخادم (انظر <a href="/guides/post-quantum-tls-apache-caddy-haproxy-cloudflare?lang=ar">دليل الخوادم الأخرى</a>).</p>
 
 <h2>2. إعداد nginx</h2>
 <p>مع OpenSSL 3.5 تكون المجموعة X25519MLKEM768 ضمن القائمة الافتراضية، فالإعداد الافتراضي <code>ssl_ecdh_curve auto</code> يعرضها أصلاً. الخطأ الشائع هو قائمة منحنيات صريحة منسوخة من دليل حماية قديم تحذفها دون أن تشعر. اكتب القائمة صراحة وضع المجموعة الهجينة أولاً:</p>
@@ -814,6 +814,188 @@ fmt.Println(c.ConnectionState().CurveID)</pre>
 <h2>النتيجة X25519؟</h2>
 <p>إذن الخادم أو موازن التحميل أو CDN الذي يُنهي TLS لا يدعمه بعد. الأدلة: <a href="/guides/enable-x25519mlkem768-nginx?lang=ar">nginx</a>، <a href="/guides/post-quantum-tls-apache-caddy-haproxy-cloudflare?lang=ar">Apache وCaddy وHAProxy وCloudflare</a>، <a href="/guides/aws-alb-cloudfront-post-quantum-tls?lang=ar">AWS</a>، <a href="/guides/nodejs-post-quantum-tls-x25519mlkem768?lang=ar">Node.js</a>، <a href="/guides/java-post-quantum-tls-jdk27?lang=ar">Java</a>، <a href="/guides/go-post-quantum-tls-x25519mlkem768?lang=ar">Go</a>، <a href="/guides/python-post-quantum-tls-x25519mlkem768?lang=ar">Python</a>. ولمعرفة شبكات الاستضافة الجاهزة انظر <a href="/adoption/hosting?lang=ar">الجاهزية حسب الاستضافة</a>.</p>
 <p class="muted small">المصادر: توثيق أدوات المطوّر في Chrome وكود devtools-frontend (لوحة Security: ‏Connection / Key exchange)، وأداة s_client في OpenSSL 3.5، وتوثيق crypto/tls في Go وssl في Python. راجعناها في 2026-11-10.</p>
+""",
+        },
+    },
+    "ubuntu-openssl-3-0-post-quantum-tls": {
+        "updated": "2026-11-11",
+        "en": {
+            "title": "Post-quantum TLS on Ubuntu 22.04 / 24.04 with OpenSSL 3.0",
+            "description": "Ubuntu's OpenSSL 3.0 cannot negotiate ML-KEM. Three ways to get X25519MLKEM768 anyway: Caddy or a CDN in front, nginx with OpenSSL 3.5, or oqs-provider for testing.",
+            "body": """
+<p>Ubuntu 22.04 and 24.04 ship <strong>OpenSSL 3.0</strong>. ML-KEM arrived in OpenSSL 3.5, so nginx or Apache built against the system library cannot negotiate <code>X25519MLKEM768</code>, whatever the config says. That is why so many servers scan as "classical" even though Chrome and Firefox offer the hybrid exchange on every connection. There are three ways out; pick the first one that fits.</p>
+<pre dir="ltr">openssl version                              # OpenSSL 3.0.x on Ubuntu 22.04 / 24.04
+nginx -V 2&gt;&amp;1 | grep -o 'OpenSSL [0-9.]*'   # the library nginx was built with</pre>
+
+<h2>Option 1 (easiest): put Caddy or a CDN in front</h2>
+<p>Caddy is written in Go, whose TLS stack supports X25519MLKEM768 by default, independent of the system OpenSSL. Let Caddy terminate TLS on port 443 and pass requests to your existing server on localhost. This very site runs this way and grades A.</p>
+<pre dir="ltr"># /etc/caddy/Caddyfile
+example.com {
+    reverse_proxy 127.0.0.1:8080   # nginx/Apache now listen on 8080 without TLS
+}</pre>
+<p>Caddy obtains and renews the certificate itself. Move nginx's <code>listen 443 ssl</code> to <code>listen 127.0.0.1:8080</code>, reload both, and scan again. A CDN that already offers the hybrid (for example Cloudflare's proxy) has the same effect for visitors; the connection from the CDN to your origin is a separate leg.</p>
+
+<h2>Option 2 (production nginx): OpenSSL 3.5</h2>
+<p>Either move to a release that ships OpenSSL 3.5 (Debian 13 "trixie" does; check <code>openssl version</code> on newer Ubuntu releases), or build nginx against an OpenSSL 3.5 source tree. nginx links it statically, so the system library stays untouched:</p>
+<pre dir="ltr">sudo apt install -y build-essential libpcre2-dev zlib1g-dev
+# download and verify the nginx and OpenSSL 3.5.x source tarballs from nginx.org and openssl-library.org
+cd nginx-1.x.y
+./configure --with-openssl=../openssl-3.5.x --with-http_ssl_module --with-http_v2_module \
+            --prefix=/etc/nginx --sbin-path=/usr/sbin/nginx   # match your current nginx -V flags
+make -j"$(nproc)" &amp;&amp; sudo make install</pre>
+<p>Copy the remaining <code>configure</code> arguments from your current <code>nginx -V</code> output so modules and paths stay the same. Then follow the <a href="/guides/enable-x25519mlkem768-nginx?lang=en">nginx guide</a> for the <code>ssl_ecdh_curve</code> line. A self-built nginx no longer receives Ubuntu security updates: you have to rebuild it for every nginx or OpenSSL fix.</p>
+
+<h2>Option 3 (testing only): oqs-provider on OpenSSL 3.0</h2>
+<p>The Open Quantum Safe project's <a href="https://github.com/open-quantum-safe/oqs-provider" rel="noopener">oqs-provider</a> adds ML-KEM to OpenSSL 3.0 as a loadable provider, built on <a href="https://github.com/open-quantum-safe/liboqs" rel="noopener">liboqs</a>. The project itself states that it is intended for prototyping and evaluation, not production. Use it on a test server to try the hybrid exchange before you upgrade.</p>
+<pre dir="ltr">sudo apt install -y build-essential cmake ninja-build libssl-dev git
+git clone https://github.com/open-quantum-safe/liboqs.git
+cmake -S liboqs -B liboqs/build -GNinja -DBUILD_SHARED_LIBS=ON
+sudo cmake --build liboqs/build --target install &amp;&amp; sudo ldconfig
+git clone https://github.com/open-quantum-safe/oqs-provider.git
+cmake -S oqs-provider -B oqs-provider/build -GNinja
+sudo cmake --build oqs-provider/build --target install
+openssl version -m   # MODULESDIR: where oqsprovider.so was installed</pre>
+<p>Do <strong>not</strong> edit the system-wide <code>/etc/ssl/openssl.cnf</code>: apt, curl, Python and every other program read it. Give nginx its own file instead:</p>
+<pre dir="ltr"># /etc/nginx/openssl-oqs.cnf
+openssl_conf = openssl_init
+[openssl_init]
+providers = provider_sect
+[provider_sect]
+default = default_sect
+oqsprovider = oqs_sect
+[default_sect]
+activate = 1
+[oqs_sect]
+activate = 1</pre>
+<pre dir="ltr">sudo systemctl edit nginx
+# add:
+[Service]
+Environment=OPENSSL_CONF=/etc/nginx/openssl-oqs.cnf</pre>
+<p>Check the exact group name your build offers with <code>OPENSSL_CONF=/etc/nginx/openssl-oqs.cnf openssl list -kem-algorithms</code>, put it first in <code>ssl_ecdh_curve</code> (for example <code>X25519MLKEM768:X25519:prime256v1</code>), then <code>nginx -t &amp;&amp; systemctl restart nginx</code>. These steps follow the OQS documentation; we have not run them on our own servers, so read the project's README for the requirements of the version you build.</p>
+
+<h2>Verify</h2>
+<p>Run the <a href="/?lang=en">free scan</a>: grade A means TLS 1.3 with a hybrid post-quantum key exchange. The scan also answers a HelloRetryRequest the way browsers do, so servers that ask for a different group are measured too. For continuous checks, the <a href="https://github.com/marketplace/actions/post-quantum-tls-check-quantum-aether" rel="noopener">GitHub Action</a> fails a build when the hybrid disappears.</p>
+<p class="muted small">Sources: OpenSSL 3.5 release notes (ML-KEM), nginx <code>--with-openssl</code> build option, Open Quantum Safe liboqs and oqs-provider READMEs, Go crypto/tls default key exchanges.</p>
+""",
+        },
+        "ar": {
+            "title": "TLS المقاوم للكم على Ubuntu 22.04 و24.04 مع OpenSSL 3.0",
+            "description": "مكتبة OpenSSL 3.0 في Ubuntu لا تدعم ML-KEM. ثلاثة طرق للحصول على X25519MLKEM768: ‏Caddy أو CDN أمام الخادم، أو nginx مع OpenSSL 3.5، أو oqs-provider للتجربة.",
+            "body": """
+<p>يأتي Ubuntu 22.04 و24.04 مع <strong>OpenSSL 3.0</strong>. دعم ML-KEM وصل في OpenSSL 3.5، لذلك لا يستطيع nginx أو Apache المبنيّ على مكتبة النظام التفاوض على <code>X25519MLKEM768</code> مهما كتبت في الإعدادات. هذا سبب ظهور خوادم كثيرة «تقليدية» في الفحص رغم أن Chrome وFirefox يعرضان التبادل الهجين في كل اتصال. أمامك ثلاثة طرق؛ اختر أول طريق يناسبك.</p>
+<pre dir="ltr">openssl version                              # OpenSSL 3.0.x on Ubuntu 22.04 / 24.04
+nginx -V 2&gt;&amp;1 | grep -o 'OpenSSL [0-9.]*'   # the library nginx was built with</pre>
+
+<h2>الطريق 1 (الأسهل): Caddy أو CDN أمام الخادم</h2>
+<p>Caddy مكتوب بلغة Go، ومكتبة TLS فيها تدعم X25519MLKEM768 افتراضياً بمعزل عن OpenSSL النظام. اجعل Caddy يستقبل TLS على المنفذ 443 ويمرّر الطلبات إلى خادمك الحالي على العنوان المحلي. هذا الموقع نفسه يعمل بهذه الطريقة ودرجته A.</p>
+<pre dir="ltr"># /etc/caddy/Caddyfile
+example.com {
+    reverse_proxy 127.0.0.1:8080   # nginx/Apache now listen on 8080 without TLS
+}</pre>
+<p>يحصل Caddy على الشهادة ويجددها بنفسه. غيّر في nginx السطر <code>listen 443 ssl</code> إلى <code>listen 127.0.0.1:8080</code>، وأعد تحميل الاثنين، ثم افحص من جديد. شبكة CDN تدعم الهجين (مثل وكيل Cloudflare) تعطي الأثر نفسه للزوار؛ أما الاتصال من CDN إلى خادمك الأصلي فمرحلة منفصلة.</p>
+
+<h2>الطريق 2 (nginx للإنتاج): OpenSSL 3.5</h2>
+<p>إما أن تنتقل إلى إصدار يأتي مع OpenSSL 3.5 (مثل Debian 13 «trixie»؛ وتحقق بـ <code>openssl version</code> في إصدارات Ubuntu الأحدث)، أو تبني nginx على شجرة مصدر OpenSSL 3.5. يربطها nginx ربطاً ثابتاً فتبقى مكتبة النظام كما هي:</p>
+<pre dir="ltr">sudo apt install -y build-essential libpcre2-dev zlib1g-dev
+# download and verify the nginx and OpenSSL 3.5.x source tarballs from nginx.org and openssl-library.org
+cd nginx-1.x.y
+./configure --with-openssl=../openssl-3.5.x --with-http_ssl_module --with-http_v2_module \
+            --prefix=/etc/nginx --sbin-path=/usr/sbin/nginx   # match your current nginx -V flags
+make -j"$(nproc)" &amp;&amp; sudo make install</pre>
+<p>انسخ بقية خيارات <code>configure</code> من ناتج <code>nginx -V</code> الحالي حتى تبقى الوحدات والمسارات كما هي. ثم اتبع <a href="/guides/enable-x25519mlkem768-nginx?lang=ar">دليل nginx</a> لسطر <code>ssl_ecdh_curve</code>. انتبه: nginx المبني يدوياً لا يصله تحديث Ubuntu الأمني، فعليك إعادة بنائه مع كل إصلاح لـ nginx أو OpenSSL.</p>
+
+<h2>الطريق 3 (للتجربة فقط): oqs-provider على OpenSSL 3.0</h2>
+<p>مشروع Open Quantum Safe يقدّم <a href="https://github.com/open-quantum-safe/oqs-provider" rel="noopener">oqs-provider</a> الذي يضيف ML-KEM إلى OpenSSL 3.0 كمزوّد قابل للتحميل، مبنياً على <a href="https://github.com/open-quantum-safe/liboqs" rel="noopener">liboqs</a>. المشروع نفسه يقول إنه للنماذج الأولية والتقييم، لا للإنتاج. استخدمه على خادم تجربة لتختبر التبادل الهجين قبل الترقية.</p>
+<pre dir="ltr">sudo apt install -y build-essential cmake ninja-build libssl-dev git
+git clone https://github.com/open-quantum-safe/liboqs.git
+cmake -S liboqs -B liboqs/build -GNinja -DBUILD_SHARED_LIBS=ON
+sudo cmake --build liboqs/build --target install &amp;&amp; sudo ldconfig
+git clone https://github.com/open-quantum-safe/oqs-provider.git
+cmake -S oqs-provider -B oqs-provider/build -GNinja
+sudo cmake --build oqs-provider/build --target install
+openssl version -m   # MODULESDIR: where oqsprovider.so was installed</pre>
+<p><strong>لا</strong> تعدّل الملف العام <code>/etc/ssl/openssl.cnf</code>: يقرؤه apt وcurl وPython وكل برنامج آخر. أعطِ nginx ملفاً خاصاً به:</p>
+<pre dir="ltr"># /etc/nginx/openssl-oqs.cnf
+openssl_conf = openssl_init
+[openssl_init]
+providers = provider_sect
+[provider_sect]
+default = default_sect
+oqsprovider = oqs_sect
+[default_sect]
+activate = 1
+[oqs_sect]
+activate = 1</pre>
+<pre dir="ltr">sudo systemctl edit nginx
+# add:
+[Service]
+Environment=OPENSSL_CONF=/etc/nginx/openssl-oqs.cnf</pre>
+<p>تحقق من الاسم الدقيق للمجموعة في نسختك بالأمر <code>OPENSSL_CONF=/etc/nginx/openssl-oqs.cnf openssl list -kem-algorithms</code>، وضعه أولاً في <code>ssl_ecdh_curve</code> (مثلاً <code>X25519MLKEM768:X25519:prime256v1</code>)، ثم <code>nginx -t &amp;&amp; systemctl restart nginx</code>. هذه الخطوات تتبع توثيق OQS، ولم نشغّلها على خوادمنا، فراجع ملف README للمشروع لمتطلبات النسخة التي تبنيها.</p>
+
+<h2>التحقق</h2>
+<p>شغّل <a href="/?lang=ar">الفحص المجاني</a>: الدرجة A تعني TLS 1.3 مع تبادل مفاتيح هجين مقاوم للكم. الفحص يجيب أيضاً على طلب HelloRetryRequest كما تفعل المتصفحات، فتُقاس الخوادم التي تطلب مجموعة أخرى كذلك. وللفحص المستمر، <a href="https://github.com/marketplace/actions/post-quantum-tls-check-quantum-aether" rel="noopener">GitHub Action</a> يُفشل البناء إذا اختفى التبادل الهجين.</p>
+<p class="muted small">المصادر: ملاحظات إصدار OpenSSL 3.5 (ML-KEM)، وخيار البناء <code>--with-openssl</code> في nginx، وملفات README لمشروعي liboqs وoqs-provider من Open Quantum Safe، والمجموعات الافتراضية في crypto/tls بلغة Go.</p>
+""",
+        },
+    },
+    "ssl-labs-post-quantum-tls-check": {
+        "updated": "2026-11-11",
+        "en": {
+            "title": "SSL Labs and post-quantum TLS: what each check shows",
+            "description": "SSL Labs audits your whole TLS setup once. A dedicated post-quantum check answers one question, handles PQ-only servers and keeps watching. When to use which.",
+            "body": """
+<p><a href="https://www.ssllabs.com/ssltest/" rel="noopener">Qualys SSL Labs</a> is the best-known free TLS test, and it now reports on post-quantum key exchange as well. So why another check? Because the two answer different questions. Use both; here is what each is for.</p>
+
+<h2>What SSL Labs is best at</h2>
+<ul>
+<li>A thorough one-off audit of the whole TLS configuration: protocol versions, cipher suites, certificate chain, known vulnerabilities, and a letter grade for all of it.</li>
+<li>Testing every IP address a hostname resolves to.</li>
+<li>A widely recognised result to show auditors and customers.</li>
+</ul>
+
+<h2>Where a dedicated post-quantum check helps</h2>
+<ul>
+<li><strong>Post-quantum-only servers.</strong> Some deployments accept only hybrid or pure ML-KEM groups. F5 documents cases of <a href="https://my.f5.com/manage/s/article/K000161411" rel="noopener">post-quantum configurations failing in SSL Labs</a>. Our probe offers X25519MLKEM768, the other hybrids and pure ML-KEM-768/1024, and answers a HelloRetryRequest once as browsers do, so the group the server finally selects is recorded.</li>
+<li><strong>One question, answered in seconds.</strong> Does the server negotiate X25519MLKEM768 with a browser today: yes, no, or undetermined, with the evidence.</li>
+<li><strong>Staying fixed.</strong> A one-off test cannot tell you that a load-balancer update or a CDN change quietly removed the hybrid exchange. <a href="/monitoring?lang=en">Daily monitoring</a> emails you when it disappears, and the <a href="https://github.com/marketplace/actions/post-quantum-tls-check-quantum-aether" rel="noopener">GitHub Action</a> fails a deployment that drops it.</li>
+<li><strong>Fix steps for your stack.</strong> Guides for <a href="/guides/enable-x25519mlkem768-nginx?lang=en">nginx</a>, <a href="/guides/ubuntu-openssl-3-0-post-quantum-tls?lang=en">Ubuntu with OpenSSL 3.0</a>, <a href="/guides/post-quantum-tls-apache-caddy-haproxy-cloudflare?lang=en">Apache, Caddy, HAProxy and Cloudflare</a> and <a href="/guides/aws-alb-cloudfront-post-quantum-tls?lang=en">AWS</a>.</li>
+<li><strong>Context.</strong> How your site compares with the top 10,000 sites, every week, in an <a href="/adoption?lang=en">open dataset</a>.</li>
+</ul>
+
+<h2>What neither test can tell you</h2>
+<p>Both see one public HTTPS connection. Neither sees the connection from a CDN to your origin, internal services, or other protocols such as SSH and VPNs. And a hybrid key exchange does not make certificates post-quantum: browsers do not accept ML-DSA certificates yet, so RSA and ECDSA certificates are expected today.</p>
+
+<h2>When results differ</h2>
+<p>Different results usually have a simple cause: the two tests reached different IP addresses (anycast CDNs, several A records), or the server was changed between the two runs. Run our <a href="/?lang=en">free scan</a> again and compare the IP address in the result with the one SSL Labs tested.</p>
+""",
+        },
+        "ar": {
+            "title": "SSL Labs وTLS المقاوم للكم: ماذا يُظهر كل فحص",
+            "description": "يدقق SSL Labs إعدادات TLS كلها مرة واحدة. الفحص المخصص لما بعد الكم يجيب عن سؤال واحد، ويتعامل مع الخوادم المقاومة للكم فقط، ويستمر في المراقبة. متى تستخدم كلاً منهما.",
+            "body": """
+<p><a href="https://www.ssllabs.com/ssltest/" rel="noopener">Qualys SSL Labs</a> أشهر فحص مجاني لـ TLS، وصار يعرض أيضاً تبادل المفاتيح المقاوم للكم. فلماذا فحص آخر؟ لأن الاثنين يجيبان عن سؤالين مختلفين. استخدم الاثنين؛ وهذا ما يصلح له كل منهما.</p>
+
+<h2>ما يتفوق فيه SSL Labs</h2>
+<ul>
+<li>تدقيق شامل لمرة واحدة لكامل إعدادات TLS: إصدارات البروتوكول، ومجموعات التشفير، وسلسلة الشهادات، والثغرات المعروفة، ودرجة لكل ذلك.</li>
+<li>فحص كل عنوان IP يشير إليه اسم النطاق.</li>
+<li>نتيجة معروفة على نطاق واسع تعرضها على المدققين والعملاء.</li>
+</ul>
+
+<h2>أين يفيد فحص مخصص لما بعد الكم</h2>
+<ul>
+<li><strong>الخوادم التي لا تقبل إلا التشفير المقاوم للكم.</strong> بعض الإعدادات تقبل المجموعات الهجينة أو ML-KEM الخالص فقط. وتوثّق F5 حالات <a href="https://my.f5.com/manage/s/article/K000161411" rel="noopener">فشل إعدادات ما بعد الكم في SSL Labs</a>. مجسّنا يعرض X25519MLKEM768 وبقية المجموعات الهجينة وML-KEM-768/1024 الخالص، ويجيب على طلب HelloRetryRequest مرة واحدة كما تفعل المتصفحات، فيسجّل المجموعة التي يختارها الخادم في النهاية.</li>
+<li><strong>سؤال واحد بإجابة خلال ثوانٍ.</strong> هل يتفاوض الخادم اليوم على X25519MLKEM768 مع المتصفح: نعم، أو لا، أو غير محسوم، مع الدليل.</li>
+<li><strong>بقاء الإصلاح.</strong> الفحص لمرة واحدة لا يخبرك أن تحديثاً لموازن التحميل أو تغييراً في CDN أزال التبادل الهجين بصمت. <a href="/monitoring?lang=ar">المراقبة اليومية</a> تراسلك حين يختفي، و<a href="https://github.com/marketplace/actions/post-quantum-tls-check-quantum-aether" rel="noopener">GitHub Action</a> يُفشل أي نشر يُسقطه.</li>
+<li><strong>خطوات إصلاح لبيئتك.</strong> أدلة لـ <a href="/guides/enable-x25519mlkem768-nginx?lang=ar">nginx</a>، و<a href="/guides/ubuntu-openssl-3-0-post-quantum-tls?lang=ar">Ubuntu مع OpenSSL 3.0</a>، و<a href="/guides/post-quantum-tls-apache-caddy-haproxy-cloudflare?lang=ar">Apache وCaddy وHAProxy وCloudflare</a>، و<a href="/guides/aws-alb-cloudfront-post-quantum-tls?lang=ar">AWS</a>.</li>
+<li><strong>السياق.</strong> موقعك مقارنة بأكبر 10,000 موقع، كل أسبوع، في <a href="/adoption?lang=ar">بيانات مفتوحة</a>.</li>
+</ul>
+
+<h2>ما لا يخبرك به أي من الفحصين</h2>
+<p>كلاهما يرى اتصال HTTPS عاماً واحداً. لا يرى أيٌّ منهما الاتصال بين CDN وخادمك الأصلي، ولا الخدمات الداخلية، ولا بروتوكولات أخرى مثل SSH وVPN. والتبادل الهجين لا يجعل الشهادات مقاومة للكم: المتصفحات لا تقبل شهادات ML-DSA بعد، فشهادات RSA وECDSA متوقعة اليوم.</p>
+
+<h2>إذا اختلفت النتيجتان</h2>
+<p>للاختلاف عادة سبب بسيط: وصل الفحصان إلى عنوانَي IP مختلفين (شبكات CDN أو عدة سجلات A)، أو تغيّر الخادم بين الفحصين. أعد <a href="/?lang=ar">الفحص المجاني</a> وقارن عنوان IP في النتيجة بالعنوان الذي فحصه SSL Labs.</p>
 """,
         },
     },
