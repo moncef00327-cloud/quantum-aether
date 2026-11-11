@@ -117,3 +117,62 @@ body{background:#110b20}
 .qa-callout-pill.pos-top-right{top:4%;right:0}
 .qa-callout-pill.pos-bottom{bottom:0;left:50%;transform:translateX(-50%)}
 @media(max-width:600px){.qa-callout-pill.pos-bottom{transform:none}}
+/* ==== Aurora hero (Variant 01 reference): light-to-navy aurora, glass shield, 3 glass cards ==== */
+@font-face{font-family:'Barlow Condensed';src:url('/static/fonts/barlow-condensed-700.woff2') format('woff2');font-weight:700;font-display:swap;unicode-range:U+0000-00FF,U+2010-2027}
+.qa-aurora{background:radial-gradient(55% 38% at 70% 20%,rgba(244,114,182,.8),transparent 70%),radial-gradient(45% 30% at 18% 42%,rgba(236,72,153,.55),transparent 70%),radial-gradient(40% 30% at 45% 40%,rgba(103,232,249,.42),transparent 70%),linear-gradient(172deg,#f1f4fb 0%,#dfe5f5 22%,#b9a6dc 40%,#5b3f8f 56%,#241a4d 70%,#120d2a 100%);border:1px solid rgba(255,255,255,.35);color:#161b3d}
+.qa-aurora .eyebrow{color:#3b2a6b}.qa-aurora .eyebrow i{background:#db2777;box-shadow:0 0 0 4px rgba(219,39,119,.15)}
+.qa-aurora .qa-hero-content h1{font-family:'Barlow Condensed','Noto Sans Arabic',sans-serif;font-weight:700;font-size:clamp(2.9rem,5.6vw,5.4rem);line-height:.98;letter-spacing:0;text-transform:uppercase;background:none;-webkit-text-fill-color:#121a3a;color:#121a3a;margin:.6rem 0 1rem}
+[dir=rtl] .qa-aurora .qa-hero-content h1{font-weight:800;line-height:1.22;font-size:clamp(2.4rem,4.6vw,4.2rem)}
+.qa-aurora .qa-hero-content p{color:#2b2f55;font-size:1.06rem}
+.qa-hero-links{display:flex;gap:10px;flex-wrap:wrap}
+.qa-pill-link{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 18px;border-radius:999px;border:1px solid rgba(18,26,58,.35);color:#121a3a;background:rgba(255,255,255,.4);font-size:14px;font-weight:600;text-decoration:none;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.qa-pill-link.solid{background:#1e1b4b;color:#fff;border-color:#1e1b4b}
+.qa-pill-link:hover{filter:brightness(1.08)}.qa-pill-link:focus-visible{outline:3px solid #db2777;outline-offset:2px}
+/* glass shield on a platform */
+.qa-shield-stage{min-height:340px}
+.qa-shield-art{width:min(300px,80%);height:auto;filter:drop-shadow(0 24px 40px rgba(30,27,75,.35));overflow:visible}
+.qa-shield-body{animation:qa-bob 6s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:center}
+@keyframes qa-bob{from{transform:translateY(0)}to{transform:translateY(-10px)}}
+/* callouts with leader lines toward the shield */
+.qa-aurora .qa-callout-pill{background:rgba(255,255,255,.42);border:1px solid rgba(255,255,255,.85);color:#161b3d;font:600 .8rem 'JetBrains Mono',ui-monospace,monospace;box-shadow:0 6px 18px rgba(30,27,75,.18)}
+.qa-aurora .qa-callout-dot{background:#db2777;box-shadow:none}
+.qa-callout-pill::after{content:'';position:absolute;background:rgba(22,27,61,.45)}
+.qa-callout-pill.pos-top-left{top:10%;left:2%}.qa-callout-pill.pos-top-left::after{left:100%;top:50%;width:44px;height:1px}
+.qa-callout-pill.pos-top-right{top:4%;right:0}.qa-callout-pill.pos-top-right::after{right:100%;top:50%;width:36px;height:1px}
+.qa-callout-pill.pos-bottom{bottom:30%;right:0;left:auto;transform:none}.qa-callout-pill.pos-bottom::after{right:100%;top:50%;width:40px;height:1px}
+/* glass cards */
+.qa-aurora .qa-glass-card{background:rgba(20,16,44,.72);border:1px solid rgba(255,255,255,.16);color:#ece9f6;display:flex;flex-direction:column;gap:12px}
+.qa-aurora .qa-glass-card:hover{border-color:rgba(244,114,182,.5);background:rgba(26,20,56,.8)}
+.qa-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.qa-card-head h2{margin:0;font:700 1.15rem/1.1 'Barlow Condensed','Noto Sans Arabic',sans-serif;letter-spacing:.04em;text-transform:uppercase;color:#fff}
+[dir=rtl] .qa-card-head h2{letter-spacing:0;font-size:1rem}
+.qa-dots{display:flex;gap:5px}.qa-dots i{width:7px;height:7px;border-radius:50%;background:#f472b6}.qa-dots i:nth-child(2){background:#c084fc}.qa-dots i:nth-child(3){background:rgba(255,255,255,.35)}
+.qa-code{margin:0;padding:14px;border-radius:10px;background:rgba(5,4,16,.55);border:1px solid rgba(255,255,255,.1);font:13px/1.65 'JetBrains Mono',ui-monospace,monospace;color:#cfc8e6;overflow-x:auto;white-space:pre;text-align:left}
+.qa-code b{font-weight:500;color:#f9a8d4}.qa-code em{font-style:normal;color:#c4b5fd}
+.qa-card-foot{margin:0;font-size:13px;line-height:1.6;color:#ddd6fe}.qa-card-foot a{color:#f9a8d4;text-underline-offset:3px}
+.qa-card-note,.qa-card-sub{margin:0;font-size:12px;line-height:1.55;color:#bdb4d6}
+.qa-metric-big{font:700 2.6rem/1 'Barlow Condensed','Manrope',sans-serif;color:#fff}
+.qa-chart{margin:0}.qa-chart figcaption{font-size:12px;color:#bdb4d6;margin-bottom:6px}
+.qa-chart svg{width:100%;height:auto;display:block}
+.qa-bar{fill:#a855f7}.qa-bar:hover{fill:#c084fc}
+.qa-axis{stroke:rgba(255,255,255,.22);stroke-width:1}
+.qa-tick{fill:#bdb4d6;font:600 11px Manrope,sans-serif}.qa-val{fill:#fff;font:600 11px Manrope,sans-serif}
+.qa-aurora .qa-hero-examples span{color:#bdb4d6}
+.qa-aurora .qa-hero-note{color:#bdb4d6}
+.qa-aurora .qa-hero-bottom-cards{grid-template-columns:1.25fr 1fr 1fr;align-items:stretch}
+@media(max-width:1150px){.qa-aurora .qa-hero-bottom-cards{grid-template-columns:1fr 1fr}.qa-aurora .qa-hero-bottom-cards>:first-child{grid-column:1/-1}}
+@media(max-width:600px){
+.qa-aurora{background:radial-gradient(70% 18% at 70% 14%,rgba(244,114,182,.75),transparent 70%),radial-gradient(60% 14% at 20% 26%,rgba(103,232,249,.4),transparent 70%),linear-gradient(180deg,#f1f4fb 0%,#dde3f4 14%,#b9a6dc 26%,#5b3f8f 36%,#241a4d 46%,#120d2a 100%)}
+.qa-aurora .qa-hero-bottom-cards{grid-template-columns:1fr}
+.qa-shield-stage{min-height:0}
+.qa-shield-art{width:200px;margin:0 calc(50% - 100px) 8px}
+.qa-callout-pill::after{display:none}
+.qa-aurora .qa-callout-pill{background:rgba(20,16,44,.55);color:#fff;border-color:rgba(255,255,255,.35)}
+}
+@media(prefers-reduced-motion:reduce){.qa-shield-body{animation:none}}
+.qa-code{font-size:12.5px}
+.qa-aurora .qa-hero-examples{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px}
+.qa-aurora .qa-hero-examples>span{flex-basis:100%;margin:0}
+.qa-aurora .qa-hero-examples button{flex:1 1 0;min-width:max-content;min-height:44px;margin:0;justify-content:center}
+.qa-aurora .qa-hero-note{margin:0}
+.qa-chart svg{max-width:340px}
