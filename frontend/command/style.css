@@ -176,3 +176,31 @@ body{background:#110b20}
 .qa-aurora .qa-hero-examples button{flex:1 1 0;min-width:max-content;min-height:44px;margin:0;justify-content:center}
 .qa-aurora .qa-hero-note{margin:0}
 .qa-chart svg{max-width:340px}
+/* ==== Transparent glass pass: colour runs behind the cards, every surface is see-through ==== */
+.qa-aurora{background:radial-gradient(55% 30% at 72% 16%,rgba(244,114,182,.8),transparent 70%),radial-gradient(45% 26% at 16% 36%,rgba(236,72,153,.5),transparent 70%),radial-gradient(40% 26% at 45% 34%,rgba(103,232,249,.4),transparent 70%),radial-gradient(50% 30% at 12% 85%,rgba(236,72,153,.45),transparent 70%),radial-gradient(45% 30% at 88% 78%,rgba(56,189,248,.35),transparent 70%),radial-gradient(40% 25% at 55% 98%,rgba(168,85,247,.5),transparent 70%),linear-gradient(172deg,#f1f4fb 0%,#dfe5f5 20%,#b9a6dc 38%,#6a4aa0 54%,#33246b 72%,#22184f 100%)}
+.qa-aurora .qa-glass-card,.qa-aurora .qa-glass-card:hover{background:linear-gradient(160deg,rgba(255,255,255,.16),rgba(255,255,255,.05));border:1px solid rgba(255,255,255,.3);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 18px 40px -18px rgba(10,6,30,.55);backdrop-filter:blur(18px) saturate(170%);-webkit-backdrop-filter:blur(18px) saturate(170%);transform:none}
+@media(hover:hover){.qa-aurora .qa-glass-card:hover{border-color:rgba(255,255,255,.5);background:linear-gradient(160deg,rgba(255,255,255,.2),rgba(255,255,255,.07))}}
+.qa-aurora .qa-glass-card .input{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.32);border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}
+.qa-aurora .qa-glass-card .input input{color:#fff}.qa-aurora .qa-glass-card .input input::placeholder{color:rgba(255,255,255,.7)}
+.qa-aurora .qa-glass-card .input svg{color:rgba(255,255,255,.8)}
+.qa-aurora .qa-glass-card .input button{border-radius:10px;background:linear-gradient(135deg,#f9a8d4,#c4b5fd);color:#1e1442;border:0;font-weight:700}
+.qa-aurora .qa-glass-card .badge{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.3);color:#fff}
+.qa-aurora .qa-hero-examples button{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.26);color:#fff}
+.qa-aurora .qa-hero-examples button b{color:#fbcfe8}
+.qa-aurora .qa-code{background:rgba(12,8,32,.32);border:1px solid rgba(255,255,255,.18);color:#f3f0fb}
+.qa-aurora .qa-code b{color:#fbcfe8}.qa-aurora .qa-code em{color:#ddd6fe}
+.qa-aurora .qa-card-note,.qa-aurora .qa-card-sub,.qa-aurora .qa-chart figcaption,.qa-aurora .qa-hero-examples span,.qa-aurora .qa-hero-note{color:#e4ddf5}
+.qa-aurora .qa-card-foot{color:#fff}.qa-aurora .qa-card-foot a{color:#fbcfe8}
+.qa-aurora .qa-tick{fill:#e4ddf5}.qa-aurora .qa-bar{fill:#f0abfc}.qa-aurora .qa-axis{stroke:rgba(255,255,255,.4)}
+@media(max-width:600px){
+.qa-aurora{background:radial-gradient(70% 14% at 70% 12%,rgba(244,114,182,.75),transparent 70%),radial-gradient(60% 12% at 20% 22%,rgba(103,232,249,.4),transparent 70%),radial-gradient(80% 14% at 10% 55%,rgba(236,72,153,.45),transparent 70%),radial-gradient(80% 14% at 90% 75%,rgba(56,189,248,.35),transparent 70%),radial-gradient(80% 12% at 40% 95%,rgba(168,85,247,.5),transparent 70%),linear-gradient(180deg,#f1f4fb 0%,#dde3f4 12%,#b9a6dc 24%,#6a4aa0 34%,#3a2876 50%,#2a1d5c 100%)}
+.qa-shield-art{width:160px;margin:0 calc(50% - 80px) 6px}
+.qa-aurora .qa-callout-pill{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.4);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+}
+/* accessibility pass (WCAG 2.1 AA): text >=4.5:1 on glass, 3:1 field boundary, visible focus */
+.qa-aurora .qa-glass-card,.qa-aurora .qa-glass-card:hover{background:linear-gradient(160deg,rgba(255,255,255,.14),rgba(30,16,72,.24))}
+@media(hover:hover){.qa-aurora .qa-glass-card:hover{background:linear-gradient(160deg,rgba(255,255,255,.18),rgba(30,16,72,.2))}}
+.qa-aurora .qa-card-note,.qa-aurora .qa-card-sub,.qa-aurora .qa-chart figcaption,.qa-aurora .qa-hero-examples span,.qa-aurora .qa-hero-note{color:#f3effc}
+.qa-aurora .qa-glass-card .input{border-color:rgba(255,255,255,.62)}
+.qa-aurora .qa-glass-card .input:focus-within{border-color:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.55)}
+.qa-aurora button:focus-visible,.qa-aurora a:focus-visible{outline:3px solid #fff;outline-offset:2px}
