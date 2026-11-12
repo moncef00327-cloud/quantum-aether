@@ -59,6 +59,7 @@
   <ul class="related">
     {% for g in fix_guides %}<li><a href="{{ url_for('site.guide', slug=g.slug, lang=lang) }}">{{ g.title }}</a></li>{% endfor %}
   </ul>
+  <p><a href="{{ url_for('site.audit_page', domain=domain, lang=lang) }}" data-ev="audit_cta">{{ audit_cta }} →</a></p>
 </section>
 {% endif %}
 <section class="card" id="badge">

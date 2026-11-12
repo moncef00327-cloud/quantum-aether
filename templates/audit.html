@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}{{ c.title }} · {{ t.brand }}{% endblock %}
+{% block description %}{{ c.meta }}{% endblock %}
+{% block head %}{% if state %}<meta name="robots" content="noindex, follow">{% endif %}{% endblock %}
+{% block content %}
+<section class="hero commercial-hero">
+  <p class="eyebrow">{{ c.eyebrow }}</p>
+  <h1>{{ c.title }}</h1>
+  <p class="lead">{{ c.lead }}</p>
+  <p class="notice">{{ c.example }}</p>
+  <div class="commercial-actions"><a class="button-link" href="#request" data-ev="audit_cta">{{ c.submit }}</a><a href="{{ url_for('site.sample_report', lang=lang if lang != 'de' else 'en') }}">{{ t.sample_link }} ↗</a></div>
+</section>
+
+<section class="card">
+  <h2>{{ c.included_title }}</h2>
+  <ul class="ticks">{% for item in c.included %}<li>{{ item }}</li>{% endfor %}</ul>
+  <p class="muted small">{{ c.limits }}</p>
+</section>
+
+<section class="card">
+  <h2>{{ c.price_title }}</h2>
+  <p class="commercial-price"><bdi>{{ c.price_line.format(price=price, currency=currency) }}</bdi></p>
+  <p class="one-time">{{ c.pay_line }}</p>
+</section>
+
+<section class="card" id="request">
+  {% if state == 'sent' %}
+    <h2>{{ c.sent_title }}</h2>
+    <p role="status">{{ c.sent.format(email=form.email) }}</p>
+  {% else %}
+    <h2>{{ c.form_title }}</h2>
+    {% if state %}<p class="form-error" role="alert">{{ c[state] }}</p>{% endif %}
+    <form method="post" action="{{ url_for('site.audit_request', lang=lang) }}#request" class="audit-form">
+      <p><label>{{ c.org }}<br><input name="org" required maxlength="200" autocomplete="organization" value="{{ form.org or '' }}"></label></p>
+      <p><label>{{ c.domain }}<br><input name="domain" required maxlength="253" dir="ltr" inputmode="url" value="{{ form.domain or '' }}"></label></p>
+      <p><label>{{ c.email }}<br><input name="email" type="email" required maxlength="254" dir="ltr" autocomplete="email" value="{{ form.email or '' }}"></label></p>
+      <p><label>{{ c.name }}<br><input name="name" maxlength="120" autocomplete="name" value="{{ form.name or '' }}"></label></p>
+      <p><label>{{ c.message }}<br><textarea name="message" rows="4" maxlength="2000">{{ form.message or '' }}</textarea></label></p>
+      <p class="consent"><label><input type="checkbox" name="consent" value="1" required>
+        <span>{{ c.consent }} (<a href="{{ url_for('site.legal_page', slug='datenschutz', lang=legal_lang) }}" target="_blank">{{ c.privacy }}</a>)</span></label></p>
+      <p><button type="submit" data-ev="audit_submit">{{ c.submit }}</button></p>
+    </form>
+  {% endif %}
+</section>
+{% endblock %}

@@ -35,6 +35,7 @@ import monitor
 import countries
 import deadlines
 import free_alerts
+import audit
 import discovery
 import config_gen
 import reports
@@ -79,6 +80,8 @@ def _config_from_env():
         "ADMIN_PASSWORD_HASH": env("QS_ADMIN_PASSWORD_HASH", ""),
         "PRICE": env("QS_PRICE", "49.00"),
         "PACK_PRICE": env("QS_PACK_PRICE", "199.00"),
+        "AUDIT_PRICE": env("QS_AUDIT_PRICE", "490"),
+        "AUDIT_CURRENCY": env("QS_AUDIT_CURRENCY", "EUR"),
         "PACK_CREDITS": int(env("QS_PACK_CREDITS", "10")),
         "CURRENCY": env("QS_CURRENCY", "USD"),
         "SCANS_PER_HOUR": int(env("QS_SCANS_PER_HOUR", "10")),
@@ -160,7 +163,7 @@ def current_lang():
 
 # الصفحات التي لها نسخة ألمانية فعلية (لمبدّل اللغة وhreflang وخريطة الموقع).
 DE_PAGES = {"site.monthly_report", "site.press_page", "site.pq_config", "site.pq_config_server", "site.index", "site.study", "site.monitoring", "site.adoption_page", "site.scanning_page", "site.deadlines_page",
-            "site.business_page", "site.pricing_page", "site.agency_page", "site.countries_page", "site.country_page"}
+            "site.business_page", "site.pricing_page", "site.agency_page", "site.audit_page", "site.audit_request", "site.countries_page", "site.country_page"}
 
 
 def texts():
@@ -176,6 +179,7 @@ def _inject():
             "abs_url": lambda endpoint, **kw: public_base() + url_for(endpoint, **kw),
             "localized_url": localized_url, "metadata_url": metadata_url,
             "sx": scan_experience.COPY[lang],
+            "audit_cta": audit.COPY[lang]["cta"],
             "domain_discoverable": lambda domain: not search_indexing.is_excluded(domain)}
 
 
@@ -618,6 +622,48 @@ def agency_page():
     cfg = current_app.config
     return render_template("agency.html", price=cfg["PACK_PRICE"], credits=cfg["PACK_CREDITS"], currency=cfg["CURRENCY"],
                            single=cfg["PRICE"], payments_enabled=payments_enabled(), paypal_client_id=cfg["PAYPAL_CLIENT_ID"])
+
+
+def _audit_page(state=None, status=200, form=None):
+    cfg = current_app.config
+    return render_template("audit.html", c=audit.COPY[current_lang()], price=cfg["AUDIT_PRICE"],
+                           currency=cfg["AUDIT_CURRENCY"], state=state, form=form or {}), status
+
+
+@bp.get("/audit")
+def audit_page():
+    return _audit_page(form={"domain": (request.args.get("domain") or "").strip()[:253]})
+
+
+@bp.post("/audit")
+def audit_request():
+    """طلب تدقيق للمؤسسات: يُحفظ ويُرسل للمالك بالبريد. لا دفع هنا؛ المالك يرسل الفاتورة يدوياً."""
+    f = {k: (request.form.get(k) or "").strip() for k in ("name", "email", "org", "domain", "message")}
+    f = dict(f, name=f["name"][:120], email=f["email"][:254], org=f["org"][:200], message=f["message"][:2000])
+    if not request.form.get("consent"):
+        return _audit_page("err_consent", 400, f)
+    if not EMAIL_RE.match(f["email"]):
+        return _audit_page("err_email", 400, f)
+    if not f["org"] or not f["domain"]:
+        return _audit_page("err_fields", 400, f)
+    try:
+        domain = discovery.base_domain(quantum_vuln_scanner.normalize_domain(f["domain"]))
+    except quantum_vuln_scanner.ScanError:
+        return _audit_page("err_domain", 400, f)
+    conn = db()
+    if audit.rate_limited(conn, client_hash()):
+        return _audit_page("err_limit", 429, f)
+    mailer = current_app.extensions["mailer"]
+    owner = current_app.config["OWNER_EMAIL"]
+    if not (mailer.enabled and owner):
+        return _audit_page("err_unavailable", 503, f)
+    req = dict(f, domain=domain, lang=current_lang())
+    req_id = audit.create(conn, email=f["email"], name=f["name"], org=f["org"], domain=domain, message=f["message"],
+                          lang=req["lang"], client_hash=client_hash(), is_test=is_test_request())
+    subject, text = audit.owner_email(req_id, req, discovery.public_summary(discovery.get(conn, domain)), public_base())
+    if not mailer.send(owner, subject, text):
+        return _audit_page("err_unavailable", 503, f)
+    return _audit_page("sent", 200, f)
 
 
 @bp.post("/api/paypal/packs")
@@ -2341,6 +2387,7 @@ def _sitemap_pages():
     pages.append(("/business", _template_day("commercial.html"), de_langs))
     pages.append(("/pricing", _template_day("commercial.html"), de_langs))
     pages.append(("/agency", _template_day("agency.html"), de_langs))
+    pages.append(("/audit", _template_day("audit.html"), de_langs))
     board = countries.leaderboard(db())
     if board:
         week_day = adoption.week_monday(board["week"]).isoformat()

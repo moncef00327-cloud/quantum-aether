@@ -17,6 +17,7 @@
 <section class="commercial-grid purchase-grid">
   <article class="card"><span class="tag">{{ commercial.once }}</span><h2>{{ commercial.report }}</h2><p class="commercial-price"><bdi>{{ price }} {{ currency }}</bdi></p><p>{{ commercial.report_desc }}</p><a href="{{ url_for('site.index', lang=lang) }}">{{ commercial.scan }} ↗</a></article>
 <article class="card"><h2>{{ commercial.pack }}</h2><p>{{ commercial.pack_desc.format(n=credits) }}</p><p class="commercial-price"><bdi>{{ pack_price }} {{ currency }}</bdi> · {{ commercial.once }}</p><a class="button-link" href="{{ url_for('site.agency_page', lang=lang) }}#buy">{{ commercial.buy }}</a>{% if not payments_enabled %}<p class="notice">{{ commercial.unavailable }}</p>{% endif %}</article></section>
+<section class="card"><span class="tag">{{ commercial.once }}</span><h2>{{ audit_cta }}</h2><p><a class="button-link" href="{{ url_for('site.audit_page', lang=lang) }}" data-ev="audit_cta">{{ commercial.choose }}</a></p></section>
 <section class="commercial-grid"><article class="card"><h2>{{ commercial.billing }}</h2><p>{{ commercial.billing_desc }}</p><a href="{{ url_for('site.monitoring', lang=lang) }}#login">{{ commercial.login }} ↗</a></article><article class="card"><h2>{{ commercial.enterprise }}</h2><p>{{ commercial.enterprise_desc }}</p><a href="{{ url_for('site.openapi') }}">{{ commercial.api }} ↗</a></article></section>
 <section class="card"><h2>{{ commercial.limits }}</h2><p>{{ commercial.limits_desc }}</p></section>
 {% endblock %}
