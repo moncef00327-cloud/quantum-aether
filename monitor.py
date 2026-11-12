@@ -28,9 +28,9 @@ ALERT_TEXT = {
         "de": "{domain}: Note geändert von {old} zu {new}",
     },
     "PQ_LOST": {
-        "en": "{domain}: post-quantum key exchange is no longer negotiated (now {group})",
-        "ar": "{domain}: لم يعد الخادم يتفق على تبادل المفاتيح المقاوم للكم (الآن {group})",
-        "de": "{domain}: Quantenresistenter Schlüsselaustausch wird nicht mehr ausgehandelt (jetzt {group})",
+        "en": "{domain}: SILENT DOWNGRADE — post-quantum key exchange is no longer negotiated after a server/CDN change (now {group})",
+        "ar": "{domain}: تنبيه تراجع صامت — توقف الخادم أو الـ CDN عن التفاوض على التشفير المقاوم للكم وتراجع إلى ({group})",
+        "de": "{domain}: STILLER RÜCKSCHRITT — Quantenresistenter Schlüsselaustausch wird nicht mehr ausgehandelt (jetzt {group})",
     },
     "PQ_GAINED": {
         "en": "{domain}: post-quantum key exchange is now enabled ({group})",

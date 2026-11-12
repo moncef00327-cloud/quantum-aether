@@ -88,6 +88,13 @@ class ConversionTests(unittest.TestCase):
         old = self.client.get("/badge/beta.test.svg").get_data(as_text=True)   # فحص قديم (>30 يوماً في الاختبار؟)
         self.assertTrue("not scanned" in old or "B ·" in old)
         self.assertIn("undetermined", self.client.get("/badge/gamma.test.svg").get_data(as_text=True))  # observed but inconclusive, not absent
+        # ربط النطاق بتنبيه مجاني فعّال يُبقي الشارة خضراء ونشطة حتى لو لم يكن في المتتبّع أو الفحص اليدوي الحديث
+        import free_alerts
+        tok, _ = free_alerts.subscribe(conn, "dev@custom-linked.test", "custom-linked.test", "en", "c1")
+        free_alerts.confirm(conn, tok, {"grade": "A", "key_exchange": {"pq": True, "version": "TLSv1.3", "group": "X25519MLKEM768", "pq_hello_ok": True}, "certificate": {"days_left": 60}})
+        conn.close()
+        linked_svg = self.client.get("/badge/custom-linked.test.svg").get_data(as_text=True)
+        self.assertIn("A · ML-KEM", linked_svg)
 
     def test_og_tags_point_to_images(self):
         body = self.client.get("/site/alpha.test?lang=en").get_data(as_text=True)

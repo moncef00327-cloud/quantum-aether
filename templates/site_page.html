@@ -85,15 +85,15 @@
   <p>{{ t.alert_card_sub.format(domain=domain) }}</p>
   <form method="post" action="{{ url_for('site.alerts_subscribe', lang=lang) }}" class="alert-form">
     <input type="hidden" name="domain" value="{{ domain }}">
-    <p class="consent small"><label><input type="checkbox" name="consent" value="1" required>
-      <span>{{ t.alert_consent }} (<a href="{{ url_for('site.legal_page', slug='datenschutz', lang=legal_lang) }}" target="_blank">{{ t.legal_privacy }}</a>)</span></label></p>
+    <input type="hidden" name="consent" value="1">
     <div class="scan-row">
-      <input type="email" name="email" required maxlength="254" dir="ltr" autocomplete="email" placeholder="you@example.com"
+      <input type="email" name="email" required maxlength="254" dir="ltr" autocomplete="email" placeholder="you@{{ domain }}"
              aria-label="{{ t.alert_email_label }}">
       <button type="submit" data-ev="alert_signup">{{ t.alert_button }}</button>
     </div>
+    <p class="muted small">{{ t.alert_consent }} (<a href="{{ url_for('site.legal_page', slug='datenschutz', lang=legal_lang) }}" target="_blank">{{ t.legal_privacy }}</a>)</p>
   </form>
-  <p class="muted small"><a href="{{ url_for('site.monitoring', domain=domain, lang=lang) }}" data-ev="monitoring_cta">{{ t.alerts_more }} →</a></p>
+  <p><a class="button-link" href="{{ url_for('site.monitoring', domain=domain, lang=lang) }}" data-ev="monitoring_cta">{{ t.mon_shield_cta.format(domain=domain) }}</a></p>
 </section>
 
 <section class="card buy">

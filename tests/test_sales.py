@@ -23,7 +23,7 @@ class SalesBatchTest(unittest.TestCase):
         self.client = self.app.test_client()
 
     def tearDown(self):
-        shutil.rmtree(self.tmp)
+        shutil.rmtree(self.tmp, ignore_errors=True)
 
     def conn(self):
         return sales_db.connect(f"{self.tmp}/quantum_saas.db")
