@@ -17,3 +17,4 @@ node_modules/
 
 # Local screenshots, read-only production audits and data fixtures.
 artifacts/
+.aider*
