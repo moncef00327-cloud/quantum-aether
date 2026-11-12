@@ -131,6 +131,49 @@ class ConversionTests(unittest.TestCase):
         self.assertIn("/deadlines", feed)
         self.assertIn("/deadlines", self.client.get("/llms.txt").get_data(as_text=True))
 
+    def test_dns_optout_and_ai_magnet_endpoints(self):
+        from unittest.mock import patch
+        import adoption
+        # 1. HNDL exposure timeline appears on classical site (beta.test) and not on PQ site (alpha.test)
+        beta_html = self.client.get("/site/beta.test?lang=en").get_data(as_text=True)
+        self.assertIn("Quantum Exposure Window (Mosca&#39;s Theorem", beta_html)
+        self.assertIn("/verify/beta.test/qa_report.json", beta_html)
+        alpha_html = self.client.get("/site/alpha.test?lang=en").get_data(as_text=True)
+        self.assertNotIn("Quantum Exposure Window (Mosca&#39;s Theorem", alpha_html)
+
+        # 2. /verify/<domain>/qa_report.json and SHA-256 attestation
+        import datetime as dt
+        now = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        conn = self.conn()
+        with conn:
+            conn.execute("UPDATE adoption_results SET scanned_at = ? WHERE domain = 'alpha.test' AND week = '2026-W45'", (now,))
+        conn.close()
+        qa = self.client.get("/verify/alpha.test/qa_report.json").get_json()
+        self.assertEqual(qa["generator"], "Quantum Aether")
+        self.assertEqual(qa["domain"], "alpha.test")
+        self.assertEqual(qa["grade"], "A")
+        self.assertFalse(qa["is_stale"])
+        self.assertEqual(len(qa["attestation_sha256"]), 64)
+        self.assertIn("AI agent", qa["agent_note"])
+        verify_html = self.client.get("/verify/alpha.test?lang=en").get_data(as_text=True)
+        self.assertIn(qa["attestation_sha256"], verify_html)
+
+        # 3. /mcp/health & /mcp/scan
+        health = self.client.get("/mcp/health").get_json()
+        self.assertEqual(health["status"], "ok")
+        self.assertEqual(health["port_scope"], 443)
+
+        # 4. DNS TXT Opt-Out verification removes domain from public /site/ and blocks /mcp/scan
+        with patch("adoption.query_txt_records", side_effect=lambda fqdn, timeout=3.0: ["verify-optout"] if fqdn == "_ather-optout.beta.test" else []):
+            self.assertTrue(adoption.is_opted_out("beta.test", check_dns=True))
+            resp = self.client.post("/scanning/optout?lang=en", data={"domain": "beta.test"})
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("Verified!", resp.get_data(as_text=True))
+            # Now beta.test is recorded in adoption_optout and removed from adoption_results
+            self.assertEqual(self.client.get("/site/beta.test").status_code, 410)
+            mcp_excl = self.client.get("/mcp/scan?domain=beta.test").get_json()
+            self.assertEqual(mcp_excl["status"], "excluded")
+
 
 if __name__ == "__main__":
     unittest.main()

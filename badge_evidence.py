@@ -1,5 +1,6 @@
 """Bounded, read-only badge evidence with explicit expiration; never scans."""
 import datetime as dt
+import hashlib
 import json
 
 import adoption
@@ -7,6 +8,21 @@ import sales_db
 import scan_experience
 
 MAX_AGE_DAYS = 30
+
+
+def fix_snippet_for(grade, tls, group):
+    if grade == 'A' or (group and 'MLKEM' in str(group).upper()):
+        return 'posture OK (X25519MLKEM768 active); monitor daily to prevent silent TLS downgrades'
+    if tls and tls != 'TLSv1.3':
+        return 'nginx: ssl_protocols TLSv1.2 TLSv1.3; ssl_ecdh_curve X25519MLKEM768:X25519:prime256v1;'
+    return 'nginx (OpenSSL 3.5+): ssl_ecdh_curve X25519MLKEM768:X25519:prime256v1; # or enable Cloudflare proxy'
+
+
+def attestation_hash(domain, state, grade, tls, group, checked_at):
+    if not checked_at or state == 'not_scanned':
+        return None
+    canonical = f"quantum-aether-v1|{domain}|{state}|{grade or ''}|{tls or ''}|{group or ''}|{checked_at}"
+    return hashlib.sha256(canonical.encode('utf-8')).hexdigest()
 
 
 def moment(value):
@@ -66,7 +82,8 @@ def for_domain(conn, domain, now=None):
         pass
     candidates = [c for c in candidates if moment(c['checked_at']) is not None and moment(c['checked_at']) <= now]
     base = dict(domain=domain, state='not_scanned', grade=None, checked_at=None, expires_at=None,
-                observation_status='undetermined', limitations=scan_experience.LIMITATION, cache_seconds=300)
+                observation_status='undetermined', limitations=scan_experience.LIMITATION, cache_seconds=300,
+                attestation_sha256=None, fix_snippet=None)
     if not candidates:
         return base
     evidence = max(candidates, key=lambda c: moment(c['checked_at']))
@@ -76,4 +93,6 @@ def for_domain(conn, domain, now=None):
                 cache_seconds=min(300, max(0, int((expiry - now).total_seconds()))) if state != 'stale' else 300)
     if state != 'fresh':
         base['grade'] = None
+    base['attestation_sha256'] = attestation_hash(domain, state, base['grade'], base.get('tls'), base.get('group'), base['checked_at'])
+    base['fix_snippet'] = fix_snippet_for(base['grade'], base.get('tls'), base.get('group'))
     return base

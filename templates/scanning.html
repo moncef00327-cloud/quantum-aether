@@ -9,6 +9,22 @@
   <ul>{% for item in t.scanning_what %}<li>{{ item }}</li>{% endfor %}</ul>
   <h2>{{ t.scanning_optout_title }}</h2>
   <p>{{ t.scanning_optout }} <a href="mailto:sajad.vip56@gmail.com?subject=Opt-out%20from%20Quantum%20Aether%20scans">sajad.vip56@gmail.com</a></p>
+  <h3>{{ t.scanning_dns_title }}</h3>
+  <p>{{ t.scanning_dns_body }}</p>
+  <pre dir="ltr"><code>_ather-optout.example.com. IN TXT "verify-optout"</code></pre>
+  {% if optout_result %}
+    {% if optout_result.verified %}
+      <p class="notice">{{ t.scanning_dns_ok.format(domain=optout_result.domain) }}</p>
+    {% else %}
+      <p class="form-error">{{ t.scanning_dns_fail.format(domain=optout_result.domain) }}</p>
+    {% endif %}
+  {% endif %}
+  <form method="post" action="{{ url_for('site.scanning_optout_submit', lang=lang) }}" class="scan-form" style="margin-bottom:1rem">
+    <div class="scan-row">
+      <input name="domain" type="text" dir="ltr" inputmode="url" autocomplete="off" placeholder="example.com" required>
+      <button type="submit">{{ t.scanning_dns_btn }}</button>
+    </div>
+  </form>
   <p class="muted small">{{ t.scanning_source }} <code dir="ltr">95.179.195.150</code> · <a href="{{ url_for('site.adoption_page', lang=lang) }}">/adoption</a></p>
 </article>
 {% endblock %}

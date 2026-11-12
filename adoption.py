@@ -54,6 +54,11 @@ CREATE TABLE IF NOT EXISTS adoption_monthly (
     scanned_at  TEXT NOT NULL,
     PRIMARY KEY (month, domain)
 );
+CREATE TABLE IF NOT EXISTS adoption_optout (
+    domain      TEXT PRIMARY KEY,
+    verified_at TEXT NOT NULL,
+    method      TEXT NOT NULL
+);
 """
 
 
@@ -93,18 +98,157 @@ def load_watchlists(path=WATCHLISTS_FILE):
         return {}
 
 
-def load_optout(path=OPTOUT_FILE):
-    """نطاقات طلب أصحابها استبعادها (سطر لكل نطاق، # للتعليق). يشمل الاستبعاد النطاقات الفرعية."""
+def load_optout(path=OPTOUT_FILE, conn=None):
+    """نطاقات طلب أصحابها استبعادها (سطر لكل نطاق، # للتعليق، بالإضافة إلى الاستبعادات الموثقة عبر DNS TXT في قاعدة البيانات)."""
+    out = set()
     try:
         with open(path, encoding="utf-8") as f:
-            return {line.split("#")[0].strip().lower() for line in f if line.split("#")[0].strip()}
+            out.update(line.split("#")[0].strip().lower() for line in f if line.split("#")[0].strip())
     except FileNotFoundError:
-        return set()
+        pass
+    if conn is not None:
+        try:
+            rows = conn.execute("SELECT domain FROM adoption_optout").fetchall()
+            out.update(r[0].strip().lower() for r in rows if r[0])
+        except Exception:
+            pass
+    return out
 
 
-def opted_out(domain, optout):
-    parts = domain.split(".")
-    return any(".".join(parts[i:]) in optout for i in range(len(parts) - 1))
+def _udp_dns_txt_query(fqdn, nameserver="1.1.1.1", timeout=3.0):
+    """استعلام DNS TXT خالص عبر UDP (RFC 1035) لا يحتاج حزماً خارجية."""
+    import random, socket, struct
+    txid = random.randint(1, 65534)
+    header = struct.pack("!HHHHHH", txid, 0x0100, 1, 0, 0, 0)
+    qname = b"".join(len(lbl.encode("idna")).to_bytes(1, "big") + lbl.encode("idna") for lbl in fqdn.strip(".").split(".")) + b"\x00"
+    packet = header + qname + struct.pack("!HH", 16, 1)  # QTYPE=16 (TXT), QCLASS=1 (IN)
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+        s.settimeout(timeout)
+        s.sendto(packet, (nameserver, 53))
+        resp, _ = s.recvfrom(4096)
+    if len(resp) < 12:
+        return []
+    r_txid, flags, qdcount, ancount, _, _ = struct.unpack("!HHHHHH", resp[:12])
+    if r_txid != txid or (flags & 0x000F) != 0 or ancount == 0:
+        return []
+
+    def skip_name(buf, pos):
+        while pos < len(buf):
+            length = buf[pos]
+            if length == 0:
+                return pos + 1
+            if (length & 0xC0) == 0xC0:
+                return pos + 2
+            pos += 1 + length
+        return pos
+
+    pos = 12
+    for _ in range(qdcount):
+        pos = skip_name(resp, pos) + 4
+    records = []
+    for _ in range(ancount):
+        if pos >= len(resp):
+            break
+        pos = skip_name(resp, pos)
+        if pos + 10 > len(resp):
+            break
+        rtype, _, _, rdlength = struct.unpack("!HHIH", resp[pos:pos + 10])
+        pos += 10
+        rdata = resp[pos:pos + rdlength]
+        pos += rdlength
+        if rtype == 16:  # TXT
+            idx, parts = 0, []
+            while idx < len(rdata):
+                slen = rdata[idx]
+                idx += 1
+                parts.append(rdata[idx:idx + slen].decode("utf-8", errors="replace"))
+                idx += slen
+            records.append("".join(parts))
+    return records
+
+
+def query_txt_records(fqdn, timeout=3.0):
+    """يجلب سجلات TXT لاسم النطاق عبر dnspython إن وُجدت، وإلا عبر استعلام UDP مباشر."""
+    try:
+        import dns.resolver  # type: ignore
+        answers = dns.resolver.resolve(fqdn, "TXT", lifetime=timeout)
+        return [a.to_text() for a in answers]
+    except ImportError:
+        pass
+    except Exception:
+        return []
+    for ns in ("1.1.1.1", "8.8.8.8"):
+        try:
+            recs = _udp_dns_txt_query(fqdn, nameserver=ns, timeout=timeout)
+            if recs:
+                return recs
+        except Exception:
+            continue
+    return []
+
+
+def verify_dns_optout(domain: str, timeout: float = 3.0) -> dict:
+    """
+    يتحقق من إثبات ملكية الاستبعاد عبر سجلات DNS TXT:
+    يقبل:
+      - _ather-optout.<domain> TXT يحتوي على "verify-optout"
+      - _qa-optout.<domain>    TXT يحتوي على "qa-optout=1"
+    """
+    clean = (domain or "").strip().lower().removeprefix("www.")
+    if not clean or "." not in clean:
+        return {"domain": clean, "verified": False, "records": [], "note": "invalid domain"}
+    all_records = []
+    for prefix in ("_ather-optout", "_qa-optout"):
+        fqdn = f"{prefix}.{clean}"
+        recs = query_txt_records(fqdn, timeout=timeout)
+        all_records.extend(recs)
+        for val in recs:
+            low = val.lower()
+            if "verify-optout" in low or "qa-optout=1" in low:
+                return {
+                    "domain": clean,
+                    "verified": True,
+                    "records": all_records,
+                    "note": f"exclusion verified via {fqdn} TXT record",
+                }
+    return {
+        "domain": clean,
+        "verified": False,
+        "records": all_records,
+        "note": "no opt-out TXT token found (_ather-optout.<domain> = verify-optout or _qa-optout.<domain> = qa-optout=1)",
+    }
+
+
+def opted_out(domain, optout=None, check_dns=False):
+    clean = (domain or "").strip().lower()
+    if not clean:
+        return False
+    optout = load_optout() if optout is None else optout
+    parts = clean.split(".")
+    if any(".".join(parts[i:]) in optout for i in range(len(parts) - 1)):
+        return True
+    if check_dns and verify_dns_optout(clean)["verified"]:
+        return True
+    return False
+
+
+def is_opted_out(domain: str, optout=None, check_dns: bool = False) -> bool:
+    """واجهة متوافقة للتحقق من استبعاد النطاق محلياً أو عبر DNS TXT."""
+    return opted_out(domain, optout=optout, check_dns=check_dns)
+
+
+def record_optout(conn, domain: str, method: str = "dns_txt"):
+    """يسجّل استبعاد النطاق الموثّق في قاعدة البيانات ويحذف نتائجه المنشورة (شاملاً النطاقات الفرعية)."""
+    clean = (domain or "").strip().lower().removeprefix("www.")
+    now = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
+    with conn:
+        conn.execute(
+            "INSERT OR REPLACE INTO adoption_optout (domain, verified_at, method) VALUES (?, ?, ?)",
+            (clean, now, method),
+        )
+        conn.execute("DELETE FROM adoption_results WHERE domain = ? OR domain LIKE ?", (clean, f"%.{clean}"))
+        conn.execute("DELETE FROM adoption_monthly WHERE domain = ? OR domain LIKE ?", (clean, f"%.{clean}"))
+    return clean
 
 
 def _raw_study_rows(path=RAW_STUDY_FILE):
@@ -207,8 +351,12 @@ def seed_from_study(conn, raw_path=RAW_STUDY_FILE):
     return len(rows)
 
 
-def _scan_all(scanner, targets, workers):
+def _scan_all(scanner, targets, workers, optout=None):
+    optout_set = load_optout() if optout is None else optout
+
     def one(target):
+        if opted_out(target["domain"], optout_set):
+            return target, None
         try:
             return target, scanner(target["domain"])
         except Exception:  # أي فشل (لا عنوان، لا HTTPS، مهلة) = لم يُجب
@@ -220,8 +368,10 @@ def _scan_all(scanner, targets, workers):
 def run_week(conn, scanner, targets, day=None, workers=16, now=None, asn_lookup=None, batch=200):
     """يفحص كل الأهداف ويحفظها تحت أسبوع اليوم. الفحص في خيوط، والكتابة في الخيط الرئيسي على دفعات."""
     week = week_of(day or dt.date.today())
+    optout_set = load_optout(conn=conn)
+    active_targets = [t for t in targets if not opted_out(t["domain"], optout_set)]
     answered = done = 0
-    for target, result in _scan_all(scanner, targets, workers):
+    for target, result in _scan_all(scanner, active_targets, workers, optout=optout_set):
         stamp = (now or dt.datetime.now(dt.timezone.utc)).isoformat(timespec="seconds")
         record(conn, week, target, result, stamp, asn_lookup)
         answered += 1 if result else 0
@@ -229,14 +379,16 @@ def run_week(conn, scanner, targets, day=None, workers=16, now=None, asn_lookup=
         if done % batch == 0:
             conn.commit()
     conn.commit()
-    return {"week": week, "targets": len(targets), "answered": answered}
+    return {"week": week, "targets": len(active_targets), "answered": answered}
 
 
 def run_month(conn, scanner, targets, day=None, workers=32, asn_lookup=None, batch=500):
     """الفحص الشهري الواسع (أكبر 100 ألف): يُستعمل لجدول مزوّدي الاستضافة."""
     month = (day or dt.date.today()).strftime("%Y-%m")
+    optout_set = load_optout(conn=conn)
+    active_targets = [t for t in targets if not opted_out(t["domain"], optout_set)]
     answered = done = 0
-    for target, result in _scan_all(scanner, targets, workers):
+    for target, result in _scan_all(scanner, active_targets, workers, optout=optout_set):
         s = _summary_of(result, asn_lookup) if result else EMPTY
         conn.execute(
             "INSERT OR REPLACE INTO adoption_monthly (month, domain, rank, ok, grade, grp, pq, asn, as_name, scanned_at, unsure) "
@@ -248,7 +400,7 @@ def run_month(conn, scanner, targets, day=None, workers=32, asn_lookup=None, bat
         if done % batch == 0:
             conn.commit()
     conn.commit()
-    return {"month": month, "targets": len(targets), "answered": answered}
+    return {"month": month, "targets": len(active_targets), "answered": answered}
 
 
 def purge_excluded(conn):

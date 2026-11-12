@@ -13,10 +13,12 @@
     <dt>{{ t.grade }}</dt><dd>{{ evidence.grade or '—' }}</dd>
     <dt>TLS</dt><dd dir="ltr">{{ evidence.tls or '—' }}</dd>
     <dt>{{ t.key_exchange }}</dt><dd dir="ltr">{{ evidence.group or '—' }}</dd>
+    {% if evidence.attestation_sha256 %}<dt>{{ 'بصمة الإثبات المشفرة (SHA-256)' if lang == 'ar' else 'Cryptographic Attestation (SHA-256)' }}</dt><dd dir="ltr"><code>{{ evidence.attestation_sha256 }}</code></dd>{% endif %}
+    {% if evidence.fix_snippet %}<dt>{{ 'توصية الإعداد' if lang == 'ar' else 'Remediation / Posture' }}</dt><dd dir="ltr"><code>{{ evidence.fix_snippet }}</code></dd>{% endif %}
   </dl>
   <p>{{ sx.limitation }}</p>
   <p>{{ 'التحقق يعرض بيانات محفوظة فقط، ولا يُجري فحصًا جديدًا أو يثبت ملكية النطاق.' if lang == 'ar' else 'Verification only reads stored evidence. It does not initiate a scan or establish domain ownership.' }}</p>
   <a class="button-link" href="{{ url_for('site.index', domain=evidence.domain, lang=lang) }}">{{ t.site_scan_cta }}</a>
-  <p><a href="{{ url_for('site.badge_status', domain=evidence.domain) }}">JSON</a></p>
+  <p><a href="{{ url_for('site.badge_status', domain=evidence.domain) }}">JSON</a> · <a href="{{ url_for('site.qa_report_json', domain=evidence.domain) }}">qa_report.json (AI Agent Footprint)</a></p>
 </section>
 {% endblock %}

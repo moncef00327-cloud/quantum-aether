@@ -1719,6 +1719,14 @@ TEXTS["en"].update({
     "alerts_upsell_cta": "Monitor {domain} and its subdomains daily ($29/mo) →",
     "site_compare_cta": "Compare {domain} side-by-side with another domain or competitor →",
     "site_legal_note": "Point-in-time public TLS handshake observation on port 443 (not a security audit or vulnerability test).",
+    "scanning_dns_title": "Instant automated opt-out via DNS TXT (ownership verification)",
+    "scanning_dns_body": "To exclude your domain (and all its subdomains) immediately without waiting for email processing, add a DNS TXT record on _ather-optout.<domain> with the value verify-optout (or _qa-optout.<domain> with qa-optout=1), then verify below:",
+    "scanning_dns_btn": "Verify DNS TXT & Opt Out Immediately",
+    "scanning_dns_ok": "Verified! {domain} and its subdomains have been excluded from future scans and removed from public tables.",
+    "scanning_dns_fail": "No valid opt-out TXT record found on _ather-optout.{domain} or _qa-optout.{domain}. Add TXT \"verify-optout\" and try again.",
+    "hndl_timeline_title": "Quantum Exposure Window (Mosca's Theorem & NIST 2030 Deadline)",
+    "hndl_timeline_body": "{domain} currently negotiates classical key exchange ({group}) without post-quantum ML-KEM. Under NIST IR 8547 and CNSA 2.0 (2030 deprecation target), any encrypted session traffic recorded today whose confidentiality must last 4+ years is already inside the Harvest-Now-Decrypt-Later (HNDL) exposure window.",
+    "qa_footprint_link": "Download qa_report.json (AI Agent Footprint & SHA-256 Attestation) →",
 })
 TEXTS["ar"].update({
     "badge_sub": "انسخ هذا الكود في ملف README على GitHub أو ترويسة موقعك. تتحول الشارة إلى رمادية (منتهية الصلاحية) بعد 30 يوماً ما لم يتم ربط النطاق بتنبيه مجاني أو حساب مراقبة يومية أدناه.",
@@ -1736,6 +1744,14 @@ TEXTS["ar"].update({
     "alerts_upsell_cta": "راقب {domain} ونطاقاته الفرعية يومياً (29$/شهر) ←",
     "site_compare_cta": "قارن {domain} جنباً إلى جنب مع نطاق آخر أو منافس ←",
     "site_legal_note": "رصد تقني سطحي لمصافحة TLS العامة على المنفذ 443 في وقت محدد (وليس فحص اختراق أو تقييماً أمنياً شاملاً).",
+    "scanning_dns_title": "الاستبعاد الفوري المؤتمت عبر سجل DNS TXT (إثبات ملكية النطاق)",
+    "scanning_dns_body": "لاستبعاد نطاقك (وجميع نطاقاته الفرعية) فوراً وآلياً دون انتظار المراسلة اليدوية، أضف سجل DNS TXT على الاسم _ather-optout.<domain> بالقيمة verify-optout (أو _qa-optout.<domain> بالقيمة qa-optout=1)، ثم تحقق أدناه:",
+    "scanning_dns_btn": "تحقق من DNS TXT واستبعد النطاق فوراً",
+    "scanning_dns_ok": "تم التحقق من الملكية! استُبعد النطاق {domain} ونطاقاته الفرعية من الفحوص القادمة وحُذفت نتائجه من الجداول العامة فوراً.",
+    "scanning_dns_fail": "لم يُعثر على سجل TXT صالح على _ather-optout.{domain} أو _qa-optout.{domain}. أضف القيمة \"verify-optout\" ثم أعد المحاولة.",
+    "hndl_timeline_title": "نافذة الانكشاف الكمي (مبرهنة موسكا وموعد NIST 2030)",
+    "hndl_timeline_body": "يتفاوض {domain} حالياً عبر تبادل مفاتيح تقليدي ({group}) دون خوارزمية ML-KEM المقاومة للكم. وفقاً لمعيار NIST IR 8547 وCNSA 2.0 (موعد الإيقاف التدريجي 2030)، فإن أي حركة مشفرة تُلتقط اليوم وتحتاج للبقاء سرية لأكثر من 4 سنوات تقع فعلياً داخل دائرة خطر «احصد الآن، فُكّ لاحقاً» (HNDL).",
+    "qa_footprint_link": "تنزيل ملف qa_report.json (بصمة وكلاء الذكاء الاصطناعي وإثبات SHA-256) ←",
 })
 TEXTS["de"].update({
     "badge_sub": "Fügen Sie diesen Code in Ihre README oder Website ein. Das Badge wird nach 30 Tagen grau (abgelaufen), sofern die Domain unten nicht mit einer kostenlosen Benachrichtigung oder täglichen Überwachung verknüpft ist.",
@@ -1753,4 +1769,12 @@ TEXTS["de"].update({
     "alerts_upsell_cta": "Tägliche Überwachung für {domain} starten →",
     "site_compare_cta": "Vergleichen Sie {domain} direkt mit einer anderen Domain →",
     "site_legal_note": "Zeitpunktbezogene Beobachtung des öffentlichen TLS-Handshakes auf Port 443 (kein Sicherheitsaudit).",
+    "scanning_dns_title": "Sofortige automatische Ausnahme per DNS-TXT (Eigentumsnachweis)",
+    "scanning_dns_body": "Um Ihre Domain (samt Subdomains) sofort automatisch auszuschließen, setzen Sie einen DNS-TXT-Eintrag unter _ather-optout.<domain> mit dem Wert verify-optout (oder _qa-optout.<domain> mit qa-optout=1) und prüfen Sie ihn hier:",
+    "scanning_dns_btn": "DNS-TXT prüfen & Domain sofort ausnehmen",
+    "scanning_dns_ok": "Bestätigt! {domain} und seine Subdomains wurden von künftigen Prüfungen ausgenommen und aus den Tabellen entfernt.",
+    "scanning_dns_fail": "Kein gültiger TXT-Eintrag unter _ather-optout.{domain} oder _qa-optout.{domain} gefunden. Bitte TXT \"verify-optout\" setzen.",
+    "hndl_timeline_title": "Quanten-Risikofenster (Mosca-Theorem & NIST-Frist 2030)",
+    "hndl_timeline_body": "{domain} nutzt derzeit einen rein klassischen Schlüsselaustausch ({group}) ohne ML-KEM. Nach NIST IR 8547 und CNSA 2.0 (Abkündigung 2030) fällt heute aufgezeichneter Datenverkehr mit einer Geheimhaltungsdauer von über 4 Jahren bereits in das Harvest-Now-Decrypt-Later-Risikofenster.",
+    "qa_footprint_link": "qa_report.json herunterladen (KI-Agenten-Footprint & SHA-256-Nachweis) →",
 })
