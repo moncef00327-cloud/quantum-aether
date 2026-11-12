@@ -74,7 +74,7 @@ class DatasetJsonLdTests(unittest.TestCase):
                     self.assertEqual(dataset['url'],'https://ather-quantum.com/adoption')
                     self.assertIn('observed',dataset['description'].lower())
                     self.assertEqual(page['about']['name'],domain)
-                    self.assertEqual([d['@type'] for d in docs],['WebPage','FAQPage'])
+                    self.assertEqual([d['@type'] for d in docs],['WebPage','FAQPage','BreadcrumbList'])
 
     def test_every_dataset_emitter_has_valid_complete_jsonld(self):
         paths=[('/adoption',['en','ar','de']),('/adoption/countries',['en','ar','de']),

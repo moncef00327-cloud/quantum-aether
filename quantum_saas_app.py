@@ -1215,7 +1215,12 @@ def site_page(domain):
                                   f"post-quantum key exchange: {pq}."},
                   {"@context": "https://schema.org", "@type": "FAQPage",
                    "mainEntity": [{"@type": "Question", "name": f"Does {domain} use post-quantum TLS?",
-                                   "acceptedAnswer": {"@type": "Answer", "text": verdict}}]}]
+                                   "acceptedAnswer": {"@type": "Answer", "text": verdict}}]},
+                  {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
+                      {"@type": "ListItem", "position": 1, "name": "Quantum Aether", "item": public_base() + "/"},
+                      {"@type": "ListItem", "position": 2, "name": "Post-quantum TLS adoption tracker",
+                       "item": public_base() + url_for(".adoption_page")},
+                      {"@type": "ListItem", "position": 3, "name": domain, "item": page_url}]}]
     country = None
     code = countries.code_of(domain)
     board = cached_countries() if (summary and code) else None
@@ -1224,8 +1229,17 @@ def site_page(domain):
         if entry:
             country = dict(entry, name=countries.name(code, current_lang()), total=board["countries"])
     indexing_excluded = not (summary and site_is_indexable(domain))
+    meta_description = None
+    if summary:
+        # The search snippet carries the actual answer and its date, so the searcher sees fresh data before clicking.
+        t = i18n.TEXTS[current_lang()]
+        answer = t["site_meta_unsure"] if summary.get("unsure") else t["site_meta_yes" if summary["pq"] else "site_meta_no"]
+        meta_description = t["site_meta_result"].format(
+            domain=domain, answer=answer, tls=(summary.get("tls") or "TLS").replace("TLSv", "TLS "),
+            group=summary.get("group") or t["site_meta_unknown_group"], grade=summary["grade"],
+            date=str(summary["scanned_at"])[:10])
     response = make_response(render_template(
-        "site_page.html", domain=domain, summary=summary, source=source, verdict=verdict, history=history,
+        "site_page.html", domain=domain, meta_description=meta_description, summary=summary, source=source, verdict=verdict, history=history,
         related=related, network=network, snippets=badge_snippets(domain) if summary else None, jsonld=jsonld,
         country=country, indexing_excluded=indexing_excluded,
         fix_guides=site_fix_guides(network, summary["pq"], current_lang()) if summary else []),

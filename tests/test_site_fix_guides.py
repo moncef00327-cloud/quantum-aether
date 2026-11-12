@@ -71,3 +71,25 @@ class SiteFixGuidesTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class SiteSnippetTests(SiteFixGuidesTests):
+    """The search snippet shows the measured answer and date; breadcrumbs give a readable SERP path."""
+
+    def test_meta_description_carries_result_and_date(self):
+        import re
+        html = self.page('self-hosted.example')
+        meta = re.search(r'<meta name="description" content="([^"]*)"', html).group(1)
+        self.assertIn('No post-quantum key exchange yet.', meta)
+        self.assertIn('TLS 1.3', meta)
+        self.assertIn('X25519', meta)
+        self.assertIn('grade B', meta)
+        self.assertIn('2026-11-02', meta)
+        self.assertLessEqual(len(meta), 170)
+        pq = re.search(r'<meta name="description" content="([^"]*)"', self.page('already-pq.example', 'ar')).group(1)
+        self.assertIn('نعم', pq)
+
+    def test_breadcrumb_jsonld(self):
+        html = self.page('aws-hosted.example')
+        self.assertIn('"BreadcrumbList"', html)
+        self.assertIn(f'"item": "{BASE}/"', html.replace('"item":"', '"item": "'))
