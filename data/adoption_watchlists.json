@@ -745,6 +745,68 @@
         "educacao.pe.gov.br",
         "arsip.go.id"
       ]
+    },
+    "banks-mena": {
+      "labels": {
+        "en": "Banks and financial institutions (MENA & Gulf)",
+        "ar": "البنوك والمؤسسات المالية (الشرق الأوسط والخليج)",
+        "de": "Banken und Finanzinstitute (Naher Osten & Golfstaaten)"
+      },
+      "domains": [
+        "www.alahli.com",
+        "www.alrajhibank.com.sa",
+        "www.riyadbank.com",
+        "www.sab.com",
+        "www.alinma.com",
+        "www.bankalbilad.com",
+        "www.sama.gov.sa",
+        "www.centralbank.ae",
+        "www.bankfab.com",
+        "www.adcb.com",
+        "www.dib.ae",
+        "www.mashreq.com",
+        "www.qnb.com",
+        "www.qib.com.qa",
+        "www.cbq.qa",
+        "www.nbk.com",
+        "www.kfh.com",
+        "www.cbk.gov.kw",
+        "www.cibeg.com",
+        "www.banquemisr.com",
+        "www.cbe.org.eg",
+        "www.arabbank.com",
+        "www.attijariwafabank.com",
+        "www.bkam.ma"
+      ]
+    },
+    "cloud-security": {
+      "labels": {
+        "en": "Cloud, DevOps and cybersecurity platforms",
+        "ar": "منصات السحابة وتطوير البرمجيات والأمن السيبراني",
+        "de": "Cloud-, DevOps- und Cybersicherheits-Plattformen"
+      },
+      "domains": [
+        "www.cloudflare.com",
+        "aws.amazon.com",
+        "cloud.google.com",
+        "azure.microsoft.com",
+        "github.com",
+        "about.gitlab.com",
+        "www.digitalocean.com",
+        "www.hetzner.com",
+        "www.ovhcloud.com",
+        "www.linode.com",
+        "vercel.com",
+        "www.netlify.com",
+        "www.fastly.com",
+        "www.akamai.com",
+        "www.crowdstrike.com",
+        "www.paloaltonetworks.com",
+        "www.fortinet.com",
+        "www.zscaler.com",
+        "www.okta.com",
+        "www.datadoghq.com"
+      ]
     }
   }
 }

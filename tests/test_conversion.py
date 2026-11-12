@@ -100,6 +100,13 @@ class ConversionTests(unittest.TestCase):
         body = self.client.get("/site/alpha.test?lang=en").get_data(as_text=True)
         self.assertIn('property="og:image" content="https://ather-quantum.com/og/site/alpha.test.png"', body)
         self.assertIn('content="summary_large_image"', body)
+        self.assertIn('/compare?a=alpha.test&amp;lang=en', body)
+        self.assertIn('/scanning?lang=en', body)
+        self.assertIn('Point-in-time public TLS handshake observation on port 443', body)
+        ar = self.client.get("/site/alpha.test?lang=ar").get_data(as_text=True)
+        self.assertIn('/compare?a=alpha.test&amp;lang=ar', ar)
+        self.assertIn('/scanning?lang=ar', ar)
+        self.assertIn('رصد تقني سطحي لمصافحة TLS العامة', ar)
         home = self.client.get("/?lang=en").get_data(as_text=True)
         self.assertIn('content="https://ather-quantum.com/og/default.png"', home)
 

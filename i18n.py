@@ -1717,6 +1717,8 @@ TEXTS["en"].update({
     "alerts_upsell_title": "Need daily protection across all your subdomains?",
     "alerts_upsell_body": "The free alert checks {domain} once a week. Daily monitoring checks up to 10 or 100 domains every day, catches silent TLS downgrades within 24 hours, warns 14 and 3 days before certificate expiry, and keeps your public badge green automatically.",
     "alerts_upsell_cta": "Monitor {domain} and its subdomains daily ($29/mo) →",
+    "site_compare_cta": "Compare {domain} side-by-side with another domain or competitor →",
+    "site_legal_note": "Point-in-time public TLS handshake observation on port 443 (not a security audit or vulnerability test).",
 })
 TEXTS["ar"].update({
     "badge_sub": "انسخ هذا الكود في ملف README على GitHub أو ترويسة موقعك. تتحول الشارة إلى رمادية (منتهية الصلاحية) بعد 30 يوماً ما لم يتم ربط النطاق بتنبيه مجاني أو حساب مراقبة يومية أدناه.",
@@ -1732,6 +1734,8 @@ TEXTS["ar"].update({
     "alerts_upsell_title": "تحتاج حماية يومية لكل نطاقاتك ونطاقاتك الفرعية؟",
     "alerts_upsell_body": "التنبيه المجاني يفحص {domain} مرة كل أسبوع. أما المراقبة اليومية فتفحص حتى 10 أو 100 نطاق كل يوم، وترصد أي تراجع صامت في التشفير خلال 24 ساعة، وتنبّه قبل انتهاء الشهادة بـ 14 و3 أيام وعند توقف الخادم، وتُبقي شارتك الخضراء نشطة دائماً.",
     "alerts_upsell_cta": "راقب {domain} ونطاقاته الفرعية يومياً (29$/شهر) ←",
+    "site_compare_cta": "قارن {domain} جنباً إلى جنب مع نطاق آخر أو منافس ←",
+    "site_legal_note": "رصد تقني سطحي لمصافحة TLS العامة على المنفذ 443 في وقت محدد (وليس فحص اختراق أو تقييماً أمنياً شاملاً).",
 })
 TEXTS["de"].update({
     "badge_sub": "Fügen Sie diesen Code in Ihre README oder Website ein. Das Badge wird nach 30 Tagen grau (abgelaufen), sofern die Domain unten nicht mit einer kostenlosen Benachrichtigung oder täglichen Überwachung verknüpft ist.",
@@ -1747,4 +1751,6 @@ TEXTS["de"].update({
     "alerts_upsell_title": "Tägliche Prüfung für alle Ihre Domains und Subdomains?",
     "alerts_upsell_body": "Die kostenlose Benachrichtigung prüft {domain} einmal pro Woche. Die tägliche Überwachung prüft bis zu 10 oder 100 Domains jeden Tag, warnt 14 und 3 Tage vor Zertifikatsablauf sowie bei Ausfällen und hält Ihr Badge automatisch aktuell.",
     "alerts_upsell_cta": "Tägliche Überwachung für {domain} starten →",
+    "site_compare_cta": "Vergleichen Sie {domain} direkt mit einer anderen Domain →",
+    "site_legal_note": "Zeitpunktbezogene Beobachtung des öffentlichen TLS-Handshakes auf Port 443 (kein Sicherheitsaudit).",
 })
