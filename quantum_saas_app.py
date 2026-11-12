@@ -823,7 +823,9 @@ def alerts_subscribe():
                 if not mailer.send(email, subject, text):
                     state = "unavailable"
     status = 200 if state in ("check_inbox", "already_active") else 400
-    return render_template("alerts.html", state=state, domain=raw), status
+    clean_dom = locals().get("domain")
+    return render_template("alerts.html", state=state, domain=clean_dom or raw,
+                           snippets=badge_snippets(clean_dom) if clean_dom else None), status
 
 
 @bp.route("/alerts/confirm/<token>", methods=["GET", "POST"])
@@ -834,8 +836,10 @@ def alerts_confirm(token):
         since = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=BADGE_MAX_AGE_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
         latest = sales_db.latest_scan_for_domain(db(), alert["domain"], since)
         free_alerts.confirm(db(), token, latest["result"] if latest else None)
-        return render_template("alerts.html", state="confirmed", domain=alert["domain"])
-    return render_template("alerts.html", state="confirm_prompt", domain=alert["domain"], token=token)
+        return render_template("alerts.html", state="confirmed", domain=alert["domain"],
+                               snippets=badge_snippets(alert["domain"]))
+    return render_template("alerts.html", state="confirm_prompt", domain=alert["domain"], token=token,
+                           snippets=badge_snippets(alert["domain"]))
 
 
 @bp.route("/alerts/stop/<token>", methods=["GET", "POST"])

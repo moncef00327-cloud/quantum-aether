@@ -144,15 +144,24 @@ def check(conn, alert, scanner):
 _CONFIRM = {
     "en": ("Confirm your free alert for {domain}",
            "Hello,\n\nplease confirm that you want an email when the post-quantum TLS status of {domain} changes "
-           "(we check it once a week):\n\n{confirm_url}\n\nIf you did not ask for this, ignore this email; "
+           "(we check it once a week):\n\n{confirm_url}\n\n"
+           "Your dynamic PQC readiness badge (stays green while your alert or monitoring is active):\n"
+           "[![Post-quantum TLS grade by Quantum Aether]({base}/badge/{domain}.svg)]({base}/verify/{domain})\n\n"
+           "If you did not ask for this, ignore this email; "
            "nothing will be sent and the request is deleted after 7 days.\n\nQuantum Aether · {base}"),
     "ar": ("أكّد تنبيهك المجاني لـ {domain}",
            "مرحباً،\n\nأكّد من فضلك أنك تريد رسالة حين يتغيّر وضع TLS ما بعد الكمومي لـ {domain} "
-           "(نفحصه مرة كل أسبوع):\n\n{confirm_url}\n\nإن لم تطلب هذا فتجاهل الرسالة؛ لن نرسل شيئاً ويُحذف الطلب بعد 7 أيام.\n\n"
+           "(نفحصه مرة كل أسبوع):\n\n{confirm_url}\n\n"
+           "شارتك الديناميكية الجاهزة لملف README أو موقعك (تبقى خضراء ونشطة طالما التنبيه أو الاشتراك مفعّل):\n"
+           "[![Post-quantum TLS grade by Quantum Aether]({base}/badge/{domain}.svg)]({base}/verify/{domain})\n\n"
+           "إن لم تطلب هذا فتجاهل الرسالة؛ لن نرسل شيئاً ويُحذف الطلب بعد 7 أيام.\n\n"
            "الأثير الكمومي · {base}"),
     "de": ("Bestätigen Sie Ihre kostenlose Benachrichtigung für {domain}",
            "Guten Tag,\n\nbitte bestätigen Sie, dass Sie eine E-Mail erhalten möchten, wenn sich der Post-Quanten-TLS-Status von "
-           "{domain} ändert (wir prüfen einmal pro Woche):\n\n{confirm_url}\n\nFalls Sie das nicht angefordert haben, ignorieren "
+           "{domain} ändert (wir prüfen einmal pro Woche):\n\n{confirm_url}\n\n"
+           "Ihr dynamisches Post-Quanten-TLS-Badge für README oder Website:\n"
+           "[![Post-quantum TLS grade by Quantum Aether]({base}/badge/{domain}.svg)]({base}/verify/{domain})\n\n"
+           "Falls Sie das nicht angefordert haben, ignorieren "
            "Sie diese E-Mail; es wird nichts gesendet und die Anfrage nach 7 Tagen gelöscht.\n\nQuantum Aether · {base}"),
 }
 

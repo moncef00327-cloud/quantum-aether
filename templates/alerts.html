@@ -14,6 +14,23 @@
   <p><a href="{{ url_for('site.index', lang=lang) }}">{{ t.scan_again }}</a></p>
 </section>
 {% if state in ("check_inbox", "confirmed", "already_active") and domain %}
+{% if snippets %}
+<section class="card">
+  <h2>{{ t.badge_title }}</h2>
+  <p>{{ t.badge_sub }}</p>
+  <p><img src="{{ url_for('site.badge', domain=domain) }}" alt="post-quantum TLS badge for {{ domain }}"></p>
+  <div class="snippet">
+    <div class="snippet-head"><span>Markdown</span>
+      <button type="button" class="copy-btn" data-copy="#al-md" data-done="{{ t.copied }}">{{ t["copy"] }}</button></div>
+    <pre id="al-md" dir="ltr"><code>{{ snippets.markdown }}</code></pre>
+  </div>
+  <div class="snippet">
+    <div class="snippet-head"><span>GitHub Action (CI/CD)</span>
+      <button type="button" class="copy-btn" data-copy="#al-gha" data-done="{{ t.copied }}">{{ t["copy"] }}</button></div>
+    <pre id="al-gha" dir="ltr"><code>{{ snippets.action }}</code></pre>
+  </div>
+</section>
+{% endif %}
 <section class="card highlight">
   <h2>{{ t.alerts_upsell_title }}</h2>
   <p>{{ t.alerts_upsell_body.format(domain=domain) }}</p>
