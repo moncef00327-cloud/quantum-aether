@@ -1930,12 +1930,19 @@ BADGE_STYLE = {
 
 
 def badge_snippets(domain):
-    """أكواد تضمين الشارة: HTML وMarkdown، يستعملها قالب صفحة النتيجة وصفحة النطاق."""
+    """أكواد تضمين الشارة وGitHub Action: HTML وMarkdown وWorkflow، يستعملها قالب صفحة النتيجة وصفحة النطاق."""
     page = public_base() + url_for('.badge_verify', domain=domain)
     img = public_base() + url_for('.badge', domain=domain)
     alt = "Post-quantum TLS grade by Quantum Aether"
+    action = (
+        f"- uses: moncef00327-cloud/pq-tls-action@v1\n"
+        f"  with:\n"
+        f"    domain: {domain}\n"
+        f"    require-post-quantum: true"
+    )
     return {"html": f'<a href="{page}"><img src="{img}" alt="{alt}"></a>',
-            "markdown": f"[![{alt}]({img})]({page})"}
+            "markdown": f"[![{alt}]({img})]({page})",
+            "action": action}
 
 
 def badge_svg(grade, checked_at=None):

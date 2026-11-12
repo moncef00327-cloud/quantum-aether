@@ -153,6 +153,11 @@
       <button type="button" class="copy-btn" data-ev="badge_copy" data-copy="#badge-md" data-done="{{ t.copied }}">{{ t["copy"] }}</button></div>
     <pre id="badge-md" dir="ltr"><code>{{ badge.markdown }}</code></pre>
   </div>
+  <div class="snippet">
+    <div class="snippet-head"><span>GitHub Action (.github/workflows/pq-tls.yml)</span>
+      <button type="button" class="copy-btn" data-ev="badge_copy" data-copy="#badge-gha" data-done="{{ t.copied }}">{{ t["copy"] }}</button></div>
+    <pre id="badge-gha" dir="ltr"><code>{{ badge.action }}</code></pre>
+  </div>
 </section>
 {% endset %}
 {# Grade A: the visitor already did well, so showing it (badge) and keeping it (free alert) come first;

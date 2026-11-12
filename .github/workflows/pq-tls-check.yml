@@ -1,0 +1,14 @@
+name: Post-quantum TLS check
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+jobs:
+  pq-tls:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: moncef00327-cloud/pq-tls-action@v1
+        with:
+          domain: ather-quantum.com
+          require-post-quantum: true
