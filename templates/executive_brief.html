@@ -21,6 +21,7 @@
 .brief-options li{margin-bottom:12px;line-height:1.8}
 .brief-unmeasured{padding:12px 16px;border-inline-start:3px solid var(--qa-glass-border)}
 .print-only{display:none}
+.nw{white-space:nowrap}
 @media (min-width:640px){.brief-actions{flex-direction:row;flex-wrap:wrap}.brief-actions>*{width:auto}}
 @media print{.print-only{display:block}}
 </style>{% endblock %}
@@ -67,7 +68,7 @@
   <h2>{{ L('2. الامتثال التنظيمي ومقارنة القطاع', '2. Regulatory Compliance & Sector Benchmark', '2. Regulatorische Compliance & Branchenvergleich') }}<span class="h-sub">NIS2 · DORA · NIST 2030</span></h2>
   <ul>
     {% if ar %}
-    <li>يحدد <bdi>NIST IR 8547</bdi> و<bdi>CNSA 2.0</bdi> عام 2030 موعداً لإيقاف تبادل المفاتيح التقليدي (<bdi>RSA / ECDHE</bdi>)؛ أي بيانات حساسة تحتاج إلى سرية لأكثر من 4 سنوات معرضة للالتقاط اليوم وفك التشفير لاحقاً.</li>
+    <li>يحدد <bdi>NIST IR 8547</bdi> و<bdi>CNSA 2.0</bdi> عام 2030 موعداً لإيقاف تبادل المفاتيح التقليدي <bdi class="nw">(RSA / ECDHE)</bdi>؛ أي بيانات حساسة تحتاج إلى سرية لأكثر من 4 سنوات معرضة للالتقاط اليوم وفك التشفير لاحقاً.</li>
     <li>تُلزم لوائح الاتحاد الأوروبي (<bdi>NIS2</bdi> المادة 21، و<bdi>DORA</bdi> للقطاع المالي) المؤسسات بتشفير البيانات أثناء النقل وفق أحدث ما وصلت إليه التقنية، وبمراقبة التراجعات الأمنية.</li>
     <li>مقارنة القطاع: 80% من منصات السحابة والأمن العالمية و70.6% من بنوك ألمانيا والنمسا وسويسرا فعّلت بالفعل <bdi>X25519MLKEM768</bdi>.</li>
     {% elif de %}
@@ -85,7 +86,7 @@
 <section class="card highlight">
   <h2>{{ L('3. التوصية والخطوة المطلوبة لاعتماد الإدارة', '3. Recommended Action for Approval', '3. Empfohlene Maßnahme zur Freigabe') }}</h2>
   {% if ar %}
-  <p>تحديثات الخوادم أو تغييرات شبكة توزيع المحتوى (<bdi>CDN</bdi>) قد تُسقط التشفير المقاوم للكم دون أن يلاحظ أحد، كما أن النطاقات الفرعية الحساسة (<bdi>api, auth, mail, vpn</bdi>) كثيراً ما تتجاوز حماية الـ<bdi>CDN</bdi>.</p>
+  <p>تحديثات الخوادم أو تغييرات شبكة توزيع المحتوى <bdi class="nw">(CDN)</bdi> قد تُسقط التشفير المقاوم للكم دون أن يلاحظ أحد، كما أن النطاقات الفرعية الحساسة <bdi class="nw">(api, auth, mail, vpn)</bdi> كثيراً ما تتجاوز حماية الـ<bdi>CDN</bdi>.</p>
   <ul class="brief-options">
     <li><strong>الخيار 1 — المراقبة اليومية للمؤسسات، ابتداءً من 29 دولاراً شهرياً:</strong> فحص يومي آلي للنطاق الرئيسي والنطاقات الفرعية، وتنبيه فوري عند أي تراجع صامت أو قرب انتهاء شهادة، ولوحة امتثال قابلة للطباعة.</li>
     <li><strong>الخيار 2 — التقرير الهندسي الكامل لمرة واحدة، 49 دولاراً:</strong> خطوات الترقية التفصيلية لخوادم <bdi>Nginx</bdi> و<bdi>Apache</bdi> و<bdi>Caddy</bdi> و<bdi>Cloudflare</bdi> و<bdi>AWS</bdi>.</li>
