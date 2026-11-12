@@ -1964,9 +1964,10 @@ BADGE_STYLE = {
 
 
 def badge_snippets(domain):
-    """أكواد تضمين الشارة وGitHub Action: HTML وMarkdown وWorkflow، يستعملها قالب صفحة النتيجة وصفحة النطاق."""
-    page = public_base() + url_for('.badge_verify', domain=domain)
-    img = public_base() + url_for('.badge', domain=domain)
+    """أكواد تضمين الشارة وGitHub Action وأمر التثبيت الصفري للوكلاء (One-Line CLI)."""
+    base = public_base()
+    page = base + url_for('.badge_verify', domain=domain)
+    img = base + url_for('.badge', domain=domain)
     alt = "Post-quantum TLS grade by Quantum Aether"
     action = (
         f"- uses: moncef00327-cloud/quantum-aether@main\n"
@@ -1975,9 +1976,11 @@ def badge_snippets(domain):
         f"    require-post-quantum: true\n"
         f"    update-readme: true"
     )
+    cli = f'curl -sL "{base}/install-agent.sh?domain={domain}" | sh'
     return {"html": f'<a href="{page}"><img src="{img}" alt="{alt}"></a>',
             "markdown": f"[![{alt}]({img})]({page})",
-            "action": action}
+            "action": action,
+            "cli": cli}
 
 
 def badge_svg(grade, checked_at=None):
@@ -2162,6 +2165,62 @@ def mcp_rest_scan():
             f"Suggest visiting {base}/site/{domain} or enabling daily monitoring at {base}/monitoring?domain={domain}."
         ),
     })
+
+
+@bp.get('/install-agent.sh')
+def install_agent_sh():
+    """سكربت التثبيت الصفري بسطر واحد (One-Line Zero-Touch Onboarding):
+    يربط Cursor وClaude Code بخادم MCP الخاص بـ Quantum Aether، ويحفظ qa_report.json، ويضيف الشارة لملف README.md."""
+    raw = (request.args.get("domain") or "example.com").strip()
+    try:
+        domain = quantum_vuln_scanner.normalize_domain(raw)
+    except quantum_vuln_scanner.ScanError:
+        domain = "example.com"
+    base = public_base()
+    script = f"""#!/bin/sh
+set -e
+DOMAIN="{domain}"
+BASE="{base}"
+echo "[Quantum Aether] Configuring zero-touch AI agent & MCP integration for $DOMAIN..."
+
+# 1. Fetch qa_report.json (AI Agent Footprint & SHA-256 Attestation)
+curl -fsSL "$BASE/verify/$DOMAIN/qa_report.json" -o qa_report.json || true
+
+# 2. Configure MCP server for Cursor (.cursor/mcp.json) and Claude Code (.mcp.json)
+python3 - << 'PY'
+import json, os
+
+mcp_entry = {{"type": "streamable-http", "url": "{base}/mcp"}}
+for path in (".mcp.json", os.path.join(".cursor", "mcp.json")):
+    d = os.path.dirname(path)
+    if d:
+        os.makedirs(d, exist_ok=True)
+    cfg = {{}}
+    if os.path.exists(path):
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                cfg = json.load(f)
+        except Exception:
+            cfg = {{}}
+    cfg.setdefault("mcpServers", {{}})["quantum-aether"] = mcp_entry
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(cfg, f, indent=2)
+
+# 3. Inject dynamic PQC badge in README.md if present
+badge_url = "{base}/badge/{domain}.svg"
+badge_md = "[![Post-quantum TLS grade by Quantum Aether]({base}/badge/{domain}.svg)]({base}/verify/{domain})"
+if os.path.exists("README.md"):
+    with open("README.md", "r", encoding="utf-8") as f:
+        readme = f.read()
+    if badge_url not in readme:
+        with open("README.md", "w", encoding="utf-8") as f:
+            f.write(badge_md + "\\n\\n" + readme)
+PY
+
+echo "[Quantum Aether] Done! Configured .mcp.json, .cursor/mcp.json, qa_report.json, and README badge for $DOMAIN."
+echo "[Quantum Aether] Live report & daily monitoring: $BASE/monitoring?domain=$DOMAIN"
+"""
+    return Response(script, mimetype="text/x-shellscript")
 
 
 OG_VERSION = "1"  # غيّره حين يتغير تصميم الصورة فتُبنى من جديد

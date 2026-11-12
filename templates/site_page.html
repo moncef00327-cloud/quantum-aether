@@ -80,6 +80,11 @@
       <button type="button" class="copy-btn" data-copy="#sp-gha" data-done="{{ t.copied }}">{{ t["copy"] }}</button></div>
     <pre id="sp-gha" dir="ltr"><code>{{ snippets.action }}</code></pre>
   </div>
+  <div class="snippet">
+    <div class="snippet-head"><span>Zero-Touch AI Agent &amp; MCP Setup (Cursor / Claude Code)</span>
+      <button type="button" class="copy-btn" data-copy="#sp-cli" data-done="{{ t.copied }}">{{ t["copy"] }}</button></div>
+    <pre id="sp-cli" dir="ltr"><code>{{ snippets.cli }}</code></pre>
+  </div>
   <p class="small" style="margin-top:0.5rem"><a href="{{ url_for('site.qa_report_json', domain=domain) }}">{{ t.qa_footprint_link }}</a></p>
 </section>
 {% if related %}
