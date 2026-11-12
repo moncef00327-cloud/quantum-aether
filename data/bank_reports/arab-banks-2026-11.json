@@ -1,0 +1,559 @@
+{
+ "id": "arab-banks-2026-11",
+ "measured_on": "2026-11-12",
+ "rows": [
+  {
+   "domain": "adcb.com",
+   "name": {
+    "ar": "بنك أبوظبي التجاري",
+    "en": "Abu Dhabi Commercial Bank"
+   },
+   "country": "AE",
+   "central": false,
+   "www": {
+    "ok": true,
+    "grade": "A",
+    "group": "X25519MLKEM768",
+    "tls": "TLSv1.3",
+    "pq": true
+   },
+   "subs": {
+    "names": 231,
+    "responding": 78,
+    "pq": 25,
+    "not_pq": 53,
+    "unknown": 0
+   }
+  },
+  {
+   "domain": "alahli.com",
+   "name": {
+    "ar": "البنك الأهلي السعودي",
+    "en": "Saudi National Bank"
+   },
+   "country": "SA",
+   "central": false,
+   "www": {
+    "ok": false,
+    "grade": null,
+    "group": null,
+    "tls": null,
+    "pq": false
+   },
+   "subs": {
+    "names": 117,
+    "responding": 38,
+    "pq": 0,
+    "not_pq": 38,
+    "unknown": 0
+   }
+  },
+  {
+   "domain": "alinma.com",
+   "name": {
+    "ar": "مصرف الإنماء",
+    "en": "Alinma Bank"
+   },
+   "country": "SA",
+   "central": false,
+   "www": {
+    "ok": true,
+    "grade": "C",
+    "group": "secp256r1",
+    "tls": "TLSv1.2",
+    "pq": false
+   },
+   "subs": {
+    "names": 142,
+    "responding": 43,
+    "pq": 1,
+    "not_pq": 42,
+    "unknown": 0
+   }
+  },
+  {
+   "domain": "alrajhibank.com.sa",
+   "name": {
+    "ar": "مصرف الراجحي",
+    "en": "Al Rajhi Bank"
+   },
+   "country": "SA",
+   "central": false,
+   "www": {
+    "ok": true,
+    "grade": "C",
+    "group": "secp256r1",
+    "tls": "TLSv1.2",
+    "pq": false
+   },
+   "subs": {
+    "names": 92,
+    "responding": 34,
+    "pq": 2,
+    "not_pq": 32,
+    "unknown": 0
+   }
+  },
+  {
+   "domain": "arabbank.com",
+   "name": {
+    "ar": "البنك العربي",
+    "en": "Arab Bank"
+   },
+   "country": "JO",
+   "central": false,
+   "www": {
+    "ok": true,
+    "grade": "B",
+    "group": "x25519",
+    "tls": "TLSv1.3",
+    "pq": false
+   },
+   "subs": {
+    "names": 159,
+    "responding": 40,
+    "pq": 1,
+    "not_pq": 39,
+    "unknown": 0
+   }
+  },
+  {
+   "domain": "attijariwafabank.com",
+   "name": {
+    "ar": "التجاري وفا بنك",
+    "en": "Attijariwafa bank"
+   },
+   "country": "MA",
+   "central": false,
+   "www": {
+    "ok": true,
+    "grade": "A",
+    "group": "X25519MLKEM768",
+    "tls": "TLSv1.3",
+    "pq": true
+   },
+   "subs": {
+    "names": 20,
+    "responding": 12,
+    "pq": 10,
+    "not_pq": 2,
+    "unknown": 0
+   }
+  },
+  {
+   "domain": "bankalbilad.com",
+   "name": {
+    "ar": "بنك البلاد",
+    "en": "Bank Albilad"
+   },
+   "country": "SA",
+   "central": false,
+   "www": {
+    "ok": true,
+    "grade": "B",
+    "group": "x25519",
+    "tls": "TLSv1.3",
+    "pq": false
+   },
+   "subs": {
+    "names": 74,
+    "responding": 26,
+    "pq": 0,
+    "not_pq": 26,
+    "unknown": 0
+   }
+  },
+  {
+   "domain": "bankfab.com",
+   "name": {
+    "ar": "بنك أبوظبي الأول",
+    "en": "First Abu Dhabi Bank"
+   },
+   "country": "AE",
+   "central": false,
+   "www": {
+    "ok": true,
+    "grade": "B",
+    "group": "x25519",
+    "tls": "TLSv1.3",
+    "pq": false
+   },
+   "subs": {
+    "names": 468,
+    "responding": 49,
+    "pq": 2,
+    "not_pq": 47,
+    "unknown": 0
+   }
+  },
+  {
+   "domain": "banquemisr.com",
+   "name": {
+    "ar": "بنك مصر",
+    "en": "Banque Misr"
+   },
+   "country": "EG",
+   "central": false,
+   "www": {
+    "ok": true,
+    "grade": "C",
+    "group": "x25519",
+    "tls": "TLSv1.2",
+    "pq": false
+   },
+   "subs": {
+    "names": 74,
+    "responding": 27,
+    "pq": 1,
+    "not_pq": 26,
+    "unknown": 0
+   }
+  },
+  {
+   "domain": "bkam.ma",
+   "name": {
+    "ar": "بنك المغرب",
+    "en": "Bank Al-Maghrib"
+   },
+   "country": "MA",
+   "central": true,
+   "www": {
+    "ok": true,
+    "grade": "A",
+    "group": "X25519MLKEM768",
+    "tls": "TLSv1.3",
+    "pq": true
+   },
+   "subs": {
+    "names": 9,
+    "responding": 0,
+    "pq": 0,
+    "not_pq": 0,
+    "unknown": 0
+   }
+  },
+  {
+   "domain": "cbe.org.eg",
+   "name": {
+    "ar": "البنك المركزي المصري",
+    "en": "Central Bank of Egypt"
+   },
+   "country": "EG",
+   "central": true,
+   "www": {
+    "ok": true,
+    "grade": "A",
+    "group": "X25519MLKEM768",
+    "tls": "TLSv1.3",
+    "pq": true
+   },
+   "subs": {
+    "names": 1,
+    "responding": 1,
+    "pq": 1,
+    "not_pq": 0,
+    "unknown": 0
+   }
+  },
+  {
+   "domain": "cbk.gov.kw",
+   "name": {
+    "ar": "بنك الكويت المركزي",
+    "en": "Central Bank of Kuwait"
+   },
+   "country": "KW",
+   "central": true,
+   "www": {
+    "ok": true,
+    "grade": "C",
+    "group": "secp256r1",
+    "tls": "TLSv1.2",
+    "pq": false
+   },
+   "subs": {
+    "names": 1,
+    "responding": 1,
+    "pq": 0,
+    "not_pq": 1,
+    "unknown": 0
+   }
+  },
+  {
+   "domain": "cbq.qa",
+   "name": {
+    "ar": "البنك التجاري القطري",
+    "en": "Commercial Bank of Qatar"
+   },
+   "country": "QA",
+   "central": false,
+   "www": {
+    "ok": true,
+    "grade": "C",
+    "group": "secp256r1",
+    "tls": "TLSv1.2",
+    "pq": false
+   },
+   "subs": {
+    "names": 14,
+    "responding": 7,
+    "pq": 1,
+    "not_pq": 6,
+    "unknown": 0
+   }
+  },
+  {
+   "domain": "centralbank.ae",
+   "name": {
+    "ar": "مصرف الإمارات المركزي",
+    "en": "Central Bank of the UAE"
+   },
+   "country": "AE",
+   "central": true,
+   "www": {
+    "ok": true,
+    "grade": "A",
+    "group": "X25519MLKEM768",
+    "tls": "TLSv1.3",
+    "pq": true
+   },
+   "subs": {
+    "names": 7,
+    "responding": 5,
+    "pq": 4,
+    "not_pq": 1,
+    "unknown": 0
+   }
+  },
+  {
+   "domain": "cibeg.com",
+   "name": {
+    "ar": "البنك التجاري الدولي",
+    "en": "Commercial International Bank"
+   },
+   "country": "EG",
+   "central": false,
+   "www": {
+    "ok": true,
+    "grade": "A",
+    "group": "X25519MLKEM768",
+    "tls": "TLSv1.3",
+    "pq": true
+   },
+   "subs": {
+    "names": 94,
+    "responding": 38,
+    "pq": 3,
+    "not_pq": 35,
+    "unknown": 0
+   }
+  },
+  {
+   "domain": "dib.ae",
+   "name": {
+    "ar": "بنك دبي الإسلامي",
+    "en": "Dubai Islamic Bank"
+   },
+   "country": "AE",
+   "central": false,
+   "www": {
+    "ok": true,
+    "grade": "C",
+    "group": "secp256r1",
+    "tls": "TLSv1.2",
+    "pq": false
+   },
+   "subs": {
+    "names": 180,
+    "responding": 28,
+    "pq": 1,
+    "not_pq": 27,
+    "unknown": 0
+   }
+  },
+  {
+   "domain": "kfh.com",
+   "name": {
+    "ar": "بيت التمويل الكويتي",
+    "en": "Kuwait Finance House"
+   },
+   "country": "KW",
+   "central": false,
+   "www": {
+    "ok": true,
+    "grade": "A",
+    "group": "X25519MLKEM768",
+    "tls": "TLSv1.3",
+    "pq": true
+   },
+   "subs": {
+    "names": 24,
+    "responding": 15,
+    "pq": 7,
+    "not_pq": 8,
+    "unknown": 0
+   }
+  },
+  {
+   "domain": "mashreq.com",
+   "name": {
+    "ar": "بنك المشرق",
+    "en": "Mashreq"
+   },
+   "country": "AE",
+   "central": false,
+   "www": {
+    "ok": true,
+    "grade": "B",
+    "group": "x25519",
+    "tls": "TLSv1.3",
+    "pq": false
+   },
+   "subs": {
+    "names": 121,
+    "responding": 74,
+    "pq": 19,
+    "not_pq": 55,
+    "unknown": 0
+   }
+  },
+  {
+   "domain": "nbk.com",
+   "name": {
+    "ar": "بنك الكويت الوطني",
+    "en": "National Bank of Kuwait"
+   },
+   "country": "KW",
+   "central": false,
+   "www": {
+    "ok": true,
+    "grade": "C",
+    "group": "secp256r1",
+    "tls": "TLSv1.2",
+    "pq": false
+   },
+   "subs": {
+    "names": 129,
+    "responding": 66,
+    "pq": 4,
+    "not_pq": 62,
+    "unknown": 0
+   }
+  },
+  {
+   "domain": "qib.com.qa",
+   "name": {
+    "ar": "مصرف قطر الإسلامي",
+    "en": "Qatar Islamic Bank"
+   },
+   "country": "QA",
+   "central": false,
+   "www": {
+    "ok": true,
+    "grade": "A",
+    "group": "X25519MLKEM768",
+    "tls": "TLSv1.3",
+    "pq": true
+   },
+   "subs": {
+    "names": 126,
+    "responding": 30,
+    "pq": 3,
+    "not_pq": 27,
+    "unknown": 0
+   }
+  },
+  {
+   "domain": "qnb.com",
+   "name": {
+    "ar": "بنك قطر الوطني",
+    "en": "QNB"
+   },
+   "country": "QA",
+   "central": false,
+   "www": {
+    "ok": true,
+    "grade": "A",
+    "group": "X25519MLKEM768",
+    "tls": "TLSv1.3",
+    "pq": true
+   },
+   "subs": {
+    "names": 157,
+    "responding": 71,
+    "pq": 70,
+    "not_pq": 1,
+    "unknown": 0
+   }
+  },
+  {
+   "domain": "riyadbank.com",
+   "name": {
+    "ar": "بنك الرياض",
+    "en": "Riyad Bank"
+   },
+   "country": "SA",
+   "central": false,
+   "www": {
+    "ok": true,
+    "grade": "B",
+    "group": "x25519",
+    "tls": "TLSv1.3",
+    "pq": false
+   },
+   "subs": {
+    "names": 101,
+    "responding": 30,
+    "pq": 0,
+    "not_pq": 30,
+    "unknown": 0
+   }
+  },
+  {
+   "domain": "sab.com",
+   "name": {
+    "ar": "البنك السعودي الأول",
+    "en": "Saudi Awwal Bank"
+   },
+   "country": "SA",
+   "central": false,
+   "www": {
+    "ok": true,
+    "grade": "C",
+    "group": "secp256r1",
+    "tls": "TLSv1.2",
+    "pq": false
+   },
+   "subs": {
+    "names": 96,
+    "responding": 18,
+    "pq": 1,
+    "not_pq": 17,
+    "unknown": 0
+   }
+  },
+  {
+   "domain": "sama.gov.sa",
+   "name": {
+    "ar": "البنك المركزي السعودي",
+    "en": "Saudi Central Bank"
+   },
+   "country": "SA",
+   "central": true,
+   "www": {
+    "ok": true,
+    "grade": "B",
+    "group": "x25519",
+    "tls": "TLSv1.3",
+    "pq": false
+   },
+   "subs": {
+    "names": 153,
+    "responding": 30,
+    "pq": 14,
+    "not_pq": 16,
+    "unknown": 0
+   }
+  }
+ ],
+ "week": "2026-W46"
+}

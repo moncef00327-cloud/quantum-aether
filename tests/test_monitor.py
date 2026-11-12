@@ -506,7 +506,7 @@ class AdminExclusionAndSeoTest(unittest.TestCase):
         self.assertIn('<xhtml:link rel="alternate" hreflang="x-default" href="https://ather-quantum.com/guides?lang=en"/>', body)
         self.assertIn("https://ather-quantum.com/impressum?lang=de", body)
         # 5 صفحات بثلاث لغات (منها /adoption و/scanning) + 6 بلغتين + compare بلغتين + 3 قانونية بلغتين
-        self.assertEqual(body.count("<url>"), 7 * 3 + 2 * (3 + 3 + 1) + 2 * 3 + 2 + 2 * 3 + 2 + 2 - 2 + 2 * 3 + 2 * 3 - 2 + 3 + 12 * 3 + 2 * 3 + 4 + 3)  # +/audit × 3 langs; +Ubuntu/OpenSSL 3.0 + SSL Labs guides en/ar; +/deadlines +/agency + bilingual Gravity + enterprise guide; -/research (noindex, off-topic); +AWS/Node.js/Java guides; +Go/Python/check guides; -Gravity (noindex, internal); +NIS2/DORA guide en/ar/de; +config generator index + 11 servers × 3 langs; +/press +/reports/2026-11 × 3 langs
+        self.assertEqual(body.count("<url>"), 7 * 3 + 2 * (3 + 3 + 1) + 2 * 3 + 2 + 2 * 3 + 2 + 2 - 2 + 2 * 3 + 2 * 3 - 2 + 3 + 12 * 3 + 2 * 3 + 4 + 3 + 2)  # +/banks/arab-banks-2026-11 en/ar; +/audit × 3 langs; +Ubuntu/OpenSSL 3.0 + SSL Labs guides en/ar; +/deadlines +/agency + bilingual Gravity + enterprise guide; -/research (noindex, off-topic); +AWS/Node.js/Java guides; +Go/Python/check guides; -Gravity (noindex, internal); +NIS2/DORA guide en/ar/de; +config generator index + 11 servers × 3 langs; +/press +/reports/2026-11 × 3 langs
         self.assertIn("https://ather-quantum.com/compare?lang=en", body)
         import quantum_saas_app
         sites_xml = client.get("/sitemap-sites-1.xml").get_data(as_text=True)

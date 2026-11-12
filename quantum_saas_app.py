@@ -36,6 +36,7 @@ import countries
 import deadlines
 import free_alerts
 import audit
+import bank_report
 import discovery
 import config_gen
 import reports
@@ -565,6 +566,31 @@ def monthly_report(report_id):
     lang = current_lang()
     return render_template("monthly_report.html", r=r, facts=reports.findings(r, lang), charts=reports.CHARTS,
                            month_name=_month_name(report_id, lang))
+
+
+def _bank_report_or_404(report_id):
+    return bank_report.load(report_id) or abort(404)
+
+
+@bp.get("/banks/<report_id>.json")
+def bank_report_json(report_id):
+    r = _bank_report_or_404(report_id)
+    rows = bank_report.ranked(r, adoption.load_optout(conn=db()))
+    response = jsonify(dict(r, rows=rows, license="CC BY 4.0",
+                            source=public_base() + url_for(".bank_report_page", report_id=report_id)))
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    return response
+
+
+@bp.get("/banks/<report_id>")
+def bank_report_page(report_id):
+    r = _bank_report_or_404(report_id)
+    rows = bank_report.ranked(r, adoption.load_optout(conn=db()))
+    lang = current_lang()
+    y, m, d = (int(x) for x in r["measured_on"].split("-"))
+    date = f"{d} {MONTHS[lang][m - 1]} {y}"
+    return render_template("bank_report.html", r=r, rows=rows, tot=bank_report.totals(rows), c=bank_report.COPY[lang],
+                           countries=bank_report.COUNTRIES, min_resp=bank_report.MIN_RESPONDING, date=date)
 
 
 @bp.get("/press")
@@ -2388,6 +2414,7 @@ def _sitemap_pages():
     pages.append(("/pricing", _template_day("commercial.html"), de_langs))
     pages.append(("/agency", _template_day("agency.html"), de_langs))
     pages.append(("/audit", _template_day("audit.html"), de_langs))
+    pages += [(f"/banks/{rid}", bank_report.load(rid)["measured_on"], site_langs) for rid in bank_report.ids()]
     board = countries.leaderboard(db())
     if board:
         week_day = adoption.week_monday(board["week"]).isoformat()

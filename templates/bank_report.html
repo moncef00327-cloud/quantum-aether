@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% set tl = lang if lang in ("ar", "en") else "en" %}
+{% block title %}{{ c.title }} {{ r.measured_on[:4] }} · {{ t.brand }}{% endblock %}
+{% block description %}{{ c.meta.format(**tot) }}{% endblock %}
+{% block head %}
+<script type="application/ld+json">{{ {"@context": "https://schema.org", "@type": "Report", "name": c.title ~ " " ~ r.measured_on[:4], "datePublished": r.measured_on, "inLanguage": tl, "license": "https://creativecommons.org/licenses/by/4.0/", "author": {"@type": "Organization", "name": "Quantum Aether"}, "description": c.meta.format(**tot)} | tojson }}</script>
+{% endblock %}
+{% block content %}
+<article class="card prose">
+  <p class="muted small">{{ c.kicker }} · <time datetime="{{ r.measured_on }}">{{ date }}</time></p>
+  <h1>{{ c.title }} {{ r.measured_on[:4] }}</h1>
+  <p class="lead">{{ c.lead.format(banks=tot.banks, date=date) }}</p>
+  <h2>{{ c.findings }}</h2>
+  <ol>
+    <li>{{ c.f_overall.format(**tot) }}</li>
+    <li>{{ c.f_www.format(**tot) }}</li>
+    {% if tot.gap %}<li>{{ c.f_gap.format(**tot) }}</li>{% endif %}
+  </ol>
+  <h2>{{ c.why_title }}</h2>
+  <p>{{ c.why }}</p>
+</article>
+
+<section class="card">
+  <h2>{{ c.table_title }}</h2>
+  <div style="overflow-x:auto">
+  <table class="bank-rank" style="width:100%">
+    <tr>{% for h in c.th %}<th>{{ h }}</th>{% endfor %}</tr>
+    {% for b in rows %}
+    <tr>
+      <td>{% if b.share is not none %}{{ loop.index }}{% else %}–{% endif %}</td>
+      <td><a href="{{ url_for('site.site_page', domain='www.' ~ b.domain, lang=tl) }}">{{ b.name[tl] }}</a>{% if b.central %} <span class="muted small">({{ c.central }})</span>{% endif %}<br><span class="muted small" dir="ltr">{{ b.domain }}</span></td>
+      <td>{{ countries[b.country][tl] }}</td>
+      <td>{% if b.share is not none %}<strong>{{ b.share }}%</strong> <span class="muted small" dir="ltr">({{ b.subs.pq }} / {{ b.subs.responding }})</span>
+          <div class="bar-track" aria-hidden="true" style="background:rgba(127,127,127,.25);height:6px;border-radius:3px;margin-top:4px"><div style="width:{{ b.share }}%;height:6px;border-radius:3px;background:currentColor;opacity:.75"></div></div>
+          {% else %}<span class="muted small">{{ c.few.format(n=min_resp) }}</span>{% endif %}</td>
+      <td>{% if not b.www.ok %}<span class="muted small">{{ c.www_na }}</span>{% elif b.www.pq %}{{ c.www_yes.format(grade=b.www.grade) }}{% else %}{{ c.www_no.format(grade=b.www.grade) }}{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  </div>
+</section>
+
+<section class="card buy">
+  <h2>{{ c.cta_title }}</h2>
+  <p>{{ c.cta }}</p>
+  <p><a class="button-link" href="{{ url_for('site.audit_page', lang=tl) }}" data-ev="bank_report_cta">{{ c.cta_button }}</a></p>
+</section>
+
+<section class="card">
+  <h2>{{ c.method_title }}</h2>
+  <ul>{% for m in c.method %}<li>{{ m }}</li>{% endfor %}</ul>
+  <p class="muted small">{{ c.optout }}</p>
+  <p class="muted small"><a href="{{ url_for('site.bank_report_json', report_id=r.id) }}">{{ c.data }}</a> · <span dir="ltr">{{ r.week }}</span></p>
+</section>
+{% endblock %}
