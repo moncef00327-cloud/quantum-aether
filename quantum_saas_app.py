@@ -609,6 +609,19 @@ def bank_detail_page(report_id, domain):
                            need=bank_report.need_for_award(d["row"]))
 
 
+@bp.get("/og/banks/<report_id>.png")
+def og_bank_report(report_id):
+    r, rows = _bank_rows(report_id)
+    tot = bank_report.totals(rows)
+    ranked_rows = [x for x in rows if x["share"] is not None]
+    leader = ranked_rows[0] if ranked_rows else None
+    zero = sum(1 for x in ranked_rows if x["share"] == 0)
+    return _og_response(f"banks|{report_id}|{tot['pct']}|{tot['responding']}|{leader and leader['domain']}|{zero}",
+                        lambda: og_image.render_bank_ranking(tot["banks"], tot["pct"], tot["responding"],
+                                                             leader["name"]["en"] if leader else "-",
+                                                             leader["share"] if leader else 0, zero))
+
+
 @bp.get("/og/bank/<report_id>/<domain>.png")
 def og_bank(report_id, domain):
     r, rows = _bank_rows(report_id)
@@ -2367,7 +2380,7 @@ echo "[Quantum Aether] Live report & daily monitoring: $BASE/monitoring?domain=$
     return Response(script, mimetype="text/x-shellscript")
 
 
-OG_VERSION = "1"  # غيّره حين يتغير تصميم الصورة فتُبنى من جديد
+OG_VERSION = "2"  # 2: new domain ather-quantum.com in the footer (v1 images said ather-quatum.cloud); غيّره حين يتغير تصميم الصورة فتُبنى من جديد
 
 
 def _og_response(key, build):

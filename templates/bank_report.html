@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% set tl = lang if lang in ("ar", "en") else "en" %}
 {% block title %}{{ c.title }} {{ r.measured_on[:4] }} · {{ t.brand }}{% endblock %}
+{% block og_image %}{{ abs_url('site.og_bank_report', report_id=r.id) }}{% endblock %}
 {% block description %}{{ c.meta.format(**tot) }}{% endblock %}
 {% block head %}
 <script type="application/ld+json">{{ {"@context": "https://schema.org", "@type": "Report", "name": c.title ~ " " ~ r.measured_on[:4], "datePublished": r.measured_on, "inLanguage": tl, "license": "https://creativecommons.org/licenses/by/4.0/", "author": {"@type": "Organization", "name": "Quantum Aether"}, "description": c.meta.format(**tot)} | tojson }}</script>

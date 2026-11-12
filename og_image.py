@@ -130,6 +130,27 @@ def render_bank(name, domain, share, pq, responding, rank, total, winner=False):
     return image
 
 
+def render_bank_ranking(banks, pct, responding, leader, leader_share, zero_count):
+    image = Image.new("RGB", (W, H), BG)
+    draw = ImageDraw.Draw(image)
+    _frame(draw)
+    draw.text((60, 170), "Post-quantum TLS ranking 2026", font=_font(FONT_REGULAR, 34), fill=MUTED)
+    draw.text((60, 222), f"{banks} Arab banks measured", font=_fit(draw, f"{banks} Arab banks measured", FONT_BOLD, 64, 800), fill=TEXT)
+    line = f"Only {pct}% of {responding} subdomains protected"
+    draw.text((60, 320), line, font=_fit(draw, line, FONT_BOLD, 40, 800), fill=GRADE_COLORS["C"])
+    draw.text((60, 390), f"Leader: {leader} {leader_share}%", font=_font(FONT_BOLD, 32), fill=GRADE_COLORS["A"])
+    if zero_count:
+        draw.text((60, 440), f"{zero_count} banks at 0%", font=_font(FONT_REGULAR, 30), fill=MUTED)
+    draw.ellipse([900, 170, 1140, 410], fill=CARD, outline=GRADE_COLORS["C"], width=12)
+    big = f"{pct}%"
+    font = _font(FONT_BOLD, 84)
+    box = draw.textbbox((0, 0), big, font=font)
+    draw.text((1020 - (box[2] - box[0]) / 2 - box[0], 290 - (box[3] - box[1]) / 2 - box[1]), big, font=font, fill=TEXT)
+    cta = "Where does your bank rank? →"
+    draw.text((W - 60 - draw.textlength(cta, font=_font(FONT_BOLD, 30)), H - 70), cta, font=_font(FONT_BOLD, 30), fill=ACCENT)
+    return image
+
+
 def render_default():
     image = Image.new("RGB", (W, H), BG)
     draw = ImageDraw.Draw(image)

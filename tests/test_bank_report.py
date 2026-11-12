@@ -91,5 +91,8 @@ class BankDetailTests(BankReportTests):
 
     def test_report_lists_winner(self):
         page = self.client.get("/banks/arab-banks-2026-11?lang=en").get_data(as_text=True)
+        self.assertIn("/og/banks/arab-banks-2026-11.png", page)
+        img = self.client.get("/og/banks/arab-banks-2026-11.png")
+        self.assertEqual((img.status_code, img.mimetype), (200, "image/png"))
         self.assertIn("Quantum-safe bank 2026", page)
         self.assertIn("/banks/arab-banks-2026-11/qnb.com", page)
