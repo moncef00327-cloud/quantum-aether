@@ -1,14 +1,18 @@
-name: Post-quantum TLS check
+name: Post-Quantum TLS Check
+
 on:
   schedule:
-    - cron: "0 6 * * 1"
+    - cron: '0 6 * * 1'
   workflow_dispatch:
 
 jobs:
   pq-tls:
     runs-on: ubuntu-latest
     steps:
-      - uses: moncef00327-cloud/pq-tls-action@v1
+      - uses: actions/checkout@v4
+      - name: Verify hybrid post-quantum TLS (X25519MLKEM768) & refresh badge
+        uses: moncef00327-cloud/quantum-aether@main
         with:
           domain: ather-quantum.com
           require-post-quantum: true
+          update-readme: true

@@ -1,0 +1,92 @@
+name: 'Quantum Aether Post-Quantum TLS Check & Badge'
+description: 'Verify hybrid post-quantum TLS (X25519MLKEM768 / FIPS 203), refresh dynamic badge, and detect silent TLS downgrades.'
+author: 'Quantum Aether'
+branding:
+  icon: 'shield'
+  color: 'green'
+
+inputs:
+  domain:
+    description: 'Public domain name to check on port 443 (e.g. example.com)'
+    required: true
+  require-post-quantum:
+    description: 'Fail the workflow if the server does not negotiate hybrid post-quantum key exchange (X25519MLKEM768)'
+    required: false
+    default: 'true'
+  update-readme:
+    description: 'Automatically insert or refresh the Quantum Aether dynamic badge in README.md'
+    required: false
+    default: 'false'
+  write-report:
+    description: 'Write qa_report.json (AI agent footprint & SHA-256 attestation) in the workspace'
+    required: false
+    default: 'true'
+
+outputs:
+  grade:
+    description: 'Observed Quantum Aether TLS grade (A, B, C, F)'
+    value: ${{ steps.scan.outputs.grade }}
+  pq:
+    description: 'Whether hybrid post-quantum key exchange (X25519MLKEM768) was negotiated (true/false)'
+    value: ${{ steps.scan.outputs.pq }}
+  group:
+    description: 'Negotiated TLS key-exchange group'
+    value: ${{ steps.scan.outputs.group }}
+  badge-url:
+    description: 'Dynamic SVG badge URL for the domain'
+    value: ${{ steps.scan.outputs.badge_url }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Run Quantum Aether PQC TLS check
+      id: scan
+      shell: bash
+      env:
+        INPUT_DOMAIN: ${{ inputs.domain }}
+        INPUT_REQUIRE_PQ: ${{ inputs.require-post-quantum }}
+        INPUT_UPDATE_README: ${{ inputs.update-readme }}
+        INPUT_WRITE_REPORT: ${{ inputs.write-report }}
+      run: |
+        python3 - << 'PY'
+        import json, os, sys, urllib.parse, urllib.request
+
+        domain = os.environ["INPUT_DOMAIN"].strip().lower()
+        req_pq = os.environ.get("INPUT_REQUIRE_PQ", "true").lower() == "true"
+        upd_readme = os.environ.get("INPUT_UPDATE_README", "false").lower() == "true"
+        write_rep = os.environ.get("INPUT_WRITE_REPORT", "true").lower() == "true"
+
+        url = f"https://ather-quantum.com/mcp/scan?domain={urllib.parse.quote(domain)}"
+        req = urllib.request.Request(url, headers={"User-Agent": "QuantumAether-GitHubAction/1.0"})
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+
+        if write_rep:
+            with open("qa_report.json", "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2)
+
+        grade = data.get("grade") or "undetermined"
+        pq = str(bool(data.get("pq"))).lower()
+        group = data.get("key_exchange_group") or "none"
+        badge_url = f"https://ather-quantum.com/badge/{domain}.svg"
+        verify_url = f"https://ather-quantum.com/verify/{domain}"
+        badge_md = f"[![Post-quantum TLS grade by Quantum Aether]({badge_url})]({verify_url})"
+
+        gh_out = os.environ.get("GITHUB_OUTPUT")
+        if gh_out:
+            with open(gh_out, "a", encoding="utf-8") as out:
+                out.write(f"grade={grade}\npq={pq}\ngroup={group}\nbadge_url={badge_url}\n")
+
+        if upd_readme and os.path.exists("README.md"):
+            with open("README.md", "r", encoding="utf-8") as f:
+                content = f.read()
+            if badge_url not in content:
+                with open("README.md", "w", encoding="utf-8") as f:
+                    f.write(badge_md + "\n\n" + content)
+
+        print(f"Quantum Aether TLS check for {domain}: Grade={grade}, PQ={pq}, Group={group}")
+        print(f"Badge Markdown: {badge_md}")
+        if req_pq and pq != "true":
+            print(f"::error::Silent TLS Downgrade or Classical-Only Key Exchange on {domain} (grade {grade}, group {group}). Fix & monitor at https://ather-quantum.com/monitoring?domain={domain}")
+            sys.exit(1)
+        PY

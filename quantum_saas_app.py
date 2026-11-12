@@ -1965,10 +1965,11 @@ def badge_snippets(domain):
     img = public_base() + url_for('.badge', domain=domain)
     alt = "Post-quantum TLS grade by Quantum Aether"
     action = (
-        f"- uses: moncef00327-cloud/pq-tls-action@v1\n"
+        f"- uses: moncef00327-cloud/quantum-aether@main\n"
         f"  with:\n"
         f"    domain: {domain}\n"
-        f"    require-post-quantum: true"
+        f"    require-post-quantum: true\n"
+        f"    update-readme: true"
     )
     return {"html": f'<a href="{page}"><img src="{img}" alt="{alt}"></a>',
             "markdown": f"[![{alt}]({img})]({page})",
@@ -1976,7 +1977,7 @@ def badge_snippets(domain):
 
 
 def badge_svg(grade, checked_at=None):
-    color, value = {'stale': ('#64748b', 'stale: rescan'), 'undetermined': ('#64748b', 'undetermined')}.get(grade, BADGE_STYLE.get(grade, BADGE_STYLE[None]))
+    color, value = {'stale': ('#d97706', 'stale: rescan'), 'undetermined': ('#64748b', 'undetermined')}.get(grade, BADGE_STYLE.get(grade, BADGE_STYLE[None]))
     label = "post-quantum TLS"
     lw, vw = 7 * len(label) + 12, 7 * len(value) + 14  # تقدير عرض النص بخط 11px
     w = lw + vw
