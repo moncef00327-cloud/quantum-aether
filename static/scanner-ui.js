@@ -3,7 +3,7 @@
   if (!window.fetch || !window.AbortController) return;
   const forms = [...document.querySelectorAll('form[data-async-scan]')];
   function domainFrom(raw) {
-    const value = raw.trim();
+    const value = raw.trim().replace(/^[`"'<>([\s]+|[`"'<>)\],;\s]+$/g, '');
     if (!value || /[\s\\\u0000-\u001f\u007f]/u.test(value)) throw new Error('invalid_domain');
     const url = new URL(value.includes('://') ? value : `https://${value}`);
     if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.port === '0') throw new Error('invalid_domain');
@@ -29,6 +29,17 @@
     try { messages = JSON.parse(form.dataset.errors || '{}'); } catch { /* localized fallback below */ }
     restore(form);
     input.addEventListener('input', () => input.removeAttribute('aria-invalid'));
+    input.addEventListener('paste', event => {
+      const text = event.clipboardData?.getData('text');
+      if (!text) return;
+      try {
+        const clean = domainFrom(text);
+        event.preventDefault();
+        input.value = clean;
+        input.removeAttribute('aria-invalid');
+        error.hidden = true;
+      } catch { /* let default paste happen so user can edit */ }
+    });
     form.addEventListener('submit', async event => {
       event.preventDefault();
       if (form.dataset.state === 'submitted') return;

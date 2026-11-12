@@ -1,14 +1,15 @@
+{% set bid = box_id | default('domain-box') %}
 <section class="card scan-box">
   <h2>{{ t.scanbox_title }}</h2>
   <form class="scan-form" method="post" action="{{ url_for('site.scan_form', lang=lang) }}" data-busy="{{ t.scanning }}" data-async-scan data-errors="{{ t.errors | tojson | forceescape }}" data-waiting="{{ sx.waiting }}" data-slow="{{ sx.slow }}" data-invalid="{{ sx.invalid }}" data-network="{{ sx.network }}" data-rate="{{ sx.rate }}" data-failed="{{ sx.failed }}" data-retry="{{ sx.retry }}">
-    <input type="hidden" name="src" value="scanbox">
-    <label for="domain-box">{{ t.domain_label }}</label>
+    <input type="hidden" name="src" value="{{ box_src | default('scanbox') }}">
+    <label for="{{ bid }}">{{ t.domain_label }}</label>
     <div class="scan-row">
-      <input id="domain-box" name="domain" type="text" inputmode="url" autocomplete="url" dir="ltr"
-             placeholder="example.com" required maxlength="4096" autocapitalize="none" spellcheck="false" aria-describedby="domain-box-hint">
+      <input id="{{ bid }}" name="domain" type="text" inputmode="url" autocomplete="url" dir="ltr"
+             placeholder="example.com" required maxlength="4096" autocapitalize="none" spellcheck="false" aria-describedby="{{ bid }}-hint">
       <button type="submit">{{ t.scan_button }}</button>
     </div>
-    <p id="domain-box-hint" class="input-hint">{{ sx.input_hint }}</p>
+    <p id="{{ bid }}-hint" class="input-hint">{{ sx.input_hint }}</p>
     <p class="form-error" data-scan-error role="alert" tabindex="-1" hidden></p>
     <p class="form-busy" role="status" aria-live="polite" hidden>{{ sx.waiting }}</p>
   </form>

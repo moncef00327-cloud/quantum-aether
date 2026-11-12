@@ -89,4 +89,5 @@
     <span class="form-busy" hidden>{{ t.scanning }}</span>
   </form>
 </section>
+{% with box_id='domain-box-site', box_src='site_other' %}{% include "_scan_box.html" %}{% endwith %}
 {% endblock %}

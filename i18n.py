@@ -1444,6 +1444,7 @@ TEXTS["de"].update({
 TEXTS["en"].update({
     "disc_title": "Your other subdomains",
     "disc_sub": "{base} is rarely the only host. Public certificate logs list its subdomains; we check each one that responds for post-quantum key exchange. Only the numbers appear here; the names are never shown publicly.",
+    "disc_sub_grade_a": "{base} is protected on this hostname (often via a CDN), but direct subdomains such as api, mail, auth or vpn frequently bypass the CDN and remain classical. We check every responding subdomain in public certificate logs. Only the numbers appear here; the names are never shown publicly.",
     "disc_button": "Check all subdomains",
     "disc_running": "Checking subdomains from public certificate logs. This usually takes 10–40 seconds…",
     "disc_result": "We found {responding} subdomains of {base} that respond on port 443: {not_pq} without post-quantum key exchange, {pq} with it, {unknown} undetermined.",
@@ -1476,6 +1477,7 @@ TEXTS["en"].update({
 TEXTS["ar"].update({
     "disc_title": "نطاقاتك الفرعية الأخرى",
     "disc_sub": "نادراً ما يكون {base} الخادم الوحيد. سجلات الشهادات العامة تذكر نطاقاته الفرعية، ونفحص كل نطاق منها يرد على الاتصال لنعرف هل يدعم تبادل المفاتيح ما بعد الكمومي. تظهر هنا الأعداد فقط، ولا تُعرض الأسماء علناً أبداً.",
+    "disc_sub_grade_a": "{base} محمي على هذا الاسم (غالباً عبر CDN)، لكن النطاقات الفرعية المباشرة مثل api وmail وauth وvpn كثيراً ما تتجاوز الـ CDN وتبقى بتبادل مفاتيح تقليدي. نفحص كل نطاق فرعي يرد في سجلات الشهادات العامة. تظهر هنا الأعداد فقط، ولا تُعرض الأسماء علناً أبداً.",
     "disc_button": "افحص كل النطاقات الفرعية",
     "disc_running": "نفحص النطاقات الفرعية من سجلات الشهادات العامة. يستغرق ذلك عادةً من 10 إلى 40 ثانية…",
     "disc_result": "وجدنا {responding} نطاقاً فرعياً لـ {base} يرد على المنفذ 443: {not_pq} بلا تبادل مفاتيح ما بعد كمومي، و{pq} يدعمه، و{unknown} غير محدد.",
@@ -1508,6 +1510,7 @@ TEXTS["ar"].update({
 TEXTS["de"].update({
     "disc_title": "Ihre weiteren Subdomains",
     "disc_sub": "{base} ist selten der einzige Host. Öffentliche Zertifikatslogs nennen seine Subdomains; wir prüfen jede erreichbare auf Post-Quanten-Schlüsselaustausch. Hier erscheinen nur die Zahlen; die Namen werden nie öffentlich gezeigt.",
+    "disc_sub_grade_a": "{base} ist unter diesem Hostnamen geschützt (oft über ein CDN), aber direkte Subdomains wie api, mail, auth oder vpn umgehen das CDN häufig und bleiben klassisch. Wir prüfen jede erreichbare Subdomain aus öffentlichen Zertifikatslogs. Hier erscheinen nur die Zahlen; die Namen werden nie öffentlich gezeigt.",
     "disc_button": "Alle Subdomains prüfen",
     "disc_running": "Wir prüfen Subdomains aus öffentlichen Zertifikatslogs. Das dauert meist 10–40 Sekunden…",
     "disc_result": "Wir haben {responding} Subdomains von {base} gefunden, die auf Port 443 antworten: {not_pq} ohne Post-Quanten-Schlüsselaustausch, {pq} mit, {unknown} unbestimmt.",

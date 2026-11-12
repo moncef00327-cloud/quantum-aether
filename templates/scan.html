@@ -31,7 +31,7 @@
 <section class="card discovery" id="discovery" data-api="{{ url_for('site.discovery_api', scan_id=scan.id) }}"
          data-msg='{{ {"running": t.disc_running, "result": t.disc_result, "none": t.disc_none, "failed": t.disc_failed, "rate_limited": t.disc_limited, "busy": t.disc_busy} | tojson | forceescape }}'>
   <h2>{{ t.disc_title }}</h2>
-  <p>{{ t.disc_sub.format(base=dbase) }}</p>
+  <p>{{ t.disc_sub_grade_a.format(base=dbase) if r.grade == 'A' else t.disc_sub.format(base=dbase) }}</p>
   <p><button type="button" class="disc-start" data-ev="disc_start">{{ t.disc_button }}</button></p>
   <p class="disc-status" role="status" aria-live="polite"></p>
   <div class="disc-request" hidden>

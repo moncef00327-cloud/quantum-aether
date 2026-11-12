@@ -47,6 +47,14 @@ class ResultOrderTests(unittest.TestCase):
             for marker in ('id="buy"', 'id="alert"', 'data-copy="#badge-html"'):
                 self.assertEqual(page.count(marker), 1, (grade, marker))
 
+    def test_grade_a_highlights_subdomain_bypass_risk(self):
+        page_a = render("A")
+        page_b = render("B")
+        self.assertIn("bypass the CDN", page_a)
+        self.assertNotIn("bypass the CDN", page_b)
+        self.assertIn("is rarely the only host", page_b)
+
+
 
 if __name__ == "__main__":
     unittest.main()
