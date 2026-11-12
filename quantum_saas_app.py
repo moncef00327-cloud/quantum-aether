@@ -1238,6 +1238,22 @@ def site_page(domain):
     return with_last_modified(response, summary["scanned_at"]) if summary else response
 
 
+@bp.get("/executive-brief/<domain>")
+def executive_brief(domain):
+    """ملخص مخاطر تنفيذي من صفحة واحدة (Executive Risk Brief) قابل للطباعة كـ PDF وإرساله للإدارة (CISO / CTO)."""
+    try:
+        domain = quantum_vuln_scanner.normalize_domain(domain)
+    except quantum_vuln_scanner.ScanError:
+        abort(404)
+    if search_indexing.is_excluded(domain) or adoption.opted_out(domain, adoption.load_optout(conn=db())):
+        abort(410)
+    summary, source = known_result_for(domain)
+    response = make_response(render_template(
+        "executive_brief.html", domain=domain, summary=summary, source=source, indexing_excluded=True))
+    response.headers["X-Robots-Tag"] = "noindex"
+    return response
+
+
 @bp.get("/compare")
 def compare():
     """مقارنة موقعين جنباً إلى جنب. الفحص حيّ ومحدود بنفس حد الفحوصات."""

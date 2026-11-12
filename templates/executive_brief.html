@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% set ar = lang == 'ar' %}
+{% set de = lang == 'de' %}
+{% block title %}{{ t.exec_brief_title.format(domain=domain) }} · {{ t.brand }}{% endblock %}
+{% block head %}<meta name="robots" content="noindex">{% endblock %}
+{% block content %}
+<section class="card">
+  <div class="result-head">
+    {% if summary %}<div class="grade grade-{{ summary.grade }}">{{ summary.grade }}</div>{% endif %}
+    <div>
+      <p class="eyebrow">{{ 'ملخص تنفيذي لإدارة أمن المعلومات (CISO / CTO)' if ar else ('Executive Brief (CISO / CTO / Management)' if not de else 'Management-Zusammenfassung (CISO / CTO)') }}</p>
+      <h1 dir="ltr" class="domain">{{ domain }}</h1>
+      {% if summary %}<p class="grade-text">{{ t.grades[summary.grade] }}</p>{% endif %}
+    </div>
+  </div>
+  <p class="no-print" style="margin-top:0.75rem">
+    <button type="button" onclick="window.print()">{{ t.print }}</button>
+    <a class="button-link" href="{{ url_for('site.monitoring', domain=domain, lang=lang) }}" data-ev="monitoring_cta">{{ t.mon_shield_cta.format(domain=domain) }}</a>
+  </p>
+</section>
+
+<section class="card">
+  <h2>{{ '1. الملخص التنفيذي ومخاطر الأعمال' if ar else ('1. Executive Risk Summary & Business Impact' if not de else '1. Zusammenfassung der Geschäfts- und Compliance-Risiken') }}</h2>
+  {% if summary and not summary.pq %}
+  <p class="notice"><strong>{{ t.hndl_timeline_title }}:</strong> {{ t.hndl_timeline_body.format(domain=domain, group=summary.group or 'classical ECDHE') }}</p>
+  {% endif %}
+  <table class="kv" dir="ltr">
+    <tr><th>Domain</th><td>{{ domain }}</td></tr>
+    <tr><th>Current Grade</th><td>{{ summary.grade if summary else 'Not Scanned' }}</td></tr>
+    <tr><th>Negotiated Key Exchange</th><td>{{ (summary.group or 'Classical / None') if summary else '—' }}</td></tr>
+    <tr><th>Post-Quantum Protection (FIPS 203)</th><td>{{ 'Enabled (X25519MLKEM768)' if (summary and summary.pq) else 'NOT ENABLED — Exposed to Harvest-Now-Decrypt-Later (HNDL)' }}</td></tr>
+    <tr><th>TLS Protocol</th><td>{{ (summary.tls or '—') if summary else '—' }}</td></tr>
+    <tr><th>Observation Timestamp</th><td>{{ (summary.scanned_at or '—') if summary else '—' }}</td></tr>
+  </table>
+</section>
+
+<section class="card">
+  <h2>{{ '2. الامتثال التنظيمي ومقارنة القطاع (NIS2 / DORA / NIST 2030)' if ar else ('2. Regulatory Compliance & Sector Benchmark (NIS2 / DORA / NIST 2030)' if not de else '2. Regulatorische Compliance & Branchenvergleich (NIS2 / DORA / NIST 2030)') }}</h2>
+  <ul>
+    <li>{{ 'معيار NIST IR 8547 وCNSA 2.0 يحددان عام 2030 موعداً لإيقاف خوارزميات التبادل التقليدية (RSA / ECDHE)؛ أي بيانات حساسة تحتاج سرية لأكثر من 4 سنوات معرضة للالتقاط اليوم وفك التشفير لاحقاً.' if ar else ('NIST IR 8547 and CNSA 2.0 set 2030 as the deprecation deadline for classical key exchange; sensitive traffic with a 4+ year confidentiality requirement is already inside the HNDL exposure window.' if not de else 'NIST IR 8547 und CNSA 2.0 setzen 2030 als Abkündigungsfrist für klassischen Schlüsselaustausch; sensible Daten mit über 4 Jahren Geheimhaltungsbedarf liegen bereits im HNDL-Risikofenster.') }}</li>
+    <li>{{ 'لوائح الاتحاد الأوروبي (NIS2 المادة 21 وDORA للقطاع المالي) تلزم المؤسسات بتطبيق أحدث معايير التشفير للبيانات أثناء النقل (State-of-the-art Cryptography in Transit) ومراقبة التراجعات الأمنية.' if ar else ('EU NIS2 (Article 21) and DORA mandate state-of-the-art cryptography in transit and continuous monitoring against configuration regressions.' if not de else 'EU NIS2 (Artikel 21) und DORA verlangen Verschlüsselung nach dem Stand der Technik sowie kontinuierliche Überwachung gegen Konfigurationsrückschritte.') }}</li>
+    <li>{{ 'مقارنة القطاع: 80% من منصات السحابة والأمن العالمية و70.6% من بنوك منطقة DACH فعّلت بالفعل X25519MLKEM768.' if ar else ('Sector benchmark: 80% of global cloud/security platforms and 70.6% of DACH banks have already enabled hybrid X25519MLKEM768.' if not de else 'Branchenvergleich: 80 % der globalen Cloud-/Sicherheitsplattformen und 70,6 % der DACH-Banken nutzen bereits X25519MLKEM768.') }}</li>
+  </ul>
+</section>
+
+<section class="card highlight">
+  <h2>{{ '3. التوصية والخطوة المطلوبة لاعتماد الإدارة' if ar else ('3. Recommended Action for Approval' if not de else '3. Empfohlene Maßnahme zur Freigabe') }}</h2>
+  <p>{{ 'تحديثات الخوادم أو تغييرات الـ CDN قد تُسقط التشفير المقاوم للكم بصمت (Silent TLS Downgrade)، كما أن النطاقات الفرعية الحساسة (api, auth, mail, vpn) غالباً ما تتجاوز حماية الـ CDN.' if ar else ('Routine server updates or CDN changes can silently drop post-quantum encryption (Silent TLS Downgrade), and direct subdomains (api, auth, mail, vpn) frequently bypass CDN edge protection.' if not de else 'Routine-Updates oder CDN-Änderungen können Post-Quanten-TLS unbemerkt deaktivieren (Silent TLS Downgrade), und direkte Subdomains (api, auth, mail, vpn) umgehen oft das CDN.') }}</p>
+  <ul>
+    <li><strong>{{ 'الخيار 1 — المراقبة اليومية المؤسسية (من $29/شهرياً):' if ar else ('Option 1 — Enterprise Daily Monitoring (from $29/month):' if not de else 'Option 1 — Tägliche Unternehmensüberwachung (ab 29 $/Monat):') }}</strong> {{ 'فحص يومي آلي للنطاق الرئيسي والنطاقات الفرعية، تنبيه فوري عند أي تراجع صامت أو قرب انتهاء شهادة، ولوحة امتثال قابلة للطباعة.' if ar else ('Automated daily checks across primary and subdomain hosts, instant silent-downgrade alerts, certificate expiry warnings, and a printable compliance log.' if not de else 'Tägliche automatische Prüfung von Hauptdomain und Subdomains, Sofortwarnung bei stillen Rückschritten und druckbares Compliance-Protokoll.') }}</li>
+    <li><strong>{{ 'الخيار 2 — التقرير الهندسي الكامل لمرة واحدة ($49):' if ar else ('Option 2 — One-Time Full Remediation Report ($49):' if not de else 'Option 2 — Einmaliger vollständiger Behebungsbericht (49 $):') }}</strong> {{ 'خطوات الترقية التفصيلية لخوادم Nginx وApache وCaddy وCloudflare وAWS.' if ar else ('Exact step-by-step configuration for Nginx, Apache, Caddy, Cloudflare, and AWS.' if not de else 'Genaue Konfigurationsschritte für Nginx, Apache, Caddy, Cloudflare und AWS.') }}</li>
+  </ul>
+  <p dir="ltr"><strong>Activate at:</strong> <a href="{{ url_for('site.monitoring', domain=domain, lang=lang, _external=True) }}">{{ url_for('site.monitoring', domain=domain, lang=lang, _external=True) }}</a></p>
+  <p class="no-print">
+    <a class="button-link" href="{{ url_for('site.monitoring', domain=domain, lang=lang) }}" data-ev="monitoring_cta">{{ t.mon_shield_cta.format(domain=domain) }}</a>
+    <a class="button-link" href="{{ url_for('site.compare', a=domain, lang=lang) }}">{{ t.site_compare_cta.format(domain=domain) }}</a>
+  </p>
+</section>
+{% endblock %}

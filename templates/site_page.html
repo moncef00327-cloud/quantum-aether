@@ -125,7 +125,10 @@
     <button type="submit">{{ t.site_scan_cta }}</button>
     <span class="form-busy" hidden>{{ t.scanning }}</span>
   </form>
-  <p class="small" style="margin-top:0.75rem"><a href="{{ url_for('site.compare', a=domain, lang=lang) }}">{{ t.site_compare_cta.format(domain=domain) }}</a></p>
+  <p class="small" style="margin-top:0.75rem">
+    <a class="button-link" href="{{ url_for('site.executive_brief', domain=domain, lang=lang) }}" data-ev="exec_brief">{{ t.exec_brief_cta }}</a>
+    · <a href="{{ url_for('site.compare', a=domain, lang=lang) }}">{{ t.site_compare_cta.format(domain=domain) }}</a>
+  </p>
 </section>
 {% with box_id='domain-box-site', box_src='site_other' %}{% include "_scan_box.html" %}{% endwith %}
 <section class="card">

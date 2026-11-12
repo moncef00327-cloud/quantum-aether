@@ -78,7 +78,10 @@
   <h2>{{ t.buy_title }} — ${{ price }}</h2>
   <p class="one-time">{{ t.one_time }} · <a href="{{ url_for('site.agency_page', lang=lang) }}" data-ev="agency_cta">{{ t.agency_home_link }}</a></p>
   <ul class="ticks">{% for item in t.paid_items %}<li>{{ item }}</li>{% endfor %}</ul>
-  <p><a href="{{ url_for('site.sample_report', lang=lang) }}" target="_blank" data-ev="sample_report">{{ t.sample_link }} →</a></p>
+  <p>
+    <a class="button-link" href="{{ url_for('site.executive_brief', domain=r.domain, lang=lang) }}" target="_blank" data-ev="exec_brief">{{ t.exec_brief_cta }}</a>
+    · <a href="{{ url_for('site.sample_report', lang=lang) }}" target="_blank" data-ev="sample_report">{{ t.sample_link }} →</a>
+  </p>
   {% if paid %}
     <p class="notice">{{ t.already_paid }}</p>
   {% elif payments_enabled or crypto_networks %}
