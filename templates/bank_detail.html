@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% set tl = lang if lang in ("ar", "en") else "en" %}
+{% set b = d.row %}
+{% set name = b.name[tl] %}
+{% set page = abs_url('site.bank_detail_page', report_id=r.id, domain=b.domain, lang=tl) %}
+{% block title %}{{ name }} · {{ c.title }} {{ r.measured_on[:4] }}{% endblock %}
+{% block description %}{% if b.share is not none %}{{ c.detail_meta.format(name=name, pq=b.subs.pq, responding=b.subs.responding, rank=d.rank) }}{% else %}{{ name }}: {{ c.d_unranked.format(few=c.few.format(n=min_resp)) }}{% endif %}{% endblock %}
+{% block og_image %}{% if b.share is not none %}{{ abs_url('site.og_bank', report_id=r.id, domain=b.domain) }}{% else %}{{ super() }}{% endif %}{% endblock %}
+{% block content %}
+<article class="card prose">
+  <p class="muted small"><a href="{{ url_for('site.bank_report_page', report_id=r.id, lang=tl) }}">{{ c.title }} {{ r.measured_on[:4] }}</a> · {{ countries[b.country][tl] }}{% if b.central %} · {{ c.central }}{% endif %}</p>
+  <h1>{{ name }}</h1>
+  <p class="muted" dir="ltr">{{ b.domain }}</p>
+  {% if d.winner %}<p class="notice"><strong>🏆 {{ c.d_winner }}</strong></p>{% endif %}
+  {% if b.share is not none %}
+    <p class="lead"><strong style="font-size:2.2em">{{ b.share }}%</strong><br>{{ c.d_subs.format(pq=b.subs.pq, responding=b.subs.responding) }}</p>
+    <div aria-hidden="true" style="background:rgba(127,127,127,.25);height:10px;border-radius:5px;max-width:520px"><div style="width:{{ b.share }}%;height:10px;border-radius:5px;background:currentColor;opacity:.75"></div></div>
+    <ul>
+      <li>{{ c.d_rank.format(rank=d.rank, of=d.of) }}</li>
+      {% if d.leader and d.leader.domain != b.domain %}<li>{{ c.d_vs_leader.format(leader=d.leader.name[tl], share=d.leader.share) }}</li>{% endif %}
+      <li>{{ c.th[4] }}: {% if not b.www.ok %}{{ c.www_na }}{% elif b.www.pq %}{{ c.www_yes.format(grade=b.www.grade) }}{% else %}{{ c.www_no.format(grade=b.www.grade) }}{% endif %}</li>
+    </ul>
+    {% if not d.winner %}<p>{{ c.d_gap.format(need=need, www='' if b.www.pq else c.d_gap_www) }}</p>{% endif %}
+  {% else %}
+    <p>{{ c.d_unranked.format(few=c.few.format(n=min_resp)) }}</p>
+  {% endif %}
+  <p class="row" style="display:flex;gap:12px;flex-wrap:wrap">
+    <a class="button-link" target="_blank" rel="noopener" data-ev="bank_share_linkedin" href="https://www.linkedin.com/sharing/share-offsite/?url={{ page | urlencode }}">LinkedIn ↗</a>
+    <a class="button-link" target="_blank" rel="noopener" data-ev="bank_share_x" href="https://twitter.com/intent/tweet?text={{ (c.share_text.format(name=name, share=b.share if b.share is not none else '–')) | urlencode }}&url={{ page | urlencode }}">X ↗</a>
+    <a href="https://wa.me/?text={{ (c.share_text.format(name=name, share=b.share if b.share is not none else '–') ~ ' ' ~ page) | urlencode }}" target="_blank" rel="noopener" data-ev="bank_share_whatsapp">WhatsApp ↗</a>
+  </p>
+</article>
+
+{% if d.winner %}
+<section class="card">
+  <h2>{{ c.award_badge }}</h2>
+  <p>{{ c.award_badge_note }}</p>
+  <p><img src="{{ url_for('site.bank_award_badge', report_id=r.id, domain=b.domain) }}" alt="Quantum-safe bank {{ r.measured_on[:4] }}" width="300" height="72"></p>
+  <pre dir="ltr">&lt;a href="{{ page }}"&gt;&lt;img src="{{ abs_url('site.bank_award_badge', report_id=r.id, domain=b.domain) }}" alt="Quantum-safe bank {{ r.measured_on[:4] }}" width="300" height="72"&gt;&lt;/a&gt;</pre>
+</section>
+{% endif %}
+
+<section class="card buy">
+  <h2>{{ c.d_staff_title.format(name=name) }}</h2>
+  <p>{{ c.d_staff }}</p>
+  <p><a class="button-link" href="{{ url_for('site.audit_page', domain=b.domain, lang=tl) }}" data-ev="bank_detail_cta">{{ c.d_staff_button.format(name=name) }}</a></p>
+</section>
+
+{% if d.peers %}
+<section class="card">
+  <h2>{{ c.d_peers.format(country=countries[b.country][tl]) }}</h2>
+  <ul>{% for p in d.peers %}<li><a href="{{ url_for('site.bank_detail_page', report_id=r.id, domain=p.domain, lang=tl) }}">{{ p.name[tl] }}</a>: {% if p.share is not none %}{{ p.share }}%{% else %}–{% endif %}</li>{% endfor %}</ul>
+  <p><a href="{{ url_for('site.bank_report_page', report_id=r.id, lang=tl) }}">{{ c.back }} →</a></p>
+</section>
+{% endif %}
+{% endblock %}

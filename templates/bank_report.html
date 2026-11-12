@@ -21,6 +21,13 @@
 </article>
 
 <section class="card">
+  <h2>🏆 {{ c.award_title }}</h2>
+  <p>{{ c.award_rule.format(n=award_min) }}</p>
+  {% if winners %}<p><strong>{{ c.award_winners }}</strong> {% for w in winners %}<a href="{{ url_for('site.bank_detail_page', report_id=r.id, domain=w.domain, lang=tl) }}">{{ w.name[tl] }}</a> ({{ w.share }}%){% if not loop.last %} · {% endif %}{% endfor %}</p>
+  {% else %}<p class="muted">{{ c.award_none }}</p>{% endif %}
+</section>
+
+<section class="card">
   <h2>{{ c.table_title }}</h2>
   <div style="overflow-x:auto">
   <table class="bank-rank" style="width:100%">
@@ -28,7 +35,7 @@
     {% for b in rows %}
     <tr>
       <td>{% if b.share is not none %}{{ loop.index }}{% else %}–{% endif %}</td>
-      <td><a href="{{ url_for('site.site_page', domain='www.' ~ b.domain, lang=tl) }}">{{ b.name[tl] }}</a>{% if b.central %} <span class="muted small">({{ c.central }})</span>{% endif %}<br><span class="muted small" dir="ltr">{{ b.domain }}</span></td>
+      <td><a href="{{ url_for('site.bank_detail_page', report_id=r.id, domain=b.domain, lang=tl) }}">{{ b.name[tl] }}</a>{% if b.domain in winners|map(attribute='domain')|list %} 🏆{% endif %}{% if b.central %} <span class="muted small">({{ c.central }})</span>{% endif %}<br><span class="muted small" dir="ltr">{{ b.domain }}</span></td>
       <td>{{ countries[b.country][tl] }}</td>
       <td>{% if b.share is not none %}<strong>{{ b.share }}%</strong> <span class="muted small" dir="ltr">({{ b.subs.pq }} / {{ b.subs.responding }})</span>
           <div class="bar-track" aria-hidden="true" style="background:rgba(127,127,127,.25);height:6px;border-radius:3px;margin-top:4px"><div style="width:{{ b.share }}%;height:6px;border-radius:3px;background:currentColor;opacity:.75"></div></div>

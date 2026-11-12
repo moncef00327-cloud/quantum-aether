@@ -105,6 +105,31 @@ def render_country(name, pct, rank, total, delta_pp=None, week=""):
     return image
 
 
+def render_bank(name, domain, share, pq, responding, rank, total, winner=False):
+    image = Image.new("RGB", (W, H), BG)
+    draw = ImageDraw.Draw(image)
+    _frame(draw)
+    draw.text((60, 170), "Arab banks: post-quantum TLS ranking", font=_font(FONT_REGULAR, 34), fill=MUTED)
+    draw.text((60, 222), name, font=_fit(draw, name, FONT_BOLD, 72, 800), fill=TEXT)
+    line = f"{pq} of {responding} subdomains post-quantum protected"
+    color = GRADE_COLORS["A"] if share >= 80 else GRADE_COLORS["B"] if share >= 30 else GRADE_COLORS["C"]
+    draw.text((60, 330), line, font=_fit(draw, line, FONT_BOLD, 40, 800), fill=color)
+    sub = "Winner: Quantum-safe bank 2026" if winner else domain
+    draw.text((60, 400), sub, font=_font(FONT_BOLD if winner else FONT_REGULAR, 30), fill=GRADE_COLORS["A"] if winner else MUTED)
+    draw.ellipse([900, 170, 1140, 410], fill=CARD, outline=color, width=12)
+    big = f"{share}%"
+    font = _font(FONT_BOLD, 84 if len(big) <= 3 else 66)
+    box = draw.textbbox((0, 0), big, font=font)
+    draw.text((1020 - (box[2] - box[0]) / 2 - box[0], 268 - (box[3] - box[1]) / 2 - box[1]), big, font=font, fill=TEXT)
+    if rank:
+        of = f"#{rank} of {total}"
+        f2 = _font(FONT_REGULAR, 30)
+        draw.text((1020 - draw.textlength(of, font=f2) / 2, 330), of, font=f2, fill=MUTED)
+    cta = "Where does your bank rank? →"
+    draw.text((W - 60 - draw.textlength(cta, font=_font(FONT_BOLD, 30)), H - 70), cta, font=_font(FONT_BOLD, 30), fill=ACCENT)
+    return image
+
+
 def render_default():
     image = Image.new("RGB", (W, H), BG)
     draw = ImageDraw.Draw(image)

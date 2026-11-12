@@ -10,7 +10,7 @@ import quantum_saas_app
 
 DISC = {"alinma.com": {"names": 50, "responding": 40, "pq": 4, "not_pq": 36, "unknown": 0,
                        "hosts": [{"host": "secret-api.alinma.com", "status": "not_pq"}]},
-        "qnb.com": {"names": 30, "responding": 20, "pq": 18, "not_pq": 2, "unknown": 0, "hosts": []},
+        "qnb.com": {"names": 30, "responding": 20, "pq": 19, "not_pq": 1, "unknown": 0, "hosts": []},
         "kfh.com": {"names": 3, "responding": 2, "pq": 2, "not_pq": 0, "unknown": 0, "hosts": []},
         "adcb.com": {"error": "crt.sh: RuntimeError"}}
 WEEKLY = {"www.alinma.com": {"ok": 1, "grade": "C", "grp": "secp256r1", "tls": "TLSv1.2", "pq": 0},
@@ -47,7 +47,7 @@ class BankReportTests(unittest.TestCase):
         self.assertEqual([r["domain"] for r in rows[:2]], ["qnb.com", "alinma.com"])
         self.assertIsNone(next(r for r in rows if r["domain"] == "kfh.com")["share"])  # too few answered
         tot = bank_report.totals(rows)
-        self.assertEqual((tot["responding"], tot["pq"], tot["pct"]), (60, 22, 37))
+        self.assertEqual((tot["responding"], tot["pq"], tot["pct"]), (60, 23, 38))
 
     def test_opt_out_removes_bank(self):
         rows = bank_report.ranked(bank_report.load("arab-banks-2026-11"), optout={"alinma.com"})
@@ -71,3 +71,25 @@ class BankReportTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class BankDetailTests(BankReportTests):
+    def test_detail_page_award_and_badge(self):
+        winner = self.client.get("/banks/arab-banks-2026-11/qnb.com?lang=ar").get_data(as_text=True)
+        self.assertIn("بنك قطر الوطني", winner)
+        self.assertIn("جائزة", winner)
+        self.assertIn("/og/bank/arab-banks-2026-11/qnb.com.png", winner)
+        self.assertIn("/audit?domain=qnb.com", winner)
+        badge = self.client.get("/banks/arab-banks-2026-11/award/qnb.com.svg")
+        self.assertEqual(badge.status_code, 200)
+        self.assertIn("Quantum-safe bank 2026", badge.get_data(as_text=True))
+        self.assertEqual(self.client.get("/banks/arab-banks-2026-11/award/alinma.com.svg").status_code, 404)
+        loser = self.client.get("/banks/arab-banks-2026-11/alinma.com?lang=en").get_data(as_text=True)
+        self.assertIn("protect 34 more subdomains and enable protection on the main website", loser)  # ceil(.95*40)=38-4
+        self.assertIn("Other banks in Saudi Arabia", loser)
+        self.assertEqual(self.client.get("/banks/arab-banks-2026-11/example.com").status_code, 404)
+
+    def test_report_lists_winner(self):
+        page = self.client.get("/banks/arab-banks-2026-11?lang=en").get_data(as_text=True)
+        self.assertIn("Quantum-safe bank 2026", page)
+        self.assertIn("/banks/arab-banks-2026-11/qnb.com", page)

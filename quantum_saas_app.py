@@ -590,7 +590,49 @@ def bank_report_page(report_id):
     y, m, d = (int(x) for x in r["measured_on"].split("-"))
     date = f"{d} {MONTHS[lang][m - 1]} {y}"
     return render_template("bank_report.html", r=r, rows=rows, tot=bank_report.totals(rows), c=bank_report.COPY[lang],
-                           countries=bank_report.COUNTRIES, min_resp=bank_report.MIN_RESPONDING, date=date)
+                           countries=bank_report.COUNTRIES, min_resp=bank_report.MIN_RESPONDING, date=date,
+                           winners=[x for x in rows if bank_report.is_winner(x)], award_min=bank_report.AWARD_MIN)
+
+
+def _bank_rows(report_id):
+    r = _bank_report_or_404(report_id)
+    return r, bank_report.ranked(r, adoption.load_optout(conn=db()))
+
+
+@bp.get("/banks/<report_id>/<domain>")
+def bank_detail_page(report_id, domain):
+    r, rows = _bank_rows(report_id)
+    d = bank_report.detail(rows, domain) or abort(404)
+    lang = current_lang()
+    return render_template("bank_detail.html", r=r, d=d, c=bank_report.COPY[lang], countries=bank_report.COUNTRIES,
+                           min_resp=bank_report.MIN_RESPONDING, award_min=bank_report.AWARD_MIN,
+                           need=bank_report.need_for_award(d["row"]))
+
+
+@bp.get("/og/bank/<report_id>/<domain>.png")
+def og_bank(report_id, domain):
+    r, rows = _bank_rows(report_id)
+    d = bank_report.detail(rows, domain) or abort(404)
+    row = d["row"]
+    if row["share"] is None:
+        abort(404)
+    s = row["subs"]
+    return _og_response(f"bank|{report_id}|{domain}|{row['share']}|{d['rank']}|{d['winner']}",
+                        lambda: og_image.render_bank(row["name"]["en"], domain, row["share"], s["pq"], s["responding"],
+                                                     d["rank"], d["of"], d["winner"]))
+
+
+@bp.get("/banks/<report_id>/award/<domain>.svg")
+def bank_award_badge(report_id, domain):
+    r, rows = _bank_rows(report_id)
+    d = bank_report.detail(rows, domain) or abort(404)
+    if not d["winner"]:
+        abort(404)
+    response = Response(bank_report.badge_svg(d["row"]["name"]["en"], r["measured_on"][:4]), mimetype="image/svg+xml")
+    response.headers["Cache-Control"] = "public, max-age=86400"
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'"
+    return response
 
 
 @bp.get("/press")
@@ -2415,6 +2457,10 @@ def _sitemap_pages():
     pages.append(("/agency", _template_day("agency.html"), de_langs))
     pages.append(("/audit", _template_day("audit.html"), de_langs))
     pages += [(f"/banks/{rid}", bank_report.load(rid)["measured_on"], site_langs) for rid in bank_report.ids()]
+    for rid in bank_report.ids():
+        rep = bank_report.load(rid)
+        pages += [(f"/banks/{rid}/{row['domain']}", rep["measured_on"], site_langs)
+                  for row in bank_report.ranked(rep, adoption.load_optout(conn=db()))]
     board = countries.leaderboard(db())
     if board:
         week_day = adoption.week_monday(board["week"]).isoformat()
