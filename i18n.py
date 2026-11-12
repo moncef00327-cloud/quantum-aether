@@ -1701,3 +1701,38 @@ TEXTS["de"].update({
 TEXTS["en"]["adoption_show_all"] = "Show all {n} hosts"
 TEXTS["ar"]["adoption_show_all"] = "اعرض كل المواقع ({n})"
 TEXTS["de"]["adoption_show_all"] = "Alle {n} Hosts anzeigen"
+
+# ---------------------------------------------------------------- تحسين قمع الاشتراكات ومعاينة اللوحة والترقية
+TEXTS["en"].update({
+    "badge_sub": "Paste this code into your site to display the badge. It updates from your latest scan within 30 days — subscribe to the free weekly alert or daily monitoring below to keep it green automatically.",
+    "mon_domain_banner": "Start by monitoring {domain} daily (plus your subdomains and other hosts):",
+    "mon_preview_title": "What your monitoring dashboard looks like",
+    "mon_preview_sub": "Silent regressions happen when an OS update, container rebuild or CDN change drops X25519MLKEM768, or when a direct subdomain (api, mail, auth) bypasses the CDN. Every domain is checked daily, with instant email alerts and a printable log for NIS2 / DORA compliance.",
+    "mon_one_time_alt": "Prefer a one-time payment without a monthly subscription? See the Agency Pack (10 full reports for $199) →",
+    "disc_monitor_cta": "Monitor these subdomains daily ($29/mo) →",
+    "alerts_upsell_title": "Need daily checks across all your subdomains?",
+    "alerts_upsell_body": "The free alert checks {domain} once a week. Daily monitoring checks up to 10 or 100 domains every day, warns 14 and 3 days before certificate expiry, alerts on downtime, and keeps your public badge fresh automatically.",
+    "alerts_upsell_cta": "Start daily monitoring for {domain} →",
+})
+TEXTS["ar"].update({
+    "badge_sub": "انسخ هذا الكود في موقعك لعرض الشارة. تتحدث تلقائياً حسب آخر فحص خلال 30 يوماً — اشترك في التنبيه الأسبوعي المجاني أو المراقبة اليومية أدناه لإبقائها خضراء ومحدّثة تلقائياً.",
+    "mon_domain_banner": "ابدأ بمراقبة {domain} يومياً (مع نطاقاتك الفرعية وخوادمك الأخرى):",
+    "mon_preview_title": "كيف تبدو لوحة المراقبة والتنبيهات",
+    "mon_preview_sub": "يحدث التراجع الصامت حين يُسقط تحديث للنظام أو الخادم أو إعدادات CDN تبادل X25519MLKEM768، أو حين تتجاوز النطاقات الفرعية (مثل api وmail وauth) شبكة الـ CDN. نفحص كل نطاق يومياً مع تنبيه فوري بالبريد وسجل جاهز للطباعة لأغراض الامتثال (NIS2 / DORA).",
+    "mon_one_time_alt": "تفضّل دفعة واحدة بلا اشتراك شهري؟ اطّلع على باقة الوكالات (10 تقارير كاملة بـ 199$) ←",
+    "disc_monitor_cta": "راقب هذه النطاقات الفرعية يومياً (29$/شهر) ←",
+    "alerts_upsell_title": "تحتاج فحصاً يومياً لكل نطاقاتك ونطاقاتك الفرعية؟",
+    "alerts_upsell_body": "التنبيه المجاني يفحص {domain} مرة كل أسبوع. أما المراقبة اليومية فتفحص حتى 10 أو 100 نطاق كل يوم، وتنبّه قبل انتهاء الشهادة بـ 14 و3 أيام وعند توقف الخادم، وتُبقي شارتك محدّثة تلقائياً.",
+    "alerts_upsell_cta": "ابدأ المراقبة اليومية لـ {domain} ←",
+})
+TEXTS["de"].update({
+    "badge_sub": "Fügen Sie diesen Code in Ihre Website ein, um das Badge anzuzeigen. Es aktualisiert sich aus Ihrer letzten Prüfung innerhalb von 30 Tagen – aktivieren Sie unten die kostenlose wöchentliche Benachrichtigung oder die tägliche Überwachung, damit es automatisch aktuell bleibt.",
+    "mon_domain_banner": "Starten Sie mit der täglichen Überwachung von {domain} (plus Ihrer weiteren Subdomains und Hosts):",
+    "mon_preview_title": "So sieht Ihr Überwachungs-Dashboard aus",
+    "mon_preview_sub": "Stille Rückschritte passieren, wenn ein Server-Update oder eine CDN-Änderung X25519MLKEM768 deaktiviert oder direkte Subdomains (api, mail, auth) das CDN umgehen. Jede Domain wird täglich geprüft – mit Sofortwarnung per E-Mail und druckbarem Protokoll für NIS2 / DORA.",
+    "mon_one_time_alt": "Lieber eine Einmalzahlung ohne Monatsabo? Zum Agenturpaket (10 vollständige Berichte für 199 $) →",
+    "disc_monitor_cta": "Diese Subdomains täglich überwachen (29 $/Monat) →",
+    "alerts_upsell_title": "Tägliche Prüfung für alle Ihre Domains und Subdomains?",
+    "alerts_upsell_body": "Die kostenlose Benachrichtigung prüft {domain} einmal pro Woche. Die tägliche Überwachung prüft bis zu 10 oder 100 Domains jeden Tag, warnt 14 und 3 Tage vor Zertifikatsablauf sowie bei Ausfällen und hält Ihr Badge automatisch aktuell.",
+    "alerts_upsell_cta": "Tägliche Überwachung für {domain} starten →",
+})

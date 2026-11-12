@@ -10,7 +10,14 @@
     <button type="submit">{{ t.alerts_confirm_button if state == "confirm_prompt" else t.alerts_stop_button }}</button>
   </form>
   {% endif %}
-  {% if state == "confirmed" %}<p><a href="{{ url_for('site.monitoring', lang=lang) }}" data-ev="monitoring_cta">{{ t.alerts_more }} →</a></p>{% endif %}
+  {% if state == "confirmed" %}<p><a href="{{ url_for('site.monitoring', domain=domain, lang=lang) }}" data-ev="monitoring_cta">{{ t.alerts_more }} →</a></p>{% endif %}
   <p><a href="{{ url_for('site.index', lang=lang) }}">{{ t.scan_again }}</a></p>
 </section>
+{% if state in ("check_inbox", "confirmed", "already_active") and domain %}
+<section class="card highlight">
+  <h2>{{ t.alerts_upsell_title }}</h2>
+  <p>{{ t.alerts_upsell_body.format(domain=domain) }}</p>
+  <p><a class="button-link" href="{{ url_for('site.monitoring', domain=domain, lang=lang) }}" data-ev="monitoring_cta">{{ t.alerts_upsell_cta.format(domain=domain) }}</a></p>
+</section>
+{% endif %}
 {% endblock %}

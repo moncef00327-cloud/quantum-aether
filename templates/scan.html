@@ -45,6 +45,7 @@
              aria-label="{{ t.disc_email_label.format(base=dbase) }}">
         <button type="submit" data-ev="disc_email">{{ t.disc_list_button }}</button></p>
     </form>
+    <p class="muted small"><a href="{{ url_for('site.monitoring', domain=dbase, lang=lang) }}" data-ev="monitoring_cta">{{ t.disc_monitor_cta }}</a></p>
   </div>
 </section>
 
@@ -134,7 +135,7 @@
       <button type="submit" data-ev="alert_signup">{{ t.alert_button }}</button>
     </div>
   </form>
-  <p class="muted small"><a href="{{ url_for('site.monitoring', lang=lang) }}" data-ev="monitoring_cta">{{ t.alerts_more }} →</a></p>
+  <p class="muted small"><a href="{{ url_for('site.monitoring', domain=r.domain, lang=lang) }}" data-ev="monitoring_cta">{{ t.alerts_more }} →</a></p>
 </section>
 {% endset %}
 {% set badge_card %}

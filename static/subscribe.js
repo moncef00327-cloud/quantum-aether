@@ -3,10 +3,18 @@
   var message = document.getElementById("sub-message");
   var emailInput = document.getElementById("sub-email");
   var consent = document.getElementById("consent");
+  var subSection = document.getElementById("subscribe");
+  var initialDomain = subSection ? (subSection.dataset.domain || "") : "";
   if (!window.paypal || !message || !emailInput) return;
   var lang = document.documentElement.lang || "en";
 
-  function fail(text) { message.textContent = text || message.dataset.msgError; }
+  function fail(text, target) {
+    message.textContent = text || message.dataset.msgError;
+    if (target && target.focus) {
+      try { target.scrollIntoView({ behavior: "smooth", block: "center" }); } catch (e) {}
+      target.focus();
+    }
+  }
 
   function post(url, body) {
     return fetch(url + "?lang=" + encodeURIComponent(lang), {
@@ -20,12 +28,12 @@
       style: { layout: "vertical", color: "gold", shape: "rect", label: "subscribe" },
       onClick: function (_data, actions) {
         message.textContent = "";
-        if (!emailInput.checkValidity() || !emailInput.value) { fail(message.dataset.msgEmail); return actions.reject(); }
-        if (!consent || !consent.checked) { fail(message.dataset.msgConsent); return actions.reject(); }
+        if (!emailInput.checkValidity() || !emailInput.value) { fail(message.dataset.msgEmail, emailInput); return actions.reject(); }
+        if (!consent || !consent.checked) { fail(message.dataset.msgConsent, consent); return actions.reject(); }
         return actions.resolve();
       },
       createSubscription: function (_data, actions) {
-        return post("/api/monitor/signup", { email: emailInput.value, plan: box.dataset.plan, consent: consent.checked }).then(function (d) {
+        return post("/api/monitor/signup", { email: emailInput.value, plan: box.dataset.plan, consent: consent.checked, domain: initialDomain }).then(function (d) {
           accountId = d.account_id;
           return actions.subscription.create({ plan_id: d.plan_id, custom_id: d.account_id });
         });

@@ -1747,9 +1747,16 @@ def account_or_404(token):
 @bp.get("/monitoring")
 def monitoring():
     cfg = current_app.config
+    raw_domain = request.args.get("domain", "").strip()
+    domain = ""
+    if raw_domain:
+        try:
+            domain = monitor.normalize(raw_domain)
+        except quantum_vuln_scanner.ScanError:
+            domain = ""
     return render_template("monitoring.html", plans=monitor.PLANS, plan_ids=plan_ids(),
                            enabled=subscriptions_enabled(), paypal_client_id=cfg["PAYPAL_CLIENT_ID"],
-                           currency=cfg["CURRENCY"], sent=request.args.get("sent"))
+                           currency=cfg["CURRENCY"], sent=request.args.get("sent"), domain=domain)
 
 
 @bp.post("/api/monitor/signup")
@@ -1765,7 +1772,15 @@ def monitor_signup():
         return jsonify(error="invalid_email"), 400
     if data.get("consent") is not True:
         return jsonify(error="consent_required"), 400
-    account_id, _token = monitor_db.create_account(db(), email, plan, current_lang(), consent_at=now_iso())
+    conn = db()
+    account_id, _token = monitor_db.create_account(conn, email, plan, current_lang(), consent_at=now_iso())
+    raw_domain = str(data.get("domain", "")).strip()
+    if raw_domain:
+        try:
+            norm_domain = monitor.normalize(raw_domain)
+            monitor_db.add_domain(conn, account_id, norm_domain)
+        except quantum_vuln_scanner.ScanError:
+            pass
     return jsonify(account_id=account_id, plan_id=plan_ids()[plan]), 201
 
 

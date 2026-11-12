@@ -109,6 +109,21 @@ class MonitoringTest(unittest.TestCase):
         self.assertIn("Starter", body)
         self.assertIn("Business", body)
         self.assertIn("intent=subscription", body)
+        self.assertIn("api.example.com", body)
+        custom = self.client.get("/monitoring?domain=acme.org&lang=en").get_data(as_text=True)
+        self.assertIn("Start by monitoring acme.org daily", custom)
+        self.assertIn("api.acme.org", custom)
+
+    def test_signup_with_initial_domain_populates_dashboard(self):
+        r = self.client.post("/api/monitor/signup", json={"email": "ops@acme.org", "plan": "starter", "consent": True, "domain": "acme.org"})
+        self.assertEqual(r.status_code, 201)
+        account_id = r.get_json()["account_id"]
+        sub_id = f"I-{account_id}"
+        self.paypal.subscriptions[sub_id] = {"id": sub_id, "status": "ACTIVE", "custom_id": account_id, "plan_id": PLAN_IDS["PAYPAL_PLAN_STARTER"]}
+        act = self.client.post("/api/monitor/activate", json={"account_id": account_id, "subscription_id": sub_id})
+        self.assertEqual(act.status_code, 200)
+        dash = self.client.get(f"/monitor/{self.token_from(act)}").get_data(as_text=True)
+        self.assertIn("acme.org", dash)
 
     def test_pricing_page_without_plans_disables_checkout(self):
         app = quantum_saas_app.create_app({"TESTING": True, "DATA_DIR": self.tmp}, scanner=self.scanner, paypal=None)

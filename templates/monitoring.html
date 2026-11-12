@@ -11,10 +11,11 @@
   <ul class="ticks">{% for item in t.mon_features %}<li>{{ item }}</li>{% endfor %}</ul>
 </section>
 
-<section class="card" id="subscribe">
+<section class="card" id="subscribe" data-domain="{{ domain or '' }}">
+  {% if domain %}<p class="notice"><strong>{{ t.mon_domain_banner.format(domain=domain) }}</strong></p>{% endif %}
   {% if enabled %}
   <label for="sub-email">{{ t.mon_email_label }}</label>
-  <div class="scan-row"><input id="sub-email" type="email" autocomplete="email" dir="ltr" placeholder="you@company.com" required></div>
+  <div class="scan-row"><input id="sub-email" type="email" autocomplete="email" dir="ltr" placeholder="you@{{ domain or 'company.com' }}" required></div>
   <p class="consent"><label><input type="checkbox" id="consent">
     <span>{{ t.consent_subscription }} (<a href="{{ url_for('site.legal_page', slug='agb', lang=legal_lang) }}" target="_blank">{{ t.legal_terms }}</a>)</span></label></p>
   <p class="muted">{{ t.mon_choose }}</p>
@@ -34,6 +35,19 @@
   {% else %}
   <p class="notice">{{ t.mon_disabled }}</p>
   {% endif %}
+  <p class="muted small"><a href="{{ url_for('site.agency_page', lang=lang) }}" data-ev="agency_cta">{{ t.mon_one_time_alt }}</a></p>
+</section>
+
+{% set pdom = domain or 'example.com' %}
+<section class="card">
+  <h2>{{ t.mon_preview_title }}</h2>
+  <p>{{ t.mon_preview_sub }}</p>
+  <table class="data" dir="ltr">
+    <tr><th>Domain</th><th>Grade</th><th>Post-quantum</th><th>Cert expiry</th></tr>
+    <tr><td>{{ pdom }}</td><td><span class="ok">A</span></td><td><span class="ok">X25519MLKEM768</span></td><td>74d</td></tr>
+    <tr><td>api.{{ pdom }}</td><td><span class="warn">B</span></td><td><span class="warn">X25519 (classical)</span></td><td>41d</td></tr>
+    <tr><td>mail.{{ pdom }}</td><td><span class="warn">B</span></td><td><span class="warn">X25519 (classical)</span></td><td>12d ⚠</td></tr>
+  </table>
 </section>
 
 <section class="card" id="login">
