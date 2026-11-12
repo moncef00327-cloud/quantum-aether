@@ -64,6 +64,7 @@
 <section class="card" id="badge">
   <h2>{{ t.badge_title }}</h2>
   <p>{{ t.badge_sub }}</p>
+  {% if summary.grade != 'A' %}<p class="notice">{{ t.badge_upgrade_hint.format(grade=summary.grade) }}</p>{% endif %}
   <p><a href="{{ url_for('site.badge_verify', domain=domain, lang=lang) }}"><img src="{{ url_for('site.badge', domain=domain) }}" alt="post-quantum TLS: {{ summary.grade }}"></a></p>
   <div class="snippet">
     <div class="snippet-head"><span>Markdown</span>

@@ -142,6 +142,7 @@
 <section class="card">
   <h2>{{ t.badge_title }}</h2>
   <p>{{ t.badge_sub }}</p>
+  {% if r.grade != 'A' %}<p class="notice">{{ t.badge_upgrade_hint.format(grade=r.grade) }}</p>{% endif %}
   <p><img src="{{ url_for('site.badge', domain=r.domain) }}" alt="post-quantum TLS: {{ r.grade }}"></p>
   <div class="snippet">
     <div class="snippet-head"><span>HTML</span>

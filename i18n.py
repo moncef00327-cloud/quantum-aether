@@ -1727,6 +1727,7 @@ TEXTS["en"].update({
     "hndl_timeline_title": "Quantum Exposure Window (Mosca's Theorem & NIST 2030 Deadline)",
     "hndl_timeline_body": "{domain} currently negotiates classical key exchange ({group}) without post-quantum ML-KEM. Under NIST IR 8547 and CNSA 2.0 (2030 deprecation target), any encrypted session traffic recorded today whose confidentiality must last 4+ years is already inside the Harvest-Now-Decrypt-Later (HNDL) exposure window.",
     "qa_footprint_link": "Download qa_report.json (AI Agent Footprint & SHA-256 Attestation) →",
+    "badge_upgrade_hint": "Your badge currently shows Grade {grade} (classical). Apply the fix steps and link your domain below so this badge automatically turns green (Grade A · ML-KEM) as soon as post-quantum key exchange is enabled.",
 })
 TEXTS["ar"].update({
     "badge_sub": "انسخ هذا الكود في ملف README على GitHub أو ترويسة موقعك. تتحول الشارة إلى رمادية (منتهية الصلاحية) بعد 30 يوماً ما لم يتم ربط النطاق بتنبيه مجاني أو حساب مراقبة يومية أدناه.",
@@ -1752,6 +1753,7 @@ TEXTS["ar"].update({
     "hndl_timeline_title": "نافذة الانكشاف الكمي (مبرهنة موسكا وموعد NIST 2030)",
     "hndl_timeline_body": "يتفاوض {domain} حالياً عبر تبادل مفاتيح تقليدي ({group}) دون خوارزمية ML-KEM المقاومة للكم. وفقاً لمعيار NIST IR 8547 وCNSA 2.0 (موعد الإيقاف التدريجي 2030)، فإن أي حركة مشفرة تُلتقط اليوم وتحتاج للبقاء سرية لأكثر من 4 سنوات تقع فعلياً داخل دائرة خطر «احصد الآن، فُكّ لاحقاً» (HNDL).",
     "qa_footprint_link": "تنزيل ملف qa_report.json (بصمة وكلاء الذكاء الاصطناعي وإثبات SHA-256) ←",
+    "badge_upgrade_hint": "تظهر شارتك حالياً بالدرجة {grade} (تشفير تقليدي). طبّق خطوات الترقية واربط نطاقك أدناه لتتحول الشارة تلقائياً إلى اللون الأخضر (Grade A · ML-KEM) فور تفعيل تبادل المفاتيح الهجين.",
 })
 TEXTS["de"].update({
     "badge_sub": "Fügen Sie diesen Code in Ihre README oder Website ein. Das Badge wird nach 30 Tagen grau (abgelaufen), sofern die Domain unten nicht mit einer kostenlosen Benachrichtigung oder täglichen Überwachung verknüpft ist.",
@@ -1777,4 +1779,5 @@ TEXTS["de"].update({
     "hndl_timeline_title": "Quanten-Risikofenster (Mosca-Theorem & NIST-Frist 2030)",
     "hndl_timeline_body": "{domain} nutzt derzeit einen rein klassischen Schlüsselaustausch ({group}) ohne ML-KEM. Nach NIST IR 8547 und CNSA 2.0 (Abkündigung 2030) fällt heute aufgezeichneter Datenverkehr mit einer Geheimhaltungsdauer von über 4 Jahren bereits in das Harvest-Now-Decrypt-Later-Risikofenster.",
     "qa_footprint_link": "qa_report.json herunterladen (KI-Agenten-Footprint & SHA-256-Nachweis) →",
+    "badge_upgrade_hint": "Ihr Badge zeigt derzeit Note {grade} (klassisch). Nach der Umstellung und Verknüpfung Ihrer Domain wird das Badge automatisch grün (Note A · ML-KEM).",
 })
