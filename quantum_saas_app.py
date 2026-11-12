@@ -95,6 +95,7 @@ def _config_from_env():
         "PAYPAL_PLAN_BUSINESS": env("PAYPAL_PLAN_BUSINESS", ""),
         "RESEND_API_KEY": env("RESEND_API_KEY", ""),
         "MAIL_FROM": env("QS_MAIL_FROM", ""),
+        "MAIL_FROM_FALLBACK": env("QS_MAIL_FROM_FALLBACK", ""),
         "OWNER_EMAIL": env("QS_OWNER_EMAIL", ""),
         "REPLY_TO": env("QS_REPLY_TO", ""),
         "USDT_POLYGON_ADDR": env("QS_USDT_POLYGON_ADDR", ""),
@@ -121,7 +122,8 @@ def create_app(overrides=None, scanner=None, paypal=None, mailer=None, chain=Non
     app.extensions["discovery_http"] = discovery_http or requests.Session()
     app.extensions["discovery_probe"] = discovery_probe or discovery.probe_host
     app.extensions["mailer"] = mailer or Mailer(app.config["RESEND_API_KEY"], app.config["MAIL_FROM"],
-                                                     app.config["REPLY_TO"])
+                                                     app.config["REPLY_TO"],
+                                                     fallback_sender=app.config["MAIL_FROM_FALLBACK"])
     app.register_blueprint(bp)
     return app
 
@@ -897,8 +899,23 @@ def discovery_request():
     url = public_base() + url_for(".discovery_list", token=token, lang=current_lang())
     subject, text = discovery.confirm_email(current_lang(), base, url, public_base())
     if not mailer.send(email, subject, text):
+        _discovery_mail_failed(token, email, base, mailer)
         return _discovery_page("unavailable", base, 503)
     return _discovery_page("check_inbox", base)
+
+
+def _discovery_mail_failed(token, email, base, mailer):
+    """فشل إرسال رابط التأكيد: احذف الطلب المعلّق (حتى لا يُحسب على حد الزائر) وأبلغ المالك بالطلب كي لا يضيع."""
+    error = getattr(mailer, "last_error", "")
+    discovery.cancel_request(db(), token)
+    current_app.logger.error("LEAD LOST? discovery confirmation mail failed for %s: %s", base, error)
+    owner = current_app.config["OWNER_EMAIL"]
+    if owner and not is_test_request():
+        mailer.send(owner, f"[Quantum Aether] Mail FAILED - subdomain list request for {base}",
+                    f"A visitor asked for the subdomain list of {base} but the confirmation email could not be sent.\n\n"
+                    f"Visitor email: {email}\nDomain: {base}\nMail error: {error}\n\n"
+                    "The pending request was removed, so the visitor can try again. "
+                    "Fix the mail setup (Resend domain) and reply to the visitor if appropriate.")
 
 
 @bp.route("/discovery/list/<token>", methods=["GET", "POST"])

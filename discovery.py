@@ -256,6 +256,12 @@ def request_list(conn, email, base, lang, client_hash):
     return token, None
 
 
+def cancel_request(conn, token):
+    """يحذف طلباً غير مؤكد (مثلاً حين فشل إرسال رابط التأكيد)."""
+    with conn:
+        conn.execute("DELETE FROM discovery_requests WHERE token_hash = ? AND status = 'PENDING'", (_hash(token),))
+
+
 def get_request(conn, token):
     row = conn.execute("SELECT * FROM discovery_requests WHERE token_hash = ? AND created_at >= ?",
                        (_hash(token), _now(dt.timedelta(days=-REQUEST_TTL_DAYS)))).fetchone()

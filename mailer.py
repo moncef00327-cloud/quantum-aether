@@ -9,9 +9,11 @@ log = logging.getLogger("quantum_saas.mail")
 
 
 class Mailer:
-    def __init__(self, api_key, sender, reply_to="", timeout=15, session=None):
+    def __init__(self, api_key, sender, reply_to="", timeout=15, session=None, fallback_sender=""):
         self.api_key = api_key
         self.sender = sender
+        self.fallback_sender = fallback_sender  # نطاق موثّق ثانٍ: يُستخدم إن رفض Resend المرسل الأساسي (مثل نطاق غير موثّق)
+        self.last_error = ""
         self.reply_to = reply_to
         self.timeout = timeout
         self.http = session or requests.Session()
@@ -25,7 +27,19 @@ class Mailer:
         if not self.enabled:
             log.info("mail disabled; not sending %r to %s", subject, to)
             return False
-        body = {"from": self.sender, "to": [to], "subject": subject, "text": text}
+        senders = [self.sender] + ([self.fallback_sender] if self.fallback_sender and self.fallback_sender != self.sender else [])
+        for i, sender in enumerate(senders):
+            ok, status = self._post(sender, to, subject, text, html)
+            if ok:
+                if i:
+                    log.warning("mail sent with FALLBACK sender after primary was rejected: %s", self.last_error)
+                return True
+            if status not in (403, 422):  # فقط رفض المرسل/النطاق يستحق تجربة المرسل الاحتياطي
+                break
+        return False
+
+    def _post(self, sender, to, subject, text, html):
+        body = {"from": sender, "to": [to], "subject": subject, "text": text}
         if html:
             body["html"] = html
         if self.reply_to:
@@ -34,9 +48,11 @@ class Mailer:
             response = self.http.post("https://api.resend.com/emails", json=body, timeout=self.timeout,
                                       headers={"Authorization": f"Bearer {self.api_key}"})
         except requests.RequestException as exc:
+            self.last_error = f"request failed: {exc}"[:300]
             log.warning("Resend request failed: %s", exc)
-            return False
+            return False, None
         if response.status_code >= 300:
+            self.last_error = f"{response.status_code}: {response.text[:300]}"
             log.warning("Resend rejected mail (%s): %s", response.status_code, response.text[:300])
-            return False
-        return True
+            return False, response.status_code
+        return True, response.status_code
