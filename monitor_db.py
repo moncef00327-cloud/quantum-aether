@@ -47,6 +47,25 @@ CREATE TABLE IF NOT EXISTS monitor_alerts (
     created_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
 CREATE INDEX IF NOT EXISTS monitor_alerts_account ON monitor_alerts (account_id, created_at);
+
+-- سجل كل فحص (دليل مؤرَّخ للمدققين). اسم النطاق محفوظ نصاً فيبقى السجل بعد حذف النطاق من اللوحة.
+CREATE TABLE IF NOT EXISTS monitor_checks (
+    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+    account_id       TEXT NOT NULL,
+    domain           TEXT NOT NULL,
+    checked_at       TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
+    grade            TEXT,
+    pq               INTEGER,               -- 1 مقاوم للكم، 0 تقليدي، NULL غير حاسم أو خطأ
+    grp              TEXT,
+    tls              TEXT,
+    days_left        INTEGER,
+    endpoints_total  INTEGER,
+    endpoints_pq     INTEGER,
+    mixed            INTEGER,
+    error            TEXT,
+    scanner_version  TEXT
+);
+CREATE INDEX IF NOT EXISTS monitor_checks_account ON monitor_checks (account_id, checked_at);
 """
 
 
@@ -116,6 +135,7 @@ def purge_ended_trials(conn, before_iso):
     with conn:
         for account_id in ids:
             conn.execute("DELETE FROM monitor_alerts WHERE account_id = ?", (account_id,))
+            conn.execute("DELETE FROM monitor_checks WHERE account_id = ?", (account_id,))
             conn.execute("DELETE FROM monitor_domains WHERE account_id = ?", (account_id,))
             conn.execute("DELETE FROM monitor_accounts WHERE id = ?", (account_id,))
     return len(ids)
@@ -197,19 +217,41 @@ def remove_domain(conn, account_id, domain_id):
         conn.execute("DELETE FROM monitor_domains WHERE account_id = ? AND id = ?", (account_id, domain_id))
 
 
+CHECK_LOG = ("INSERT INTO monitor_checks (account_id, domain, grade, pq, grp, tls, days_left, endpoints_total, endpoints_pq,"
+             " mixed, error, scanner_version) SELECT account_id, domain, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? FROM monitor_domains WHERE id = ?")
+
+
 def save_check(conn, domain_id, result=None, error=None):
     with conn:
         if result is not None:
             kx = result['key_exchange']
-            pq = None if adoption.is_unsure(kx, kx.get('version') or result['certificate'].get('negotiated_version')) else int(bool(kx.get('pq')))
+            tls = kx.get('version') or result['certificate'].get('negotiated_version')
+            pq = None if adoption.is_unsure(kx, tls) else int(bool(kx.get('pq')))
+            es = result.get("endpoint_summary") or {}
+            conn.execute(CHECK_LOG, (result["grade"], pq, kx.get("group"), tls, result["certificate"].get("days_left"),
+                                     es.get("total"), es.get("pq"), None if not es else int(bool(es.get("mixed"))),
+                                     None, result.get("scanner_version"), domain_id))
             conn.execute(
                 "UPDATE monitor_domains SET grade = ?, pq = ?, days_left = ?, error = NULL, result_json = ?,"
                 " checked_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now') WHERE id = ?",
                 (result["grade"], pq, result["certificate"].get("days_left"),
                  json.dumps(result, ensure_ascii=False), domain_id))
         else:
+            conn.execute(CHECK_LOG, (None, None, None, None, None, None, None, None, error, None, domain_id))
             conn.execute("UPDATE monitor_domains SET error = ?, checked_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now') WHERE id = ?",
                          (error, domain_id))
+
+
+def check_history(conn, account_id, limit=None):
+    """سجل الفحوص الأحدث أولاً."""
+    sql = "SELECT * FROM monitor_checks WHERE account_id = ? ORDER BY checked_at DESC, id DESC"
+    rows = conn.execute(sql + (" LIMIT ?" if limit else ""), (account_id, limit) if limit else (account_id,)).fetchall()
+    return [dict(r) for r in rows]
+
+
+def prune_checks(conn, before_iso):
+    with conn:
+        return conn.execute("DELETE FROM monitor_checks WHERE checked_at < ?", (before_iso,)).rowcount
 
 
 def add_alert(conn, account_id, domain, kind, params):

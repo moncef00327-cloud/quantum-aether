@@ -5,11 +5,13 @@
 # التشغيل المحلي:  python quantum_saas_app.py   ثم افتح http://127.0.0.1:5000
 # الإنتاج: gunicorn quantum_saas_app:app خلف nginx (انظر مجلد deploy/)
 import datetime as dt
+import csv
 import base64
 import functools
 import glob
 import hashlib
 import hmac
+import io
 import json
 import logging
 import os
@@ -2209,7 +2211,37 @@ def monitor_dashboard(token):
                            live=monitor.is_live(account), limit=monitor.domain_limit(account), trial=trial,
                            trial_left=monitor.trial_days_left(account, dt.datetime.now(dt.timezone.utc)) if trial else None,
                            plans=monitor.PLANS, plan_ids=plan_ids(), enabled=trial and subscriptions_enabled(),
+                           history=monitor_db.check_history(conn, account["id"], limit=60),
                            paypal_client_id=cfg["PAYPAL_CLIENT_ID"], currency=cfg["CURRENCY"])
+
+
+CSV_COLUMNS = ("checked_at_utc", "domain", "grade", "post_quantum", "key_exchange_group", "tls_version", "cert_days_left",
+               "addresses_total", "addresses_post_quantum", "servers_consistent", "error", "scanner_version", "measurement")
+
+
+def _csv_cell(value):
+    """يمنع حقن الصيغ في جداول البيانات (قيمة تبدأ بـ = + - @ تُعامل نصاً)."""
+    text = "" if value is None else str(value)
+    return "'" + text if text[:1] in ("=", "+", "-", "@", "\t", "\r") else text
+
+
+@bp.get("/monitor/<token>/history.csv")
+def monitor_history_csv(token):
+    """سجل كل الفحوص (حتى 400 يوم) لفريق الأمن أو المدقق."""
+    account = account_or_404(token)
+    out = io.StringIO()
+    w = csv.writer(out)
+    w.writerow(CSV_COLUMNS)
+    note = scan_experience.LIMITATION
+    for c in monitor_db.check_history(db(), account["id"]):
+        pq = "" if c["error"] else {1: "yes", 0: "no"}.get(c["pq"], "undetermined")
+        consistent = "" if c["mixed"] is None else ("no" if c["mixed"] else "yes")
+        w.writerow([_csv_cell(v) for v in (c["checked_at"], c["domain"], c["grade"], pq, c["grp"], c["tls"], c["days_left"],
+                                           c["endpoints_total"], c["endpoints_pq"], consistent, c["error"], c["scanner_version"], note)])
+    response = make_response(out.getvalue())
+    response.headers["Content-Type"] = "text/csv; charset=utf-8"
+    response.headers["Content-Disposition"] = f'attachment; filename="quantum-aether-history-{dt.date.today().isoformat()}.csv"'
+    return response
 
 
 def _back(token, notice):

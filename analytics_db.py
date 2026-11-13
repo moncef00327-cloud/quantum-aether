@@ -117,7 +117,8 @@ EVENT_NAMES = ("focus", "type", "example", "submit", "result", "lang", "monitori
                "tab_scanner", "tab_tracker", "tab_monitor", "tab_guides", "tab_business", "tab_llm",
                "business_cta", "agents_cta", "explore",
                "disc_start", "disc_email", "cfg_copy",
-               "trial_start")  # زر «ابدأ التجربة المجانية» في /monitoring
+               "trial_start",  # زر «ابدأ التجربة المجانية» في /monitoring
+               "history_csv")  # تنزيل سجل الفحوص من لوحة المراقبة
 EVENTS_SCHEMA = """
 CREATE TABLE IF NOT EXISTS events (
     day      TEXT NOT NULL,

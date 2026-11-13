@@ -1915,3 +1915,11 @@ TEXTS["ar"].update({"ep_title": "كل عناوين الخادم", "ep_summary": 
 TEXTS["de"].update({"ep_title": "Alle Serveradressen", "ep_summary": "{pq} von {total} Adressen handeln quantenresistenten Schlüsselaustausch aus",
                     "ep_note": "Jede öffentliche IP-Adresse der Domain wird einzeln geprüft: CDN-Knoten und Server hinter Load-Balancern können abweichen.",
                     "ep_ip": "Adresse", "ep_failed": "keine Antwort", "ep_mixed": "Server uneinheitlich"})
+
+# ---------------------------------------------------------------- سجل الفحوص في لوحة المراقبة
+TEXTS["en"].update({"hist_title": "Check history", "hist_sub": "Every daily and manual check, newest first (kept 400 days). The CSV is dated evidence for your security team or auditor.",
+                    "hist_when": "Checked (UTC)", "hist_addresses": "Addresses PQ", "hist_csv": "Download full history (CSV)", "hist_none": "No checks yet. The first one runs with the next daily scan, or press \"Scan all now\"."})
+TEXTS["ar"].update({"hist_title": "سجل الفحوص", "hist_sub": "كل فحص يومي أو يدوي، الأحدث أولاً (يُحفظ 400 يوم). ملف CSV دليل مؤرَّخ لفريق الأمن أو المدقق.",
+                    "hist_when": "وقت الفحص (UTC)", "hist_addresses": "عناوين مقاومة للكم", "hist_csv": "تنزيل السجل الكامل (CSV)", "hist_none": "لا فحوص بعد. أول فحص مع الفحص اليومي التالي، أو اضغط «افحص الكل الآن»."})
+TEXTS["de"].update({"hist_title": "Prüfverlauf", "hist_sub": "Jede tägliche und manuelle Prüfung, neueste zuerst (400 Tage aufbewahrt). Die CSV ist ein datierter Nachweis für Ihr Sicherheitsteam oder Ihre Prüfer.",
+                    "hist_when": "Geprüft (UTC)", "hist_addresses": "Adressen PQ", "hist_csv": "Gesamten Verlauf herunterladen (CSV)", "hist_none": "Noch keine Prüfungen. Die erste läuft mit der nächsten täglichen Prüfung, oder klicken Sie auf „Alle jetzt prüfen“."})

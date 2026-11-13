@@ -90,6 +90,8 @@ def run(app):
             account = dict(row)
             total_domains += monitor.check_account(conn, account, scanner=app.extensions["scanner"])
             total_alerts += send_alerts(conn, account, app.extensions["mailer"], base_url)
+        cutoff = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=monitor.CHECK_RETENTION_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        monitor_db.prune_checks(conn, cutoff)
         free_checked, free_sent = free_alerts.run(conn, app.extensions["scanner"], app.extensions["mailer"], base_url)
         discovery.prune(conn)
         log.info("free alerts: checked %d, emailed %d", free_checked, free_sent)

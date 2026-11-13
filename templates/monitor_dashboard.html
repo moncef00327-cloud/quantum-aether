@@ -89,6 +89,24 @@
   {% else %}<p class="muted">{{ t.dash_no_alerts }}</p>{% endif %}
 </section>
 
+<section class="card" id="history">
+  <h2>{{ t.hist_title }}</h2>
+  <p class="muted small">{{ t.hist_sub }}</p>
+  {% if history %}
+  <table class="data" dir="ltr">
+    <tr><th>{{ t.hist_when }}</th><th>{{ t.domain_col }}</th><th>{{ t.grade_col }}</th><th>{{ t.group_col }}</th><th>{{ t.hist_addresses }}</th></tr>
+    {% for c in history %}
+    <tr><td class="small">{{ c.checked_at }}</td><td>{{ c.domain }}</td>
+      {% if c.error %}<td colspan="3"><span class="warn">{{ c.error }}</span></td>
+      {% else %}<td>{% if c.pq is none %}<span class="warn">{{ sx.undetermined }}</span>{% else %}<span class="grade-chip grade-{{ c.grade }}">{{ c.grade }}</span>{% endif %}</td>
+      <td><code>{{ c.grp or "?" }}</code></td>
+      <td>{% if c.endpoints_total %}{{ c.endpoints_pq }}/{{ c.endpoints_total }}{% if c.mixed %} <span class="warn">⚠</span>{% endif %}{% else %}—{% endif %}</td>{% endif %}</tr>
+    {% endfor %}
+  </table>
+  <p class="no-print"><a class="button-link" href="{{ url_for('site.monitor_history_csv', token=token) }}" data-ev="history_csv">{{ t.hist_csv }}</a></p>
+  {% else %}<p class="muted">{{ t.hist_none }}</p>{% endif %}
+</section>
+
 <section class="no-print">
   <p><button type="button" id="print-report">{{ t.dash_print }}</button></p>
   {% if account.status == "ACTIVE" %}
