@@ -100,3 +100,32 @@ class DiscoveryMailFailureTests(unittest.TestCase):
             self.assertEqual(conn.execute("SELECT COUNT(*) FROM discovery_requests").fetchone()[0], 0)
         finally:
             conn.close()
+
+
+class BrandedHtmlTests(unittest.TestCase):
+    def test_text_mail_gets_logo_html(self):
+        sent = {}
+
+        class S:
+            def post(self, url, json=None, timeout=None, headers=None):
+                sent.update(json)
+                return _Resp(200)
+        m = mailer_mod.Mailer("k", "a@x.example", session=S(), site_url="https://ather-quantum.com/")
+        self.assertTrue(m.send("u@y.z", "Hi <b>", "Hello\n\nOpen https://ather-quantum.com/x?a=1&b=2.\nBye"))
+        h = sent["html"]
+        self.assertIn('src="https://ather-quantum.com/static/brand/logo-email.png"', h)
+        self.assertIn('href="https://ather-quantum.com/x?a=1&amp;b=2"', h)
+        self.assertNotIn("<b>", h)
+        self.assertIn('dir="ltr"', h)
+        self.assertEqual(sent["text"].split("\n")[0], "Hello")
+
+    def test_arabic_is_rtl_and_no_site_url_means_text_only(self):
+        self.assertIn('dir="rtl"', mailer_mod.render_html("s", "مرحباً", "https://e.example"))
+        sent = {}
+
+        class S:
+            def post(self, url, json=None, timeout=None, headers=None):
+                sent.update(json)
+                return _Resp(200)
+        mailer_mod.Mailer("k", "a@x.example", session=S()).send("u@y.z", "s", "t")
+        self.assertNotIn("html", sent)

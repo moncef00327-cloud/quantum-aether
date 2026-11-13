@@ -16,7 +16,8 @@ def main():
     text = scorecard.as_text(card)
     print(text)
     mailer = Mailer(os.environ.get("RESEND_API_KEY", ""), os.environ.get("QS_MAIL_FROM", ""),
-                    fallback_sender=os.environ.get("QS_MAIL_FROM_FALLBACK", ""))
+                    fallback_sender=os.environ.get("QS_MAIL_FROM_FALLBACK", ""),
+                    site_url=os.environ.get("QS_PUBLIC_URL", ""))
     if owner and mailer.enabled and "--dry-run" not in sys.argv:
         verdict = scorecard.SCENARIOS[card["verdict"]]["label"] if card["verdict"] else "no data"
         mailer.send(owner, f"[Quantum Aether] weekly scorecard: {verdict} scenario", text)

@@ -101,7 +101,8 @@ def check_mail(state, owner, now_ts):
     state, action = mail_decide(state, ok)
     print("mail check:", "ok" if ok else "FAILED " + probe_mailer.last_error, "|", action or "")
     alert = Mailer(os.environ.get("RESEND_API_KEY", ""), os.environ.get("QS_MAIL_FROM", ""),
-                   fallback_sender=os.environ.get("QS_MAIL_FROM_FALLBACK", ""))
+                   fallback_sender=os.environ.get("QS_MAIL_FROM_FALLBACK", ""),
+                    site_url=os.environ.get("QS_PUBLIC_URL", ""))
     if owner and action == "mail_down":
         alert.send(owner, "[Quantum Aether] SITE EMAIL IS FAILING",
                    f"Resend rejected the site's sender ({os.environ.get('QS_MAIL_FROM', '')}).\n\n"
@@ -127,7 +128,8 @@ def main():
             result = subprocess.run(["systemctl", "restart", unit], capture_output=True, text=True)
             restarted.append(f"{unit}: {'restarted' if result.returncode == 0 else 'restart FAILED ' + result.stderr.strip()}")
     mailer = Mailer(os.environ.get("RESEND_API_KEY", ""), os.environ.get("QS_MAIL_FROM", ""),
-                    fallback_sender=os.environ.get("QS_MAIL_FROM_FALLBACK", ""))
+                    fallback_sender=os.environ.get("QS_MAIL_FROM_FALLBACK", ""),
+                    site_url=os.environ.get("QS_PUBLIC_URL", ""))
     owner = os.environ.get("QS_OWNER_EMAIL", "")
     if owner and mailer.enabled:
         if "alert_down" in actions:

@@ -123,7 +123,8 @@ def create_app(overrides=None, scanner=None, paypal=None, mailer=None, chain=Non
     app.extensions["discovery_probe"] = discovery_probe or discovery.probe_host
     app.extensions["mailer"] = mailer or Mailer(app.config["RESEND_API_KEY"], app.config["MAIL_FROM"],
                                                      app.config["REPLY_TO"],
-                                                     fallback_sender=app.config["MAIL_FROM_FALLBACK"])
+                                                     fallback_sender=app.config["MAIL_FROM_FALLBACK"],
+                                                     site_url=app.config["PUBLIC_URL"])
     app.register_blueprint(bp)
     return app
 
