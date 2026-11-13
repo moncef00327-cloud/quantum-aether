@@ -328,6 +328,14 @@ TEXTS = {
 }
 
 FINDINGS = {
+    "ENDPOINTS_MIXED": {
+        "ar": ("عناوين الخادم غير متسقة: {pq} من {total} تدعم التبادل المقاوم للكم",
+               "للنطاق عدة عناوين IP (غالباً خوادم CDN أو موازن أحمال)، وبعضها لا يتفاوض على التبادل المقاوم للكم: {ips}. "
+               "الزائر الذي يصل إلى هذه العناوين يحصل على تبادل تقليدي فقط. وحّد إعداد TLS على كل الخوادم أو حافة CDN."),
+        "en": ("Inconsistent servers: {pq} of {total} addresses support post-quantum key exchange",
+               "This domain resolves to several IP addresses (often CDN edges or a load balancer), and some do not negotiate post-quantum key exchange: {ips}. "
+               "Visitors who reach those addresses get classical key exchange only. Align the TLS configuration across all servers or CDN edges."),
+    },
     "KX_RETRY_REQUESTED": {
         "ar": ("طلب الخادم إعادة المصافحة؛ الدعم غير محسوم",
                "طلب HelloRetryRequest المجموعة {group}، لكن المجسّ لم يكمل إعادة المصافحة. هذا لا يثبت تفاوض تبادل مفاتيح مقاوم للكم. أعد الفحص من عميل TLS متوافق."),
@@ -1896,3 +1904,14 @@ TEXTS["de"]["dash_status_names"] = dict(TEXTS["de"].get("dash_status_names", TEX
 TEXTS["en"].update({"admin_trials": "Free trials (running)", "admin_trials_ended": "ended without subscribing"})
 TEXTS["ar"].update({"admin_trials": "تجارب مجانية جارية", "admin_trials_ended": "انتهت بلا اشتراك"})
 TEXTS["de"].update({"admin_trials": "Kostenlose Tests (laufend)", "admin_trials_ended": "ohne Abo beendet"})
+
+# ---------------------------------------------------------------- كل عناوين النطاق (IPv4/IPv6) في صفحة النتيجة
+TEXTS["en"].update({"ep_title": "All server addresses", "ep_summary": "{pq} of {total} addresses negotiate post-quantum key exchange",
+                    "ep_note": "Each public IP address of the domain is tested separately: CDN edges and load-balanced servers can differ.",
+                    "ep_ip": "Address", "ep_failed": "no answer", "ep_mixed": "Servers disagree"})
+TEXTS["ar"].update({"ep_title": "كل عناوين الخادم", "ep_summary": "{pq} من {total} عناوين تتفاوض على التبادل المقاوم للكم",
+                    "ep_note": "نفحص كل عنوان IP عام للنطاق على حدة: خوادم CDN والخوادم خلف موازن الأحمال قد تختلف.",
+                    "ep_ip": "العنوان", "ep_failed": "لا رد", "ep_mixed": "الخوادم غير متسقة"})
+TEXTS["de"].update({"ep_title": "Alle Serveradressen", "ep_summary": "{pq} von {total} Adressen handeln quantenresistenten Schlüsselaustausch aus",
+                    "ep_note": "Jede öffentliche IP-Adresse der Domain wird einzeln geprüft: CDN-Knoten und Server hinter Load-Balancern können abweichen.",
+                    "ep_ip": "Adresse", "ep_failed": "keine Antwort", "ep_mixed": "Server uneinheitlich"})

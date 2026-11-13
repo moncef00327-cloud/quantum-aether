@@ -1,0 +1,15 @@
+{# كل عناوين النطاق (فحص متعدد العناوين). يظهر فقط حين يحتوي الفحص على أكثر من عنوان. #}
+{% if r.endpoints and r.endpoints | length > 1 %}{% set es = r.endpoint_summary %}
+<section class="card" id="endpoints">
+  <h2>{{ t.ep_title }}</h2>
+  <p>{% if es.mixed %}<strong class="warn">{{ t.ep_mixed }}:</strong> {% endif %}{{ t.ep_summary.format(pq=es.pq, total=es.total) }}</p>
+  <table class="data" dir="ltr">
+    <tr><th>{{ t.ep_ip }}</th><th>IP</th><th>TLS</th><th>{{ t.key_exchange }}</th></tr>
+    {% for e in r.endpoints %}
+    <tr><td><code>{{ e.ip }}</code></td><td>v{{ e.family }}</td><td>{{ e.version or "—" }}</td>
+      <td>{% if e.error %}<span class="muted">{{ t.ep_failed }}</span>{% elif e.undetermined %}<span class="warn">{{ sx.undetermined }}</span>{% elif e.pq %}<span class="ok">{{ e.group }}</span>{% else %}<span class="warn">{{ e.group or "—" }}</span>{% endif %}</td></tr>
+    {% endfor %}
+  </table>
+  <p class="muted small">{{ t.ep_note }}</p>
+</section>
+{% endif %}

@@ -23,6 +23,8 @@
   <button type="button" class="print-button no-print">{{ t.print }}</button>
 </section>
 
+{% include "_endpoints.html" %}
+
 <section class="card">
   <h2>{{ t.findings_title }}</h2>
   {% for f in findings %}

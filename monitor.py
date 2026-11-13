@@ -71,6 +71,11 @@ ALERT_TEXT = {
         "ar": "{domain}: فشل الفحص ({error})",
         "de": "{domain}: Prüfung fehlgeschlagen ({error})",
     },
+    "ENDPOINTS_MIXED": {
+        "en": "{domain}: servers disagree, {pq} of {total} addresses negotiate post-quantum key exchange (classical on {ips})",
+        "ar": "{domain}: الخوادم غير متسقة، {pq} من {total} عناوين تتفاوض على التبادل المقاوم للكم (تقليدي على {ips})",
+        "de": "{domain}: Server uneinheitlich, {pq} von {total} Adressen mit quantenresistentem Schlüsselaustausch (klassisch auf {ips})",
+    },
     "RECOVERED": {
         "en": "{domain}: reachable again, grade {new}",
         "ar": "{domain}: عاد يعمل، الدرجة {new}",
@@ -107,6 +112,12 @@ def diff(previous, result):
         alerts.append(("PQ_LOST", {"group": group}))
     elif not uncertain and not old_uncertain and previous.get("pq") == 0 and kx.get("pq"):
         alerts.append(("PQ_GAINED", {"group": group}))
+    mixed = (result.get("endpoint_summary") or {}).get("mixed")
+    old_mixed = ((old_result.get("endpoint_summary") or {}).get("mixed"))
+    if mixed and not old_mixed:
+        s = result["endpoint_summary"]
+        classical = [e["ip"] for e in result.get("endpoints", ()) if not e["undetermined"] and not e["pq"]]
+        alerts.append(("ENDPOINTS_MIXED", {"pq": s["pq"], "total": s["total"], "ips": ", ".join(classical) or "?"}))
     days, old_days = cert.get("days_left"), previous.get("days_left")
     if days is not None:
         for limit in CERT_WARN_DAYS:

@@ -26,6 +26,7 @@
     <tr><th>{{ t.findings_count }}</th><td>{{ r.findings | length }}</td></tr>
   </table>
 </section>
+{% include "_endpoints.html" %}
 
 {% set dbase = r.domain[4:] if r.domain.startswith("www.") and r.domain.count(".") >= 2 else r.domain %}
 <section class="card discovery" id="discovery" data-api="{{ url_for('site.discovery_api', scan_id=scan.id) }}"

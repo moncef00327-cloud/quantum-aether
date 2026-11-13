@@ -360,6 +360,17 @@ components:
           enum: [observed_pq, observed_classical, undetermined]
         port: { type: integer, enum: [443] }
         limitations: { type: string }
+        endpoint_summary:
+          type: object
+          nullable: true
+          description: One handshake per public IP address (IPv4 first, up to 6). mixed=true means some addresses negotiate post-quantum key exchange and others do not.
+          properties:
+            total: { type: integer }
+            pq: { type: integer }
+            classical: { type: integer }
+            failed: { type: integer }
+            undetermined: { type: integer }
+            mixed: { type: boolean }
         certificate_key: { type: string, example: ECDSA-256 }
         certificate_valid: { type: boolean }
         findings_in_full_report: { type: integer }

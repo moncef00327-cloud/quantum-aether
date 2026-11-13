@@ -119,7 +119,7 @@ def create_app(overrides=None, scanner=None, paypal=None, mailer=None, chain=Non
         app.wsgi_app = ProxyFix(app.wsgi_app, x_for=proxies, x_proto=proxies, x_host=proxies)
     if paypal is None and app.config["PAYPAL_CLIENT_ID"] and app.config["PAYPAL_CLIENT_SECRET"]:
         paypal = PayPalClient(app.config["PAYPAL_CLIENT_ID"], app.config["PAYPAL_CLIENT_SECRET"], app.config["PAYPAL_ENV"])
-    app.extensions["scanner"] = scanner or quantum_vuln_scanner.scan
+    app.extensions["scanner"] = scanner or quantum_vuln_scanner.scan_full  # كل عناوين النطاق؛ المتتبّع يستخدم عنواناً واحداً
     app.extensions["paypal"] = paypal
     app.extensions["chain"] = chain or crypto_pay.ChainClient()
     app.extensions["discovery_http"] = discovery_http or requests.Session()
@@ -321,6 +321,7 @@ def scan_summary(scan_id, result):
         "observation_status": scan_experience.status(result),
         "port": 443,
         "limitations": scan_experience.LIMITATION,
+        "endpoint_summary": result.get("endpoint_summary"),  # كل عناوين النطاق: total/pq/classical/failed/mixed
         "certificate_key": f"{cert.get('key_algorithm')}-{cert.get('key_bits')}",
         "certificate_valid": bool(cert.get("verified")),
         "findings_in_full_report": len(result["findings"]),

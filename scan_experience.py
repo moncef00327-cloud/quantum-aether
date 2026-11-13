@@ -2,7 +2,7 @@
 import adoption
 
 
-LIMITATION = "One observed TLS connection is not a comprehensive security assessment; a CDN edge may differ from the origin."
+LIMITATION = "Observed from one location on port 443, one TLS handshake per public address; not a comprehensive security assessment, and a CDN edge may differ from the origin."
 
 
 def status(result):
@@ -56,7 +56,7 @@ COPY = {
         'monitor': 'رُصد تبادل مفاتيح مقاوم للكم. راقب تغيّر الإعدادات؛ هذه النتيجة ليست ضمانًا أمنيًا.',
         'tls13': 'فعّل TLS 1.3 في مكتبة TLS الفعلية قبل إعداد تبادل المفاتيح الهجين.',
         'configure': 'تحقق من دعم المجموعات الهجينة في مكتبة TLS واضبط خادمك أو CDN الفعلي، ثم أعد القياس.',
-        'limitation': 'اتصال TLS مرصود واحد لا يمثّل تقييمًا أمنيًا شاملًا؛ قد تختلف واجهة CDN عن الخادم الأصلي.',
+        'limitation': 'رُصد من موقع واحد على المنفذ 443، بمصافحة TLS واحدة لكل عنوان عام؛ هذا ليس تقييمًا أمنيًا شاملًا، وقد تختلف واجهة CDN عن الخادم الأصلي.',
         'observed_pq': 'رُصد تبادل مقاوم للكم', 'observed_classical': 'رُصد تبادل تقليدي', 'undetermined': 'الدعم غير محسوم',
         'input_hint': 'أدخل نطاقًا أو رابط HTTP(S). يُفحص HTTPS على المنفذ 443؛ لا تُفحص المسارات أو منافذ الرابط الملصق.',
         'waiting': 'أُرسل طلب الفحص. بانتظار استجابة الخادم…', 'network': 'تعذّر استلام الاستجابة. تحقق من اتصالك ثم أعد المحاولة. قد يكون الخادم ما زال يُكمل الفحص السابق.',
@@ -70,7 +70,7 @@ COPY = {
         'monitor': 'Post-Quantum-Schlüsselaustausch wurde beobachtet. Überwachen Sie Änderungen; dies ist keine Sicherheitsgarantie.',
         'tls13': 'Aktivieren Sie TLS 1.3 in Ihrem tatsächlichen TLS-Stack.',
         'configure': 'Prüfen Sie hybride Gruppen in Ihrer TLS-Bibliothek und konfigurieren Sie Ihren tatsächlichen Server oder CDN. Messen Sie anschließend erneut.',
-        'limitation': 'Eine beobachtete TLS-Verbindung ist keine umfassende Sicherheitsprüfung; CDN und Ursprungsserver können sich unterscheiden.',
+        'limitation': 'Von einem Standort auf Port 443 beobachtet, ein TLS-Handshake pro öffentlicher Adresse; keine umfassende Sicherheitsprüfung, und CDN und Ursprungsserver können sich unterscheiden.',
         'observed_pq': 'Post-Quantum-Austausch beobachtet', 'observed_classical': 'Klassischer Austausch beobachtet', 'undetermined': 'Unterstützung unbestimmt',
         'input_hint': 'Domain oder HTTP(S)-URL. Geprüft wird HTTPS auf Port 443, nicht URL-Pfade oder eingefügte Ports.',
         'waiting': 'Prüfung gesendet. Warten auf die Serverantwort…', 'network': 'Keine Antwort empfangen. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut. Der Server könnte die vorherige Prüfung noch abschließen.',

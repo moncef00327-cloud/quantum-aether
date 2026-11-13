@@ -10,6 +10,7 @@ import sys
 import adoption
 import asn
 import quantum_saas_app
+import quantum_vuln_scanner
 import sales_db
 
 log = logging.getLogger("quantum_saas.adoption_job")
@@ -26,13 +27,18 @@ def asn_lookup_for(app):
         return None
 
 
+def tracker_scanner(scanner):
+    """المتتبّع (10 آلاف أسبوعياً، 100 ألف شهرياً) يفحص عنواناً واحداً لكل نطاق كما في المنهجية المنشورة."""
+    return quantum_vuln_scanner.scan if scanner is quantum_vuln_scanner.scan_full else scanner
+
+
 def run(app, mode="weekly", day=None, workers=None, asn_lookup="auto"):
     conn = sales_db.connect(os.path.join(app.config["DATA_DIR"], "quantum_saas.db"))
     try:
         lookup = asn_lookup_for(app) if asn_lookup == "auto" else asn_lookup
         if mode == "monthly":
             targets = adoption.load_targets(limit=adoption.MONTHLY_TOP, watchlists={})
-            outcome = adoption.run_month(conn, app.extensions["scanner"], targets, day=day or dt.date.today(),
+            outcome = adoption.run_month(conn, tracker_scanner(app.extensions["scanner"]), targets, day=day or dt.date.today(),
                                          workers=workers or 32, asn_lookup=lookup)
             log.info("adoption month %s: %d targets, %d answered", outcome["month"], outcome["targets"], outcome["answered"])
         else:
@@ -40,7 +46,7 @@ def run(app, mode="weekly", day=None, workers=None, asn_lookup="auto"):
             if seeded:
                 log.info("seeded %d rows from the published study", seeded)
             targets = adoption.load_targets(limit=adoption.WEEKLY_TOP)
-            outcome = adoption.run_week(conn, app.extensions["scanner"], targets, day=day or dt.date.today(),
+            outcome = adoption.run_week(conn, tracker_scanner(app.extensions["scanner"]), targets, day=day or dt.date.today(),
                                         workers=workers or 24, asn_lookup=lookup)
             log.info("adoption week %s: %d targets, %d answered", outcome["week"], outcome["targets"], outcome["answered"])
         adoption.prune(conn)

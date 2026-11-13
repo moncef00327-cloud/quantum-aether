@@ -14,7 +14,7 @@ Full text of every guide plus the live weekly figures in one file: {{ base }}/ll
 ## What this reference answers
 
 - Badge verification: GET {{ base }}/api/v1/badge/<domain> — stored evidence, timestamps and fresh/stale/undetermined state; never starts a scan. Human verification: {{ base }}/verify/<domain>.
-- API consumers must inspect observation_status. A false post_quantum_key_exchange flag can mean classical or undetermined. One observed TLS connection is not a comprehensive security assessment.
+- API consumers must inspect observation_status. A false post_quantum_key_exchange flag can mean classical or undetermined. Each public IP address (IPv4 and IPv6, up to 6) gets its own handshake; endpoint_summary.mixed=true means the servers disagree. This is an external observation from one location, not a comprehensive security assessment.
 
 - "Does <domain> use post-quantum TLS / X25519MLKEM768?" — scan it: GET {{ base }}/api/v1/scan?domain=<domain> , or see {{ base }}/site/<domain>.
 - "How do I enable post-quantum TLS on nginx / Apache / Caddy / Cloudflare?" — step-by-step guides at {{ base }}/guides .

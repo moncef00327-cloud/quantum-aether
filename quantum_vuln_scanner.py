@@ -9,6 +9,7 @@
 #
 # الاستخدام: python quantum_vuln_scanner.py example.com [--json]
 import argparse
+import concurrent.futures
 import datetime as dt
 import ipaddress
 import json
@@ -116,7 +117,12 @@ def normalize_domain(raw: str) -> str:
     return value
 
 
-def resolve_public_ip(host: str) -> str:
+MAX_ENDPOINTS = 6         # نفحص حتى هذا العدد من عناوين النطاق (IPv4 أولاً، مع عنوان IPv6 واحد على الأقل إن وُجد)
+ENDPOINT_TIMEOUT = 5.0    # مهلة كل عنوان إضافي (تُفحص بالتوازي)
+
+
+def resolve_public_ips(host: str) -> list:
+    """كل عناوين النطاق العامة بلا تكرار: IPv4 أولاً ثم IPv6، بحد MAX_ENDPOINTS ومع إبقاء عنوان IPv6 واحد."""
     try:
         infos = socket.getaddrinfo(host, PORT, type=socket.SOCK_STREAM)
     except socket.gaierror as exc:
@@ -132,7 +138,14 @@ def resolve_public_ip(host: str) -> str:
         (ipv4 if ip.version == 4 else ipv6).append(str(ip))
     if not ipv4 and not ipv6:
         raise ScanError("dns_failure", f"no address for {host}")
-    return (ipv4 or ipv6)[0]
+    ipv4, ipv6 = list(dict.fromkeys(ipv4)), list(dict.fromkeys(ipv6))
+    if ipv4 and ipv6:
+        return ipv4[:MAX_ENDPOINTS - 1] + ipv6[:MAX_ENDPOINTS - len(ipv4[:MAX_ENDPOINTS - 1])]
+    return (ipv4 or ipv6)[:MAX_ENDPOINTS]
+
+
+def resolve_public_ip(host: str) -> str:
+    return resolve_public_ips(host)[0]
 
 
 def _connect(ip: str, timeout: float) -> socket.socket:
@@ -579,12 +592,46 @@ def assess(kx: dict, cert: dict) -> dict:
     return {"grade": grade, "findings": findings}
 
 
-def scan(raw_domain: str, timeout: float = TIMEOUT) -> dict:
+def _endpoint(ip: str, kx: dict) -> dict:
+    return {"ip": ip, "family": ipaddress.ip_address(ip).version, "group": kx.get("group"), "pq": kx.get("pq"),
+            "version": kx.get("version"), "error": kx.get("error"),
+            "undetermined": bool(kx.get("hrr") or kx.get("error"))}
+
+
+def endpoint_summary(endpoints: list) -> dict:
+    """pq/classical تُحسب للعناوين ذات النتيجة الحاسمة فقط؛ mixed = عناوين تختلف في دعم التبادل المقاوم للكم."""
+    decided = [e for e in endpoints if not e["undetermined"]]
+    pq = sum(1 for e in decided if e["pq"])
+    classical = len(decided) - pq
+    return {"total": len(endpoints), "pq": pq, "classical": classical,
+            "failed": sum(1 for e in endpoints if e["error"]),
+            "undetermined": sum(1 for e in endpoints if e["undetermined"] and not e["error"]),
+            "mixed": pq > 0 and classical > 0}
+
+
+def probe_endpoints(ips: list, host: str, primary_ip: str, primary_kx: dict, timeout: float = ENDPOINT_TIMEOUT) -> list:
+    """تبادل المفاتيح على كل عنوان إضافي بالتوازي؛ فشل عنوان لا يُفشل الفحص كله."""
+    others = [ip for ip in ips if ip != primary_ip]
+
+    def one(ip):
+        try:
+            return _endpoint(ip, probe_key_exchange(ip, host, timeout))
+        except Exception as exc:  # any failure on an extra address is an observation, not a scan error
+            return _endpoint(ip, {"error": str(exc) or type(exc).__name__})
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, len(others))) as pool:
+        extra = list(pool.map(one, others)) if others else []
+    return [_endpoint(primary_ip, primary_kx)] + extra
+
+
+def scan(raw_domain: str, timeout: float = TIMEOUT, all_endpoints: bool = False) -> dict:
+    """all_endpoints=False (المتتبّع الأسبوعي): عنوان واحد كما كان. True (الموقع والمراقبة): كل عناوين النطاق."""
     domain = normalize_domain(raw_domain)
-    ip = resolve_public_ip(domain)
+    ips = resolve_public_ips(domain)
+    ip = ips[0]
     kx = probe_key_exchange(ip, domain, timeout)
     cert = probe_certificate(ip, domain, timeout)
-    return {
+    result = {
         "domain": domain,
         "ip": ip,
         "port": PORT,
@@ -594,6 +641,21 @@ def scan(raw_domain: str, timeout: float = TIMEOUT) -> dict:
         "certificate": cert,
         **assess(kx, cert),
     }
+    if all_endpoints:
+        endpoints = probe_endpoints(ips, domain, ip, kx, min(timeout, ENDPOINT_TIMEOUT))
+        summary = endpoint_summary(endpoints)
+        result["endpoints"], result["endpoint_summary"] = endpoints, summary
+        if summary["mixed"]:
+            majority_pq = bool(kx.get("pq"))
+            odd = [e["ip"] for e in endpoints if not e["undetermined"] and bool(e["pq"]) != majority_pq]
+            result["findings"].append({"code": "ENDPOINTS_MIXED", "status": "warning",
+                                       "params": {"pq": summary["pq"], "total": summary["total"], "ips": ", ".join(odd)}})
+    return result
+
+
+def scan_full(raw_domain: str, timeout: float = TIMEOUT) -> dict:
+    """فحص كل العناوين: للموقع والمراقبة والتقرير المدفوع."""
+    return scan(raw_domain, timeout, all_endpoints=True)
 
 
 def main(argv=None) -> int:
@@ -602,7 +664,7 @@ def main(argv=None) -> int:
     parser.add_argument("--json", action="store_true", help="print the full result as JSON")
     args = parser.parse_args(argv)
     try:
-        result = scan(args.domain)
+        result = scan_full(args.domain)
     except ScanError as exc:
         print(f"[{exc.code}] {exc}", file=sys.stderr)
         return 2
@@ -616,6 +678,9 @@ def main(argv=None) -> int:
           f"{' (post-quantum hybrid)' if kx.get('pq') else ''}")
     print(f"  Certificate: {cert['key_algorithm']}-{cert['key_bits']}, {cert['signature_algorithm']},"
           f" expires in {cert['days_left']} days, verified={cert['verified']}")
+    for e in result.get("endpoints", ()):
+        state = "no answer" if e["error"] else ("undetermined" if e["undetermined"] else (e["group"] or "?"))
+        print(f"  Address {e['ip']}: {state}{' (post-quantum)' if e['pq'] and not e['undetermined'] else ''}")
     for finding in result["findings"]:
         print(f"  [{finding['status'].upper()}] {finding['code']} {finding['params'] or ''}")
     return 0
