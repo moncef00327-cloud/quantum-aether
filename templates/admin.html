@@ -7,7 +7,7 @@
   <table class="data">
     <tr><th>focused the domain box</th><th>typed</th><th>clicked an example</th><th>submitted a scan</th><th>saw a result</th><th>error</th></tr>
     <tr><td>{{ events.focus }}</td><td>{{ events.type }}</td><td>{{ events.example }}</td><td>{{ events.submit }}</td><td>{{ events.result }}</td><td>{{ events.error }}</td></tr>
-    <tr><th>switched language</th><th>monitoring CTA</th><th>sample report</th><th>buy (consent/crypto)</th><th>share</th><th>badge copy</th></tr>
+    <tr><th>switched language</th><th>monitoring CTA</th><th>sample report</th><th title="Consent checkbox ticked or crypto button pressed. Not a payment; paid orders are listed under sales.">buy clicks (not payments)</th><th>share</th><th>badge copy</th></tr>
     <tr><td>{{ events.lang }}</td><td>{{ events.monitoring_cta }}</td><td>{{ events.sample_report }}</td><td>{{ events.buy_click }}</td><td>{{ events.share }}</td><td>{{ events.badge_copy }}</td></tr>
   </table>
   <p class="muted small">Unique visitor-days, bots and admin excluded. Tracking started 2026-11-04.</p>

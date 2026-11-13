@@ -391,3 +391,27 @@ a.check:active>span,a.check:focus-visible>span{border-color:var(--qa-cyan)!impor
 .qa-example-tag{font-size:10px;padding:2px 7px}
 .qa-grade-head{flex-wrap:wrap;row-gap:6px}
 }
+
+/* Sidebar 2026-11-13: fits desktop heights; collapsible groups absorb new entries (only the nav list scrolls) */
+@media(min-width:851px){
+aside{height:100vh;height:100dvh;overflow:hidden!important;display:flex;flex-direction:column;padding-top:24px!important;padding-bottom:14px!important}
+aside .label{margin:22px 12px 8px}
+nav#workspace-nav{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:rgba(138,229,247,.22) transparent;padding:2px;margin-inline:-2px;align-content:start}
+}
+nav#workspace-nav{gap:3px}
+nav#workspace-nav :is(button,a){padding:9px 12px;font-size:14px;min-height:42px}
+.nav-group{display:grid;gap:3px;margin-top:8px;padding-top:8px;border-top:1px solid var(--qa-line)}
+.nav-group-items{display:grid;gap:3px}
+.nav-group-items[hidden]{display:none}
+nav#workspace-nav .nav-group-toggle{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:34px;padding:6px 12px;background:none!important;border:0!important;box-shadow:none!important;font-size:11px;font-weight:600;letter-spacing:1px;color:#9fb0c8;transform:none!important}
+nav#workspace-nav .nav-group-toggle svg{transition:transform .2s;color:#9fb0c8}
+nav#workspace-nav .nav-group-toggle[aria-expanded=false] svg{transform:rotate(90deg)}
+.en nav#workspace-nav .nav-group-toggle[aria-expanded=false] svg{transform:rotate(-90deg)}
+@media(hover:hover){nav#workspace-nav .nav-group-toggle:hover{color:#fff}nav#workspace-nav .nav-group-toggle:hover svg{color:var(--qa-cyan)}}
+nav#workspace-nav .nav-ext{font-size:13.5px}
+.research{display:none}
+.sidefoot{margin-top:10px!important;padding-top:12px!important;border-top:1px solid var(--qa-line);flex-shrink:0;display:grid;gap:6px}
+.sidefoot>span{display:flex;align-items:center;gap:8px}
+.sidefoot .side-gh{display:inline-flex;align-items:center;gap:6px;color:var(--qa-cyan);font-size:12px;min-height:32px}
+@media(hover:hover){.sidefoot .side-gh:hover{text-decoration:underline}}
+@media(min-width:851px) and (max-height:760px){aside .label{margin-top:12px}nav#workspace-nav :is(button,a){min-height:38px;padding-block:7px}.brand small{display:none}}
