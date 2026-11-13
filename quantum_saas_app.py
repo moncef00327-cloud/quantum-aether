@@ -31,6 +31,7 @@ import bio_archive_report
 import crypto_pay
 import dna_encode
 import analytics_db
+import assets
 import guides
 import legal
 import monitor
@@ -126,6 +127,9 @@ def create_app(overrides=None, scanner=None, paypal=None, mailer=None, chain=Non
     app.extensions["chain"] = chain or crypto_pay.ChainClient()
     app.extensions["discovery_http"] = discovery_http or requests.Session()
     app.extensions["discovery_probe"] = discovery_probe or discovery.probe_host
+    # جرد أصول المشتركين: نفس كشف النطاقات العام (سجلات الشهادات + فحص كل اسم)
+    app.extensions["asset_discover"] = lambda base: discovery.run_discovery(
+        base, app.extensions["discovery_http"], app.extensions["discovery_probe"])
     app.extensions["mailer"] = mailer or Mailer(app.config["RESEND_API_KEY"], app.config["MAIL_FROM"],
                                                      app.config["REPLY_TO"],
                                                      fallback_sender=app.config["MAIL_FROM_FALLBACK"],
@@ -2222,6 +2226,7 @@ def monitor_dashboard(token):
                            trial_left=monitor.trial_days_left(account, dt.datetime.now(dt.timezone.utc)) if trial else None,
                            plans=monitor.PLANS, plan_ids=plan_ids(), enabled=trial and subscriptions_enabled(),
                            history=monitor_db.check_history(conn, account["id"], limit=60),
+                           seeds=assets.summary_for(conn, account["id"]), seed_limit=assets.seed_limit(account),
                            paypal_client_id=cfg["PAYPAL_CLIENT_ID"], currency=cfg["CURRENCY"])
 
 
@@ -2252,6 +2257,51 @@ def monitor_history_csv(token):
     response.headers["Content-Type"] = "text/csv; charset=utf-8"
     response.headers["Content-Disposition"] = f'attachment; filename="quantum-aether-history-{dt.date.today().isoformat()}.csv"'
     return response
+
+
+# ---------------------------------------------------------------- جرد الأصول (بذور، كشف، سحب)
+
+def _seed_or_404(account, seed_id):
+    return assets.get_seed(db(), account["id"], seed_id) or abort(404)
+
+
+@bp.post("/monitor/<token>/seeds")
+def monitor_add_seed(token):
+    account = account_or_404(token)
+    if not monitor.is_live(account):
+        return _back(token, "inactive")
+    outcome = assets.add_seed(db(), account, request.form.get("base", ""))
+    return _back(token, {"added": "seed_added", "exists": "seed_added", "limit": "seed_limit", "invalid": "invalid"}[outcome])
+
+
+@bp.post("/monitor/<token>/seeds/<int:seed_id>/verify")
+def monitor_verify_seed(token, seed_id):
+    account = account_or_404(token)
+    seed = _seed_or_404(account, seed_id)
+    return _back(token, "seed_verified" if seed["verified_at"] or assets.verify_seed(db(), seed) else "seed_dns_missing")
+
+
+@bp.post("/monitor/<token>/seeds/<int:seed_id>/discover")
+def monitor_discover_seed(token, seed_id):
+    account = account_or_404(token)
+    seed = _seed_or_404(account, seed_id)
+    if not monitor.is_live(account):
+        return _back(token, "inactive")
+    if not seed["verified_at"]:
+        return _back(token, "seed_unverified")
+    if seed["last_status"] == "RUNNING" or assets.manual_wait(seed):
+        return _back(token, "seed_wait")
+    path = os.path.join(current_app.config["DATA_DIR"], "quantum_saas.db")
+    assets.start_background(lambda: sales_db.connect(path), account["id"], seed, current_app.extensions["asset_discover"])
+    return _back(token, "seed_started")
+
+
+@bp.post("/monitor/<token>/seeds/<int:seed_id>/delete")
+def monitor_remove_seed(token, seed_id):
+    account = account_or_404(token)
+    _seed_or_404(account, seed_id)
+    assets.remove_seed(db(), account["id"], seed_id)
+    return _back(token, "seed_removed")
 
 
 def _back(token, notice):

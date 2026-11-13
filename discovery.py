@@ -115,14 +115,22 @@ def ct_names_certspotter(base, http):
 
 
 def ct_names(base, http):
-    """يعيد (الأسماء، المصدر). crt.sh يفشل أحياناً (502): محاولتان ثم Cert Spotter."""
-    errors = []
+    """يعيد (الأسماء، المصدر). crt.sh يفشل أحياناً (502) أو يرد قائمة فارغة وهو مثقل: محاولتان ثم Cert Spotter.
+    الرد الفارغ لا يُصدَّق ما دام هناك مصدر آخر؛ نعيد الفارغ فقط إن اتفقت عليه كل المصادر التي ردّت."""
+    errors, empty_from = [], None
     for source, fn, tries in (("crt.sh", ct_names_crtsh, 2), ("certspotter", ct_names_certspotter, 1)):
         for _ in range(tries):
             try:
-                return fn(base, http), source
+                names = fn(base, http)
             except Exception as exc:  # noqa: BLE001 — أي فشل ينتقل للمصدر التالي
                 errors.append(f"{source}: {type(exc).__name__}")
+                continue
+            if names:
+                return names, source
+            empty_from = source
+            break  # فارغ: لا نعيد المحاولة على المصدر نفسه، ننتقل للتالي
+    if empty_from:
+        return set(), empty_from
     raise RuntimeError("; ".join(errors))
 
 

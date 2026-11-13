@@ -118,7 +118,8 @@ EVENT_NAMES = ("focus", "type", "example", "submit", "result", "lang", "monitori
                "business_cta", "agents_cta", "explore",
                "disc_start", "disc_email", "cfg_copy",
                "trial_start",  # زر «ابدأ التجربة المجانية» في /monitoring
-               "history_csv")  # تنزيل سجل الفحوص من لوحة المراقبة
+               "history_csv",  # تنزيل سجل الفحوص من لوحة المراقبة
+               "seed_add")  # إضافة نطاق أساسي لجرد الأصول
 EVENTS_SCHEMA = """
 CREATE TABLE IF NOT EXISTS events (
     day      TEXT NOT NULL,

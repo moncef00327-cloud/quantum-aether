@@ -136,6 +136,7 @@ def purge_ended_trials(conn, before_iso):
         for account_id in ids:
             conn.execute("DELETE FROM monitor_alerts WHERE account_id = ?", (account_id,))
             conn.execute("DELETE FROM monitor_checks WHERE account_id = ?", (account_id,))
+            conn.execute("DELETE FROM monitor_seeds WHERE account_id = ?", (account_id,))
             conn.execute("DELETE FROM monitor_domains WHERE account_id = ?", (account_id,))
             conn.execute("DELETE FROM monitor_accounts WHERE id = ?", (account_id,))
     return len(ids)
@@ -205,10 +206,11 @@ def count_domains(conn, account_id):
     return conn.execute("SELECT COUNT(*) FROM monitor_domains WHERE account_id = ?", (account_id,)).fetchone()[0]
 
 
-def add_domain(conn, account_id, domain):
-    """يعيد True إن أُضيف، وFalse إن كان موجوداً."""
+def add_domain(conn, account_id, domain, source="manual"):
+    """يعيد True إن أُضيف، وFalse إن كان موجوداً. source: manual (يدوي، لا يُسحب أبداً) أو discovered (من جرد الأصول)."""
     with conn:
-        cur = conn.execute("INSERT OR IGNORE INTO monitor_domains (account_id, domain) VALUES (?, ?)", (account_id, domain))
+        cur = conn.execute("INSERT OR IGNORE INTO monitor_domains (account_id, domain, source) VALUES (?, ?, ?)",
+                           (account_id, domain, source))
     return cur.rowcount == 1
 
 
@@ -232,14 +234,14 @@ def save_check(conn, domain_id, result=None, error=None):
                                      es.get("total"), es.get("pq"), None if not es else int(bool(es.get("mixed"))),
                                      None, result.get("scanner_version"), domain_id))
             conn.execute(
-                "UPDATE monitor_domains SET grade = ?, pq = ?, days_left = ?, error = NULL, result_json = ?,"
+                "UPDATE monitor_domains SET grade = ?, pq = ?, days_left = ?, error = NULL, fail_streak = 0, result_json = ?,"
                 " checked_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now') WHERE id = ?",
                 (result["grade"], pq, result["certificate"].get("days_left"),
                  json.dumps(result, ensure_ascii=False), domain_id))
         else:
             conn.execute(CHECK_LOG, (None, None, None, None, None, None, None, None, error, None, domain_id))
-            conn.execute("UPDATE monitor_domains SET error = ?, checked_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now') WHERE id = ?",
-                         (error, domain_id))
+            conn.execute("UPDATE monitor_domains SET error = ?, fail_streak = fail_streak + 1,"
+                         " checked_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now') WHERE id = ?", (error, domain_id))
 
 
 def check_history(conn, account_id, limit=None):

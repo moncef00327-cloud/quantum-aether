@@ -78,6 +78,7 @@ Full text of every guide plus the live weekly figures in one file: {{ base }}/ll
 - Free trial: 14 days, up to 10 domains, no payment details; it ends automatically and never turns into a paid subscription by itself. Start at {{ base }}/monitoring#trial (company domain + work email; the dashboard link is emailed).
 - Every public IPv4/IPv6 address of a domain (up to 6) gets its own handshake; an alert fires when some addresses negotiate post-quantum key exchange and others do not (CDN edges or load-balanced servers out of sync).
 - Email alerts when post-quantum key exchange is lost, a grade changes, a result becomes inconclusive, or a certificate nears expiry.
+- Asset discovery: add your base domain (ownership proven by an email on that domain or a DNS TXT record); every hostname with a certificate under it (certificate transparency logs) is looked up weekly, live ones are added to monitoring with a new-asset alert, an alert tells you when hosts exceed your plan, and auto-added hosts that stay unreachable for 7 checks and disappear are removed with the reason in the alert.
 - Check history: every daily and manual check is kept for 400 days in the dashboard, with a CSV export (time, grade, key-exchange group, TLS version, certificate days left, addresses post-quantum/total, error, scanner version, measurement note) for security teams and auditors.
 
 ## Badge

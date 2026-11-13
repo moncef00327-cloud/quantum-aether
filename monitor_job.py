@@ -9,6 +9,7 @@ import sys
 import requests
 
 import analytics_db
+import assets
 import discovery
 import free_alerts
 import monitor
@@ -84,6 +85,8 @@ def run(app):
         base_url = cfg["PUBLIC_URL"] or "https://ather-quantum.com"
         sync_subscriptions(conn, app.extensions["paypal"], app.extensions["mailer"], cfg["OWNER_EMAIL"], base_url)
         handle_trials(conn, app.extensions["mailer"], cfg["OWNER_EMAIL"], base_url)
+        for seed in assets.due_seeds(conn):  # جرد الأصول قبل الفحص: الأصل الجديد يُفحص في نفس اليوم
+            assets.run_seed(conn, seed["account_id"], seed, app.extensions["asset_discover"])
         accounts = conn.execute("SELECT * FROM monitor_accounts WHERE status IN ('ACTIVE', 'TRIAL')").fetchall()
         total_domains = total_alerts = 0
         for row in accounts:

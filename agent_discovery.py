@@ -46,7 +46,7 @@ def manifest(base):
  cfg=current_app.config
  return {'schema_version':'1.0','manifest_type':'Quantum Aether service discovery; custom metadata, not an A2A Agent Card',
   'name':'Quantum Aether Observatory','description':'Check whether a public website negotiates hybrid post-quantum TLS key exchange; read timestamped observations, certificate summaries and explicit measurement limits.',
-  'website':base+'/agents?lang=en','canonical_manifest':base+'/.well-known/agent-service.json','capabilities':['public_tls_scan','certificate_summary','post_quantum_key_exchange_observation','all_address_observation','stored_evidence_lookup','daily_monitoring','check_history_export'],
+  'website':base+'/agents?lang=en','canonical_manifest':base+'/.well-known/agent-service.json','capabilities':['public_tls_scan','certificate_summary','post_quantum_key_exchange_observation','all_address_observation','stored_evidence_lookup','daily_monitoring','asset_discovery','check_history_export'],
   'keywords':['TLS','post-quantum','ML-KEM','X25519MLKEM768','HTTPS','certificate','cryptography'],
   'use_cases':['Measure the negotiated key exchange before applying a transport-security policy.','Re-check a public domain after changing TLS or CDN configuration.','Read existing evidence before deciding whether a fresh scan is needed.','Monitor an organization\'s domains daily and keep a dated check history (CSV) for audits; free 14-day trial at '+base+'/monitoring.'],
   'endpoints':{'scan':{'url':base+'/api/scan','method':'POST','input':{'domain':'example.com'},'success_status':201},

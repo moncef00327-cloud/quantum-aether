@@ -1931,3 +1931,51 @@ TEXTS["ar"].update({"mon_seo_title": "مراقبة TLS المقاوم للكم: 
                     "mon_seo_desc": "فحص يومي لكل عناوين خوادم نطاقاتك، وتنبيه عند فقدان التبادل المقاوم للكم أو اختلاف الخوادم، وسجل CSV جاهز للتدقيق. مجاناً 14 يوماً وبلا بطاقة."})
 TEXTS["de"].update({"mon_seo_title": "Post-Quanten-TLS-Überwachung: 14 Tage kostenlos testen",
                     "mon_seo_desc": "Tägliche Prüfung jeder Serveradresse Ihrer Domains, Warnung bei Verlust des quantenresistenten Schlüsselaustauschs oder uneinheitlichen Servern, prüfbarer CSV-Verlauf. 14 Tage kostenlos, ohne Karte."})
+
+# ---------------------------------------------------------------- جرد الأصول في لوحة المراقبة
+_AS = {
+    "en": {"as_title": "Asset discovery", "as_sub": "Add your company's base domain. We look up every hostname issued a certificate under it (certificate transparency logs) once a week, add the live ones to monitoring, alert you about new assets, and remove auto-added hosts that stay unreachable and disappear, with the reason in your alerts.",
+           "as_base": "Base domain", "as_owner": "Ownership", "as_last": "Last discovery (UTC)", "as_found": "Found",
+           "as_verified_by": {"email": "your email domain", "dns": "DNS record"}, "as_unverified": "not verified",
+           "as_running": "running…", "as_live": "live", "as_auto": "auto", "as_auto_title": "Added by asset discovery",
+           "as_discover": "Discover now", "as_verify": "Check DNS record", "as_add": "Add base domain",
+           "as_add_label": "Base domain (you can add {n} more on this plan)",
+           "as_txt_help": "Your email is not on this domain, so prove ownership with this DNS TXT record, then press \"Check DNS record\":"},
+    "ar": {"as_title": "اكتشاف الأصول", "as_sub": "أضف النطاق الأساسي لشركتك. نبحث أسبوعياً عن كل اسم صدرت له شهادة تحته (سجلات شفافية الشهادات)، ونضيف الأسماء الحية للمراقبة، وننبهك بالأصول الجديدة، ونسحب ما أضفناه تلقائياً إن توقف واختفى، مع ذكر السبب في التنبيهات.",
+           "as_base": "النطاق الأساسي", "as_owner": "الملكية", "as_last": "آخر كشف (UTC)", "as_found": "النتيجة",
+           "as_verified_by": {"email": "نطاق بريدك", "dns": "سجل DNS"}, "as_unverified": "غير موثّقة",
+           "as_running": "جارٍ…", "as_live": "حي", "as_auto": "تلقائي", "as_auto_title": "أضافه اكتشاف الأصول",
+           "as_discover": "اكشف الآن", "as_verify": "تحقق من سجل DNS", "as_add": "أضف نطاقاً أساسياً",
+           "as_add_label": "النطاق الأساسي (يمكنك إضافة {n} في هذه الخطة)",
+           "as_txt_help": "بريدك ليس على هذا النطاق، فأثبت الملكية بسجل DNS TXT التالي ثم اضغط «تحقق من سجل DNS»:"},
+}
+_AS["de"] = dict(_AS["en"], as_title="Asset-Erkennung", as_discover="Jetzt erkennen", as_add="Basisdomain hinzufügen")
+_AS_NOTICES = {
+    "en": {"seed_added": "Base domain added.", "seed_limit": "Your plan's base-domain limit is reached.", "seed_verified": "Ownership confirmed.",
+           "seed_dns_missing": "The TXT record was not found yet. DNS changes can take a few minutes; try again.",
+           "seed_unverified": "Confirm ownership first.", "seed_wait": "Discovery for this domain ran recently; you can run it again after 6 hours.",
+           "seed_started": "Discovery started. New hosts appear here within a few minutes.", "seed_removed": "Base domain removed (its monitored hosts stay)."},
+    "ar": {"seed_added": "أُضيف النطاق الأساسي.", "seed_limit": "اكتمل حد النطاقات الأساسية في خطتك.", "seed_verified": "تأكدت الملكية.",
+           "seed_dns_missing": "لم يُعثر على سجل TXT بعد. قد يستغرق تحديث DNS دقائق؛ حاول مجدداً.",
+           "seed_unverified": "أكّد الملكية أولاً.", "seed_wait": "جرى كشف هذا النطاق مؤخراً؛ يمكنك تكراره بعد 6 ساعات.",
+           "seed_started": "بدأ الكشف. تظهر الأسماء الجديدة هنا خلال دقائق.", "seed_removed": "حُذف النطاق الأساسي (تبقى أسماؤه المراقبة)."},
+}
+for _l in ("en", "ar", "de"):
+    TEXTS[_l].update(_AS[_l])
+    if "dash_notices" in TEXTS[_l]:
+        TEXTS[_l]["dash_notices"] = dict(TEXTS[_l]["dash_notices"], **_AS_NOTICES.get(_l, _AS_NOTICES["en"]))
+
+# ---------------------------------------------------------------- مزايا المراقبة: الإضافات الجديدة في قائمة /monitoring
+TEXTS["en"]["mon_features"] = list(TEXTS["en"]["mon_features"]) + [
+    "Asset discovery: add your base domain and we find and monitor its live hostnames weekly, with new-asset alerts",
+    "Every server address (IPv4/IPv6) checked, with an alert when servers disagree",
+    "Dated history of every check, exportable as CSV for audits"]
+TEXTS["ar"]["mon_features"] = list(TEXTS["ar"]["mon_features"]) + [
+    "اكتشاف الأصول: أضف نطاقك الأساسي فنكتشف أسماءه الحية أسبوعياً ونراقبها، مع تنبيه عند ظهور أصل جديد",
+    "فحص كل عناوين الخادم (IPv4/IPv6) وتنبيه عند اختلافها",
+    "سجل مؤرَّخ لكل فحص، قابل للتصدير CSV للتدقيق"]
+if "mon_features" in TEXTS["de"]:
+    TEXTS["de"]["mon_features"] = list(TEXTS["de"]["mon_features"]) + [
+        "Asset-Erkennung: Basisdomain hinzufügen, wir finden und überwachen ihre aktiven Hostnamen wöchentlich, mit Warnung bei neuen Assets",
+        "Jede Serveradresse (IPv4/IPv6) geprüft, mit Warnung bei uneinheitlichen Servern",
+        "Datierter Verlauf jeder Prüfung, als CSV für Audits exportierbar"]

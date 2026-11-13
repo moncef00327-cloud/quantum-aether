@@ -77,6 +77,21 @@ ALERT_TEXT = {
         "ar": "{domain}: الخوادم غير متسقة، {pq} من {total} عناوين تتفاوض على التبادل المقاوم للكم (تقليدي على {ips})",
         "de": "{domain}: Server uneinheitlich, {pq} von {total} Adressen mit quantenresistentem Schlüsselaustausch (klassisch auf {ips})",
     },
+    "NEW_ASSET": {
+        "en": "{domain}: new asset found under {base} and added to monitoring (key exchange {group})",
+        "ar": "{domain}: أصل جديد تحت {base} أُضيف للمراقبة (تبادل المفاتيح {group})",
+        "de": "{domain}: neues Asset unter {base} gefunden und zur Überwachung hinzugefügt (Schlüsselaustausch {group})",
+    },
+    "ASSETS_OVER_LIMIT": {
+        "en": "{domain}: {count} more live hosts found, but your plan limit of {limit} domains is reached. Upgrade or remove domains to monitor them",
+        "ar": "{domain}: وُجد {count} خادماً حياً إضافياً، لكن حد خطتك ({limit} نطاقاً) مكتمل. رقِّ الخطة أو احذف نطاقات لمراقبتها",
+        "de": "{domain}: {count} weitere aktive Hosts gefunden, aber Ihr Tariflimit von {limit} Domains ist erreicht. Upgraden oder Domains entfernen",
+    },
+    "ASSET_RETIRED": {
+        "en": "{domain}: removed from monitoring: no answer on {days} consecutive checks and no longer found live under {base}",
+        "ar": "{domain}: سُحب من المراقبة: لم يرد في {days} فحوص متتالية ولم يعد يظهر حياً تحت {base}",
+        "de": "{domain}: aus der Überwachung entfernt: {days} Prüfungen in Folge keine Antwort und unter {base} nicht mehr aktiv gefunden",
+    },
     "RECOVERED": {
         "en": "{domain}: reachable again, grade {new}",
         "ar": "{domain}: عاد يعمل، الدرجة {new}",

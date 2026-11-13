@@ -11,6 +11,7 @@ import free_alerts
 import audit
 import discovery
 import packs
+import assets
 import monitor_db
 
 SCHEMA = """
@@ -58,6 +59,7 @@ def connect(path: str) -> sqlite3.Connection:
     conn.execute("PRAGMA foreign_keys=ON")
     conn.executescript(SCHEMA)
     monitor_db.init(conn)
+    assets.init(conn)
     free_alerts.init(conn)
     discovery.init(conn)
     audit.init(conn)

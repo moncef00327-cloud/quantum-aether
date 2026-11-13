@@ -52,6 +52,42 @@
 </section>
 {% endif %}
 
+<section class="card no-print" id="assets">
+  <h2>{{ t.as_title }}</h2>
+  <p class="muted">{{ t.as_sub }}</p>
+  {% if seeds %}
+  <table class="data" dir="ltr">
+    <tr><th>{{ t.as_base }}</th><th>{{ t.as_owner }}</th><th>{{ t.as_last }}</th><th>{{ t.as_found }}</th><th></th></tr>
+    {% for s in seeds %}
+    <tr>
+      <td>{{ s.base }}</td>
+      <td>{% if s.verified_at %}<span class="ok">✓ {{ t.as_verified_by[s.verified_by] }}</span>{% else %}<span class="warn">{{ t.as_unverified }}</span>{% endif %}</td>
+      <td class="small">{% if s.last_status == "RUNNING" %}{{ t.as_running }}{% elif s.last_run_at %}{{ s.last_run_at }}{% if s.last_status == "FAILED" %} <span class="warn">✗</span>{% endif %}{% else %}—{% endif %}</td>
+      <td>{% if s.last_responding is not none %}{{ s.last_responding }} {{ t.as_live }} · {{ s.discovered }} {{ t.as_auto }}{% else %}—{% endif %}</td>
+      <td>
+        {% if s.verified_at %}
+        {% if live %}<form method="post" action="{{ url_for('site.monitor_discover_seed', token=token, seed_id=s.id, lang=lang) }}"><button type="submit" class="link-button">{{ t.as_discover }}</button></form>{% endif %}
+        {% else %}
+        <form method="post" action="{{ url_for('site.monitor_verify_seed', token=token, seed_id=s.id, lang=lang) }}"><button type="submit" class="link-button">{{ t.as_verify }}</button></form>
+        {% endif %}
+        <form method="post" action="{{ url_for('site.monitor_remove_seed', token=token, seed_id=s.id, lang=lang) }}"><button type="submit" class="link-button">{{ t.dash_remove }}</button></form>
+      </td>
+    </tr>
+    {% if not s.verified_at %}
+    <tr><td colspan="5" class="small">{{ t.as_txt_help }}<br><code>{{ s.txt_name }}</code> TXT <code>{{ s.txt_value }}</code></td></tr>
+    {% endif %}
+    {% endfor %}
+  </table>
+  {% endif %}
+  {% if live and seeds | length < seed_limit %}
+  <form method="post" action="{{ url_for('site.monitor_add_seed', token=token, lang=lang) }}" class="scan-form">
+    <label for="seed-base" class="muted">{{ t.as_add_label.format(n=seed_limit - seeds | length) }}</label>
+    <div class="scan-row"><input id="seed-base" name="base" type="text" dir="ltr" placeholder="company.com" required>
+      <button type="submit" data-ev="seed_add">{{ t.as_add }}</button></div>
+  </form>
+  {% endif %}
+</section>
+
 <section class="card">
   <h2>{{ t.dash_domains_title }}</h2>
   {% if domains %}
@@ -59,7 +95,7 @@
     <tr><th>{{ t.domain_col }}</th><th>{{ t.grade_col }}</th><th>{{ t.group_col }}</th><th>{{ t.dash_days_left }}</th><th>{{ t.dash_checked }}</th><th class="no-print"></th></tr>
     {% for d in domains %}
     <tr>
-      <td>{{ d.domain }}</td>
+      <td>{{ d.domain }}{% if d.source == "discovered" %} <span class="tag" title="{{ t.as_auto_title }}">{{ t.as_auto }}</span>{% endif %}</td>
       <td>{% if d.result and (d.result.key_exchange.hrr or d.result.key_exchange.error) %}<span class="warn">{{ sx.undetermined }}</span>{% elif d.grade %}<span class="grade-chip grade-{{ d.grade }}">{{ d.grade }}</span>{% else %}—{% endif %}</td>
       <td>{% if d.error %}<span class="warn">{{ d.error }}</span>{% elif d.result %}<code>{{ d.result.key_exchange.group or "?" }}</code>{% else %}<span class="muted">{{ t.dash_pending }}</span>{% endif %}</td>
       <td>{{ d.days_left if d.days_left is not none else "—" }}</td>
