@@ -415,3 +415,8 @@ nav#workspace-nav .nav-ext{font-size:13.5px}
 .sidefoot .side-gh{display:inline-flex;align-items:center;gap:6px;color:var(--qa-cyan);font-size:12px;min-height:32px}
 @media(hover:hover){.sidefoot .side-gh:hover{text-decoration:underline}}
 @media(min-width:851px) and (max-height:760px){aside .label{margin-top:12px}nav#workspace-nav :is(button,a){min-height:38px;padding-block:7px}.brand small{display:none}}
+
+/* 2026-11-13: keep the footer's last line clear of Safari's floating bottom bar; no colour seam under the page */
+html{background:#0b1324}
+main footer{padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))!important}
+@media(max-width:850px){main footer{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))!important}}
