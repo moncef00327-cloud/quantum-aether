@@ -42,6 +42,29 @@ def sync_subscriptions(conn, paypal, mailer=None, owner="", base_url="https://at
                                      f"PayPal status: {status}")
 
 
+def handle_trials(conn, mailer, owner="", base_url="https://ather-quantum.com", now=None):
+    """تذكير واحد قبل نهاية التجربة بثلاثة أيام، ثم إيقافها عند النهاية (النطاقات تبقى محفوظة)."""
+    now = now or dt.datetime.now(dt.timezone.utc)
+    for account in monitor_db.trial_accounts(conn):
+        login_url = f"{base_url}/monitoring?lang={account.get('lang') or 'en'}#login"
+        left = monitor.trial_days_left(account, now)
+        end = dt.datetime.strptime(account["trial_ends_at"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=dt.timezone.utc)
+        if end <= now:
+            monitor_db.set_status(conn, account["id"], "TRIAL_ENDED")
+            log.info("account %s: trial ended", account["id"])
+            if mailer is not None and mailer.enabled:
+                mailer.send(account["email"], *monitor.trial_ended_email(account, login_url))
+                monitor.notify_owner(mailer, owner, "Free trial ended", dict(account, status="TRIAL_ENDED"),
+                                     f"Domains: {', '.join(d['domain'] for d in monitor_db.list_domains(conn, account['id']))}")
+        elif left <= monitor.TRIAL_REMIND_DAYS and not account["trial_notice"]:
+            if mailer is not None and mailer.enabled and mailer.send(account["email"], *monitor.trial_reminder_email(account, left, login_url)):
+                monitor_db.mark_trial_notice(conn, account["id"])
+    cutoff = (now - dt.timedelta(days=monitor.TRIAL_RETENTION_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    purged = monitor_db.purge_ended_trials(conn, cutoff)
+    if purged:
+        log.info("deleted %d ended trials past retention", purged)
+
+
 def send_alerts(conn, account, mailer, base_url):
     alerts = monitor_db.unsent_alerts(conn, account["id"])
     if not alerts or not mailer.enabled:
@@ -60,7 +83,8 @@ def run(app):
     try:
         base_url = cfg["PUBLIC_URL"] or "https://ather-quantum.com"
         sync_subscriptions(conn, app.extensions["paypal"], app.extensions["mailer"], cfg["OWNER_EMAIL"], base_url)
-        accounts = conn.execute("SELECT * FROM monitor_accounts WHERE status = 'ACTIVE'").fetchall()
+        handle_trials(conn, app.extensions["mailer"], cfg["OWNER_EMAIL"], base_url)
+        accounts = conn.execute("SELECT * FROM monitor_accounts WHERE status IN ('ACTIVE', 'TRIAL')").fetchall()
         total_domains = total_alerts = 0
         for row in accounts:
             account = dict(row)

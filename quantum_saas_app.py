@@ -2031,6 +2031,84 @@ def monitoring():
                            currency=cfg["CURRENCY"], sent=request.args.get("sent"), domain=domain)
 
 
+TRIALS_PER_CLIENT_PER_DAY = 3
+
+
+def send_dashboard_link(conn, account):
+    """يدوّر رمز الحساب ويرسل رابط اللوحة الجديد بالبريد. الرابط لا يظهر في المتصفح أبداً."""
+    token = monitor_db.rotate_token(conn, account["id"])
+    url = dashboard_url(token, account["lang"])
+    if account["status"] in ("TRIAL", "TRIAL_ENDED"):
+        doms = monitor_db.list_domains(conn, account["id"])
+        subject, text = monitor.trial_welcome_email(account["lang"], doms[0]["domain"] if doms else account["email"].split("@")[-1], url)
+    else:
+        subject, text = monitor.welcome_email(account, url)
+    return current_app.extensions["mailer"].send(account["email"], subject, text)
+
+
+@bp.post("/monitoring/trial")
+def monitor_trial():
+    """تجربة مجانية 14 يوماً بلا دفع: البريد + نطاق الشركة. رابط اللوحة يصل بالبريد فقط (إثبات ملكية البريد)."""
+    email = (request.form.get("email") or "").strip().lower()[:254]
+    raw = request.form.get("domain") or ""
+    domain, state, status = None, "sent", 200
+    try:
+        domain = monitor.normalize(raw)
+    except quantum_vuln_scanner.ScanError:
+        pass
+    mailer = current_app.extensions["mailer"]
+    conn = db()
+    if not request.form.get("consent"):
+        state, status = "consent_missing", 400
+    elif not EMAIL_RE.match(email):
+        state, status = "bad_email", 400
+    elif not domain:
+        state, status = "bad_domain", 400
+    elif not mailer.enabled:
+        state, status = "unavailable", 503
+    elif monitor_db.has_account(conn, email):
+        # تجربة واحدة لكل بريد. الرد نفسه دائماً؛ صاحب الحساب يستلم رابطه من جديد.
+        for account in monitor_db.accounts_for_login(conn, email):
+            send_dashboard_link(conn, account)
+    else:
+        day_ago = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        if monitor_db.trials_by_client_since(conn, client_hash(), day_ago) >= TRIALS_PER_CLIENT_PER_DAY:
+            state, status = "rate_limited", 429
+        else:
+            ends = (dt.datetime.now(dt.timezone.utc) + dt.timedelta(days=monitor.TRIAL_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
+            account_id, _ = monitor_db.create_trial(conn, email, current_lang(), now_iso(), client_hash(), ends)
+            monitor_db.add_domain(conn, account_id, domain)
+            account = monitor_db.get_account(conn, account_id)
+            if send_dashboard_link(conn, account):
+                monitor.notify_owner(mailer, current_app.config["OWNER_EMAIL"], "New free trial", account,
+                                     f"Domain: {domain} · lang: {current_lang()}")
+            else:
+                with conn:  # لم يصل الرابط: لا نترك حساباً لا يستطيع صاحبه دخوله
+                    conn.execute("DELETE FROM monitor_domains WHERE account_id = ?", (account_id,))
+                    conn.execute("DELETE FROM monitor_accounts WHERE id = ?", (account_id,))
+                state, status = "unavailable", 503
+    return render_template("trial.html", state=state, email=email, domain=domain or raw), status
+
+
+@bp.post("/api/monitor/upgrade")
+def monitor_upgrade():
+    """من لوحة التجربة: يختار الخطة ويعيد معرّف الحساب نفسه ليُرفق باشتراك PayPal (النطاقات تبقى)."""
+    if not subscriptions_enabled():
+        return jsonify(error="subscriptions_disabled"), 503
+    data = json_object()
+    conn = db()
+    account = monitor_db.get_account_by_token(conn, str(data.get("token", "")))
+    if not account or account["status"] not in ("TRIAL", "TRIAL_ENDED"):
+        return jsonify(error="account_not_found"), 404
+    plan = str(data.get("plan", ""))
+    if plan not in monitor.PLANS:
+        return jsonify(error="invalid_plan"), 400
+    if data.get("consent") is not True:
+        return jsonify(error="consent_required"), 400
+    monitor_db.set_plan(conn, account["id"], plan, now_iso())
+    return jsonify(account_id=account["id"], plan_id=plan_ids()[plan])
+
+
 @bp.post("/api/monitor/signup")
 def monitor_signup():
     """الخطوة 1: ينشئ حساباً معلقاً ويعيد معرّفه ليُرفق بالاشتراك في PayPal (custom_id)."""
@@ -2068,7 +2146,12 @@ def monitor_activate():
     subscription_id = str(data.get("subscription_id", ""))
     if not account or not subscription_id:
         return jsonify(error="account_not_found"), 404
-    if account["status"] != "PENDING":
+    if account["status"] in ("TRIAL", "TRIAL_ENDED"):
+        # ترقية تجربة: تتطلب رمز لوحة الحساب نفسه، وإلا لأمكن لأي أحد يعرف المعرّف أن يستولي على اللوحة
+        owner = monitor_db.get_account_by_token(conn, str(data.get("token", "")))
+        if not owner or owner["id"] != account["id"]:
+            return jsonify(error="already_activated"), 409
+    elif account["status"] != "PENDING":
         return jsonify(error="already_activated"), 409
     try:
         subscription = paypal.get_subscription(subscription_id)
@@ -2090,8 +2173,9 @@ def monitor_activate():
     subject, text = monitor.welcome_email(account, url)
     mailer = current_app.extensions["mailer"]
     mailer.send(account["email"], subject, text)
-    monitor.notify_owner(mailer, current_app.config["OWNER_EMAIL"], "New subscription",
-                         dict(account, subscription_id=subscription_id))
+    upgraded = account["status"] in ("TRIAL", "TRIAL_ENDED")
+    monitor.notify_owner(mailer, current_app.config["OWNER_EMAIL"], "New subscription (from free trial)" if upgraded else "New subscription",
+                         dict(account, status="ACTIVE", subscription_id=subscription_id))
     return jsonify(dashboard_url=url)
 
 
@@ -2102,10 +2186,8 @@ def monitor_login():
     conn = db()
     # بلا بريد مفعّل لا نغيّر الرمز، وإلا فقد المشترك رابطه الحالي دون أن يصله بديل.
     if EMAIL_RE.match(email) and current_app.extensions["mailer"].enabled:
-        for account in monitor_db.active_accounts_by_email(conn, email):
-            token = monitor_db.rotate_token(conn, account["id"])
-            subject, text = monitor.welcome_email(account, dashboard_url(token, account["lang"]))
-            current_app.extensions["mailer"].send(email, subject, text)
+        for account in monitor_db.accounts_for_login(conn, email):
+            send_dashboard_link(conn, account)
     return redirect(url_for(".monitoring", lang=current_lang(), sent=1, _anchor="login"), code=303)
 
 
@@ -2117,9 +2199,16 @@ def monitor_dashboard(token):
     lang = current_lang()
     for a in alerts:
         a["text"] = monitor.alert_text(a, lang)
+    cfg = current_app.config
+    trial = account["status"] in ("TRIAL", "TRIAL_ENDED")
+    g.paypal_csp = trial and subscriptions_enabled()
     return render_template("monitor_dashboard.html", account=account, token=token,
                            domains=monitor_db.list_domains(conn, account["id"]), alerts=alerts,
-                           plan=monitor.PLANS[account["plan"]], notice=request.args.get("n"))
+                           plan=monitor.PLANS[account["plan"]], notice=request.args.get("n"),
+                           live=monitor.is_live(account), limit=monitor.domain_limit(account), trial=trial,
+                           trial_left=monitor.trial_days_left(account, dt.datetime.now(dt.timezone.utc)) if trial else None,
+                           plans=monitor.PLANS, plan_ids=plan_ids(), enabled=trial and subscriptions_enabled(),
+                           paypal_client_id=cfg["PAYPAL_CLIENT_ID"], currency=cfg["CURRENCY"])
 
 
 def _back(token, notice):
@@ -2129,10 +2218,10 @@ def _back(token, notice):
 @bp.post("/monitor/<token>/domains")
 def monitor_add_domains(token):
     account = account_or_404(token)
-    if account["status"] != "ACTIVE":
+    if not monitor.is_live(account):
         return _back(token, "inactive")
     conn = db()
-    limit = monitor.PLANS[account["plan"]]["domains"]
+    limit = monitor.domain_limit(account)
     raw = re.split(r"[\s,]+", request.form.get("domains", ""))
     added, notice = 0, "added"
     for item in filter(None, raw):
@@ -2158,7 +2247,7 @@ def monitor_remove_domain(token, domain_id):
 @bp.post("/monitor/<token>/scan")
 def monitor_scan_now(token):
     account = account_or_404(token)
-    if account["status"] != "ACTIVE":
+    if not monitor.is_live(account):
         return _back(token, "inactive")
     now = dt.datetime.now(dt.timezone.utc)
     last = account.get("last_manual_scan")
@@ -2864,8 +2953,14 @@ def _security_headers(response):
         response.headers["Cache-Control"] = "no-store"
         response.headers["Referrer-Policy"] = "no-referrer"
         response.headers["X-Robots-Tag"] = "noindex"
-        response.headers["Content-Security-Policy"] = ("default-src 'self'; img-src 'self' data:; "
-                                                       "frame-ancestors 'none'; base-uri 'none'; form-action 'self'")
+        csp = ("default-src 'self'; img-src 'self' data:; "
+               "frame-ancestors 'none'; base-uri 'none'; form-action 'self'")
+        if g.get("paypal_csp"):  # لوحة تجربة فيها أزرار اشتراك PayPal
+            csp = ("default-src 'self'; img-src 'self' data: https://*.paypal.com https://*.paypalobjects.com; "
+                   "script-src 'self' https://www.paypal.com https://*.paypal.com https://*.paypalobjects.com; "
+                   "frame-src https://*.paypal.com; connect-src 'self' https://*.paypal.com; style-src 'self' 'unsafe-inline'; "
+                   "frame-ancestors 'none'; base-uri 'none'; form-action 'self'")
+        response.headers["Content-Security-Policy"] = csp
     return response
 
 

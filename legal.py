@@ -77,6 +77,7 @@ PAGES = {
 
 <h2>8. Überwachungs-Abonnement</h2>
 <p>Für ein Abonnement speichern wir Ihre E-Mail-Adresse, den Tarif, die PayPal-Abonnement-ID, die von Ihnen eingetragenen Domains, deren Prüfergebnisse und Benachrichtigungen. Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO. Die Daten werden nach Vertragsende gelöscht, soweit keine gesetzlichen Aufbewahrungspflichten bestehen (Buchhaltungsunterlagen: 7 Jahre gemäß § 132 BAO).</p>
+<p>Kostenloser Überwachungstest: Wir speichern Ihre E-Mail-Adresse, die eingetragenen Domains, deren Prüfergebnisse und Benachrichtigungen sowie einen gesalzenen Hash Ihrer Verbindung zur Missbrauchsbegrenzung. Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO (Bereitstellung des angeforderten Tests). Folgt kein Abonnement, werden alle diese Daten 90 Tage nach Testende gelöscht.</p>
 <p>Kostenlose Änderungsbenachrichtigung: Wenn Sie auf einer Ergebnisseite „Benachrichtigen“ wählen, speichern wir Ihre E-Mail-Adresse und die Domain, um diese wöchentlich zu prüfen und Sie bei Änderungen zu informieren. Rechtsgrundlage: Ihre Einwilligung (Art. 6 Abs. 1 lit. a DSGVO), bestätigt per Link (Double-Opt-in). Unbestätigte Anfragen löschen wir nach 7 Tagen. Sie können die Einwilligung jederzeit über den Link in jeder E-Mail widerrufen; Ihre Adresse wird dann sofort gelöscht.</p>
 
 <h2>9. E-Mail-Versand</h2>
@@ -117,6 +118,7 @@ PAGES = {
 
 <h2>8. Monitoring subscription</h2>
 <p>For a subscription we store your email address, plan, PayPal subscription ID, the domains you add, their scan results and alerts. Legal basis: Art. 6(1)(b) GDPR. The data are deleted after the contract ends unless statutory retention applies (accounting records: 7 years under § 132 BAO).</p>
+<p>Free monitoring trial: we store your email address, the domains you add, their scan results and alerts, and a salted hash of your connection to limit abuse. Legal basis: Art. 6(1)(b) GDPR (providing the trial you requested). If no subscription follows, all of these data are deleted 90 days after the trial ends.</p>
 <p>Free change alert: if you choose "Notify me" on a result page, we store your email address and the domain to check it weekly and tell you about changes. Legal basis: your consent (Art. 6(1)(a) GDPR), confirmed by a link (double opt-in). Unconfirmed requests are deleted after 7 days. You can withdraw consent at any time with the link in every email; your address is then deleted immediately.</p>
 
 <h2>9. Email delivery</h2>
@@ -154,6 +156,7 @@ PAGES = {
 
 <h2>5. Laufzeit und Kündigung des Abonnements</h2>
 <p>Das Abonnement läuft auf unbestimmte Zeit und wird monatlich im Voraus abgerechnet. Es kann jederzeit im Kunden-Dashboard oder im PayPal-Konto gekündigt werden; die Überwachung endet mit der Kündigung, weitere Abbuchungen erfolgen nicht.</p>
+<p>Kostenloser Test: Die Überwachung kann 14 Tage kostenlos für bis zu 10 Domains getestet werden, einmal pro E-Mail-Adresse. Der Test ist unentgeltlich, erfordert keine Zahlungsdaten und endet automatisch; er geht nicht in ein kostenpflichtiges Abonnement über. Ein Abonnement entsteht nur, wenn Sie es ausdrücklich im Dashboard abschließen.</p>
 
 <h2>6. Rücktrittsrecht für Verbraucher</h2>
 <p>Verbraucher im Sinne des KSchG können von einem im Fernabsatz geschlossenen Vertrag binnen 14 Tagen ab Vertragsschluss ohne Angabe von Gründen zurücktreten (§ 11 FAGG). Die Erklärung ist an {EMAIL} zu richten. Beim <strong>vollständigen Bericht</strong> (digitaler Inhalt) erlischt das Rücktrittsrecht, wenn der Verbraucher vor der Zahlung ausdrücklich zugestimmt hat, dass der Bericht sofort bereitgestellt wird, und zur Kenntnis genommen hat, dass er dadurch sein Rücktrittsrecht verliert (§ 18 Abs. 1 Z 11 FAGG); diese Zustimmung wird beim Kauf durch ein Ankreuzfeld eingeholt und gespeichert. Beim <strong>Agenturpaket</strong> gilt dies für jeden bereits erstellten Bericht; vom Kauf noch nicht genutzter Berichte kann der Verbraucher binnen 14 Tagen zurücktreten und erhält den anteiligen Preis (19,90 USD je nicht genutztem Bericht) zurück. Beim <strong>Abonnement</strong> beginnt die Überwachung auf ausdrücklichen Wunsch des Verbrauchers sofort; bei einem Rücktritt innerhalb der Frist ist für die bis dahin erbrachten Leistungen ein anteiliges Entgelt zu zahlen (§ 16 FAGG).</p>
@@ -197,6 +200,7 @@ PAGES = {
 
 <h2>5. Term and cancellation of the subscription</h2>
 <p>The subscription runs for an indefinite period and is billed monthly in advance. It can be cancelled at any time in the customer dashboard or in the PayPal account; monitoring ends with the cancellation and no further charges are made.</p>
+<p>Free trial: monitoring can be tried free of charge for 14 days for up to 10 domains, once per email address. The trial is free, needs no payment details and ends automatically; it does not turn into a paid subscription. A subscription only starts if you expressly take one out in the dashboard.</p>
 
 <h2>6. Right of withdrawal for consumers</h2>
 <p>Consumers within the meaning of the Austrian Consumer Protection Act may withdraw from a distance contract within 14 days of its conclusion without giving reasons (§ 11 FAGG). The withdrawal must be sent to {EMAIL}. For the <strong>full report</strong> (digital content), the right of withdrawal expires if, before paying, the consumer expressly agreed that the report is delivered immediately and acknowledged losing the right of withdrawal (§ 18(1)(11) FAGG); this consent is collected with a checkbox at purchase and stored. For the <strong>agency pack</strong> this applies to every report already generated; the consumer may withdraw from unused reports within 14 days and receives the proportionate price back (USD 19.90 per unused report). For the <strong>subscription</strong>, monitoring starts immediately at the consumer's express request; on withdrawal within the period a proportionate amount is payable for the services provided until then (§ 16 FAGG).</p>

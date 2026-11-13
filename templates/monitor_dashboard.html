@@ -5,16 +5,43 @@
 <section class="card">
   <h1>{{ t.dash_title }}</h1>
   <table class="kv">
-    <tr><th>{{ t.dash_plan }}</th><td>{{ plan.name }} · ${{ plan.price | replace(".00", "") }} {{ t.mon_per_month }}</td></tr>
+    <tr><th>{{ t.dash_plan }}</th><td>{% if trial %}{{ t.dash_trial_plan }}{% else %}{{ plan.name }} · ${{ plan.price | replace(".00", "") }} {{ t.mon_per_month }}{% endif %}</td></tr>
     <tr><th>{{ t.dash_status }}</th><td>{{ t.dash_status_names.get(account.status, account.status) }}</td></tr>
-    <tr><th>{{ t.dash_used }}</th><td dir="ltr">{{ domains | length }} / {{ plan.domains }}</td></tr>
+    <tr><th>{{ t.dash_used }}</th><td dir="ltr">{{ domains | length }} / {{ limit }}</td></tr>
     <tr><th>Email</th><td dir="ltr">{{ account.email }}</td></tr>
   </table>
   <p class="muted small no-print">{{ t.dash_keep_private }}</p>
   {% if notice %}<p class="notice no-print" role="status">{{ t.dash_notices.get(notice, "") }}</p>{% endif %}
 </section>
 
-{% if account.status == "ACTIVE" %}
+{% if trial %}
+<section class="card highlight no-print" id="subscribe" data-token="{{ token }}">
+  {% if account.status == "TRIAL" %}
+  <p class="notice"><strong>{{ t.dash_trial_left.format(n=trial_left) }}</strong></p>
+  {% else %}
+  <p class="notice"><strong>{{ t.dash_trial_ended }}</strong></p>
+  {% endif %}
+  <h2>{{ t.dash_upgrade_title }}</h2>
+  {% if enabled %}
+  <p class="consent"><label><input type="checkbox" id="consent">
+    <span>{{ t.consent_subscription }} (<a href="{{ url_for('site.legal_page', slug='agb', lang=legal_lang) }}" target="_blank">{{ t.legal_terms }}</a>)</span></label></p>
+  <div class="grid-2">
+    {% for name, p in plans.items() %}
+    <div class="price-box{% if name == 'business' %} highlight{% endif %}">
+      <h3>{{ p.name }} <span class="tag">${{ p.price | replace(".00", "") }}</span> <span class="muted small">{{ t.mon_per_month }}</span></h3>
+      <p>{{ t.mon_domains.format(n=p.domains) }}</p>
+      <div class="paypal-sub" data-plan="{{ name }}"></div>
+    </div>
+    {% endfor %}
+  </div>
+  <p id="sub-message" class="form-error" role="status" data-msg-error="{{ t.mon_error }}" data-msg-consent="{{ t.consent_missing }}"></p>
+  {% else %}
+  <p class="notice">{{ t.mon_disabled }}</p>
+  {% endif %}
+</section>
+{% endif %}
+
+{% if live %}
 <section class="card no-print">
   <h2>{{ t.dash_add_title }}</h2>
   <form method="post" action="{{ url_for('site.monitor_add_domains', token=token, lang=lang) }}">
@@ -45,7 +72,7 @@
     </tr>
     {% endfor %}
   </table>
-  {% if account.status == "ACTIVE" %}
+  {% if live %}
   <form method="post" action="{{ url_for('site.monitor_scan_now', token=token, lang=lang) }}" class="no-print">
     <p><button type="submit">{{ t.dash_scan_now }}</button></p>
   </form>
@@ -72,4 +99,8 @@
   {% endif %}
 </section>
 {% endblock %}
-{% block scripts %}<script src="{{ url_for('static', filename='dashboard.js') }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+{% if enabled %}
+<script src="https://www.paypal.com/sdk/js?client-id={{ paypal_client_id | urlencode }}&vault=true&intent=subscription&currency={{ currency }}"></script>
+<script src="{{ url_for('static', filename='subscribe.js') }}"></script>
+{% endif %}{% endblock %}

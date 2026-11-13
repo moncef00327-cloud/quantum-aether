@@ -11,7 +11,24 @@
   <ul class="ticks">{% for item in t.mon_features %}<li>{{ item }}</li>{% endfor %}</ul>
 </section>
 
+<section class="card highlight" id="trial">
+  <h2>{{ t.trial_card_title }}</h2>
+  <p>{{ t.trial_card_sub }}</p>
+  <form method="post" action="{{ url_for('site.monitor_trial', lang=lang) }}" class="scan-form">
+    <label for="trial-domain">{{ t.trial_domain_label }}</label>
+    <div class="scan-row"><input id="trial-domain" name="domain" type="text" dir="ltr" required value="{{ domain or '' }}" placeholder="company.com" autocomplete="url"></div>
+    <label for="trial-email">{{ t.trial_email_label }}</label>
+    <div class="scan-row">
+      <input id="trial-email" name="email" type="email" autocomplete="email" dir="ltr" required placeholder="security@{{ domain or 'company.com' }}">
+      <button type="submit" data-ev="trial_start">{{ t.trial_button }}</button>
+    </div>
+    <p class="consent"><label><input type="checkbox" name="consent" value="1" required>
+      <span>{{ t.trial_consent }} (<a href="{{ url_for('site.legal_page', slug='agb', lang=legal_lang) }}" target="_blank">{{ t.legal_terms }}</a> · <a href="{{ url_for('site.legal_page', slug='datenschutz', lang=legal_lang) }}" target="_blank">{{ t.legal_privacy }}</a>)</span></label></p>
+  </form>
+</section>
+
 <section class="card" id="subscribe" data-domain="{{ domain or '' }}">
+  <h2>{{ t.trial_or_subscribe }}</h2>
   {% if domain %}<p class="notice"><strong>{{ t.mon_domain_banner.format(domain=domain) }}</strong></p>{% endif %}
   {% if enabled %}
   <label for="sub-email">{{ t.mon_email_label }}</label>

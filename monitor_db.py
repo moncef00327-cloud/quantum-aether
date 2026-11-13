@@ -10,11 +10,14 @@ CREATE TABLE IF NOT EXISTS monitor_accounts (
     id               TEXT PRIMARY KEY,
     email            TEXT NOT NULL,
     plan             TEXT NOT NULL,
-    status           TEXT NOT NULL,               -- PENDING, ACTIVE, CANCELLED, SUSPENDED, EXPIRED
+    status           TEXT NOT NULL,               -- PENDING, TRIAL, TRIAL_ENDED, ACTIVE, CANCELLED, SUSPENDED, EXPIRED
     subscription_id  TEXT UNIQUE,
     token_hash       TEXT NOT NULL UNIQUE,        -- رابط لوحة التحكم السري؛ نحفظ بصمته فقط
     lang             TEXT NOT NULL DEFAULT 'en',
     last_manual_scan TEXT,
+    trial_ends_at    TEXT,                        -- نهاية التجربة المجانية (حسابات TRIAL فقط)
+    trial_notice     INTEGER NOT NULL DEFAULT 0,  -- 1 = أُرسل تذكير اقتراب النهاية
+    client_hash      TEXT,                        -- بصمة الاتصال الذي طلب التجربة (حد الطلبات)
     created_at       TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
     updated_at       TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
@@ -47,7 +50,17 @@ CREATE INDEX IF NOT EXISTS monitor_alerts_account ON monitor_alerts (account_id,
 """
 
 
+TRIAL_COLUMNS = (("trial_ends_at", "TEXT"), ("trial_notice", "INTEGER NOT NULL DEFAULT 0"), ("client_hash", "TEXT"))
+
+
 def init(conn):
+    # قواعد أقدم من التجربة المجانية: نضيف أعمدتها قبل أي شيء آخر
+    if conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='monitor_accounts'").fetchone():
+        cols = {r[1] for r in conn.execute("PRAGMA table_info(monitor_accounts)")}
+        with conn:
+            for name, decl in TRIAL_COLUMNS:
+                if name not in cols:
+                    conn.execute(f"ALTER TABLE monitor_accounts ADD COLUMN {name} {decl}")
     conn.executescript(SCHEMA)
 
 
@@ -63,6 +76,60 @@ def create_account(conn, email, plan, lang, consent_at=None):
         conn.execute("INSERT INTO monitor_accounts (id, email, plan, status, token_hash, lang, consent_at)"
                      " VALUES (?, ?, ?, 'PENDING', ?, ?, ?)", (account_id, email, plan, hash_token(token), lang, consent_at))
     return account_id, token
+
+
+def create_trial(conn, email, lang, consent_at, client_hash, trial_ends_at, plan="starter"):
+    """حساب تجربة مجانية بلا دفع. الرمز السري يُرسل بالبريد فقط (إثبات أن البريد لصاحبه)."""
+    account_id, token = "acc_" + secrets.token_urlsafe(12), secrets.token_urlsafe(32)
+    with conn:
+        conn.execute("INSERT INTO monitor_accounts (id, email, plan, status, token_hash, lang, consent_at, client_hash, trial_ends_at)"
+                     " VALUES (?, ?, ?, 'TRIAL', ?, ?, ?, ?, ?)",
+                     (account_id, email, plan, hash_token(token), lang, consent_at, client_hash, trial_ends_at))
+    return account_id, token
+
+
+def trials_by_client_since(conn, client_hash, since):
+    return conn.execute("SELECT COUNT(*) FROM monitor_accounts WHERE client_hash = ? AND created_at >= ?",
+                        (client_hash, since)).fetchone()[0]
+
+
+def accounts_for_login(conn, email):
+    """من يحق له استلام رابط لوحة التحكم: المشترك الفعّال، ومن في التجربة أو انتهت تجربته (ليشترك من اللوحة)."""
+    rows = conn.execute("SELECT * FROM monitor_accounts WHERE email = ? AND status IN ('ACTIVE', 'TRIAL', 'TRIAL_ENDED')",
+                        (email,)).fetchall()
+    return [dict(r) for r in rows]
+
+
+def has_account(conn, email):
+    """أي حساب سابق بهذا البريد غير المعلّق (تجربة واحدة لكل بريد)."""
+    return conn.execute("SELECT 1 FROM monitor_accounts WHERE email = ? AND status != 'PENDING' LIMIT 1", (email,)).fetchone() is not None
+
+
+def trial_accounts(conn):
+    return [dict(r) for r in conn.execute("SELECT * FROM monitor_accounts WHERE status = 'TRIAL'").fetchall()]
+
+
+def purge_ended_trials(conn, before_iso):
+    """يحذف بيانات التجارب المنتهية بلا اشتراك بعد مدة الاحتفاظ (سياسة الخصوصية: 90 يوماً)."""
+    ids = [r[0] for r in conn.execute("SELECT id FROM monitor_accounts WHERE status = 'TRIAL_ENDED' AND updated_at < ?",
+                                      (before_iso,)).fetchall()]
+    with conn:
+        for account_id in ids:
+            conn.execute("DELETE FROM monitor_alerts WHERE account_id = ?", (account_id,))
+            conn.execute("DELETE FROM monitor_domains WHERE account_id = ?", (account_id,))
+            conn.execute("DELETE FROM monitor_accounts WHERE id = ?", (account_id,))
+    return len(ids)
+
+
+def mark_trial_notice(conn, account_id):
+    with conn:
+        conn.execute("UPDATE monitor_accounts SET trial_notice = 1 WHERE id = ?", (account_id,))
+
+
+def set_plan(conn, account_id, plan, consent_at):
+    with conn:
+        conn.execute("UPDATE monitor_accounts SET plan = ?, consent_at = ?, updated_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now')"
+                     " WHERE id = ?", (plan, consent_at, account_id))
 
 
 def rotate_token(conn, account_id):
@@ -176,7 +243,10 @@ def stats(conn, plans):
     active = {r["plan"]: r["n"] for r in rows}
     mrr = sum(float(plans[p]["price"]) * n for p, n in active.items() if p in plans)
     cancelled = conn.execute("SELECT COUNT(*) FROM monitor_accounts WHERE status IN ('CANCELLED', 'SUSPENDED', 'EXPIRED')").fetchone()[0]
-    return {"active": active, "active_total": sum(active.values()), "mrr": f"{mrr:.2f}", "churned": cancelled}
+    trials = conn.execute("SELECT COUNT(*) FROM monitor_accounts WHERE status = 'TRIAL'").fetchone()[0]
+    trials_ended = conn.execute("SELECT COUNT(*) FROM monitor_accounts WHERE status = 'TRIAL_ENDED'").fetchone()[0]
+    return {"active": active, "active_total": sum(active.values()), "mrr": f"{mrr:.2f}", "churned": cancelled,
+            "trials": trials, "trials_ended": trials_ended}
 
 
 def recent_accounts(conn, limit=50):

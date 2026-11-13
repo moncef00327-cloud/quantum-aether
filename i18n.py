@@ -1807,3 +1807,92 @@ TEXTS["de"].update({
     "exec_brief_cta": "Management-Risikobericht für CISO / Vorstand erstellen (PDF druckbar) →",
     "exec_brief_title": "Management-Risikobericht Post-Quanten-TLS: {domain}",
 })
+
+# ---------------------------------------------------------------- تجربة المراقبة المجانية للشركات (14 يوماً)
+DE_ENDPOINTS.add("site.monitor_trial")
+TEXTS["en"].update({
+    "mon_shield_cta": "Monitor {domain} and its subdomains daily, free for 14 days, no card →",
+    "disc_monitor_cta": "Monitor {base} and its subdomains daily, free for 14 days, no card →",
+    "trial_card_title": "Try it for your company: 14 days free",
+    "trial_card_sub": "No payment and no card. Enter your company domain and work email; we email you the dashboard link, scan up to 10 domains daily and alert you the moment anything regresses. When the trial ends, monitoring simply stops unless you subscribe.",
+    "trial_domain_label": "Company domain",
+    "trial_email_label": "Work email (the dashboard link is sent here)",
+    "trial_button": "Start free trial",
+    "trial_consent": "I agree to the Terms and the Privacy Policy",
+    "trial_or_subscribe": "Or subscribe right away",
+    "trial_title": "Free monitoring trial",
+    "trial_states": {
+        "sent": "Check your inbox: we sent the dashboard link for {domain} to {email}. Monitoring starts with the next daily scan, or press \"Scan all now\" in the dashboard.",
+        "consent_missing": "Please tick the box to accept the Terms and the Privacy Policy.",
+        "bad_email": "Please enter a valid email address.",
+        "bad_domain": "\"{domain}\" is not a valid domain. Enter something like company.com.",
+        "unavailable": "We can't send email right now, so the trial can't start. Please try again later or reply to any of our emails.",
+        "rate_limited": "Too many trial requests from this connection today. Please try again tomorrow.",
+    },
+    "trial_back": "← Back",
+    "trial_spam_hint": "Nothing after a few minutes? Check the spam folder. The link is the key to the account, so we never show it in the browser.",
+    "dash_trial_plan": "Free trial (up to 10 domains)",
+    "dash_trial_left": "Free trial: {n} days left. Subscribe below to keep monitoring without a gap; your domains and alerts stay.",
+    "dash_trial_ended": "Your free trial has ended and daily scanning is paused. Your domains are saved: subscribe below to resume.",
+    "dash_upgrade_title": "Keep monitoring",
+})
+TEXTS["en"]["dash_status_names"] = dict(TEXTS["en"]["dash_status_names"], TRIAL="Free trial", TRIAL_ENDED="Trial ended")
+
+TEXTS["ar"].update({
+    "mon_shield_cta": "راقب {domain} ونطاقاته الفرعية يومياً، مجاناً لمدة 14 يوماً وبلا بطاقة ←",
+    "disc_monitor_cta": "راقب {base} ونطاقاته الفرعية يومياً، مجاناً لمدة 14 يوماً وبلا بطاقة ←",
+    "trial_card_title": "جرّبها لشركتك: 14 يوماً مجاناً",
+    "trial_card_sub": "بلا دفع ولا بطاقة. اكتب نطاق شركتك وبريد العمل؛ نرسل لك رابط لوحة التحكم، ونفحص حتى 10 نطاقات يومياً، وننبّهك فور أي تراجع. عند نهاية التجربة تتوقف المراقبة ببساطة ما لم تشترك.",
+    "trial_domain_label": "نطاق الشركة",
+    "trial_email_label": "بريد العمل (يصل إليه رابط لوحة التحكم)",
+    "trial_button": "ابدأ التجربة المجانية",
+    "trial_consent": "أوافق على الشروط وسياسة الخصوصية",
+    "trial_or_subscribe": "أو اشترك مباشرة",
+    "trial_title": "تجربة المراقبة المجانية",
+    "trial_states": {
+        "sent": "افحص بريدك: أرسلنا رابط لوحة التحكم لـ {domain} إلى {email}. تبدأ المراقبة مع الفحص اليومي التالي، أو اضغط «افحص الكل الآن» في اللوحة.",
+        "consent_missing": "ضع علامة الموافقة على الشروط وسياسة الخصوصية.",
+        "bad_email": "اكتب بريداً صحيحاً.",
+        "bad_domain": "«{domain}» ليس نطاقاً صالحاً. اكتب شيئاً مثل company.com.",
+        "unavailable": "لا نستطيع إرسال البريد الآن، فلا يمكن بدء التجربة. حاول لاحقاً.",
+        "rate_limited": "طلبات تجربة كثيرة من هذا الاتصال اليوم. حاول غداً.",
+    },
+    "trial_back": "رجوع →",
+    "trial_spam_hint": "لم يصل شيء بعد دقائق؟ افحص مجلد الرسائل غير المرغوبة. الرابط هو مفتاح الحساب، لذلك لا نعرضه في المتصفح.",
+    "dash_trial_plan": "تجربة مجانية (حتى 10 نطاقات)",
+    "dash_trial_left": "التجربة المجانية: بقي {n} يوماً. اشترك أدناه لتستمر المراقبة بلا انقطاع؛ نطاقاتك وتنبيهاتك تبقى.",
+    "dash_trial_ended": "انتهت تجربتك المجانية وتوقف الفحص اليومي. نطاقاتك محفوظة: اشترك أدناه لاستئناف المراقبة.",
+    "dash_upgrade_title": "استمر في المراقبة",
+})
+TEXTS["ar"]["dash_status_names"] = dict(TEXTS["ar"]["dash_status_names"], TRIAL="تجربة مجانية", TRIAL_ENDED="انتهت التجربة")
+
+TEXTS["de"].update({
+    "mon_shield_cta": "Überwachen Sie {domain} und seine Subdomains täglich, 14 Tage kostenlos, ohne Karte →",
+    "disc_monitor_cta": "Überwachen Sie {base} und seine Subdomains täglich, 14 Tage kostenlos, ohne Karte →",
+    "trial_card_title": "Für Ihr Unternehmen testen: 14 Tage kostenlos",
+    "trial_card_sub": "Keine Zahlung, keine Karte. Geben Sie Ihre Unternehmensdomain und Ihre geschäftliche E-Mail-Adresse ein; wir senden Ihnen den Dashboard-Link, prüfen bis zu 10 Domains täglich und warnen Sie sofort bei jedem Rückschritt. Nach dem Test endet die Überwachung einfach, sofern Sie nicht abonnieren.",
+    "trial_domain_label": "Unternehmensdomain",
+    "trial_email_label": "Geschäftliche E-Mail (dorthin senden wir den Dashboard-Link)",
+    "trial_button": "Kostenlosen Test starten",
+    "trial_consent": "Ich stimme den AGB und der Datenschutzerklärung zu",
+    "trial_or_subscribe": "Oder direkt abonnieren",
+    "trial_title": "Kostenloser Überwachungstest",
+    "trial_states": {
+        "sent": "Bitte prüfen Sie Ihr Postfach: Wir haben den Dashboard-Link für {domain} an {email} gesendet. Die Überwachung beginnt mit der nächsten täglichen Prüfung, oder klicken Sie im Dashboard auf „Alle jetzt prüfen“.",
+        "consent_missing": "Bitte bestätigen Sie die AGB und die Datenschutzerklärung.",
+        "bad_email": "Bitte geben Sie eine gültige E-Mail-Adresse ein.",
+        "bad_domain": "„{domain}“ ist keine gültige Domain. Geben Sie z. B. company.com ein.",
+        "unavailable": "Wir können gerade keine E-Mails senden, daher kann der Test nicht starten. Bitte versuchen Sie es später erneut.",
+        "rate_limited": "Zu viele Testanfragen von dieser Verbindung heute. Bitte versuchen Sie es morgen erneut.",
+    },
+    "trial_back": "← Zurück",
+    "trial_spam_hint": "Nach einigen Minuten nichts erhalten? Bitte prüfen Sie den Spam-Ordner. Der Link ist der Schlüssel zum Konto, daher zeigen wir ihn nie im Browser.",
+    "dash_trial_plan": "Kostenloser Test (bis zu 10 Domains)",
+    "dash_trial_left": "Kostenloser Test: noch {n} Tage. Abonnieren Sie unten, damit die Überwachung lückenlos weiterläuft; Domains und Warnungen bleiben erhalten.",
+    "dash_trial_ended": "Ihr kostenloser Test ist beendet und die tägliche Prüfung pausiert. Ihre Domains sind gespeichert: Abonnieren Sie unten, um fortzufahren.",
+    "dash_upgrade_title": "Überwachung fortsetzen",
+})
+TEXTS["de"]["dash_status_names"] = dict(TEXTS["de"].get("dash_status_names", TEXTS["en"]["dash_status_names"]), TRIAL="Kostenloser Test", TRIAL_ENDED="Test beendet")
+TEXTS["en"].update({"admin_trials": "Free trials (running)", "admin_trials_ended": "ended without subscribing"})
+TEXTS["ar"].update({"admin_trials": "تجارب مجانية جارية", "admin_trials_ended": "انتهت بلا اشتراك"})
+TEXTS["de"].update({"admin_trials": "Kostenlose Tests (laufend)", "admin_trials_ended": "ohne Abo beendet"})

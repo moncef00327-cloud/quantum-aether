@@ -82,6 +82,8 @@
     <p class="muted small" dir="ltr">{% for plan, n in subs.active.items() %}{{ plan }}: {{ n }} {% endfor %}</p></div>
   <div class="card stat"><h3>{{ t.admin_mrr }}</h3><p class="value ok" dir="ltr">${{ subs.mrr }}</p></div>
   <div class="card stat"><h3>{{ t.admin_churned }}</h3><p class="value">{{ subs.churned }}</p></div>
+  <div class="card stat"><h3>{{ t.admin_trials }}</h3><p class="value">{{ subs.trials }}</p>
+    <p class="muted small">{{ t.admin_trials_ended }}: {{ subs.trials_ended }}</p></div>
 </section>
 
 <section class="card">

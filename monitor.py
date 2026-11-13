@@ -1,6 +1,7 @@
 # monitor.py
 # منطق المراقبة الشهرية: الخطط، فحص نطاقات الحساب، اكتشاف التغيرات، ونصوص التنبيهات والرسائل.
 import concurrent.futures as cf
+import datetime as dt
 import logging
 import adoption
 
@@ -13,6 +14,29 @@ PLANS = {
     "starter": {"price": "29.00", "domains": 10, "env": "PAYPAL_PLAN_STARTER", "name": "Starter"},
     "business": {"price": "99.00", "domains": 100, "env": "PAYPAL_PLAN_BUSINESS", "name": "Business"},
 }
+
+TRIAL_DAYS = 14          # تجربة مجانية للشركات بلا دفع
+TRIAL_DOMAINS = 10       # حد النطاقات أثناء التجربة مهما كانت الخطة المختارة لاحقاً
+TRIAL_REMIND_DAYS = 3    # تذكير واحد قبل النهاية بهذه المدة
+TRIAL_RETENTION_DAYS = 90  # بعدها تُحذف بيانات التجربة المنتهية بلا اشتراك (سياسة الخصوصية)
+LIVE_STATUSES = ("ACTIVE", "TRIAL")  # الحسابات التي نفحص نطاقاتها ويمكنها الإضافة والفحص اليدوي
+
+
+def is_live(account):
+    return account["status"] in LIVE_STATUSES
+
+
+def domain_limit(account):
+    return TRIAL_DOMAINS if account["status"] == "TRIAL" else PLANS[account["plan"]]["domains"]
+
+
+def trial_days_left(account, now):
+    """أيام التجربة المتبقية (تقريب للأعلى، لا تقل عن صفر)."""
+    if not account.get("trial_ends_at"):
+        return None
+    end = dt.datetime.strptime(account["trial_ends_at"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=dt.timezone.utc)
+    return max(0, -(-(end - now) // dt.timedelta(days=1)))
+
 
 CERT_WARN_DAYS = (14, 3)  # ننبّه مرة عند عبور كل حد
 
@@ -194,6 +218,76 @@ def welcome_email(account, dashboard_url):
     return bodies[lang]
 
 
+def trial_welcome_email(lang, domain, dashboard_url):
+    """رابط لوحة التجربة: يصل بالبريد فقط."""
+    bodies = {
+        "ar": ("الأثير الكمومي: بدأت تجربتكم المجانية لمراقبة {d}",
+               "بدأت تجربتكم المجانية لمدة {days} يوماً لمراقبة {d}.\n\n"
+               "لوحة التحكم (هذا الرابط هو مفتاح الحساب؛ شاركوه مع فريقكم التقني فقط):\n{url}\n\n"
+               "أضيفوا حتى {n} نطاقات (الموقع، الـ API، البريد، بوابة العملاء...). نفحصها يومياً ونراسلكم فور أي تراجع: "
+               "فقدان التبادل المقاوم للكم، أو انخفاض الدرجة، أو اقتراب انتهاء شهادة.\n\n"
+               "لا دفع ولا بطاقة. عند نهاية التجربة تتوقف المراقبة ما لم تشتركوا من اللوحة نفسها، وتبقى نطاقاتكم محفوظة.\n"
+               "لأي سؤال، ردّوا على هذه الرسالة."),
+        "de": ("Quantum Aether: Ihr kostenloser Test für {d} hat begonnen",
+               "Ihr kostenloser {days}-Tage-Test für die Überwachung von {d} hat begonnen.\n\n"
+               "Dashboard (dieser Link ist der Schlüssel zum Konto; nur mit Ihrem Technikteam teilen):\n{url}\n\n"
+               "Fügen Sie bis zu {n} Domains hinzu (Website, API, Mail, Kundenportal ...). Wir prüfen sie täglich und melden jeden Rückschritt sofort: "
+               "Wegfall des quantenresistenten Schlüsselaustauschs, schlechtere Note oder ablaufendes Zertifikat.\n\n"
+               "Keine Zahlung, keine Karte. Nach dem Test endet die Überwachung, sofern Sie nicht im Dashboard abonnieren; Ihre Domains bleiben gespeichert.\n"
+               "Bei Fragen antworten Sie einfach auf diese E-Mail."),
+        "en": ("Quantum Aether: your free trial for {d} has started",
+               "Your free {days}-day monitoring trial for {d} has started.\n\n"
+               "Dashboard (this link is the key to the account; share it only with your technical team):\n{url}\n\n"
+               "Add up to {n} domains (website, API, mail, customer portal...). We scan them daily and email you the moment anything regresses: "
+               "post-quantum key exchange lost, a lower grade, or a certificate nearing expiry.\n\n"
+               "No payment, no card. When the trial ends, monitoring stops unless you subscribe from the same dashboard; your domains stay saved.\n"
+               "Any questions, just reply to this email."),
+    }
+    subject, body = bodies[lang if lang in bodies else "en"]
+    return subject.format(d=domain), body.format(d=domain, url=dashboard_url, days=TRIAL_DAYS, n=TRIAL_DOMAINS)
+
+
+def trial_reminder_email(account, days_left, login_url):
+    bodies = {
+        "ar": ("الأثير الكمومي: تنتهي تجربتكم المجانية خلال {k} أيام",
+               "تنتهي تجربة المراقبة المجانية خلال {k} أيام. بعدها نتوقف عن فحص نطاقاتكم يومياً ولن تصلكم تنبيهات التراجع.\n\n"
+               "للاستمرار، افتحوا لوحة التحكم واختاروا خطة (Starter بـ 29$ أو Business بـ 99$ شهرياً). "
+               "نطاقاتكم وسجلّ التنبيهات يبقيان كما هما.\n\n"
+               "إن لم يكن رابط اللوحة عندكم، اطلبوه هنا:\n{url}"),
+        "de": ("Quantum Aether: Ihr kostenloser Test endet in {k} Tagen",
+               "Ihr kostenloser Überwachungstest endet in {k} Tagen. Danach prüfen wir Ihre Domains nicht mehr täglich und Sie erhalten keine Warnungen.\n\n"
+               "Um fortzufahren, öffnen Sie Ihr Dashboard und wählen Sie einen Tarif (Starter 29 $ oder Business 99 $ pro Monat). "
+               "Ihre Domains und der Warnverlauf bleiben erhalten.\n\n"
+               "Dashboard-Link nicht zur Hand? Hier anfordern:\n{url}"),
+        "en": ("Quantum Aether: your free trial ends in {k} days",
+               "Your free monitoring trial ends in {k} days. After that we stop scanning your domains daily and you won't get regression alerts.\n\n"
+               "To keep it running, open your dashboard and pick a plan (Starter $29 or Business $99 per month). "
+               "Your domains and alert history stay as they are.\n\n"
+               "Don't have the dashboard link at hand? Request it here:\n{url}"),
+    }
+    subject, body = bodies[_lang(account)]
+    return subject.format(k=days_left), body.format(k=days_left, url=login_url)
+
+
+def trial_ended_email(account, login_url):
+    bodies = {
+        "ar": ("الأثير الكمومي: انتهت تجربتكم المجانية وتوقفت المراقبة",
+               "انتهت تجربة المراقبة المجانية، وتوقف الفحص اليومي لنطاقاتكم.\n\n"
+               "نطاقاتكم وآخر النتائج محفوظة. لاستئناف المراقبة اشتركوا من لوحة التحكم (Starter بـ 29$ أو Business بـ 99$ شهرياً).\n\n"
+               "اطلبوا رابط اللوحة من هنا:\n{url}\n\nشكراً لتجربتكم الأثير الكمومي."),
+        "de": ("Quantum Aether: Ihr kostenloser Test ist beendet",
+               "Ihr kostenloser Überwachungstest ist beendet; die tägliche Prüfung Ihrer Domains ist pausiert.\n\n"
+               "Ihre Domains und die letzten Ergebnisse sind gespeichert. Abonnieren Sie im Dashboard, um fortzufahren (Starter 29 $ oder Business 99 $ pro Monat).\n\n"
+               "Dashboard-Link anfordern:\n{url}\n\nDanke, dass Sie Quantum Aether getestet haben."),
+        "en": ("Quantum Aether: your free trial has ended",
+               "Your free monitoring trial has ended and daily scanning of your domains is paused.\n\n"
+               "Your domains and latest results are saved. Subscribe from the dashboard to resume (Starter $29 or Business $99 per month).\n\n"
+               "Request your dashboard link here:\n{url}\n\nThanks for trying Quantum Aether."),
+    }
+    subject, body = bodies[_lang(account)]
+    return subject, body.format(url=login_url)
+
+
 def cancel_email(account, monitoring_url):
     """رسالة تأكيد الإلغاء وشكر، بلغة العميل."""
     bodies = {
@@ -245,11 +339,14 @@ def report_receipt_email(lang, domain, amount, currency, report_url, order_id):
 def owner_email(event, account, detail=""):
     """رسالة لصاحب الموقع عند اشتراك جديد أو إلغاء أو توقف."""
     plan = PLANS[account["plan"]]
-    subject = f"[Quantum Aether] {event}: {plan['name']} ${plan['price']} — {account['email']}"
+    trial = account.get("status") in ("TRIAL", "TRIAL_ENDED")
+    subject = (f"[Quantum Aether] {event} — {account['email']}" if trial
+               else f"[Quantum Aether] {event}: {plan['name']} ${plan['price']} — {account['email']}")
     text = "\n".join([
         f"Event: {event}",
         f"Customer: {account['email']}",
-        f"Plan: {plan['name']} (${plan['price']}/month, up to {plan['domains']} domains)",
+        f"Plan: {plan['name']} (${plan['price']}/month, up to {plan['domains']} domains)" if account.get("status") not in ("TRIAL", "TRIAL_ENDED")
+        else f"Free trial (ends {account.get('trial_ends_at') or '-'}, up to {TRIAL_DOMAINS} domains)",
         f"Account: {account['id']}",
         f"PayPal subscription: {account.get('subscription_id') or '-'}",
         *( [f"Detail: {detail}"] if detail else [] ),
