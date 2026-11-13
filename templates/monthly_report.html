@@ -24,6 +24,8 @@
     {% if r.top10k %}<tr><td>{{ t.rep_top10k }}</td><td>{{ r.top10k.reachable }}</td><td>{{ r.top10k.pct }}%</td></tr>{% endif %}
     {% for s in r.sectors if s.measured %}<tr><td>{{ s.labels[lang] or s.labels.en }}</td><td>{{ s.measured }}</td><td>{{ s.pct }}%</td></tr>{% endfor %}
   </table>
+  {% if r.top1000_breakdown %}<p class="muted small">{{ t.rep_breakdown.format(**r.top1000_breakdown) }}</p>{% endif %}
+  <p class="muted small">{{ t.rep_frozen.format(date=r.published) }}</p>
   {% for s in r.sectors if s.classical %}
   <details><summary>{{ t.rep_classical.format(group=s.labels[lang] or s.labels.en, n=s.classical|length) }}</summary>
     <p dir="ltr">{% for d in s.classical %}<a href="{{ url_for('site.site_page', domain=d, lang=lang if lang != 'de' else 'en') }}">{{ d }}</a>{% if not loop.last %} · {% endif %}{% endfor %}</p></details>

@@ -94,6 +94,7 @@ TEXTS = {
         "scan_again": "فحص نطاق آخر",
         "report_title": "تقرير الجاهزية لما بعد الكم",
         "findings_title": "النتائج",
+        "findings_calm": "رُصد تبادل مفاتيح ما بعد الكم على هذا الاتصال. التقرير الكامل يذكر {n} ملاحظة، أغلبها عن الشهادة، وهي تقليدية في كل المواقع حالياً.",
         "remediation_title": "خطوات الإصلاح",
         "remediation_intro": "التفعيل يحتاج مكتبة TLS تدعم ML-KEM. أسرع طريق: ترقية OpenSSL إلى 3.5 أو أحدث، "
                              "أو خادم مبني بـ Go 1.24+، أو تفعيل وكيل مثل Cloudflare أمام موقعك.",
@@ -145,6 +146,7 @@ TEXTS = {
         "amount": "المبلغ",
         "not_found": "الصفحة غير موجودة.",
         "rate_limited": "تجاوزت عدد الفحوصات المسموح في الساعة. حاول لاحقاً.",
+        "busy_global": "الموقع يستقبل فحوصاً كثيرة الآن. حاول مجدداً بعد بضع دقائق، أو افتح نتيجة نطاق فُحص مؤخراً.",
         "server_error": "حدث خطأ غير متوقع.",
         "back_home": "العودة للرئيسية",
         "errors": {
@@ -155,7 +157,7 @@ TEXTS = {
             "tls_failure": "الخادم لا يقبل اتصال HTTPS حديثاً (TLS 1.2 أو أحدث).",
         },
         "grades": {
-            "A": "جاهز: تبادل مفاتيح مقاوم للكم",
+            "A": "رُصد تبادل مفاتيح ما بعد الكم",
             "B": "آمن اليوم، لكنه معرّض لهجوم «احفظ الآن، فُكّ لاحقاً»",
             "C": "يحتاج ترقية: لا يدعم TLS 1.3",
             "F": "مشكلة حرجة يجب إصلاحها أولاً",
@@ -254,6 +256,7 @@ TEXTS = {
         "scan_again": "Scan another domain",
         "report_title": "Post-quantum readiness report",
         "findings_title": "Findings",
+        "findings_calm": "Post-quantum key exchange observed on this connection. The full report lists {n} notes, mostly about the certificate, which is still classical on every site today.",
         "remediation_title": "How to fix",
         "remediation_intro": "You need a TLS library with ML-KEM. Quickest routes: upgrade to OpenSSL 3.5 or newer, "
                              "use a server built with Go 1.24+, or put a proxy such as Cloudflare in front of your site.",
@@ -304,6 +307,7 @@ TEXTS = {
         "amount": "Amount",
         "not_found": "Page not found.",
         "rate_limited": "Too many scans this hour. Please try again later.",
+        "busy_global": "We are getting a lot of scans right now. Please try again in a few minutes.",
         "server_error": "Something went wrong.",
         "back_home": "Back to home",
         "errors": {
@@ -314,7 +318,7 @@ TEXTS = {
             "tls_failure": "The server does not accept a modern HTTPS connection (TLS 1.2 or newer).",
         },
         "grades": {
-            "A": "Ready: quantum-resistant key exchange",
+            "A": "Post-quantum key exchange observed",
             "B": "Secure today, exposed to harvest-now-decrypt-later",
             "C": "Needs an upgrade: no TLS 1.3",
             "F": "Critical issue to fix first",
@@ -1602,6 +1606,8 @@ TEXTS["en"].update({
     "rep_title": "State of post-quantum TLS: {month}",
     "rep_meta": "Monthly report on post-quantum TLS adoption across the most visited websites, banks and hosting networks.",
     "rep_kicker": "Monthly report",
+    "rep_breakdown": "Why {counted} of 1,000: {excluded} excluded (pornographic and gambling sites), {no_answer} serve no website on port 443 (mostly infrastructure domains such as akamai.net, akadns.net, gtld-servers.net, cloudfront.net), {unsure} undetermined (a firewall hid the key exchange).",
+    "rep_frozen": "Figures frozen as published on {date}. The live tracker (/adoption) can differ slightly because late rescans arrive after publication.",
     "rep_link": "Monthly report: State of post-quantum TLS",
     "rep_findings": "Key findings",
     "rep_charts": "Charts",
@@ -1638,6 +1644,8 @@ TEXTS["ar"].update({
     "rep_title": "حالة TLS ما بعد الكمومي: {month}",
     "rep_meta": "تقرير شهري عن تبنّي TLS ما بعد الكمومي في أكثر المواقع زيارة والبنوك وشبكات الاستضافة.",
     "rep_kicker": "تقرير شهري",
+    "rep_breakdown": "لماذا {counted} من 1000؟ {excluded} مستبعدة (مواقع إباحية وقمار)، و{no_answer} لا تقدّم موقعاً على المنفذ 443 (أغلبها نطاقات بنية تحتية مثل akamai.net وakadns.net وgtld-servers.net وcloudfront.net)، و{unsure} غير محسومة (جدار حماية أخفى تبادل المفاتيح).",
+    "rep_frozen": "الأرقام مجمّدة كما نُشرت في {date}. قد يختلف المتتبع الحي (/adoption) قليلاً بسبب إعادة فحوص وصلت بعد النشر.",
     "rep_link": "التقرير الشهري: حالة TLS ما بعد الكمومي",
     "rep_findings": "أهم النتائج",
     "rep_charts": "الرسوم البيانية",
@@ -1674,6 +1682,8 @@ TEXTS["de"].update({
     "rep_title": "Stand von Post-Quanten-TLS: {month}",
     "rep_meta": "Monatsbericht zur Verbreitung von Post-Quanten-TLS bei den meistbesuchten Websites, Banken und Hosting-Netzen.",
     "rep_kicker": "Monatsbericht",
+    "rep_breakdown": "Warum {counted} von 1.000: {excluded} ausgeschlossen (Pornografie und Glücksspiel), {no_answer} ohne Website auf Port 443 (meist Infrastruktur-Domains wie akamai.net, akadns.net, gtld-servers.net, cloudfront.net), {unsure} unbestimmt (eine Firewall verbarg den Schlüsselaustausch).",
+    "rep_frozen": "Zahlen eingefroren wie am {date} veröffentlicht. Der Live-Tracker (/adoption) kann leicht abweichen, weil spätere Nachmessungen eingehen.",
     "rep_link": "Monatsbericht: Stand von Post-Quanten-TLS",
     "rep_findings": "Wichtigste Ergebnisse",
     "rep_charts": "Grafiken",

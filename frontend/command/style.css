@@ -420,3 +420,7 @@ nav#workspace-nav .nav-ext{font-size:13.5px}
 html{background:#0b1324}
 main footer{padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))!important}
 @media(max-width:850px){main footer{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))!important}}
+
+/* 2026-11-13: sidebar labels stay on one line at narrow desktop widths */
+nav#workspace-nav :is(button,a){white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(min-width:851px) and (max-width:1150px){nav#workspace-nav :is(button,a){font-size:13px;gap:8px;padding-inline:10px}}

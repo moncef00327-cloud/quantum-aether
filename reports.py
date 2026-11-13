@@ -15,8 +15,18 @@ PROVIDER_MIN = 100
 SPOTLIGHT_TOP = 10000
 
 
+_TLD = {v[3]: k for k, v in countries.COUNTRIES.items()}  # ISO -> ccTLD (GB -> uk)
+
+
 def _pct(pq, n):
     return round(100 * pq / n, 1) if n else 0.0
+
+
+def top1000_breakdown(conn, week):
+    """Why fewer than 1,000 sites count: excluded hosts, no HTTPS answer on 443, undetermined."""
+    rows, ok, unsure = conn.execute("SELECT COUNT(*), COALESCE(SUM(ok),0), COALESCE(SUM(ok AND unsure),0) FROM adoption_results "
+                                    "WHERE week = ? AND rank <= 1000", (week,)).fetchone()
+    return {"ranks": 1000, "excluded": 1000 - rows, "no_answer": rows - ok, "unsure": unsure, "counted": ok - unsure}
 
 
 def build(conn, report_id, published):
@@ -40,6 +50,7 @@ def build(conn, report_id, published):
         "id": report_id, "published": published, "week": snap["week"], "week_start": snap["week_start"],
         "previous_week": snap["previous_week"],
         "top1000": tl[-1] if tl else None, "top1000_previous": tl[-2] if len(tl) > 1 else None,
+        "top1000_breakdown": top1000_breakdown(conn, snap["week"]),
         "top10k": snap["top10k"],
         "sectors": sectors,
         "providers": [{"asn": r["asn"], "name": r["name"], "sites": r["reachable"], "pq": r["pq"], "pct": r["pct"]} for r in prov],
@@ -161,6 +172,7 @@ def chart(r, name, lang="en"):
         return bar_svg("Post-quantum key exchange by hosting network",
                        [(f"{_short(p['name'])} (AS{p['asn']})", p["pct"]) for p in r["providers"]], src)
     if name == "countries":
-        rows = r["countries_top"] + r["countries_bottom"]
-        return bar_svg("By country-code domain: top 5 and bottom 5", [(c["code"], c["pct"]) for c in rows], src)
+        rows = r["countries_bottom"][::-1] + r["countries_top"][::-1]
+        return bar_svg("By country-code domain: lowest 5 first, then highest 5 (sites in brackets)",
+                       [(f".{_TLD.get(c['code'], c['code'].lower())} ({c['measured']} sites)", c["pct"]) for c in rows], src)
     return None

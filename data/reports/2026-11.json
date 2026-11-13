@@ -290,5 +290,12 @@
    "domain": "go.link",
    "rank": 8432
   }
- ]
+ ],
+ "top1000_breakdown": {
+  "ranks": 1000,
+  "excluded": 10,
+  "no_answer": 283,
+  "unsure": 18,
+  "counted": 689
+ }
 }

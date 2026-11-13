@@ -53,9 +53,13 @@
 {% set glang = lang if lang in ("en", "ar") else "en" %}
 <section class="card">
   <h2>{{ t.findings_title }}</h2>
+  {% if observation == 'observed_pq' %}
+  <p>{{ t.findings_calm.format(n=findings|length) }}</p>
+  {% else %}
   <ul class="findings-list">
     {% for f in findings %}<li class="st-{{ f.status }}">{{ f.title }}</li>{% endfor %}
   </ul>
+  {% endif %}
 {% if observation == 'observed_classical' %}
   <p>{{ t.free_fix_hint }}
     <a href="{{ url_for('site.guide', slug='enable-x25519mlkem768-nginx', lang=glang) }}">nginx</a> ·

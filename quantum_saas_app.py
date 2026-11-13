@@ -87,6 +87,7 @@ def _config_from_env():
         "CURRENCY": env("QS_CURRENCY", "USD"),
         "SCANS_PER_HOUR": int(env("QS_SCANS_PER_HOUR", "10")),
         "GLOBAL_SCANS_PER_HOUR": int(env("QS_GLOBAL_SCANS_PER_HOUR", "300")),
+        "SCAN_REUSE_SECONDS": int(env("QS_SCAN_REUSE_SECONDS", "600")),
         "TRUSTED_PROXIES": int(env("QS_TRUSTED_PROXIES", "1")),
         "PAYPAL_CLIENT_ID": env("PAYPAL_CLIENT_ID", ""),
         "PAYPAL_CLIENT_SECRET": env("PAYPAL_CLIENT_SECRET", ""),
@@ -109,6 +110,8 @@ def create_app(overrides=None, scanner=None, paypal=None, mailer=None, chain=Non
     app.config['MAX_CONTENT_LENGTH'] = 128 * 1024
     app.config.update(_config_from_env())
     app.config.update(overrides or {})
+    if app.config.get("TESTING") and "SCAN_REUSE_SECONDS" not in (overrides or {}):
+        app.config["SCAN_REUSE_SECONDS"] = 0  # الاختبارات تتوقع فحصاً جديداً في كل مرة
     if not app.config["HASH_SALT"]:
         app.config["HASH_SALT"] = secrets.token_hex(16)
     proxies = app.config["TRUSTED_PROXIES"]
@@ -272,13 +275,30 @@ def is_api_request():
 SCAN_SOURCES = {"home", "example", "site", "scanbox", "compare", "api", "mcp", "deadlines", "pack"}
 
 
+def _recent_scan(conn, raw_domain, seconds):
+    """نتيجة نفس النطاق إن فُحص قبل دقائق: يرى الزائر النتيجة فوراً ولا يُستهلك حد الفحوص (يوم الإطلاق يفحص الجميع المواقع نفسها)."""
+    if seconds <= 0:
+        return None
+    try:
+        host = quantum_vuln_scanner.normalize_domain(raw_domain)
+    except quantum_vuln_scanner.ScanError:
+        return None
+    since = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(seconds=seconds)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return sales_db.latest_scan_for_domain(conn, host, since)
+
+
 def perform_scan(raw_domain, source=None):
     conn, chash = db(), client_hash()
-    since = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
     cfg = current_app.config
-    if (sales_db.count_attempts_since(conn, since, chash) >= cfg["SCANS_PER_HOUR"]
-            or sales_db.count_attempts_since(conn, since) >= cfg["GLOBAL_SCANS_PER_HOUR"]):
+    if source != "pack":  # باقة مدفوعة: فحص جديد دائماً
+        recent = _recent_scan(conn, raw_domain, cfg["SCAN_REUSE_SECONDS"])
+        if recent:
+            return recent["id"], recent["result"]
+    since = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    if sales_db.count_attempts_since(conn, since, chash) >= cfg["SCANS_PER_HOUR"]:
         abort(429)
+    if sales_db.count_attempts_since(conn, since) >= cfg["GLOBAL_SCANS_PER_HOUR"]:
+        abort(429, description="busy")  # ضغط عام، لا ذنب للزائر
     sales_db.record_attempt(conn, chash)
     raw_domain = quantum_vuln_scanner.normalize_domain(raw_domain)
     result = current_app.extensions["scanner"](raw_domain)
@@ -2145,13 +2165,12 @@ def badge_snippets(domain):
     img = base + url_for('.badge', domain=domain)
     alt = "Post-quantum TLS grade by Quantum Aether"
     action = (
-        f"- uses: moncef00327-cloud/quantum-aether@main\n"
+        f"- uses: moncef00327-cloud/pq-tls-action@v1\n"
         f"  with:\n"
         f"    domain: {domain}\n"
-        f"    require-post-quantum: true\n"
-        f"    update-readme: true"
+        f"    require-post-quantum: true"
     )
-    cli = f'curl -sL "{base}/install-agent.sh?domain={domain}" | sh'
+    cli = "uvx quantum-aether-mcp"  # إعداد صريح لخادم MCP؛ لا سكربت من الإنترنت يُنفَّذ عبر sh
     return {"html": f'<a href="{page}"><img src="{img}" alt="{alt}"></a>',
             "markdown": f"[![{alt}]({img})]({page})",
             "action": action,
@@ -2344,56 +2363,25 @@ def mcp_rest_scan():
 
 @bp.get('/install-agent.sh')
 def install_agent_sh():
-    """سكربت التثبيت الصفري بسطر واحد (One-Line Zero-Touch Onboarding):
-    يربط Cursor وClaude Code بخادم MCP الخاص بـ Quantum Aether، ويحفظ qa_report.json، ويضيف الشارة لملف README.md."""
-    raw = (request.args.get("domain") or "example.com").strip()
-    try:
-        domain = quantum_vuln_scanner.normalize_domain(raw)
-    except quantum_vuln_scanner.ScanError:
-        domain = "example.com"
+    """Retired one-line installer. It used to edit README.md and .mcp.json without asking; a security site should not
+    ask people to pipe a script into sh. The URL stays (old links) but only prints the explicit setup and changes nothing."""
     base = public_base()
     script = f"""#!/bin/sh
-set -e
-DOMAIN="{domain}"
-BASE="{base}"
-echo "[Quantum Aether] Configuring zero-touch AI agent & MCP integration for $DOMAIN..."
+# Quantum Aether: this installer no longer changes any files.
+cat <<'EOF'
+Set up the Quantum Aether MCP server explicitly:
 
-# 1. Fetch qa_report.json (AI Agent Footprint & SHA-256 Attestation)
-curl -fsSL "$BASE/verify/$DOMAIN/qa_report.json" -o qa_report.json || true
+  uvx quantum-aether-mcp            # local stdio server (PyPI: quantum-aether-mcp)
+  {base}/mcp      # or connect a Streamable HTTP MCP client here
 
-# 2. Configure MCP server for Cursor (.cursor/mcp.json) and Claude Code (.mcp.json)
-python3 - << 'PY'
-import json, os
+CI check (GitHub Actions):
+  - uses: moncef00327-cloud/pq-tls-action@v1
+    with:
+      domain: example.com
+      require-post-quantum: true
 
-mcp_entry = {{"type": "streamable-http", "url": "{base}/mcp"}}
-for path in (".mcp.json", os.path.join(".cursor", "mcp.json")):
-    d = os.path.dirname(path)
-    if d:
-        os.makedirs(d, exist_ok=True)
-    cfg = {{}}
-    if os.path.exists(path):
-        try:
-            with open(path, "r", encoding="utf-8") as f:
-                cfg = json.load(f)
-        except Exception:
-            cfg = {{}}
-    cfg.setdefault("mcpServers", {{}})["quantum-aether"] = mcp_entry
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(cfg, f, indent=2)
-
-# 3. Inject dynamic PQC badge in README.md if present
-badge_url = "{base}/badge/{domain}.svg"
-badge_md = "[![Post-quantum TLS grade by Quantum Aether]({base}/badge/{domain}.svg)]({base}/verify/{domain})"
-if os.path.exists("README.md"):
-    with open("README.md", "r", encoding="utf-8") as f:
-        readme = f.read()
-    if badge_url not in readme:
-        with open("README.md", "w", encoding="utf-8") as f:
-            f.write(badge_md + "\\n\\n" + readme)
-PY
-
-echo "[Quantum Aether] Done! Configured .mcp.json, .cursor/mcp.json, qa_report.json, and README badge for $DOMAIN."
-echo "[Quantum Aether] Live report & daily monitoring: $BASE/monitoring?domain=$DOMAIN"
+Docs: {base}/agents
+EOF
 """
     return Response(script, mimetype="text/x-shellscript")
 
@@ -2873,9 +2861,10 @@ def _gone(_e):
 
 
 @bp.app_errorhandler(429)
-def _rate_limited(_e):
-    response = make_response(_error(429, "rate_limited"))
-    response.headers['Retry-After'] = '3600'
+def _rate_limited(e):
+    busy = getattr(e, "description", "") == "busy"
+    response = make_response(_error(429, "busy_global" if busy else "rate_limited"))
+    response.headers['Retry-After'] = '300' if busy else '3600'
     return response
 
 
