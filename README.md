@@ -118,14 +118,9 @@ curl -X POST https://ather-quantum.com/api/scan -H "Content-Type: application/js
 | `templates/`, `static/` | Web pages, styles, PayPal button script |
 | `guides.py` | Guide pages (Arabic/English) |
 | `data/`, `tools/run_study.py` | Top-1,000 study data and the script that produced it |
-| `real_quantum.py` | Run GHZ on IBM hardware, or `--fetch JOB_ID` to download an existing job |
-| `ghz_fidelity.py` | GHZ fidelity from stabilizer expectation values (`--noisy`, `--hardware`) |
-| `quantum_teleportation.py`, `aether_decoder.py` | Teleportation protocol and Qiskit bit-order analysis |
-| `run_bell_state.py`, `run_ghz_relay.py`, `bell_state.ipynb` | Simulator demos |
-| `export_quantum_data.py`, `quantum_gui.py` | `quantum_data.csv` (simulator, noise model, hardware) and a Tkinter viewer |
+| `experiments/quantum-lab/` | IBM/Qiskit experiments (GHZ, Bell, teleportation, fidelity), and `requirements-quantum.txt`. Not used by the web service; run from the repo root |
+| `results/` | Recorded experiment results (JSON), shown on `/research` |
 | `dna_encode.py`, `bio_archive_report.py` | DNA encoding and the report archive (`archive` / `restore` / `verify`) |
-| `save_ibm_account.py` | Save the IBM Quantum token locally without echoing it |
-| `results/` | Recorded experiment results (JSON) |
 | `deploy/` | Server install script, systemd unit, PayPal/admin configuration, nginx example |
 | `tests/` | Unit tests |
 
@@ -134,7 +129,7 @@ curl -X POST https://ather-quantum.com/api/scan -H "Content-Type: application/js
 ```bash
 python -m venv .venv
 .venv\Scripts\activate            # Linux/macOS: source .venv/bin/activate
-pip install -r requirements.txt -r requirements-quantum.txt
+pip install -r requirements.txt   # experiments: -r experiments/quantum-lab/requirements-quantum.txt
 python -m unittest discover -s tests -t .
 python quantum_saas_app.py        # http://127.0.0.1:5000
 ```
