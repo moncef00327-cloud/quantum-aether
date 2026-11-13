@@ -31,8 +31,8 @@ for u in / /monitoring /research /site/google.com /openapi.yaml /llms.txt; do
   echo "$u $code"
   [ "$code" = 200 ] || rollback
 done
-# a real multi-address scan through the site API must return endpoint_summary
-out=$(curl -s -X POST -H 'Content-Type: application/json' -d '{"domain":"cloudflare.com"}' "$URL/api/scan")
-echo "$out" | grep -q '"endpoint_summary": *{' || { echo "api: ${out:0:300}"; rollback; }
-echo "api endpoint_summary ok"
+# the live code must default to the all-addresses scanner (checked without creating a scan record)
+/var/www/quantum_saas/.venv312/bin/python3 -B -c "
+import sys; sys.path.insert(0, '/var/www/quantum_saas'); import quantum_vuln_scanner as q
+r = q.scan_full('cloudflare.com'); s = r['endpoint_summary']; assert s['total'] >= 2, s; print('live scanner endpoints', s)" || rollback
 echo "DEPLOYED OK"
