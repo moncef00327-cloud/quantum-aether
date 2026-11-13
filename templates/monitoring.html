@@ -1,6 +1,9 @@
 {% extends "base.html" %}
-{% block title %}{{ t.mon_title }} · {{ t.brand }}{% endblock %}
-{% block description %}{{ t.mon_sub }}{% endblock %}
+{% block title %}{{ t.mon_seo_title }} · {{ t.brand }}{% endblock %}
+{% block description %}{{ t.mon_seo_desc }}{% endblock %}
+{% block head %}
+<script type="application/ld+json">{{ mon_jsonld | tojson }}</script>
+{% endblock %}
 {% block content %}
 <section class="hero">
   <h1>{{ t.mon_title }}</h1>

@@ -2029,7 +2029,17 @@ def monitoring():
             domain = monitor.normalize(raw_domain)
         except quantum_vuln_scanner.ScanError:
             domain = ""
-    return render_template("monitoring.html", plans=monitor.PLANS, plan_ids=plan_ids(),
+    base = public_base()
+    offer = lambda name, price, desc: {"@type": "Offer", "name": name, "price": price, "priceCurrency": cfg["CURRENCY"],
+                                       "description": desc, "url": f"{base}/monitoring?lang={current_lang()}"}
+    mon_jsonld = {
+        "@context": "https://schema.org", "@type": "Service", "name": "Quantum Aether post-quantum TLS monitoring",
+        "serviceType": "Post-quantum TLS readiness monitoring", "provider": {"@type": "Organization", "name": "Quantum Aether", "url": base},
+        "description": texts()["mon_seo_desc"], "areaServed": "Worldwide",
+        "offers": [offer("Free trial", "0", f"{monitor.TRIAL_DAYS} days, up to {monitor.TRIAL_DOMAINS} domains, no card"),
+                   *[offer(p["name"], p["price"], f"Monthly, up to {p['domains']} domains") for p in monitor.PLANS.values()]],
+    }
+    return render_template("monitoring.html", plans=monitor.PLANS, plan_ids=plan_ids(), mon_jsonld=mon_jsonld,
                            enabled=subscriptions_enabled(), paypal_client_id=cfg["PAYPAL_CLIENT_ID"],
                            currency=cfg["CURRENCY"], sent=request.args.get("sent"), domain=domain)
 
@@ -2767,6 +2777,10 @@ def feed():
         rep = reports.load(rid)
         entries.append((f"{base}/reports/{rid}", rep["published"], f"State of post-quantum TLS: {_month_name(rid, 'en')}",
                         (reports.findings(rep, "en") or [""])[0]))
+    entries.append((f"{base}/monitoring?lang=en", "2026-11-13",
+                    "New: free 14-day monitoring trial, every-address checks and an audit-ready check history",
+                    "Daily post-quantum TLS monitoring now starts with a free 14-day trial (no card), tests every public IPv4/IPv6 "
+                    "address of a domain and alerts when servers disagree, and keeps a dated log of every check with CSV export."))
     entries.append((f"{base}/deadlines", deadlines.UPDATED, deadlines.TEXT["en"]["title"], deadlines.TEXT["en"]["description"]))
     board = cached_countries()
     if board and board["entries"]:

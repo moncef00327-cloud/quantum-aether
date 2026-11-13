@@ -74,7 +74,11 @@ Full text of every guide plus the live weekly figures in one file: {{ base }}/ll
 
 ## Monitoring subscription (for teams)
 
-- {{ base }}/monitoring — daily scans of up to 10 domains ($29/month) or 100 domains ($99/month) with email alerts when post-quantum key exchange is lost, a grade changes, or a certificate nears expiry. Billed monthly through PayPal; cancel any time.
+- {{ base }}/monitoring — daily scans of up to 10 domains ($29/month) or 100 domains ($99/month), billed monthly through PayPal, cancel any time.
+- Free trial: 14 days, up to 10 domains, no payment details; it ends automatically and never turns into a paid subscription by itself. Start at {{ base }}/monitoring#trial (company domain + work email; the dashboard link is emailed).
+- Every public IPv4/IPv6 address of a domain (up to 6) gets its own handshake; an alert fires when some addresses negotiate post-quantum key exchange and others do not (CDN edges or load-balanced servers out of sync).
+- Email alerts when post-quantum key exchange is lost, a grade changes, a result becomes inconclusive, or a certificate nears expiry.
+- Check history: every daily and manual check is kept for 400 days in the dashboard, with a CSV export (time, grade, key-exchange group, TLS version, certificate days left, addresses post-quantum/total, error, scanner version, measurement note) for security teams and auditors.
 
 ## Badge
 

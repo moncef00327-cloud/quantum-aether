@@ -1923,3 +1923,11 @@ TEXTS["ar"].update({"hist_title": "سجل الفحوص", "hist_sub": "كل فح�
                     "hist_when": "وقت الفحص (UTC)", "hist_addresses": "عناوين مقاومة للكم", "hist_csv": "تنزيل السجل الكامل (CSV)", "hist_none": "لا فحوص بعد. أول فحص مع الفحص اليومي التالي، أو اضغط «افحص الكل الآن»."})
 TEXTS["de"].update({"hist_title": "Prüfverlauf", "hist_sub": "Jede tägliche und manuelle Prüfung, neueste zuerst (400 Tage aufbewahrt). Die CSV ist ein datierter Nachweis für Ihr Sicherheitsteam oder Ihre Prüfer.",
                     "hist_when": "Geprüft (UTC)", "hist_addresses": "Adressen PQ", "hist_csv": "Gesamten Verlauf herunterladen (CSV)", "hist_none": "Noch keine Prüfungen. Die erste läuft mit der nächsten täglichen Prüfung, oder klicken Sie auf „Alle jetzt prüfen“."})
+
+# ---------------------------------------------------------------- عنوان ووصف /monitoring في نتائج البحث
+TEXTS["en"].update({"mon_seo_title": "Post-quantum TLS monitoring: 14-day free trial",
+                    "mon_seo_desc": "Daily checks of every server address of your domains, alerts when post-quantum key exchange is lost or servers disagree, and an audit-ready CSV history. Free for 14 days, no card."})
+TEXTS["ar"].update({"mon_seo_title": "مراقبة TLS المقاوم للكم: تجربة مجانية 14 يوماً",
+                    "mon_seo_desc": "فحص يومي لكل عناوين خوادم نطاقاتك، وتنبيه عند فقدان التبادل المقاوم للكم أو اختلاف الخوادم، وسجل CSV جاهز للتدقيق. مجاناً 14 يوماً وبلا بطاقة."})
+TEXTS["de"].update({"mon_seo_title": "Post-Quanten-TLS-Überwachung: 14 Tage kostenlos testen",
+                    "mon_seo_desc": "Tägliche Prüfung jeder Serveradresse Ihrer Domains, Warnung bei Verlust des quantenresistenten Schlüsselaustauschs oder uneinheitlichen Servern, prüfbarer CSV-Verlauf. 14 Tage kostenlos, ohne Karte."})
