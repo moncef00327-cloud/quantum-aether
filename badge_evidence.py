@@ -43,7 +43,8 @@ def for_domain(conn, domain, now=None):
                                observation_status=scan_experience.status(result),
                                tls=result['key_exchange'].get('version') or result['certificate'].get('negotiated_version'),
                                group=result['key_exchange'].get('group')))
-    row = adoption.latest_for(conn, domain)
+    alt = domain[4:] if domain.startswith('www.') else f'www.{domain}'
+    row = adoption.latest_for(conn, domain) or adoption.latest_for(conn, alt)
     if row:
         candidates.append(dict(checked_at=row['scanned_at'], grade=row['grade'], source='tracker',
                                observation_status='undetermined' if row['unsure'] else ('observed_pq' if row['pq'] else 'observed_classical'),

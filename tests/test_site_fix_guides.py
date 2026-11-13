@@ -93,3 +93,23 @@ class SiteSnippetTests(SiteFixGuidesTests):
         html = self.page('aws-hosted.example')
         self.assertIn('"BreadcrumbList"', html)
         self.assertIn(f'"item": "{BASE}/"', html.replace('"item":"', '"item": "'))
+
+
+class SiteWwwAliasTests(SiteFixGuidesTests):
+    """A site tracked only as www.<domain> (or only as the apex) still gets its /site/ page under the other name."""
+
+    def setUp(self):
+        super().setUp()
+        with self.conn:
+            self.conn.execute(ROW, ('www.bank-www.example', 14, 'B', 'X25519', 0, 'Hetzner Online GmbH'))
+
+    def test_apex_falls_back_to_www_row(self):
+        html = self.page('bank-www.example')
+        self.assertIn('bank-www.example', html)
+        self.assertIn('TLS 1.3', html)
+
+    def test_www_falls_back_to_apex_row(self):
+        self.page('www.self-hosted.example')
+
+    def test_unknown_domain_is_still_404(self):
+        self.assertEqual(self.client.get('/site/nothing-here.example').status_code, 404)

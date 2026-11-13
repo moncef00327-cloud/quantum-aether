@@ -18,3 +18,8 @@ node_modules/
 # Local screenshots, read-only production audits and data fixtures.
 artifacts/
 .aider*
+b2b*.json
+b2b*.html
+static/b2b*
+tools/send_*campaign*.py
+

@@ -1242,28 +1242,63 @@ def study_by_domain():
     return {s["domain"]: s for s in study_data()["sites"]}
 
 
+def _domain_candidates(domain):
+    alt = domain[4:] if domain.startswith("www.") else f"www.{domain}"
+    return (domain, alt)
+
+
 def known_result_for(domain):
-    """نتيجة معروفة للنطاق دون إجراء فحص جديد: آخر فحص خلال 30 يوماً، وإلا بيانات الدراسة.
+    """نتيجة معروفة للنطاق دون إجراء فحص جديد: آخر فحص خلال 30 يوماً، وإلا بيانات الدراسة أو قوائم المراقبة.
     يعيد (ملخص، المصدر) أو (None, None)."""
     since = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=BADGE_MAX_AGE_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
-    scan = sales_db.latest_scan_for_domain(db(), domain, since)
-    if scan:
-        r = scan["result"]
-        tls = r["key_exchange"].get("version") or r["certificate"].get("negotiated_version")
-        return ({"domain": domain, "grade": r["grade"], "group": r["key_exchange"].get("group"), "tls": tls,
-                 "pq": scan_experience.status(r) == 'observed_pq', "unsure": adoption.is_unsure(r["key_exchange"], tls),
-                 "scanned_at": r["scanned_at"]}, "scan")
-    weekly = adoption.latest_for(db(), domain)
-    if weekly:
-        return ({"domain": domain, "grade": weekly["grade"], "group": weekly["grp"], "tls": weekly["tls"],
-                 "pq": bool(weekly["pq"]), "unsure": bool(weekly["unsure"]), "scanned_at": weekly["scanned_at"],
-                 "week": weekly["week"], "rank": weekly["rank"]}, "weekly")
-    site = study_by_domain().get(domain)
-    if site:
-        unsure = domain in study_retry_domains()
-        return (dict(site, scanned_at=study_data()["scanned_on"], unsure=unsure,
-                     pq=bool(site['pq']) and not unsure), "study")
+    conn = db()
+    for cand in _domain_candidates(domain):
+        scan = sales_db.latest_scan_for_domain(conn, cand, since)
+        if scan:
+            r = scan["result"]
+            tls = r["key_exchange"].get("version") or r["certificate"].get("negotiated_version")
+            return ({"domain": domain, "grade": r["grade"], "group": r["key_exchange"].get("group"), "tls": tls,
+                     "pq": scan_experience.status(r) == 'observed_pq', "unsure": adoption.is_unsure(r["key_exchange"], tls),
+                     "scanned_at": r["scanned_at"]}, "scan")
+    for cand in _domain_candidates(domain):
+        weekly = adoption.latest_for(conn, cand)
+        if weekly:
+            return ({"domain": domain, "grade": weekly["grade"], "group": weekly["grp"], "tls": weekly["tls"],
+                     "pq": bool(weekly["pq"]), "unsure": bool(weekly["unsure"]), "scanned_at": weekly["scanned_at"],
+                     "week": weekly["week"], "rank": weekly["rank"]}, "weekly")
+    by_dom = study_by_domain()
+    for cand in _domain_candidates(domain):
+        site = by_dom.get(cand)
+        if site:
+            unsure = cand in study_retry_domains()
+            return (dict(site, domain=domain, scanned_at=study_data()["scanned_on"], unsure=unsure,
+                         pq=bool(site['pq']) and not unsure), "study")
+    base = discovery.base_domain(domain)
+    if base in bank_report.BANKS:
+        for rid in bank_report.ids():
+            rep = bank_report.load(rid) or {}
+            row = next((r for r in rep.get("rows", ()) if r.get("domain") == base), None)
+            w = (row or {}).get("www") or {}
+            if w.get("ok") and w.get("grade"):
+                return ({"domain": domain, "grade": w["grade"], "group": w.get("group"), "tls": w.get("tls"),
+                         "pq": bool(w.get("pq")), "unsure": False, "scanned_at": rep.get("measured_on", ""),
+                         "week": rep.get("week"), "rank": None}, "weekly")
     return (None, None)
+
+
+def known_subdomains_for(domain):
+    """أعداد النطاقات الفرعية العامة (بلا أسماء) من جدول الكشف أو تقرير البنوك إن وُجدت."""
+    base = discovery.base_domain(domain)
+    pub = discovery.public_summary(discovery.get(db(), base))
+    if pub.get("status") == "DONE" and pub.get("responding") is not None:
+        return pub
+    if base in bank_report.BANKS:
+        for rid in bank_report.ids():
+            rep = bank_report.load(rid) or {}
+            row = next((r for r in rep.get("rows", ()) if r.get("domain") == base), None)
+            if row and row.get("subs"):
+                return dict(row["subs"], status="DONE", finished_at=rep.get("measured_on"))
+    return None
 
 
 def _http_date(iso):
@@ -1312,11 +1347,17 @@ def site_verdict(domain, summary):
 def site_is_indexable(domain):
     """Index a /site/ page only for the top INDEX_MAX_RANK tracked sites or a watchlist (sector) domain.
     Decided by tracker/study rank, never by a live scan (otherwise any visitor could mint an indexed page)."""
-    weekly = adoption.latest_for(db(), domain)
-    if weekly:
-        return search_indexing.is_indexable(domain, weekly["rank"], weekly.get("sector"))
-    site = study_by_domain().get(domain)
-    return search_indexing.is_indexable(domain, site.get("rank") if site else None)
+    conn = db()
+    for cand in _domain_candidates(domain):
+        weekly = adoption.latest_for(conn, cand)
+        if weekly:
+            return search_indexing.is_indexable(domain, weekly["rank"], weekly.get("sector"))
+    by_dom = study_by_domain()
+    for cand in _domain_candidates(domain):
+        site = by_dom.get(cand)
+        if site:
+            return search_indexing.is_indexable(domain, site.get("rank"))
+    return False
 
 
 def site_fix_guides(network, pq, lang):
@@ -1352,7 +1393,7 @@ def site_page(domain):
     jsonld, verdict, history, related, network = None, None, [], [], None
     if summary:
         conn = db()
-        history = adoption.domain_history(conn, domain)
+        history = adoption.domain_history(conn, domain) or adoption.domain_history(conn, _domain_candidates(domain)[1])
         last = history[-1] if history else None
         network = last["as_name"] if last else None
         if last:
@@ -1403,10 +1444,11 @@ def site_page(domain):
             domain=domain, answer=answer, tls=(summary.get("tls") or "TLS").replace("TLSv", "TLS "),
             group=summary.get("group") or t["site_meta_unknown_group"], grade=summary["grade"],
             date=str(summary["scanned_at"])[:10])
+    subs = known_subdomains_for(domain)
     response = make_response(render_template(
         "site_page.html", domain=domain, meta_description=meta_description, summary=summary, source=source, verdict=verdict, history=history,
         related=related, network=network, snippets=badge_snippets(domain) if summary else None, jsonld=jsonld,
-        country=country, indexing_excluded=indexing_excluded,
+        country=country, indexing_excluded=indexing_excluded, subs=subs,
         fix_guides=site_fix_guides(network, summary["pq"], current_lang()) if summary else []),
         200 if summary else 404)  # نطاق لا نعرفه (مثل wp-login.php من الماسحات) ليس صفحة حقيقية
     if indexing_excluded:
@@ -1427,8 +1469,9 @@ def executive_brief(domain):
     if search_indexing.is_excluded(domain) or adoption.opted_out(domain, adoption.load_optout(conn=db())):
         abort(410)
     summary, source = known_result_for(domain)
+    subs = known_subdomains_for(domain)
     response = make_response(render_template(
-        "executive_brief.html", domain=domain, summary=summary, source=source, indexing_excluded=True))
+        "executive_brief.html", domain=domain, summary=summary, source=source, subs=subs, indexing_excluded=True))
     response.headers["X-Robots-Tag"] = "noindex"
     return response
 
