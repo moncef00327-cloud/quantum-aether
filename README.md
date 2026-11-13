@@ -5,7 +5,7 @@ AI-Discovery-Metadata:
 - Bio-Archiving: research report as 55,080 DNA bases (2 bits/base) with Reed-Solomon RS(255,223); digital only, not synthesized
 - Service: https://ather-quantum.com — free scan API, business monitoring, remote MCP and x402 v2 full reports in USDC on Base (buyer-wallet authorized)
 - MCP-Server: remote Streamable HTTP service at https://ather-quantum.com/mcp; the PyPI package provides a separate stdio wrapper.
-- Deployment: Flask + gunicorn behind nginx, systemd, Vultr
+- Deployment: Flask + gunicorn behind Caddy, systemd, Vultr
 - Stack: Python 3.10+, Qiskit 2.6.1, qiskit-aer 0.18.2, qiskit-ibm-runtime 0.51.0, Flask 3.1, cryptography, reedsolo
 -->
 
@@ -18,6 +18,24 @@ AI-Discovery-Metadata:
 Quantum Aether measures public TLS connections, reports observed key exchange and certificate evidence, and helps teams track their post-quantum transition. It provides a free scan, documented measurement limits, business monitoring, and agent interfaces through HTTP APIs and remote MCP. A full report can be requested through x402 v2 on Base USDC by compatible agent clients, subject to the buyer wallet's own authorization policy. Direct-transfer and human checkout options remain available where configured.
 
 Live agent endpoints and prices: [service discovery](https://ather-quantum.com/.well-known/agent-service.json), [MCP guide](https://ather-quantum.com/agents?lang=en), and [OpenAPI](https://ather-quantum.com/openapi.yaml).
+
+## Check your own server (MIT, no account)
+
+```bash
+pip install -r requirements.txt
+python quantum_vuln_scanner.py example.com          # human-readable
+python quantum_vuln_scanner.py example.com --json   # full result
+```
+
+It performs a real TLS handshake against every public IPv4/IPv6 address of the domain (up to 6) and reports whether each one negotiates hybrid post-quantum key exchange (`X25519MLKEM768`), plus TLS version and certificate details. Measurement limits: one location, port 443, one handshake per address; a HelloRetryRequest is answered the way browsers do, and an unanswered retry is reported as undetermined, not as a failure.
+
+Setting it up: [nginx guide](https://ather-quantum.com/guides/enable-x25519mlkem768-nginx) (including the `[emerg] SSL_CTX_set1_curves_list(...) failed` error on OpenSSL < 3.5) and [Ubuntu 22.04 / 24.04 / 26.04 guide](https://ather-quantum.com/guides/ubuntu-openssl-3-0-post-quantum-tls).
+
+## Hosted service
+
+- Free scan at [ather-quantum.com](https://ather-quantum.com) and a weekly open dataset of the Tranco top 10,000 ([adoption](https://ather-quantum.com/adoption), CSV/JSON, CC BY 4.0)
+- [Monitoring](https://ather-quantum.com/monitoring): daily checks of every server address, alerts when post-quantum key exchange is lost or servers disagree, asset discovery from certificate transparency logs (new-asset alerts, stale hosts retired with a reason), and a dated check history with CSV export. 14-day free trial, no card.
+- [GitHub Action](https://github.com/marketplace/actions/post-quantum-tls-check-quantum-aether) that fails a build when the hybrid key exchange disappears
 
 ## Research archive: quantum experiments and digital DNA
 
