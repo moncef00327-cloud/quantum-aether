@@ -116,7 +116,8 @@ EVENT_NAMES = ("focus", "type", "example", "submit", "result", "lang", "monitori
                # command UI (2026-11-09): tab switches and outbound links
                "tab_scanner", "tab_tracker", "tab_monitor", "tab_guides", "tab_business", "tab_llm",
                "business_cta", "agents_cta", "explore",
-               "disc_start", "disc_email", "cfg_copy")
+               "disc_start", "disc_email", "cfg_copy",
+               "trial_start")  # زر «ابدأ التجربة المجانية» في /monitoring
 EVENTS_SCHEMA = """
 CREATE TABLE IF NOT EXISTS events (
     day      TEXT NOT NULL,

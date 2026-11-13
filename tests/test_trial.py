@@ -227,6 +227,14 @@ class TrialTest(unittest.TestCase):
         self.assertIn("Free trial", self.client.get("/agb?lang=en").get_data(as_text=True))
         self.assertIn("90 days after the trial ends", self.client.get("/datenschutz?lang=en").get_data(as_text=True))
 
+    def test_trial_button_click_is_tracked(self):
+        body = self.client.get("/monitoring?lang=en").get_data(as_text=True)
+        self.assertIn('data-ev="trial_start"', body)
+        self.client.post("/api/ev", data='{"name": "trial_start", "page": "/monitoring", "lang": "en"}',
+                         headers={"User-Agent": "Mozilla/5.0"}, content_type="text/plain")
+        with self.conn() as c:
+            self.assertEqual(c.execute("SELECT COUNT(*) FROM events WHERE name = 'trial_start'").fetchone()[0], 1)
+
     def test_admin_counts_trials(self):
         self.start_trial()
         with self.conn() as c:
