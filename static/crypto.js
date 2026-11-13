@@ -9,12 +9,23 @@
   var order = null;
 
   function say(text) { message.textContent = text || ""; }
+  // خانة الموافقة فوق أزرار الدفع وقد تكون خارج الشاشة على الجوال: نمرّر إليها ونبرزها بدل رسالة لا يُعرف مكانها.
+  function showConsent(el) {
+    if (!el) return;
+    var label = el.closest("label") || el;
+    try { label.scrollIntoView({ block: "center" }); } catch (e) { label.scrollIntoView(); }
+    el.focus({ preventScroll: true });
+    label.style.outline = "3px solid #f59e0b"; label.style.outlineOffset = "4px"; label.style.borderRadius = "6px";
+    setTimeout(function () { label.style.outline = ""; label.style.outlineOffset = ""; }, 4000);
+    el.addEventListener("change", function () { label.style.outline = ""; }, { once: true });
+  }
+
   function fill(template, values) {
     return template.replace(/\{(\w+)\}/g, function (_m, k) { return values[k] != null ? values[k] : ""; });
   }
 
   box.querySelector(".crypto-create").addEventListener("click", function () {
-      if (!consent || !consent.checked) { say(box.dataset.msgConsent); return; }
+      if (!consent || !consent.checked) { say(box.dataset.msgConsent); showConsent(consent); return; }
       say("");
       fetch("/api/crypto/orders", {
         method: "POST",

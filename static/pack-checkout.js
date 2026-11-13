@@ -6,12 +6,22 @@
   var consent = document.getElementById("consent");
 
   function fail(text) { message.textContent = text || container.dataset.msgError; }
+  // خانة الموافقة فوق أزرار الدفع وقد تكون خارج الشاشة على الجوال: نمرّر إليها ونبرزها بدل رسالة لا يُعرف مكانها.
+  function showConsent(el) {
+    if (!el) return;
+    var label = el.closest("label") || el;
+    try { label.scrollIntoView({ block: "center" }); } catch (e) { label.scrollIntoView(); }
+    el.focus({ preventScroll: true });
+    label.style.outline = "3px solid #f59e0b"; label.style.outlineOffset = "4px"; label.style.borderRadius = "6px";
+    setTimeout(function () { label.style.outline = ""; label.style.outlineOffset = ""; }, 4000);
+    el.addEventListener("change", function () { label.style.outline = ""; }, { once: true });
+  }
 
   window.paypal.Buttons({
     style: { layout: "vertical", color: "gold", shape: "rect", label: "paypal" },
     onClick: function (_data, actions) {
       // الموافقة الصريحة على التسليم الفوري شرط قبل فتح نافذة الدفع.
-      if (!consent || !consent.checked) { fail(container.dataset.msgConsent); return actions.reject(); }
+      if (!consent || !consent.checked) { fail(container.dataset.msgConsent); showConsent(consent); return actions.reject(); }
       message.textContent = "";
       return actions.resolve();
     },
