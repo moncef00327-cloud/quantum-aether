@@ -3,7 +3,7 @@
 
 GUIDES = {
     "enable-x25519mlkem768-nginx": {
-        "updated": "2026-11-03",
+        "updated": "2026-11-13",
         "en": {
             "title": "How to enable post-quantum TLS (X25519MLKEM768) on nginx",
             "description": "Turn on the hybrid ML-KEM key exchange that Chrome and Firefox already use, on nginx with OpenSSL 3.5, and verify it.",
@@ -17,7 +17,7 @@ openssl version</pre>
 <p>If either shows 3.0, 3.1, 3.2, 3.3 or 3.4, nginx cannot negotiate ML-KEM no matter what you put in the config. Ubuntu 22.04 and 24.04 ship OpenSSL 3.0; Debian 13 (trixie) ships 3.5. On Ubuntu, the <a href="/guides/ubuntu-openssl-3-0-post-quantum-tls?lang=en">Ubuntu / OpenSSL 3.0 guide</a> walks through all three ways out. Your options are to upgrade the OS, use an nginx build linked against OpenSSL 3.5, or put a post-quantum capable proxy or CDN in front (see the <a href="/guides/post-quantum-tls-apache-caddy-haproxy-cloudflare?lang=en">other servers guide</a>).</p>
 
 <h2>2. Configure nginx</h2>
-<p>With OpenSSL 3.5, X25519MLKEM768 is in the default group list, so nginx's default <code>ssl_ecdh_curve auto</code> already offers it. The common mistake is an explicit curve list copied from an old hardening guide, which silently removes it. Make the list explicit and put the hybrid group first:</p>
+<p>With OpenSSL 3.5, X25519MLKEM768 is in the default group list, so nginx's default <code>ssl_ecdh_curve auto</code> already offers it. The common mistake is an explicit curve list copied from an old hardening guide: it replaces OpenSSL's default list instead of extending it, and silently removes the hybrid. The cleanest fix is to delete that line. If you want an explicit list, put the hybrid group first:</p>
 <pre dir="ltr">server {
     listen 443 ssl;
     http2 on;
@@ -32,6 +32,17 @@ openssl version</pre>
 <p>With an OpenSSL 3.5 client:</p>
 <pre dir="ltr">openssl s_client -connect example.com:443 -groups X25519MLKEM768 &lt;/dev/null 2&gt;/dev/null | grep -i group</pre>
 <p>You should see <code>X25519MLKEM768</code> as the negotiated group. Or run the <a href="/?lang=en">free scan</a>: grade A means TLS 1.3 with a hybrid post-quantum key exchange.</p>
+
+<h2>nginx won't start after adding X25519MLKEM768</h2>
+<p>If <code>nginx -t</code> or a restart fails with an error like this:</p>
+<pre dir="ltr">nginx: [emerg] SSL_CTX_set1_curves_list("X25519MLKEM768:X25519:prime256v1") failed</pre>
+<p>then the OpenSSL that nginx actually uses does not know the group, which means it is older than 3.5. OpenSSL rejects the whole list when one name is unknown, so nginx stops while reading its configuration. Check the library nginx runs with, which can differ from the <code>openssl</code> command on the same machine:</p>
+<pre dir="ltr">nginx -V 2&gt;&amp;1 | grep -i openssl</pre>
+<ul>
+<li><strong>Get the site back now:</strong> remove <code>X25519MLKEM768</code> from the line, or delete the <code>ssl_ecdh_curve</code> line entirely (safe on every OpenSSL version), then <code>nginx -t &amp;&amp; systemctl reload nginx</code>.</li>
+<li><strong>Then get a newer OpenSSL:</strong> on Ubuntu 22.04 / 24.04 see <a href="/guides/ubuntu-openssl-3-0-post-quantum-tls?lang=en">the Ubuntu guide</a> (upgrade to 26.04, put Caddy or a CDN in front, or build nginx with OpenSSL 3.5).</li>
+<li><strong>Always run <code>nginx -t</code> first.</strong> A <code>reload</code> with a broken config keeps the old workers serving, but a <code>restart</code> or a reboot leaves the site down.</li>
+</ul>
 
 <h2>Watch out for</h2>
 <ul>
@@ -53,7 +64,7 @@ openssl version</pre>
 <p>إذا ظهر 3.0 أو 3.1 أو 3.2 أو 3.3 أو 3.4 فلن يستطيع nginx استخدام ML-KEM مهما كتبت في الإعدادات. Ubuntu 22.04 و24.04 يأتيان بـ OpenSSL 3.0، وDebian 13 (trixie) يأتي بـ 3.5. على Ubuntu يشرح <a href="/guides/ubuntu-openssl-3-0-post-quantum-tls?lang=ar">دليل Ubuntu وOpenSSL 3.0</a> الطرق الثلاثة بالتفصيل. الحلول: ترقية النظام، أو نسخة nginx مبنية على OpenSSL 3.5، أو وضع وكيل أو CDN يدعم ما بعد الكم أمام الخادم (انظر <a href="/guides/post-quantum-tls-apache-caddy-haproxy-cloudflare?lang=ar">دليل الخوادم الأخرى</a>).</p>
 
 <h2>2. إعداد nginx</h2>
-<p>مع OpenSSL 3.5 تكون المجموعة X25519MLKEM768 ضمن القائمة الافتراضية، فالإعداد الافتراضي <code>ssl_ecdh_curve auto</code> يعرضها أصلاً. الخطأ الشائع هو قائمة منحنيات صريحة منسوخة من دليل حماية قديم تحذفها دون أن تشعر. اكتب القائمة صراحة وضع المجموعة الهجينة أولاً:</p>
+<p>مع OpenSSL 3.5 تكون المجموعة X25519MLKEM768 ضمن القائمة الافتراضية، فالإعداد الافتراضي <code>ssl_ecdh_curve auto</code> يعرضها أصلاً. الخطأ الشائع هو قائمة منحنيات صريحة منسوخة من دليل حماية قديم: تحلّ محل القائمة الافتراضية لـ OpenSSL ولا تضيف إليها، فتحذف المجموعة الهجينة دون أن تشعر. أنظف حل هو حذف ذلك السطر. وإن أردت قائمة صريحة فضع المجموعة الهجينة أولاً:</p>
 <pre dir="ltr">server {
     listen 443 ssl;
     http2 on;
@@ -68,6 +79,17 @@ openssl version</pre>
 <p>باستخدام عميل OpenSSL 3.5:</p>
 <pre dir="ltr">openssl s_client -connect example.com:443 -groups X25519MLKEM768 &lt;/dev/null 2&gt;/dev/null | grep -i group</pre>
 <p>يجب أن تظهر <code>X25519MLKEM768</code> كمجموعة متفق عليها. أو شغّل <a href="/?lang=ar">الفحص المجاني</a>: الدرجة A تعني TLS 1.3 مع تبادل مفاتيح هجين مقاوم للكم.</p>
+
+<h2>nginx لا يعمل بعد إضافة X25519MLKEM768</h2>
+<p>إذا فشل <code>nginx -t</code> أو إعادة التشغيل برسالة مثل هذه:</p>
+<pre dir="ltr">nginx: [emerg] SSL_CTX_set1_curves_list("X25519MLKEM768:X25519:prime256v1") failed</pre>
+<p>فمكتبة OpenSSL التي يستخدمها nginx فعلاً لا تعرف هذه المجموعة، أي أنها أقدم من 3.5. ترفض OpenSSL القائمة كلها إذا كان فيها اسم واحد غير معروف، فيتوقف nginx أثناء قراءة إعداداته. تحقق من المكتبة التي يعمل بها nginx، فقد تختلف عن أمر <code>openssl</code> على نفس الجهاز:</p>
+<pre dir="ltr">nginx -V 2&gt;&amp;1 | grep -i openssl</pre>
+<ul>
+<li><strong>أعِد الموقع للعمل الآن:</strong> احذف <code>X25519MLKEM768</code> من السطر، أو احذف سطر <code>ssl_ecdh_curve</code> كله (آمن على كل إصدارات OpenSSL)، ثم <code>nginx -t &amp;&amp; systemctl reload nginx</code>.</li>
+<li><strong>ثم احصل على OpenSSL أحدث:</strong> على Ubuntu 22.04 و24.04 راجع <a href="/guides/ubuntu-openssl-3-0-post-quantum-tls?lang=ar">دليل Ubuntu</a> (الترقية إلى 26.04، أو Caddy أو CDN أمام الخادم، أو بناء nginx مع OpenSSL 3.5).</li>
+<li><strong>شغّل <code>nginx -t</code> دائماً أولاً.</strong> أمر <code>reload</code> مع إعداد معطوب يُبقي العمليات القديمة تخدم الموقع، أما <code>restart</code> أو إعادة تشغيل الجهاز فتُسقط الموقع.</li>
+</ul>
 
 <h2>انتبه إلى</h2>
 <ul>
@@ -818,14 +840,19 @@ fmt.Println(c.ConnectionState().CurveID)</pre>
         },
     },
     "ubuntu-openssl-3-0-post-quantum-tls": {
-        "updated": "2026-11-11",
+        "updated": "2026-11-13",
         "en": {
-            "title": "Post-quantum TLS on Ubuntu 22.04 / 24.04 with OpenSSL 3.0",
-            "description": "Ubuntu's OpenSSL 3.0 cannot negotiate ML-KEM. Three ways to get X25519MLKEM768 anyway: Caddy or a CDN in front, nginx with OpenSSL 3.5, or oqs-provider for testing.",
+            "title": "Post-quantum TLS on Ubuntu 22.04, 24.04 and 26.04 LTS",
+            "description": "Ubuntu 25.10 and 26.04 LTS negotiate X25519MLKEM768 by default, unless an old curve list overrides it. On 22.04 / 24.04 (OpenSSL 3.0): Caddy or a CDN in front, nginx with OpenSSL 3.5, or oqs-provider for testing.",
             "body": """
 <p>Ubuntu 22.04 and 24.04 ship <strong>OpenSSL 3.0</strong>. ML-KEM arrived in OpenSSL 3.5, so nginx or Apache built against the system library cannot negotiate <code>X25519MLKEM768</code>, whatever the config says. That is why so many servers scan as "classical" even though Chrome and Firefox offer the hybrid exchange on every connection. There are three ways out; pick the first one that fits.</p>
 <pre dir="ltr">openssl version                              # OpenSSL 3.0.x on Ubuntu 22.04 / 24.04
 nginx -V 2&gt;&amp;1 | grep -o 'OpenSSL [0-9.]*'   # the library nginx was built with</pre>
+
+<h2>Ubuntu 25.10 and 26.04 LTS: already on by default</h2>
+<p>Ubuntu 25.10 ships OpenSSL 3.5, and its stock nginx negotiates <code>X25519MLKEM768</code> with no extra configuration. Canonical says Ubuntu 26.04 LTS uses a hybrid post-quantum key exchange by default as well. So upgrading from 24.04 is the simplest way to get it, with one catch: <strong>an explicit curve list from an old hardening guide replaces the new default instead of extending it</strong>, and the server stays classical after the upgrade. Look for such lines before and after upgrading:</p>
+<pre dir="ltr">grep -rnE 'ssl_ecdh_curve|SSLOpenSSLConfCmd +(Curves|Groups)' /etc/nginx /etc/apache2 /etc/letsencrypt 2&gt;/dev/null</pre>
+<p>If a line turns up, the cleanest fix is to delete it so the library default applies (nginx's default is <code>ssl_ecdh_curve auto</code>). If you must keep an explicit list, put <code>X25519MLKEM768</code> first, as in the <a href="/guides/enable-x25519mlkem768-nginx?lang=en">nginx guide</a>. Then run <code>nginx -t</code> (or <code>apachectl configtest</code>) and reload. One more thing to expect: the hybrid key share makes the first TLS message about 1.2 KB larger, and a few old middleboxes mishandle that, so test clients behind corporate firewalls too.</p>
 
 <h2>Option 1 (easiest): put Caddy or a CDN in front</h2>
 <p>Caddy is written in Go, whose TLS stack supports X25519MLKEM768 by default, independent of the system OpenSSL. Let Caddy terminate TLS on port 443 and pass requests to your existing server on localhost. This very site runs this way and grades A.</p>
@@ -875,16 +902,21 @@ Environment=OPENSSL_CONF=/etc/nginx/openssl-oqs.cnf</pre>
 
 <h2>Verify</h2>
 <p>Run the <a href="/?lang=en">free scan</a>: grade A means TLS 1.3 with a hybrid post-quantum key exchange. The scan also answers a HelloRetryRequest the way browsers do, so servers that ask for a different group are measured too. For continuous checks, the <a href="https://github.com/marketplace/actions/post-quantum-tls-check-quantum-aether" rel="noopener">GitHub Action</a> fails a build when the hybrid disappears.</p>
-<p class="muted small">Sources: OpenSSL 3.5 release notes (ML-KEM), nginx <code>--with-openssl</code> build option, Open Quantum Safe liboqs and oqs-provider READMEs, Go crypto/tls default key exchanges.</p>
+<p class="muted small">Sources: Canonical's "Post-quantum support in the upcoming 26.04 LTS" (Ubuntu Discourse), OpenSSL 3.5 release notes (ML-KEM), nginx <code>--with-openssl</code> build option, Open Quantum Safe liboqs and oqs-provider READMEs, Go crypto/tls default key exchanges.</p>
 """,
         },
         "ar": {
-            "title": "TLS المقاوم للكم على Ubuntu 22.04 و24.04 مع OpenSSL 3.0",
-            "description": "مكتبة OpenSSL 3.0 في Ubuntu لا تدعم ML-KEM. ثلاثة طرق للحصول على X25519MLKEM768: ‏Caddy أو CDN أمام الخادم، أو nginx مع OpenSSL 3.5، أو oqs-provider للتجربة.",
+            "title": "TLS المقاوم للكم على Ubuntu 22.04 و24.04 و26.04 LTS",
+            "description": "يتفاوض Ubuntu 25.10 و26.04 LTS على X25519MLKEM768 افتراضياً، ما لم تُلغِه قائمة منحنيات قديمة. على 22.04 و24.04 (OpenSSL 3.0): ‏Caddy أو CDN أمام الخادم، أو nginx مع OpenSSL 3.5، أو oqs-provider للتجربة.",
             "body": """
 <p>يأتي Ubuntu 22.04 و24.04 مع <strong>OpenSSL 3.0</strong>. دعم ML-KEM وصل في OpenSSL 3.5، لذلك لا يستطيع nginx أو Apache المبنيّ على مكتبة النظام التفاوض على <code>X25519MLKEM768</code> مهما كتبت في الإعدادات. هذا سبب ظهور خوادم كثيرة «تقليدية» في الفحص رغم أن Chrome وFirefox يعرضان التبادل الهجين في كل اتصال. أمامك ثلاثة طرق؛ اختر أول طريق يناسبك.</p>
 <pre dir="ltr">openssl version                              # OpenSSL 3.0.x on Ubuntu 22.04 / 24.04
 nginx -V 2&gt;&amp;1 | grep -o 'OpenSSL [0-9.]*'   # the library nginx was built with</pre>
+
+<h2>Ubuntu 25.10 و26.04 LTS: مفعّل افتراضياً</h2>
+<p>يأتي Ubuntu 25.10 مع OpenSSL 3.5، ويتفاوض nginx الأصلي فيه على <code>X25519MLKEM768</code> دون أي إعداد إضافي. وتقول Canonical إن Ubuntu 26.04 LTS يستخدم تبادل مفاتيح هجيناً مقاوماً للكم افتراضياً أيضاً. لذلك الترقية من 24.04 أبسط طريق، مع تنبيه واحد: <strong>قائمة المنحنيات الصريحة المنسوخة من دليل حماية قديم تحلّ محل القائمة الافتراضية الجديدة ولا تضيف إليها</strong>، فيبقى الخادم «تقليدياً» بعد الترقية. ابحث عن هذه الأسطر قبل الترقية وبعدها:</p>
+<pre dir="ltr">grep -rnE 'ssl_ecdh_curve|SSLOpenSSLConfCmd +(Curves|Groups)' /etc/nginx /etc/apache2 /etc/letsencrypt 2&gt;/dev/null</pre>
+<p>إن ظهر سطر، فأنظف حل هو حذفه لتُطبَّق القائمة الافتراضية للمكتبة (الإعداد الافتراضي في nginx هو <code>ssl_ecdh_curve auto</code>). وإن احتجت قائمة صريحة فضع <code>X25519MLKEM768</code> أولاً كما في <a href="/guides/enable-x25519mlkem768-nginx?lang=ar">دليل nginx</a>. ثم شغّل <code>nginx -t</code> (أو <code>apachectl configtest</code>) وأعد التحميل. وتوقّع أمراً آخر: المفتاح الهجين يزيد أول رسالة TLS بنحو 1.2 كيلوبايت، وبعض أجهزة الشبكة القديمة لا تتعامل معها جيداً، فجرّب أيضاً من أجهزة خلف جدران نارية مؤسسية.</p>
 
 <h2>الطريق 1 (الأسهل): Caddy أو CDN أمام الخادم</h2>
 <p>Caddy مكتوب بلغة Go، ومكتبة TLS فيها تدعم X25519MLKEM768 افتراضياً بمعزل عن OpenSSL النظام. اجعل Caddy يستقبل TLS على المنفذ 443 ويمرّر الطلبات إلى خادمك الحالي على العنوان المحلي. هذا الموقع نفسه يعمل بهذه الطريقة ودرجته A.</p>
@@ -934,7 +966,7 @@ Environment=OPENSSL_CONF=/etc/nginx/openssl-oqs.cnf</pre>
 
 <h2>التحقق</h2>
 <p>شغّل <a href="/?lang=ar">الفحص المجاني</a>: الدرجة A تعني TLS 1.3 مع تبادل مفاتيح هجين مقاوم للكم. الفحص يجيب أيضاً على طلب HelloRetryRequest كما تفعل المتصفحات، فتُقاس الخوادم التي تطلب مجموعة أخرى كذلك. وللفحص المستمر، <a href="https://github.com/marketplace/actions/post-quantum-tls-check-quantum-aether" rel="noopener">GitHub Action</a> يُفشل البناء إذا اختفى التبادل الهجين.</p>
-<p class="muted small">المصادر: ملاحظات إصدار OpenSSL 3.5 (ML-KEM)، وخيار البناء <code>--with-openssl</code> في nginx، وملفات README لمشروعي liboqs وoqs-provider من Open Quantum Safe، والمجموعات الافتراضية في crypto/tls بلغة Go.</p>
+<p class="muted small">المصادر: إعلان Canonical عن دعم التشفير المقاوم للكم في 26.04 LTS ‏(Ubuntu Discourse)، وملاحظات إصدار OpenSSL 3.5 (ML-KEM)، وخيار البناء <code>--with-openssl</code> في nginx، وملفات README لمشروعي liboqs وoqs-provider من Open Quantum Safe، والمجموعات الافتراضية في crypto/tls بلغة Go.</p>
 """,
         },
     },
