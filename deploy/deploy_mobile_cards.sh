@@ -24,7 +24,7 @@ smoke() {
     echo "smoke $p $code"; [[ "$code" == 200 ]] || return 1
   done
   n=$(curl -s -H "Host: ather-quantum.com" -H "X-Forwarded-Proto: https" -A "Mozilla/5.0 QA-deploy-smoke" \
-      "http://127.0.0.1:8000/?lang=ar" | grep -c 'href="/prooflab?lang=ar"' || true)
+      "http://127.0.0.1:8000/?lang=ar" | grep -o 'href="/prooflab?lang=ar"' | wc -l)
   echo "home ProofLab links: $n (1 before this fix)"; [[ "$n" -ge 2 ]]
 }
 
