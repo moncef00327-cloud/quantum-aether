@@ -56,7 +56,9 @@ This repository includes a **Model Context Protocol (MCP) server** in [`mcp/`](m
 |------|--------------|
 | `scan_tls(domain)` | Scans a host and returns a plain-language summary: post-quantum key exchange yes/no, the "harvest now, decrypt later" risk and the fix. |
 | `scan_tls_raw(domain)` | Structured result: grade, key-exchange group, post-quantum yes/no, certificate, scan_id. |
+| `get_scan(scan_id)` | Fetches a stored earlier scan by its scan_id, without scanning again. |
 | `buy_full_report(scan_id, consent_immediate_delivery)` | Optional: PayPal approval link for the $49 full report. Requires explicit user consent. |
+| `get_order_status(order_id)` | Status of a report order; returns the report link once paid. |
 | `start_monitoring(email, plan, consent)` | Optional: starts paid daily monitoring. Requires explicit user consent. |
 
 Install and run:
