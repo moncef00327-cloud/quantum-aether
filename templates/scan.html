@@ -29,6 +29,23 @@
 {% include "_endpoints.html" %}
 
 {% set dbase = r.domain[4:] if r.domain.startswith("www.") and r.domain.count(".") >= 2 else r.domain %}
+{# نتيجة تقليدية (غير محمية): أول ما يراه الزائر بعد الملخص هو المراقبة المجانية، بنموذج في الصفحة نفسها #}
+{% if observation == 'observed_classical' and not paid %}
+<section class="card highlight" id="scan-trial">
+  <h2>{{ t.scan_trial_title.format(domain=dbase) }}</h2>
+  <p>{{ t.scan_trial_sub }}</p>
+  <form method="post" action="{{ url_for('site.monitor_trial', lang=lang) }}" class="scan-form">
+    <input type="hidden" name="domain" value="{{ dbase }}">
+    <label for="scan-trial-email">{{ t.trial_email_label }}</label>
+    <div class="scan-row">
+      <input id="scan-trial-email" name="email" type="email" autocomplete="email" dir="ltr" required maxlength="254" placeholder="security@{{ dbase }}">
+      <button type="submit" data-ev="trial_start">{{ t.trial_button }}</button>
+    </div>
+    <p class="consent"><label><input type="checkbox" name="consent" value="1" required>
+      <span>{{ t.trial_consent }} (<a href="{{ url_for('site.legal_page', slug='agb', lang=legal_lang) }}" target="_blank">{{ t.legal_terms }}</a> · <a href="{{ url_for('site.legal_page', slug='datenschutz', lang=legal_lang) }}" target="_blank">{{ t.legal_privacy }}</a>)</span></label></p>
+  </form>
+</section>
+{% endif %}
 <section class="card discovery" id="discovery" data-api="{{ url_for('site.discovery_api', scan_id=scan.id) }}"
          data-msg='{{ {"running": t.disc_running, "result": t.disc_result, "none": t.disc_none, "failed": t.disc_failed, "rate_limited": t.disc_limited, "busy": t.disc_busy} | tojson | forceescape }}'>
   <h2>{{ t.disc_title }}</h2>

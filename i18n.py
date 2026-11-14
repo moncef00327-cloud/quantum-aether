@@ -1979,3 +1979,11 @@ if "mon_features" in TEXTS["de"]:
         "Asset-Erkennung: Basisdomain hinzufügen, wir finden und überwachen ihre aktiven Hostnamen wöchentlich, mit Warnung bei neuen Assets",
         "Jede Serveradresse (IPv4/IPv6) geprüft, mit Warnung bei uneinheitlichen Servern",
         "Datierter Verlauf jeder Prüfung, als CSV für Audits exportierbar"]
+
+# ---------------------------------------------------------------- بطاقة المراقبة المجانية أعلى نتيجة غير محمية
+TEXTS["en"].update({"scan_trial_title": "{domain} is not protected yet. Watch it free for 14 days",
+                    "scan_trial_sub": "We check it every day, email you the moment anything changes, and confirm when your fix works. Up to 10 domains, no payment, no card, and it simply ends after 14 days."})
+TEXTS["ar"].update({"scan_trial_title": "{domain} غير محمي بعد. راقبه مجاناً لمدة 14 يوماً",
+                    "scan_trial_sub": "نفحصه كل يوم، ونراسلك فور أي تغيّر، ونؤكد لك عندما ينجح إصلاحك. حتى 10 نطاقات، بلا دفع ولا بطاقة، وتنتهي التجربة وحدها بعد 14 يوماً."})
+TEXTS["de"].update({"scan_trial_title": "{domain} ist noch nicht geschützt. 14 Tage kostenlos überwachen",
+                    "scan_trial_sub": "Wir prüfen die Domain täglich, melden jede Änderung sofort per E-Mail und bestätigen, wenn Ihre Korrektur wirkt. Bis zu 10 Domains, keine Zahlung, keine Karte, endet nach 14 Tagen von selbst."})
