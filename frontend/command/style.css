@@ -477,3 +477,17 @@ details.buy-more>summary{cursor:pointer;min-height:44px}
 /* email (trial) first, scanner second */
 .qa-trial-inline{margin-top:0;padding-top:0;border-top:0;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #ffffff1f}
 .qa-trial-inline{margin-top:12px;padding-top:14px}
+/* trial form (home, mobile-first): visible labels, 16px text (no iOS zoom), 48px+ targets, one radius/border system */
+.qa-trial-inline{display:flex;flex-direction:column;gap:0;padding:16px;border-radius:14px}
+.qa-trial-inline h2{font-size:1.05rem;line-height:1.4;margin:0 0 12px;text-wrap:balance}
+.qa-trial-inline .qa-field-label{display:block;margin:0 0 6px;font-size:13px;font-weight:600;color:#d9d4ef}
+.qa-trial-inline .qa-field{display:block;width:100%;box-sizing:border-box;height:52px;margin:0 0 12px;padding:0 14px;
+  font-size:16px;line-height:1.2;font-family:inherit;color:#f5f3ff;background:#0f0b1c;border:1.5px solid #6f62a3;border-radius:12px;
+  text-align:left;direction:ltr;transition:border-color .15s,box-shadow .15s}
+.qa-trial-inline .qa-field::placeholder{color:#8f88ad;opacity:1}
+.qa-trial-inline .qa-field:focus{outline:none;border-color:#67e8f9;box-shadow:0 0 0 3px #67e8f940}
+.qa-trial-inline .qa-trial-domain{height:48px;margin-top:0;font-size:16px;padding:0 14px}
+.qa-trial-inline .qa-trial-consent{margin:2px 0 0;align-items:center;min-height:44px;font-size:14px}
+.qa-trial-inline .qa-trial-consent input{width:20px;height:20px;flex:0 0 20px;margin:0}
+.qa-trial-inline .qa-trial-submit{min-height:52px;margin-top:8px;border-radius:12px;font-size:16px}
+.qa-trial-inline .qa-trial-note{text-align:center;margin-top:10px}
