@@ -11,7 +11,38 @@ AI-Discovery-Metadata:
 
 # Quantum Aether / الأثير الكمومي
 
+[![CI](https://github.com/moncef00327-cloud/quantum-aether/actions/workflows/ci.yml/badge.svg)](https://github.com/moncef00327-cloud/quantum-aether/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/github/license/moncef00327-cloud/quantum-aether)](LICENSE)
+[![PyPI](https://img.shields.io/pypi/v/quantum-aether-mcp)](https://pypi.org/project/quantum-aether-mcp/)
 [![MCPTry](https://mcptry.com/badge/io.github.moncef00327-cloud/quantum-aether)](https://mcptry.com/servers/io.github.moncef00327-cloud/quantum-aether)
+[![GitHub Marketplace](https://img.shields.io/badge/Marketplace-Post--quantum%20TLS%20check-blue?logo=github)](https://github.com/marketplace/actions/post-quantum-tls-check-quantum-aether)
+
+Open-source **post-quantum TLS** scanner and observatory: check whether a public HTTPS site negotiates **X25519MLKEM768** (**ML-KEM**, FIPS 203), monitor **harvest-now-decrypt-later** exposure, and track **quantum-safe** / **NIS2**-era TLS readiness.
+
+## 30-second quick start
+
+Scan any public host from this repository (MIT, no account):
+
+```bash
+pip install -r requirements.txt
+python quantum_vuln_scanner.py example.com          # human-readable
+python quantum_vuln_scanner.py example.com --json   # full result
+```
+
+Or use the hosted scanner, no install: [ather-quantum.com](https://ather-quantum.com)
+
+Or fail CI when post-quantum key exchange disappears:
+
+```yaml
+- uses: moncef00327-cloud/pq-tls-action@v1
+  with:
+    domain: example.com
+    require-post-quantum: true
+```
+
+- Live scanner: https://ather-quantum.com
+- Open dataset (weekly Tranco top 10,000, CSV/JSON, CC BY 4.0): https://ather-quantum.com/adoption
+- MCP server for AI agents: [`quantum-aether-mcp`](https://pypi.org/project/quantum-aether-mcp/) and the remote endpoint at https://ather-quantum.com/mcp
 
 ## Post-quantum TLS security observatory
 
