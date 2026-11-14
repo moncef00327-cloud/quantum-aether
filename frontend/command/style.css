@@ -386,6 +386,8 @@ a.check:active>span,a.check:focus-visible>span{border-color:var(--qa-cyan)!impor
 .qa-neon .qa-metrics-card{order:4}
 .qa-neon .qa-grade-card{order:5}
 .qa-neon .qa-grade-card:has(.qa-details[open]){grid-column:1/-1}
+/* the grade card carries the trial form: half a phone width squeezed it to one word per line */
+.qa-neon .qa-metrics-card,.qa-neon .qa-grade-card{grid-column:1/-1}
 .qa-holo{width:150px}
 .qa-neon .qa-hero-content p{margin-bottom:.4rem}
 .qa-example-tag{font-size:10px;padding:2px 7px}

@@ -14,7 +14,7 @@
 <link rel="service-desc" type="application/json" href="{{ abs_url('site.agent_service_manifest') }}">
 <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
 <link rel="preload" href="/static/fonts/noto-arabic.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/static/command/app.css?v=20261114-t4">
+<link rel="stylesheet" href="/static/command/app.css?v=20261114-ui1">
 {% for obj in jsonld %}<script type="application/ld+json">{{ obj | tojson }}</script>{% endfor %}
 </head>
 <body><div id="command-root">{% if lang == "ar" %}{% include "command/ar.html" %}{% else %}{% include "command/en.html" %}{% endif %}</div>
