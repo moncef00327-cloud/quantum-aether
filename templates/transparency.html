@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}{{ 'شفافية الزيارات والفحوص' if lang == 'ar' else 'Traffic and scan transparency' }} · {{ t.brand }}{% endblock %}
+{% block description %}{{ 'إحصاءات مجمّعة ومحدّثة للنشاط العام والفحوص، مع استبعاد بيانات الأفراد والنطاقات.' if lang == 'ar' else 'Updated aggregate website activity and scan statistics, with personal and individual domain data excluded.' }}{% endblock %}
+{% block content %}
+<section class="intro">
+  <div>
+    <div class="eyebrow">{{ 'بيانات تشغيلية مجمّعة' if lang == 'ar' else 'AGGREGATE SERVICE DATA' }}</div>
+    <h1>{{ 'شفافية الزيارات والفحوص' if lang == 'ar' else 'Traffic and scan transparency' }}</h1>
+    <p>{{ 'نعرض نشاط الخدمة كما سُجّل، مع توضيح ما تعنيه الأرقام وما لا تعنيه.' if lang == 'ar' else 'A transparent view of recorded service activity, with clear definitions and limits.' }}</p>
+    <p class="muted small">{{ 'الفترة' if lang == 'ar' else 'Period' }}: <bdi>{{ stats.period.start }}</bdi> — <bdi>{{ stats.period.end }}</bdi> · {{ 'آخر تحديث' if lang == 'ar' else 'Updated' }}: <bdi>{{ stats.updated_at }}</bdi></p>
+  </div>
+</section>
+
+<section class="stats">
+  <article class="card stat"><h2>{{ 'مشاهدات بشرية مرصودة' if lang == 'ar' else 'Browser page views' }}</h2><p class="value">{{ stats.traffic.page_views }}</p></article>
+  <article class="card stat"><h2>{{ 'زائر-يوم' if lang == 'ar' else 'Visitor-days' }}</h2><p class="value">{{ stats.traffic.visitor_days }}</p></article>
+  <article class="card stat"><h2>{{ 'فحوص مكتملة' if lang == 'ar' else 'Completed scans' }}</h2><p class="value">{{ stats.scans.completed }}</p></article>
+</section>
+
+<section class="grid-2">
+  <article class="card">
+    <h2>{{ 'نتائج الفحوص حسب الدرجة' if lang == 'ar' else 'Scan grades' }}</h2>
+    <table class="data" dir="ltr"><thead><tr><th>{{ 'الدرجة' if lang == 'ar' else 'Grade' }}</th><th>{{ 'عدد الفحوص' if lang == 'ar' else 'Scans' }}</th></tr></thead><tbody>
+    {% for row in stats.scans.grades %}<tr><td>{{ row.grade }}</td><td>{{ row.display }}</td></tr>{% else %}<tr><td colspan="2">{{ 'لا توجد بيانات في هذه الفترة' if lang == 'ar' else 'No data for this period' }}</td></tr>{% endfor %}
+    </tbody></table>
+    <p class="muted small">{{ 'تُستبعد الفحوص الموسومة كاختبارات. لا ننشر أسماء النطاقات أو سجلات الفحص الفردية.' if lang == 'ar' else 'Scans marked as tests are excluded. Domain names and individual scan records are not published.' }}</p>
+  </article>
+  <article class="card">
+    <h2>{{ 'مصادر الزيارات' if lang == 'ar' else 'Traffic sources' }}</h2>
+    <table class="data" dir="ltr"><thead><tr><th>{{ 'المصدر' if lang == 'ar' else 'Source' }}</th><th>{{ 'زائر-يوم' if lang == 'ar' else 'Visitor-days' }}</th></tr></thead><tbody>
+    {% for row in stats.traffic.sources %}<tr><td>{{ row.source }}</td><td>{{ row.visitor_days }}</td></tr>{% else %}<tr><td colspan="2">{{ 'لا توجد بيانات في هذه الفترة' if lang == 'ar' else 'No data for this period' }}</td></tr>{% endfor %}
+    </tbody></table>
+  </article>
+</section>
+
+<section class="card">
+  <h2>{{ 'النشاط اليومي' if lang == 'ar' else 'Daily activity' }}</h2>
+  <table class="data" dir="ltr"><thead><tr><th>{{ 'اليوم' if lang == 'ar' else 'Day' }}</th><th>{{ 'مشاهدات' if lang == 'ar' else 'Views' }}</th><th>{{ 'زائر-يوم' if lang == 'ar' else 'Visitor-days' }}</th></tr></thead><tbody>
+  {% for row in stats.traffic.daily %}<tr><td>{{ row.day }}</td><td>{{ row.views }}</td><td>{{ row.visitor_days }}</td></tr>{% else %}<tr><td colspan="3">{{ 'لا توجد أيام تتجاوز حد إخفاء الأعداد الصغيرة.' if lang == 'ar' else 'No days meet the minimum display threshold.' }}</td></tr>{% endfor %}
+  </tbody></table>
+  <p class="muted small">{{ 'تُحجب الأيام التي يقل فيها عدد الزوار عن خمسة.' if lang == 'ar' else 'Days with fewer than five visitor-days are suppressed.' }}</p>
+</section>
+
+<section class="grid-2">
+  <article class="card">
+    <h2>{{ 'خطوات الاستخدام والتجربة' if lang == 'ar' else 'Usage and trial funnel' }}</h2>
+    <table class="data" dir="ltr"><thead><tr><th>{{ 'الحدث' if lang == 'ar' else 'Event' }}</th><th>{{ 'زائر-يوم' if lang == 'ar' else 'Visitor-days' }}</th></tr></thead><tbody>
+    {% for key,label_ar,label_en in [('focus','التركيز على خانة النطاق','Domain field focused'),('submit','إرسال الفحص','Scan submitted'),('result','ظهور النتيجة','Result displayed'),('trial_start','الضغط لبدء التجربة','Trial button clicked')] %}
+    {% set item = stats.funnel.events.get(key) %}{% if item %}<tr><td>{{ label_ar if lang == 'ar' else label_en }}</td><td>{{ item.display }}</td></tr>{% endif %}{% endfor %}
+    <tr><td>{{ 'حسابات التجربة المنشأة' if lang == 'ar' else 'Trial accounts created' }}</td><td>{{ stats.funnel.trial_accounts_created.display }}</td></tr>
+    </tbody></table>
+    <p class="muted small">{{ 'كل حدث يُحسب كزائر-يوم مستقل، ولا يمكن ربط الأحداث بين الأيام على مستوى الشخص.' if lang == 'ar' else 'Each event is counted as a visitor-day; events cannot be linked across days to a person.' }}</p>
+  </article>
+  <article class="card">
+    <h2>{{ 'منهجية وحدود القياس' if lang == 'ar' else 'Method and limits' }}</h2>
+    <ul>
+      <li>{{ 'مشاهدة الصفحة تُرسل من المتصفح بعد تحميل JavaScript؛ لذلك لا تمثل كل طلبات HTTP أو كل الزوار.' if lang == 'ar' else 'Page views are sent by browser JavaScript after load; this is not a count of all HTTP requests or all visitors.' }}</li>
+      <li>{{ 'زائر-يوم تقدير ببصمة يومية مستعارة، وليس شخصًا فريدًا خلال الفترة.' if lang == 'ar' else 'A visitor-day is a daily pseudonymous estimate, not a unique person over the whole period.' }}</li>
+      <li>{{ 'تُستبعد الروبوتات المعروفة والسجلات الاختبارية. تصنيف الروبوتات تقريبي.' if lang == 'ar' else 'Known bots and test records are excluded. Bot classification is approximate.' }}</li>
+      <li>{{ 'لا تُعرض النطاقات المفحوصة أو البريد أو عناوين IP أو معرفات الزوار.' if lang == 'ar' else 'Scanned domains, email addresses, IP addresses and visitor identifiers are not shown.' }}</li>
+      <li>{{ 'الأعداد غير الصفرية الأصغر من خمسة تُخفى لحماية الخصوصية.' if lang == 'ar' else 'Nonzero counts below five are suppressed to protect privacy.' }}</li>
+    </ul>
+    <a href="{{ url_for('site.public_stats_api') }}">{{ 'بيانات JSON العامة' if lang == 'ar' else 'Public JSON data' }}</a>
+  </article>
+</section>
+{% endblock %}

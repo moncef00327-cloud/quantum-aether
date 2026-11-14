@@ -5,9 +5,11 @@
 # التشغيل المحلي:  python quantum_saas_app.py   ثم افتح http://127.0.0.1:5000
 # الإنتاج: gunicorn quantum_saas_app:app خلف nginx (انظر مجلد deploy/)
 import datetime as dt
+import access_links
 import csv
 import base64
 import functools
+from email.utils import parseaddr
 import glob
 import hashlib
 import hmac
@@ -15,6 +17,7 @@ import io
 import json
 import logging
 import os
+from pathlib import Path
 import re
 import secrets
 import urllib.parse
@@ -39,6 +42,8 @@ import countries
 import deadlines
 import free_alerts
 import audit
+import audit_checkout
+import company_billing
 import bank_report
 import discovery
 import config_gen
@@ -52,8 +57,11 @@ import quantum_vuln_scanner
 import sales_db
 import scorecard
 import scan_experience
+import scan_insights
+import evidence
 import search_indexing
 import badge_evidence
+import public_stats
 from mailer import Mailer
 from paypal_client import SUBSCRIPTION_LIVE_STATUSES, PayPalClient, PayPalError, verify_capture, verify_subscription
 
@@ -85,8 +93,18 @@ def _config_from_env():
         "PRICE": env("QS_PRICE", "49.00"),
         "PACK_PRICE": env("QS_PACK_PRICE", "199.00"),
         "AUDIT_PRICE": env("QS_AUDIT_PRICE", "490"),
-        "AUDIT_CURRENCY": env("QS_AUDIT_CURRENCY", "EUR"),
+        # EUR by default. Fallback if the PayPal account cannot take EUR: QS_AUDIT_CURRENCY=USD (the page then says so).
+        "AUDIT_CURRENCY": env("QS_AUDIT_CURRENCY", "EUR").upper() if env("QS_AUDIT_CURRENCY", "EUR").upper() in ("EUR", "USD") else "EUR",
+        # Separate PayPal credentials keep sandbox testing isolated from report and subscription payments.
+        "AUDIT_PAYPAL_CLIENT_ID": env("QS_AUDIT_PAYPAL_CLIENT_ID", ""),
+        "AUDIT_PAYPAL_CLIENT_SECRET": env("QS_AUDIT_PAYPAL_CLIENT_SECRET", "") or env("QS_AUDIT_PAYPAL_SECRET", ""),
+        "AUDIT_PAYPAL_ENV": env("QS_AUDIT_PAYPAL_ENV", "sandbox"),
+        "AUDIT_PAYMENTS_ENABLED": env("QS_AUDIT_PAYMENTS_ENABLED", "0").lower() in ("1", "true", "yes", "on"),
         "PACK_CREDITS": int(env("QS_PACK_CREDITS", "10")),
+        # Agency pack and monitoring subscriptions are sold in EUR (single reports keep QS_CURRENCY).
+        "PACK_CURRENCY": env("QS_PACK_CURRENCY", "EUR").upper() if env("QS_PACK_CURRENCY", "EUR").upper() in ("EUR", "USD") else "EUR",
+        # Blank = automatic: EUR once both EUR plan ids are configured, otherwise the legacy USD plans.
+        "SUBSCRIPTION_CURRENCY": env("QS_SUBSCRIPTION_CURRENCY", "").upper(),
         "CURRENCY": env("QS_CURRENCY", "USD"),
         "SCANS_PER_HOUR": int(env("QS_SCANS_PER_HOUR", "10")),
         "GLOBAL_SCANS_PER_HOUR": int(env("QS_GLOBAL_SCANS_PER_HOUR", "300")),
@@ -97,6 +115,8 @@ def _config_from_env():
         "PAYPAL_ENV": env("PAYPAL_ENV", "live"),
         "PAYPAL_PLAN_STARTER": env("PAYPAL_PLAN_STARTER", ""),
         "PAYPAL_PLAN_BUSINESS": env("PAYPAL_PLAN_BUSINESS", ""),
+        "PAYPAL_PLAN_STARTER_EUR": env("PAYPAL_PLAN_STARTER_EUR", ""),
+        "PAYPAL_PLAN_BUSINESS_EUR": env("PAYPAL_PLAN_BUSINESS_EUR", ""),
         "RESEND_API_KEY": env("RESEND_API_KEY", ""),
         "MAIL_FROM": env("QS_MAIL_FROM", ""),
         "MAIL_FROM_FALLBACK": env("QS_MAIL_FROM_FALLBACK", ""),
@@ -108,7 +128,8 @@ def _config_from_env():
     }
 
 
-def create_app(overrides=None, scanner=None, paypal=None, mailer=None, chain=None, discovery_http=None, discovery_probe=None):
+def create_app(overrides=None, scanner=None, paypal=None, mailer=None, chain=None, discovery_http=None, discovery_probe=None,
+               audit_paypal=None, audit_discovery=None):
     app = Flask(__name__)
     app.config['MAX_CONTENT_LENGTH'] = 128 * 1024
     app.config.update(_config_from_env())
@@ -124,12 +145,26 @@ def create_app(overrides=None, scanner=None, paypal=None, mailer=None, chain=Non
         paypal = PayPalClient(app.config["PAYPAL_CLIENT_ID"], app.config["PAYPAL_CLIENT_SECRET"], app.config["PAYPAL_ENV"])
     app.extensions["scanner"] = scanner or quantum_vuln_scanner.scan_full  # كل عناوين النطاق؛ المتتبّع يستخدم عنواناً واحداً
     app.extensions["paypal"] = paypal
+    if audit_paypal is None:
+        audit_id = app.config["AUDIT_PAYPAL_CLIENT_ID"]
+        audit_secret = app.config["AUDIT_PAYPAL_CLIENT_SECRET"]
+        if audit_id and audit_secret and app.config["AUDIT_PAYPAL_ENV"] in ("live", "sandbox"):
+            audit_paypal = PayPalClient(audit_id, audit_secret, app.config["AUDIT_PAYPAL_ENV"])
+        elif audit_id and audit_secret:
+            log.error("QS_AUDIT_PAYPAL_ENV must be live or sandbox; audit checkout stays disabled")
+        elif app.config["TESTING"]:
+            audit_paypal = paypal
+    app.extensions["audit_paypal"] = audit_paypal
     app.extensions["chain"] = chain or crypto_pay.ChainClient()
     app.extensions["discovery_http"] = discovery_http or requests.Session()
     app.extensions["discovery_probe"] = discovery_probe or discovery.probe_host
+    # Server header for the stack hint on the result page; tests never open sockets unless they inject one.
+    app.extensions.setdefault("server_header", (lambda ip, host: None) if app.config.get("TESTING")
+                              else scan_insights.server_header)
     # جرد أصول المشتركين: نفس كشف النطاقات العام (سجلات الشهادات + فحص كل اسم)
     app.extensions["asset_discover"] = lambda base: discovery.run_discovery(
         base, app.extensions["discovery_http"], app.extensions["discovery_probe"])
+    app.extensions["audit_discover"] = audit_discovery or app.extensions["asset_discover"]
     app.extensions["mailer"] = mailer or Mailer(app.config["RESEND_API_KEY"], app.config["MAIL_FROM"],
                                                      app.config["REPLY_TO"],
                                                      fallback_sender=app.config["MAIL_FROM_FALLBACK"],
@@ -174,9 +209,33 @@ def current_lang():
     return request.accept_languages.best_match(["en", "ar"] + (["de"] if german_allowed() else [])) or "en"
 
 
+def contact_email_address():
+    address = parseaddr(current_app.config.get("MAIL_FROM") or current_app.config.get("REPLY_TO")
+                        or current_app.config.get("OWNER_EMAIL") or "")[1]
+    return address if "@" in address else "sajad.vip56@gmail.com"
+
+
+def dual_price_label(amount, currency):
+    if currency == "USD":
+        return f"{amount} USD (≈ EUR {float(amount) / business_pages.USD_PER_EUR:.2f})"
+    return f"{amount} {currency}"
+
+
+def public_price_labels():
+    cfg = current_app.config
+    return {
+        "report_price_dual": dual_price_label(cfg["PRICE"], cfg["CURRENCY"]),
+        "agency_price_dual": dual_price_label(cfg["PACK_PRICE"], cfg["PACK_CURRENCY"]),
+        "starter_price_dual": dual_price_label(monitor.PLANS["starter"]["price"], subscription_currency()),
+        "business_price_dual": dual_price_label(monitor.PLANS["business"]["price"], subscription_currency()),
+        "credits": cfg["PACK_CREDITS"],
+    }
+
+
 # الصفحات التي لها نسخة ألمانية فعلية (لمبدّل اللغة وhreflang وخريطة الموقع).
 DE_PAGES = {"site.monthly_report", "site.press_page", "site.pq_config", "site.pq_config_server", "site.index", "site.study", "site.monitoring", "site.adoption_page", "site.scanning_page", "site.deadlines_page",
-            "site.business_page", "site.pricing_page", "site.agency_page", "site.audit_page", "site.audit_request", "site.countries_page", "site.country_page"}
+            "site.business_page", "site.pricing_page", "site.agency_page", "site.audit_page", "site.audit_request", "site.countries_page", "site.country_page",
+            "site.scan_page", "site.site_page"}
 
 
 def texts():
@@ -186,14 +245,35 @@ def texts():
 @bp.app_context_processor
 def _inject():
     lang = current_lang()
+    contact_email = contact_email_address()
     return {"t": i18n.TEXTS[lang], "lang": lang, "other_lang": "en" if lang == "ar" else "ar",
-            "legal_lang": "de" if lang == "de" else "en", "lang_names": i18n.LANG_NAMES,
+            # Legal pages in the visitor's language where a version exists (de, en); Arabic visitors get the binding
+            # German text with an Arabic note (legal_page). No Arabic legal text exists, so none is invented.
+            "legal_lang": lang if lang in LEGAL_LINK_LANGS else "de", "contact_email": contact_email, "lang_names": i18n.LANG_NAMES,
+            "grade_guide_url": url_for("site.study", lang=lang) + "#grade-definitions",
+            "report_price": current_app.config["PRICE"], "currency": current_app.config["CURRENCY"],
+            "agency_price_dual": dual_price_label(current_app.config["PACK_PRICE"], current_app.config["PACK_CURRENCY"]),
+            "pack_currency": current_app.config["PACK_CURRENCY"], "sub_currency": subscription_currency(),
+            "agency_credits": current_app.config["PACK_CREDITS"],
+            "starter_price": monitor.PLANS["starter"]["price"],
+            "usd_per_eur": business_pages.USD_PER_EUR, "fx_rate_date": business_pages.FX_RATE_DATE,
             "page_langs": ["en", "ar", "de"] if request.endpoint in DE_PAGES or guide_has_german() else ["en", "ar"],
             "abs_url": lambda endpoint, **kw: public_base() + url_for(endpoint, **kw),
             "localized_url": localized_url, "metadata_url": metadata_url,
             "sx": scan_experience.COPY[lang],
             "audit_cta": audit.COPY[lang]["cta"],
             "domain_discoverable": lambda domain: not search_indexing.is_excluded(domain)}
+
+
+@bp.app_template_filter("utm")
+def add_utm(url, source, campaign, medium="social"):
+    """Outbound/share link to our own site with utm_source/medium/campaign (analytics records utm_source)."""
+    url = str(url)
+    if "utm_source=" in url:
+        return url
+    base, hash_, frag = url.partition("#")
+    sep = "&" if "?" in base else "?"
+    return f"{base}{sep}utm_source={source}&utm_medium={medium}&utm_campaign={campaign}{hash_}{frag}"
 
 
 def public_base():
@@ -219,11 +299,14 @@ def metadata_url(lang):
 
 
 def json_object():
+    """The JSON object in the body. No JSON body: {}. Declared JSON that is malformed, null, an array or a scalar:
+    400 invalid_request, the API's established error code (before, malformed JSON silently became {} and surfaced
+    as a misleading field error)."""
     data = request.get_json(silent=True)
-    if data is None:
-        return {}
+    if data is None and not (request.is_json and request.get_data(cache=True)):
+        return {}  # no body, or not declared as JSON: unchanged behaviour
     if not isinstance(data, dict):
-        abort(400)
+        abort(make_response(jsonify(error="invalid_request", message="Expected a JSON object."), 400))
     return data
 
 
@@ -270,6 +353,42 @@ def client_hash():
     return hmac.new(salt, (request.remote_addr or "").encode(), hashlib.sha256).hexdigest()[:32]
 
 
+def record_conversion_event(name, page="/monitoring", is_test=None, detail=""):
+    """Record an aggregate funnel event; no account identifier or email enters analytics."""
+    try:
+        if is_admin_visitor():
+            return
+        day = dt.date.today().isoformat()
+        ua = request.headers.get("User-Agent", "")
+        salt = current_app.config["HASH_SALT"].encode()
+        visitor = hmac.new(salt, f"{day}|{request.remote_addr}|{ua}".encode(), hashlib.sha256).hexdigest()[:16]
+        test_event = is_test_request() if is_test is None else bool(is_test)
+        analytics_db.record_event(db(), day, name, page, current_lang(), visitor,
+                                  not ua or bool(analytics_db.BOT_RE.search(ua)), test_event, detail)
+    except Exception:
+        log.exception("conversion event tracking failed")
+
+
+def scan_domain_for_log(raw):
+    """The domain a visitor tried to scan, reduced to hostname characters (no paths, queries or credentials)."""
+    raw = str(raw or "").strip().lower()
+    host = raw.split("://", 1)[-1].split("/", 1)[0].split("?", 1)[0].split("#", 1)[0].rsplit("@", 1)[-1]
+    if not host.isascii():
+        try:
+            host = host.encode("idna").decode("ascii")
+        except UnicodeError:
+            host = host.encode("ascii", "ignore").decode("ascii")
+    return re.sub(r"[^a-z0-9.\-]", "", host)[:80] or "-"
+
+
+def note_scan_error(exc, raw, source, page):
+    """Scan rejected (invalid name, DNS, private address, TLS...): log the code and domain, count it with that detail."""
+    code = getattr(exc, "code", None) or type(exc).__name__
+    domain = scan_domain_for_log(raw)
+    log.warning("scan rejected: code=%s domain=%s src=%s lang=%s", code, domain, str(source or "-")[:20], current_lang())
+    record_conversion_event("error", page=page, detail=f"{code}:{domain}")
+
+
 def payments_enabled():
     return current_app.extensions["paypal"] is not None
 
@@ -301,11 +420,11 @@ def perform_scan(raw_domain, source=None):
         if recent:
             return recent["id"], recent["result"]
     since = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
-    if sales_db.count_attempts_since(conn, since, chash) >= cfg["SCANS_PER_HOUR"]:
-        abort(429)
-    if sales_db.count_attempts_since(conn, since) >= cfg["GLOBAL_SCANS_PER_HOUR"]:
+    # Check and count in one transaction so parallel requests cannot all slip under the limit.
+    if not sales_db.claim_scan_attempt(conn, chash, since, cfg["SCANS_PER_HOUR"], cfg["GLOBAL_SCANS_PER_HOUR"]):
+        if sales_db.count_attempts_since(conn, since, chash) >= cfg["SCANS_PER_HOUR"]:
+            abort(429)
         abort(429, description="busy")  # ضغط عام، لا ذنب للزائر
-    sales_db.record_attempt(conn, chash)
     raw_domain = quantum_vuln_scanner.normalize_domain(raw_domain)
     result = current_app.extensions["scanner"](raw_domain)
     scan_id = secrets.token_urlsafe(9)
@@ -370,11 +489,38 @@ def research_data():
 
 # ---------------------------------------------------------------- الصفحات
 
+# Public profiles of the project (sameAs in JSON-LD). Real URLs from the repo metadata (README, publish workflows).
+SAME_AS = (
+    "https://github.com/moncef00327-cloud/quantum-aether",
+    "https://github.com/moncef00327-cloud",
+    "https://pypi.org/project/quantum-aether-mcp/",
+    "https://github.com/marketplace/actions/post-quantum-tls-check-quantum-aether",
+    "https://github.com/moncef00327-cloud/pq-tls-action",
+)
+
+
+def org_jsonld(full=True):
+    """The publisher (Quantum Aether). full=False: a short reference by @id for nested use."""
+    base = public_base()
+    ref = {"@type": "Organization", "@id": base + "/#organization", "name": "Quantum Aether", "url": base + "/"}
+    if full:
+        ref.update({"logo": base + "/static/favicon.svg", "sameAs": list(SAME_AS),
+                    "email": current_app.config.get("CONTACT_EMAIL") or None})
+        ref = {k: v for k, v in ref.items() if v}
+    return ref
+
+
+@bp.app_context_processor
+def _jsonld_helpers():
+    return {"org_jsonld": org_jsonld}
+
+
 def home_jsonld():
     base, t = public_base(), texts()
     return [
-        {"@context": "https://schema.org", "@type": "WebSite", "name": t["brand"], "url": base,
-         "inLanguage": current_lang(),
+        dict({"@context": "https://schema.org"}, **org_jsonld()),
+        {"@context": "https://schema.org", "@type": "WebSite", "@id": base + "/#website", "name": t["brand"], "url": base,
+         "inLanguage": current_lang(), "publisher": {"@id": base + "/#organization"}, "sameAs": list(SAME_AS),
          "potentialAction": {"@type": "SearchAction", "target": base + "/site/{search_term_string}",
                              "query-input": "required name=search_term_string"}},
         {"@context": "https://schema.org", "@type": "SoftwareApplication", "name": t["brand"],
@@ -388,7 +534,7 @@ def home_jsonld():
     ]
 
 
-HOME_EXAMPLES = ("github.com", "cloudflare.com", "amazon.com")
+HOME_EXAMPLES = ("github.com", "amazon.com", "cloudflare.com")  # lead with classical results, not a guaranteed A
 
 
 def home_examples():
@@ -415,14 +561,32 @@ def scan_form():
     try:
         scan_id, _ = perform_scan(raw, request.form.get("src") or "home")
     except quantum_vuln_scanner.ScanError as exc:
+        note_scan_error(exc, raw, request.form.get("src") or "home", "/scan")
         return render_template("index.html", error=texts()["errors"].get(exc.code, str(exc)), domain=raw,
                                jsonld=home_jsonld(), examples=home_examples(), study_snapshot=study_data()), 400
     return redirect(url_for(".scan_page", scan_id=scan_id, lang=current_lang()), code=303)
 
 
+def _scan_by_domain_path(raw):
+    """/scan/<domain> shows the latest result for that hostname when no scan id matches."""
+    if "." not in (raw or "") or "/" in raw or len(raw) > 253:
+        return None
+    try:
+        host = quantum_vuln_scanner.normalize_domain(raw)
+    except quantum_vuln_scanner.ScanError:
+        return None
+    conn = db()
+    scan = sales_db.latest_scan(conn, host)
+    if not scan and host.startswith("www.") and host.count(".") >= 2:
+        scan = sales_db.latest_scan(conn, host[4:])
+    if not scan and not host.startswith("www."):
+        scan = sales_db.latest_scan(conn, "www." + host)
+    return scan
+
+
 @bp.get("/scan/<scan_id>")
 def scan_page(scan_id):
-    scan = sales_db.get_scan(db(), scan_id) or abort(404)
+    scan = sales_db.get_scan(db(), scan_id) or _scan_by_domain_path(scan_id) or abort(404)
     cfg = current_app.config
     lang = current_lang()
     findings = [dict(f, title=i18n.finding_text(f, lang if lang in ("en", "ar") else "en")[0]) for f in scan["result"]["findings"]]
@@ -432,7 +596,21 @@ def scan_page(scan_id):
         crypto_networks=crypto_pay.enabled_networks(cfg), badge=badge_snippets(scan["result"]["domain"]),
         price=cfg["PRICE"], currency=cfg["CURRENCY"],
         observation=scan_experience.status(scan['result']), next_steps=scan_experience.advice(scan['result']),
+        pq_reason=scan_insights.reason(scan['result']), fix_tabs=scan_insights.fix_tabs(lang),
+        common_prefixes=scan_insights.COMMON_PREFIXES,
     )
+
+
+@bp.post("/api/scan/<scan_id>/insights")
+def scan_insights_api(scan_id):
+    """Stack hint (Server header) + www/api/mail/auth/login check for one scan; computed once, then cached."""
+    scan = sales_db.get_scan(db(), scan_id) or abort(404)
+    data, state = scan_insights.get_or_compute(db(), scan_id, scan["result"], current_app.extensions["discovery_probe"],
+                                               current_app.extensions["server_header"])
+    if state == "busy":
+        return jsonify(state="busy"), 429
+    fix = scan_insights.fix_line(data["stack"], current_lang()) if data.get("stack") else None
+    return jsonify(dict(data, state="done", fix=fix))
 
 
 @bp.get("/report/<token>")
@@ -465,6 +643,8 @@ def sample_report():
 
 @bp.get("/report/<token>/dna.txt")
 def report_dna(token):
+    # Disabled 2026-11-14 (product focus): the DNA/FASTA export is not offered any more. Code kept below.
+    abort(404)
     scan = paid_scan_or_404(token)
     payload = json.dumps(scan["result"], ensure_ascii=False, indent=2).encode("utf-8")
     name = f"pqc-report-{scan['domain']}.json"
@@ -509,6 +689,8 @@ def _study_filtered(excluded):
     d.update({
         "total": len(kept), "excluded": len(rows) - len(kept), "reachable": len(ok), "unreachable": len(kept) - len(ok),
         "pq": sum(1 for r in ok if kx(r).get("pq")),
+        "pq_critical": sum(1 for r in ok if kx(r).get("pq") and any(
+            finding.get("status") == "critical" for finding in r.get("findings", []))),
         "grades": dict(sorted(collections.Counter(r.get("grade") for r in ok).items())),
         "groups": [list(x) for x in collections.Counter(kx(r).get("group") or "?" for r in ok).most_common()],
         "versions": [list(x) for x in collections.Counter(kx(r).get("version") or cert(r).get("negotiated_version") for r in ok).most_common()],
@@ -535,15 +717,34 @@ def study_retry_domains():
 
 # ---------------------------------------------------------------- الصفحات القانونية (النمسا)
 
+LEGAL_LINK_LANGS = ("de", "en", "ar")  # ar: German binding text + an Arabic notice (no Arabic legal text exists)
+LEGAL_BINDING_NOTE = {
+    "ar": ("هذه الصفحة غير متوفرة بالعربية. النص الملزم قانونياً هو النسخة الألمانية أدناه؛ "
+           "وتتوفر ترجمة إنجليزية للاطلاع فقط: "),
+    "en": "",
+}
+
+
 @bp.get("/<any(impressum, datenschutz, agb):slug>")
 def legal_page(slug):
-    lang = request.args.get("lang")
-    lang = lang if lang in legal.LANGS else (request.accept_languages.best_match(list(legal.LANGS)) or "de")
+    requested = request.args.get("lang")
+    if requested == "ar":
+        # No Arabic legal text: show the binding German version with a note in Arabic (never a machine translation).
+        lang, notice = "de", "ar"
+    else:
+        notice = None
+        lang = requested if requested in legal.LANGS else (request.accept_languages.best_match(list(legal.LANGS)) or "de")
     other = "en" if lang == "de" else "de"
     # الصفحة بالألمانية أو الإنجليزية: نمرر لغة القالب صراحة فتتجاوز لغة الموقع (عربي/إنجليزي).
     t = dict(i18n.TEXTS["en"], dir="ltr", other_lang="English" if lang == "de" else "Deutsch")
-    return render_template("legal.html", page=legal.PAGES[slug][lang], t=t, lang=lang, other_lang=other,
-                           legal_lang=lang, page_langs=list(legal.LANGS))
+    import html
+    contact_email = contact_email_address()
+    contact_html = f'<a href="mailto:{html.escape(contact_email, quote=True)}">{html.escape(contact_email)}</a>'
+    body = legal.PAGES[slug][lang]["body"].replace(legal.EMAIL, contact_html)
+    page = dict(legal.PAGES[slug][lang], body=body)
+    return render_template("legal.html", page=page, t=t, lang=lang, other_lang=other,
+                           legal_lang=lang, page_langs=list(legal.LANGS),
+                           binding_notice=LEGAL_BINDING_NOTE.get(notice) if notice else None)
 
 
 MONTHS = {"en": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
@@ -683,8 +884,17 @@ def press_page():
     lang = current_lang()
     latest = reports.ids()
     r = reports.load(latest[0]) if latest else None
+    base = public_base()
+    jsonld = [{"@context": "https://schema.org", "@type": "WebPage", "name": texts()["press_title"],
+               "description": texts()["press_meta"], "url": base + url_for(".press_page"), "inLanguage": lang,
+               "publisher": org_jsonld(), "about": {"@id": base + "/#organization"}}]
+    if r:
+        jsonld.append({"@context": "https://schema.org", "@type": "Report", "name": f"Post-quantum TLS report {r['id']}",
+                       "datePublished": r["published"], "inLanguage": lang,
+                       "url": base + url_for(".monthly_report", report_id=r["id"]),
+                       "publisher": org_jsonld(False), "author": org_jsonld(False)})
     return render_template("press.html", r=r, facts=reports.findings(r, lang) if r else [], charts=reports.CHARTS,
-                           month_name=_month_name(r["id"], lang) if r else "")
+                           month_name=_month_name(r["id"], lang) if r else "", jsonld=jsonld)
 
 
 @bp.get("/tools/pq-tls-config")
@@ -704,7 +914,16 @@ def pq_config_server(server):
 def guides_index():
     lang = current_lang()
     items = [(slug, g[lang]) for slug, g in guides.GUIDES.items()]
-    return render_template("guides_index.html", items=items)
+    base = public_base()
+    jsonld = {"@context": "https://schema.org", "@type": "CollectionPage", "name": texts()["guides_title"],
+              "description": texts()["guides_intro"], "url": base + url_for(".guides_index"), "inLanguage": lang,
+              "publisher": org_jsonld(),
+              "mainEntity": {"@type": "ItemList", "itemListElement": [
+                  {"@type": "ListItem", "position": i, "item": {
+                      "@type": "TechArticle", "headline": page["title"], "description": page.get("description", ""),
+                      "url": base + url_for(".guide", slug=slug, lang=lang), "dateModified": guides.GUIDES[slug]["updated"]}}
+                  for i, (slug, page) in enumerate(items, 1)]}}
+    return render_template("guides_index.html", items=items, jsonld=jsonld)
 
 
 # ---------------------------------------------------------------- باقة الوكالات (10 تقارير، دفعة واحدة)
@@ -724,21 +943,39 @@ def commercial_page(section):
     return render_template("commercial.html", commercial=business_pages.COPY[current_lang()],
                            section=section, plans=monitor.PLANS, price=cfg["PRICE"],
                            pack_price=cfg["PACK_PRICE"], credits=cfg["PACK_CREDITS"],
-                           currency=cfg["CURRENCY"], recurring_enabled=subscriptions_enabled(),
+                           audit_price=cfg["AUDIT_PRICE"], audit_currency=cfg["AUDIT_CURRENCY"],
+                           contact_email=contact_email_address(),
+                           usd_per_eur=business_pages.USD_PER_EUR, fx_rate_date=business_pages.FX_RATE_DATE,
+                           currency=cfg["CURRENCY"], pack_currency=cfg["PACK_CURRENCY"],
+                           sub_currency=subscription_currency(), recurring_enabled=subscriptions_enabled(),
                            payments_enabled=payments_enabled())
 
 
 @bp.get("/agency")
 def agency_page():
     cfg = current_app.config
-    return render_template("agency.html", price=cfg["PACK_PRICE"], credits=cfg["PACK_CREDITS"], currency=cfg["CURRENCY"],
-                           single=cfg["PRICE"], payments_enabled=payments_enabled(), paypal_client_id=cfg["PAYPAL_CLIENT_ID"])
+    currency = cfg["PACK_CURRENCY"]
+    c = audit.COPY[current_lang()]
+    return render_template("agency.html", price=cfg["PACK_PRICE"], credits=cfg["PACK_CREDITS"], currency=currency,
+                           price_dual=dual_price_label(cfg["PACK_PRICE"], currency),
+                           each_dual=dual_price_label(f"{float(cfg['PACK_PRICE']) / cfg['PACK_CREDITS']:.2f}", currency),
+                           single=cfg["PRICE"], single_dual=dual_price_label(cfg["PRICE"], cfg["CURRENCY"]),
+                           payments_enabled=payments_enabled(), paypal_client_id=cfg["PAYPAL_CLIENT_ID"],
+                           c=c, pay_note=c["checkout"]["pay_note"], sandbox=cfg["PAYPAL_ENV"] != "live")
 
 
 def _audit_page(state=None, status=200, form=None):
     cfg = current_app.config
     return render_template("audit.html", c=audit.COPY[current_lang()], price=cfg["AUDIT_PRICE"],
-                           currency=cfg["AUDIT_CURRENCY"], state=state, form=form or {}), status
+                           currency=cfg["AUDIT_CURRENCY"], state=state, form=form or {},
+                           audit_payments_enabled=audit_payments_enabled(),
+                           audit_paypal_client_id=cfg["AUDIT_PAYPAL_CLIENT_ID"],
+                           audit_sandbox=cfg["AUDIT_PAYPAL_ENV"] != "live"), status
+
+
+def audit_payments_enabled():
+    return bool(current_app.extensions.get("audit_paypal") and
+                (current_app.testing or current_app.config.get("AUDIT_PAYMENTS_ENABLED")))
 
 
 @bp.get("/audit")
@@ -777,25 +1014,446 @@ def audit_request():
     return _audit_page("sent", 200, f)
 
 
+def _audit_order_fields(data):
+    """Server-side mirror of the checkout form: every field, Latin billing data, and all three boxes."""
+    fields = {key: str(data.get(key) or "").strip() for key in
+              ("name", "email", "org", "street", "postal_code", "city", "country", "domain")}
+    limits = {"name": 120, "email": 254, "org": 200, "street": 200, "postal_code": 30, "city": 100, "country": 100,
+              "domain": 253}
+    if any(len(fields[k]) > n for k, n in limits.items()):
+        return None, "required_fields"
+    fields["email"] = fields["email"].lower()
+    if not all(fields.values()):
+        return None, "required_fields"
+    if data.get("company_buyer") is not True or data.get("agb_consent") is not True or data.get("contact_consent") is not True:
+        return None, "consent_required"
+    if not EMAIL_RE.match(fields["email"]):
+        return None, "invalid_email"
+    if not all(audit_checkout.latin_ok(fields[k]) for k in audit_checkout.LATIN_FIELDS):
+        return None, "latin_required"
+    try:
+        domain = quantum_vuln_scanner.normalize_domain(fields["domain"])
+    except quantum_vuln_scanner.ScanError:
+        return None, "invalid_domain"
+    fields["domain"] = discovery.base_domain(domain)
+    fields["billing_address"] = f"{fields['street']}\n{fields['postal_code']} {fields['city']}\n{fields['country']}"
+    return fields, None
+
+
+def _audit_amount():
+    from decimal import Decimal, InvalidOperation
+    try:
+        return f"{Decimal(str(current_app.config['AUDIT_PRICE'])):.2f}"
+    except InvalidOperation:
+        return "490.00"
+
+
+def _audit_is_test():
+    """Owner/admin traffic, or any order while the audit PayPal client is not live (sandbox money is never real)."""
+    return is_test_request() or current_app.config.get("AUDIT_PAYPAL_ENV") != "live"
+
+
+@bp.post("/api/paypal/audit")
+def paypal_create_audit():
+    if request.headers.get("Sec-Fetch-Site", "same-origin") not in ("same-origin", "none"):
+        abort(400)
+    if not audit_payments_enabled():
+        return jsonify(error="audit_payments_disabled"), 503
+    paypal = current_app.extensions["audit_paypal"]
+    data = json_object()
+    fields, error = _audit_order_fields(data)
+    if error:
+        return jsonify(error=error), 400
+    conn = db()
+    if audit_checkout.rate_limited(conn, client_hash()):
+        return jsonify(error="rate_limited"), 429
+    cfg = current_app.config
+    lang = data.get("lang") or request.args.get("lang") or current_lang()
+    if lang not in ("en", "ar", "de"):
+        lang = current_lang()
+    amount, currency = _audit_amount(), cfg["AUDIT_CURRENCY"]
+    audit_id = audit_checkout.new_id()
+    try:
+        order = paypal.create_order(audit_id, amount, currency,
+                                    f"Post-quantum TLS subdomain audit: {fields['domain']}", no_shipping=True)
+    except (PayPalError, requests.RequestException) as exc:
+        log.warning("PayPal audit order creation failed: %s", exc)
+        return jsonify(error="paypal_unavailable"), 502
+    now = now_iso()
+    try:
+        audit_checkout.create(conn, audit_id=audit_id, order_id=order["id"], email=fields["email"],
+                              name=fields["name"], org=fields["org"], billing_address=fields["billing_address"],
+                              domain=fields["domain"], lang=lang, amount=amount, currency=currency,
+                              agb_consent_at=now, contact_consent_at=now, client_hash=client_hash(),
+                              is_test=_audit_is_test(), paypal_env=cfg["AUDIT_PAYPAL_ENV"])
+    except Exception:
+        log.exception("Could not store created PayPal audit order %s", order.get("id"))
+        return jsonify(error="order_storage_failed"), 500
+    record_conversion_event("audit_checkout_start", "/audit")
+    return jsonify(id=order["id"], amount=amount, currency=currency), 201
+
+
+def _audit_seller():
+    email = re.search(r"mailto:([^\"'>]+)", legal.EMAIL)
+    return {"name": legal.OWNER, "address": legal.ADDRESS, "email": email.group(1) if email else ""}
+
+
+def _audit_tag(order):
+    return "[TEST] " if order.get("is_test") else ""
+
+
+def _audit_scan_main(app, domain):
+    """Full check of the primary domain (all IPs). Returns a small dict; never raises."""
+    try:
+        r = app.extensions["scanner"](domain)
+    except Exception as exc:  # noqa: BLE001 — unreachable primary domain is a result, not a crash
+        return {"error": getattr(exc, "code", None) or type(exc).__name__}
+    kx = r.get("key_exchange") or {}
+    out = {"grade": r.get("grade"), "version": kx.get("version"), "group": kx.get("group"), "pq": bool(kx.get("pq"))}
+    summary = r.get("endpoint_summary") or {}
+    if summary.get("total"):
+        out["endpoints_total"], out["endpoints_pq"] = summary.get("total"), summary.get("pq")
+    return out
+
+
+def _run_audit_discovery(app, order_id):
+    """Discovery + checks, then the PDF report by email. Unreachable domains are flagged for a refund instead."""
+    with app.app_context():
+        conn = db()
+        order = audit_checkout.by_order(conn, order_id)
+        if not order or order["status"] != "COMPLETED" or order["audit_status"] in ("DONE", "ACCESS_ISSUE"):
+            return
+        audit_checkout.set_audit_result(conn, order_id, "RUNNING")
+        base = order["domain"]
+        try:
+            result = app.extensions["audit_discover"](base)
+            error = None
+        except Exception as exc:  # noqa: BLE001 — CT sources down: still check the primary names directly
+            log.warning("Paid audit discovery failed for %s: %s", order_id, exc)
+            result, error = {"source": None, "names": 0, "hosts": []}, type(exc).__name__
+        hosts = list(result.get("hosts") or [])
+        seen = {h.get("host") for h in hosts}
+        probe = app.extensions["discovery_probe"]
+        for name in (base, "www." + base):  # the primary names are always part of the audit
+            if name not in seen:
+                try:
+                    h = probe(name)
+                except Exception:  # noqa: BLE001
+                    h = None
+                if h:
+                    hosts.append(h)
+        order_key = {"not_pq": 0, "unknown": 1, "pq": 2}
+        hosts.sort(key=lambda h: (order_key.get(h.get("status"), 1), h.get("host") or ""))
+        count = lambda s: sum(1 for h in hosts if h.get("status") == s)
+        main = _audit_scan_main(app, base)
+        summary = {"source": result.get("source"), "names": int(result.get("names") or 0),
+                   "checked": min(int(result.get("names") or 0), discovery.MAX_HOSTS),
+                   "responding": len(hosts), "pq": count("pq"), "not_pq": count("not_pq"),
+                   "unknown": count("unknown"), "hosts": hosts, "main": main, "discovery_error": error,
+                   "finished_at": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}
+        mailer = app.extensions["mailer"]
+        owner = app.config["OWNER_EMAIL"]
+        if summary["responding"] == 0 and not main.get("grade"):
+            # Nothing reachable: no report; the owner decides on the full refund in /admin.
+            audit_checkout.set_audit_result(conn, order_id, "ACCESS_ISSUE", json.dumps(summary, ensure_ascii=False))
+            if owner and mailer.send(owner, f"{_audit_tag(order)}[Quantum Aether] Audit domain unreachable: {base}",
+                                     f"Order {order_id} ({order['invoice_number']}) for {order['org']}: no host of "
+                                     f"{base} answered on port 443.\nA full refund button is available in "
+                                     f"{public_base_for(app)}/admin#audit-orders"):
+                audit_checkout.set_delivery_state(conn, order_id, access_notice=True)
+            return
+        audit_checkout.set_audit_result(conn, order_id, "DONE", json.dumps(summary, ensure_ascii=False))
+        _deliver_audit_report(app, conn, order_id)
+
+
+def public_base_for(app):
+    return (app.config.get("PUBLIC_URL") or "").rstrip("/")
+
+
+def _deliver_audit_report(app, conn, order_id):
+    """Build (once) and email the PDF report; safe to call again from the admin retry button."""
+    order = audit_checkout.by_order(conn, order_id)
+    if not order or order["audit_status"] != "DONE":
+        return False
+    path = Path(order["report_path"]) if order.get("report_path") else None
+    if path and path.is_file():
+        data = path.read_bytes()
+    else:
+        generated = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d %H:%M")
+        path, data = audit_checkout.save_report(app.config["DATA_DIR"], order, audit_checkout.summary_of(order),
+                                                _audit_seller(), generated)
+        audit_checkout.set_report(conn, order_id, path, generated)
+        order = audit_checkout.by_order(conn, order_id)
+    if order.get("report_email_sent"):
+        return True
+    mailer = app.extensions["mailer"]
+    subject, body = audit.report_email(order, public_base_for(app))
+    ok = mailer.send(order["email"], _audit_tag(order) + subject, body,
+                     attachments=[{"filename": f"{order['invoice_number']}-report.pdf", "content": data}])
+    if ok:
+        audit_checkout.set_delivery_state(conn, order_id, report=True)
+        owner = app.config["OWNER_EMAIL"]
+        s = audit_checkout.summary_of(order)
+        if owner:
+            mailer.send(owner, f"{_audit_tag(order)}[Quantum Aether] Audit report delivered: {order['domain']}",
+                        f"Order {order_id} ({order['invoice_number']}), {order['org']}\nReport sent to {order['email']}\n"
+                        f"Hosts responding: {s.get('responding')} · PQ {s.get('pq')} · classical {s.get('not_pq')} · "
+                        f"undetermined {s.get('unknown')}")
+    return ok
+
+
+def _start_audit(order_id):
+    app = current_app._get_current_object()
+    if app.testing:
+        _run_audit_discovery(app, order_id)
+    else:
+        import threading
+        threading.Thread(target=_run_audit_discovery, args=(app, order_id), daemon=True,
+                         name=f"paid-audit-{order_id}").start()
+
+
+def _finalize_audit_payment(order_id, capture_id):
+    """Idempotent: invoice once, customer mail once, owner mail once, audit started once."""
+    conn = db()
+    order, _ = audit_checkout.complete(conn, order_id, capture_id)
+    if not order or order["status"] != "COMPLETED":
+        return None
+    path = Path(order["invoice_path"]) if order.get("invoice_path") else audit_checkout.invoice_path(current_app.config["DATA_DIR"], order)
+    if not path.is_file():
+        path, pdf_data = audit_checkout.save_invoice(current_app.config["DATA_DIR"], order, _audit_seller())
+        audit_checkout.set_invoice_path(conn, order_id, path)
+    else:
+        pdf_data = path.read_bytes()
+    order = audit_checkout.by_order(conn, order_id)
+    mailer = current_app.extensions["mailer"]
+    tag = _audit_tag(order)
+    if not order.get("customer_email_sent"):
+        subject, body = audit.paid_receipt_email(order, public_base())
+        if mailer.send(order["email"], tag + subject, body,
+                       attachments=[{"filename": f"{order['invoice_number']}.pdf", "content": pdf_data}]):
+            audit_checkout.set_delivery_state(conn, order_id, customer=True)
+    order = audit_checkout.by_order(conn, order_id)
+    owner = current_app.config["OWNER_EMAIL"]
+    if owner and not order.get("owner_email_sent"):
+        body = (f"Audit order {order_id} ({order['paypal_env']})\nInvoice {order['invoice_number']}\n"
+                f"Organization: {order['org']}\nContact: {order['name']} <{order['email']}>\n"
+                f"Billing address:\n{order['billing_address']}\nDomain: {order['domain']}\n"
+                f"Amount: {order['amount']} {order['currency']}\nPayPal capture: {order['capture_id']}\n"
+                f"Customer invoice email sent: {'yes' if order['customer_email_sent'] else 'NO - retry in /admin'}")
+        if mailer.send(owner, f"{tag}[Quantum Aether] Audit paid: {order['org']} ({order['domain']})", body,
+                       attachments=[{"filename": f"{order['invoice_number']}.pdf", "content": pdf_data}]):
+            audit_checkout.set_delivery_state(conn, order_id, owner=True)
+    order = audit_checkout.by_order(conn, order_id)
+    if order["audit_status"] == "NOT_STARTED":
+        audit_checkout.set_audit_result(conn, order_id, "QUEUED")
+        _start_audit(order_id)
+    return audit_checkout.by_order(conn, order_id)
+
+
+@bp.post("/api/paypal/audit/<order_id>/capture")
+def paypal_capture_audit(order_id):
+    """Same pattern as the pack: the server captures, then verifies reference, amount and currency."""
+    if request.headers.get("Sec-Fetch-Site", "same-origin") not in ("same-origin", "none"):
+        abort(400)
+    if not audit_payments_enabled():
+        return jsonify(error="audit_payments_disabled"), 503
+    conn = db()
+    row = audit_checkout.by_order(conn, order_id)
+    if not row:
+        return jsonify(error="order_not_found"), 404
+    if row["status"] in ("CREATED", "PENDING"):
+        paypal = current_app.extensions["audit_paypal"]
+        try:
+            order = paypal.capture_order(order_id)
+        except PayPalError as exc:
+            if exc.issue == "INSTRUMENT_DECLINED":
+                return jsonify(error="INSTRUMENT_DECLINED"), 422
+            if exc.issue == "ORDER_NOT_APPROVED":
+                return jsonify(error="order_not_approved"), 409
+            if exc.issue != "ORDER_ALREADY_CAPTURED":
+                log.warning("PayPal audit capture failed for %s: %s (%s)", order_id, exc, exc.issue)
+                return jsonify(error="capture_failed"), 502
+            try:
+                order = paypal.get_order(order_id)
+            except (PayPalError, requests.RequestException):
+                return jsonify(error="paypal_unavailable"), 502
+        except requests.RequestException:
+            return jsonify(error="paypal_unavailable"), 502
+        status, capture_id = verify_capture(order, row["id"], row["amount"], row["currency"])
+        if status == "FAILED" or (status == "COMPLETED" and not capture_id):
+            log.error("PayPal audit capture for %s did not match the expected amount/reference", order_id)
+            audit_checkout.set_status(conn, order_id, "FAILED")
+            return jsonify(error="verification_failed"), 402
+        if status == "PENDING":
+            audit_checkout.set_status(conn, order_id, "PENDING")
+            return jsonify(status="PENDING"), 202
+    elif row["status"] != "COMPLETED":
+        return jsonify(error="order_not_payable", status=row["status"]), 409
+    else:
+        capture_id = row["capture_id"]
+    final = _finalize_audit_payment(order_id, capture_id)
+    if not final:
+        return jsonify(error="invoice_generation_failed"), 500
+    record_conversion_event("audit_payment_complete", "/audit", is_test=final["is_test"])
+    return jsonify(status="COMPLETED", invoice_number=final["invoice_number"], audit_status=final["audit_status"],
+                   invoice_email_sent=bool(final["customer_email_sent"])), 200
+
+
+def _admin_audit_guard():
+    if not is_admin_visitor():
+        return Response(status=401, headers={"WWW-Authenticate": 'Basic realm="Quantum Aether admin", charset="UTF-8"'})
+    if request.method == "POST" and request.headers.get("Sec-Fetch-Site", "same-origin") not in ("same-origin", "none"):
+        abort(400)
+    return None
+
+
+def _admin_back(message):
+    return redirect(url_for(".admin", audit_msg=message) + "#audit-orders", code=303)
+
+
+@bp.post("/admin/audit/<audit_id>/retry-delivery")
+def admin_retry_audit_delivery(audit_id):
+    denied = _admin_audit_guard()
+    if denied:
+        return denied
+    row = audit_checkout.by_id(db(), audit_id) or abort(404)
+    if row["status"] != "COMPLETED":
+        return _admin_back("not-completed")
+    final = _finalize_audit_payment(row["order_id"], row["capture_id"])
+    if final and final["audit_status"] == "DONE":
+        _deliver_audit_report(current_app._get_current_object(), db(), row["order_id"])
+    final = audit_checkout.by_id(db(), audit_id)
+    ok = final and final["customer_email_sent"] and (final["audit_status"] != "DONE" or final["report_email_sent"])
+    return _admin_back("delivery-ok" if ok else "delivery-pending")
+
+
+@bp.post("/admin/audit/<audit_id>/refund")
+def admin_refund_audit(audit_id):
+    """Full PayPal refund, offered only when no host of the customer's domain answered."""
+    denied = _admin_audit_guard()
+    if denied:
+        return denied
+    if request.form.get("confirm") != "yes":
+        return _admin_back("refund-not-confirmed")
+    conn = db()
+    row = audit_checkout.by_id(conn, audit_id) or abort(404)
+    if row["status"] not in ("COMPLETED", "REFUND_PENDING") or row["audit_status"] != "ACCESS_ISSUE" or not row["capture_id"]:
+        return _admin_back("refund-not-eligible")
+    try:
+        refund = current_app.extensions["audit_paypal"].refund_capture(
+            row["capture_id"], request_id=f"audit-refund-{audit_id}")
+    except (PayPalError, requests.RequestException) as exc:
+        log.warning("PayPal audit refund failed for %s: %s", audit_id, exc)
+        return _admin_back("refund-failed")
+    if not refund.get("id"):
+        return _admin_back("refund-failed")
+    if refund.get("status") != "COMPLETED":
+        audit_checkout.set_refund(conn, row["order_id"], refund["id"], "REFUND_PENDING")
+        return _admin_back("refund-pending")
+    first = row["status"] != "REFUNDED"
+    audit_checkout.set_refund(conn, row["order_id"], refund["id"], "REFUNDED")
+    if first:
+        current_app.extensions["mailer"].send(
+            row["email"], f"{_audit_tag(row)}Rückerstattung / Refund – Audit {row['invoice_number']}",
+            f"Guten Tag {row['name']},\n\nwir haben den vollständigen Betrag von {row['amount']} {row['currency']} "
+            f"über PayPal erstattet, da kein öffentlicher HTTPS-Endpunkt von {row['domain']} erreichbar war.\n\n"
+            f"Hello {row['name']},\n\nwe refunded the full amount of {row['amount']} {row['currency']} via PayPal "
+            f"because no public HTTPS endpoint of {row['domain']} could be reached.\n\n{legal.OWNER}\n{public_base()}")
+    return _admin_back("refund-ok")
+
+
+def _admin_audit_file(audit_id, kind):
+    denied = _admin_audit_guard()
+    if denied:
+        return denied
+    row = audit_checkout.by_id(db(), audit_id) or abort(404)
+    path = Path(row.get(f"{kind}_path") or "")
+    if not row.get("invoice_number") or not path.is_file():
+        abort(404)
+    suffix = "" if kind == "invoice" else "-report"
+    return send_file(path, mimetype="application/pdf", as_attachment=True,
+                     download_name=f"{row['invoice_number']}{suffix}.pdf", max_age=0)
+
+
+@bp.get("/admin/billing/<record_id>/invoice")
+def admin_billing_invoice(record_id):
+    denied = _admin_audit_guard()
+    if denied:
+        return denied
+    row = db().execute("SELECT * FROM billing_records WHERE id=?", (record_id,)).fetchone() or abort(404)
+    path = Path(row["invoice_path"] or "")
+    if not row["invoice_number"] or not path.is_file():
+        abort(404)
+    return send_file(path, mimetype="application/pdf", as_attachment=True,
+                     download_name=f"{row['invoice_number']}.pdf", max_age=0)
+
+
+@bp.get("/admin/audit/<audit_id>/invoice")
+def admin_audit_invoice(audit_id):
+    return _admin_audit_file(audit_id, "invoice")
+
+
+@bp.get("/admin/audit/<audit_id>/report")
+def admin_audit_report(audit_id):
+    return _admin_audit_file(audit_id, "report")
+
+
 @bp.post("/api/paypal/packs")
 def paypal_create_pack():
     paypal = current_app.extensions["paypal"]
     if paypal is None:
         return jsonify(error="payments_disabled"), 503
+    if request.headers.get("Sec-Fetch-Site", "same-origin") not in ("same-origin", "none"):
+        abort(400)
     data = json_object()
-    if data.get("consent") is not True:
-        return jsonify(error="consent_required"), 400
+    fields, error = _audit_order_fields(data)  # same company form and rules as the audit checkout
+    if error:
+        return jsonify(error=error), 400
     cfg = current_app.config
+    conn = db()
+    lang = data.get("lang") if data.get("lang") in ("en", "ar", "de") else current_lang()
+    amount, currency = _money(cfg["PACK_PRICE"]), cfg["PACK_CURRENCY"]
     pack_id = packs.new_id()
     try:
-        order = paypal.create_order(pack_id, cfg["PACK_PRICE"], cfg["CURRENCY"],
-                                    f"Agency pack: {cfg['PACK_CREDITS']} post-quantum TLS reports")
+        order = paypal.create_order(pack_id, amount, currency,
+                                    f"Agency pack: {cfg['PACK_CREDITS']} post-quantum TLS reports", no_shipping=True)
     except (PayPalError, requests.RequestException) as exc:
         log.warning("PayPal create pack order failed: %s", exc)
         return jsonify(error="paypal_unavailable"), 502
-    packs.create(db(), pack_id, order["id"], cfg["PACK_CREDITS"], cfg["PACK_PRICE"], cfg["CURRENCY"], current_lang(),
-                 now_iso(), is_test_request())
-    return jsonify(id=order["id"]), 201
+    now, is_test = now_iso(), _main_paypal_is_test()
+    packs.create(conn, pack_id, order["id"], cfg["PACK_CREDITS"], amount, currency, lang, now, is_test)
+    company_billing.create(conn, kind="pack", ref_id=pack_id, fields=fields, amount=amount, currency=currency,
+                           consent_at=now, client_hash=client_hash(), is_test=is_test, paypal_env=cfg["PAYPAL_ENV"],
+                           order_id=order["id"])
+    record_conversion_event("agency_start", "/agency")
+    return jsonify(id=order["id"], amount=amount, currency=currency), 201
+
+
+def _money(value):
+    from decimal import Decimal, InvalidOperation
+    try:
+        return f"{Decimal(str(value)):.2f}"
+    except InvalidOperation:
+        return str(value)
+
+
+def _main_paypal_is_test():
+    """Owner/admin traffic, or the main PayPal client is not live (sandbox money is never real)."""
+    return is_test_request() or current_app.config.get("PAYPAL_ENV") != "live"
+
+
+def _finalize_pack_invoice(conn, pack, order_id, capture_id):
+    """Invoice (shared QA-/TEST- sequence) for a paid pack with company billing data; None for legacy packs."""
+    record = company_billing.mark_paid(conn, "pack", pack["id"], order_id, capture_id)
+    if not record:
+        return None, None
+    try:
+        _path, data = company_billing.pack_invoice(conn, current_app.config["DATA_DIR"], record, _audit_seller(),
+                                                   pack["credits"])
+    except Exception:  # noqa: BLE001 — the pack link must still be delivered; the owner can re-issue the invoice
+        log.exception("Could not create the pack invoice for %s", pack["id"])
+        data = None
+    return company_billing.get(conn, "pack", pack["id"]), data
 
 
 @bp.post("/api/paypal/packs/<order_id>/capture")
@@ -829,22 +1487,35 @@ def paypal_capture_pack(order_id):
     status, capture_id = verify_capture(order, pack["id"], pack["amount"], pack["currency"])
     email = (order.get("payer") or {}).get("email_address")
     token = packs.mark(conn, pack["id"], status, capture_id, email)
+    if status == "COMPLETED" and token is None:  # a parallel capture completed it and sent the link already
+        return jsonify(status="COMPLETED", message="already_completed")
     if status == "FAILED":
         log.error("PayPal pack capture for %s did not match the expected amount/reference", order_id)
         return jsonify(error="verification_failed"), 402
     if status != "COMPLETED":
         return jsonify(status=status), 202
+    record_conversion_event("agency_paid", "/agency", is_test=pack["is_test"])
     pack_url = public_base() + url_for(".pack_page", token=token, lang=pack["lang"])
     mailer = current_app.extensions["mailer"]
-    if email and mailer.enabled:
+    record, invoice = _finalize_pack_invoice(conn, pack, order_id, capture_id)
+    to = (record or {}).get("email") or email
+    tag = "[TEST] " if pack["is_test"] else ""
+    attachments = ([{"filename": f"{record['invoice_number']}.pdf", "content": invoice}] if record and invoice else None)
+    if to and mailer.enabled:
         subject, text = packs.receipt_email(pack["lang"], dict(pack, order_id=order_id), pack_url, public_base())
-        mailer.send(email, subject, text)
+        if record:
+            text += f"\n\nInvoice / Rechnung: {record['invoice_number']} (PDF attached)"
+        mailer.send(to, tag + subject, text, **({"attachments": attachments} if attachments else {}))
     owner = current_app.config["OWNER_EMAIL"]
     if owner and not pack["is_test"]:
-        mailer.send(owner, f"[Quantum Aether] Agency pack sold: ${pack['amount']} — {email or '?'}",
+        billing = (f"\nCompany: {record['org']}\nContact: {record['name']} <{record['email']}>\n"
+                   f"Billing address:\n{record['billing_address']}\nDomain: {record['domain']}\n"
+                   f"Invoice: {record['invoice_number']}") if record else ""
+        mailer.send(owner, f"[Quantum Aether] Agency pack sold: {pack['amount']} {pack['currency']} — {to or '?'}",
                     f"Pack {pack['id']} ({pack['credits']} reports)\nPayPal order {order_id}, capture {capture_id}\n"
-                    f"Buyer: {email or '?'} · language {pack['lang']}")
-    return jsonify(status="COMPLETED", pack_url=pack_url)
+                    f"Buyer: {to or '?'} · PayPal payer {email or '?'} · language {pack['lang']}{billing}",
+                    **({"attachments": attachments} if attachments else {}))
+    return jsonify(status="COMPLETED", pack_url=pack_url, invoice_number=(record or {}).get("invoice_number"))
 
 
 @bp.get("/pack/<token>")
@@ -1177,7 +1848,28 @@ def country_page(code):
     entry = next((e for e in board["entries"] if e["code"] == code.lower()), None) or abort(404)
     lang = current_lang()
     sites = countries.country_sites(db(), entry["code"], board["week"])
-    return render_template("country.html", b=board, e=dict(entry, name=countries.name(entry["code"], lang)), sites=sites)
+    name_en = countries.name(entry["code"], "en")
+    base = public_base()
+    jsonld = {"@context": "https://schema.org", "@type": "Dataset",
+              "name": f"Post-quantum TLS readiness in {name_en} (.{entry['code']} websites)",
+              "description": (f"Share of {name_en}'s top websites (.{entry['code']} domains in the Tranco top 10,000) that "
+                              f"negotiate the hybrid post-quantum key exchange X25519MLKEM768: {entry['pct']}% of "
+                              f"{entry['measured']} measured sites, rank {entry['rank']} of {board['countries']} countries, "
+                              f"week {board['week']}."),
+              "url": base + url_for(".country_page", code=entry["code"]),
+              "license": "https://creativecommons.org/licenses/by/4.0/", "isAccessibleForFree": True,
+              "temporalCoverage": str(board["week"]), "spatialCoverage": {"@type": "Country", "name": name_en},
+              "creator": org_jsonld(False), "publisher": org_jsonld(False),
+              "isPartOf": {"@type": "Dataset", "name": "Post-quantum TLS readiness by country",
+                           "description": "Share of each country's top websites (by country-code domain, Tranco top "
+                                          "10,000) that negotiate the hybrid post-quantum key exchange X25519MLKEM768, "
+                                          "updated weekly.",
+                           "url": base + url_for(".countries_page"),
+                           "license": "https://creativecommons.org/licenses/by/4.0/", "creator": org_jsonld(False)},
+              "distribution": {"@type": "DataDownload", "encodingFormat": "application/json",
+                               "contentUrl": base + url_for(".countries_json")}}
+    return render_template("country.html", b=board, e=dict(entry, name=countries.name(entry["code"], lang)), sites=sites,
+                           jsonld=jsonld)
 
 
 @bp.get("/adoption/countries.json")
@@ -1229,7 +1921,15 @@ def api_optout_verify():
 @bp.get("/adoption.json")
 def adoption_json():
     snap = adoption_snapshot()
-    body = dict(snap, license="CC BY 4.0", source=public_base() + url_for(".adoption_page"),
+    cutoff = "2026-W47"
+    timeline = [dict(point, methodology="hrr_retry_once" if point["week"] >= cutoff else "hrr_unanswered")
+                for point in snap["timeline"]]
+    marked = exposure_web.watermark_export(db(), snap["rows"], "adoption.json", snap["week"], current_app.config["HASH_SALT"],
+                                           client_hash(), request.headers.get("User-Agent"))
+    body = dict(snap, rows=marked, timeline=timeline, license="CC BY 4.0", source=public_base() + url_for(".adoption_page"),
+                methodology_change={"introduced_week": cutoff, "current_methodology":
+                                    "hrr_retry_once" if snap["week"] >= cutoff else "hrr_unanswered",
+                                    "note": "HelloRetryRequest is retried once on the same connection from 2026-W47; earlier weeks treated retries as undetermined."},
                 method="Two TLS connections to port 443 per hostname from one vantage point; "
                        "pq = the server negotiated X25519MLKEM768 with a Chrome-like ClientHello.")
     return _open_data(current_app.response_class(json.dumps(body, ensure_ascii=False), mimetype="application/json"))
@@ -1238,7 +1938,12 @@ def adoption_json():
 @bp.get("/adoption.csv")
 def adoption_csv():
     snap = adoption_snapshot()
-    response = Response(adoption.to_csv(snap["rows"]), mimetype="text/csv")
+    cutoff = "2026-W47"
+    marked = exposure_web.watermark_export(db(), snap["rows"], "adoption.csv", snap["week"], current_app.config["HASH_SALT"],
+                                           client_hash(), request.headers.get("User-Agent"))
+    rows = [dict(row, methodology="hrr_retry_once" if row["week"] >= cutoff else "hrr_unanswered")
+            for row in marked]
+    response = Response(adoption.to_csv(rows), mimetype="text/csv")
     response.headers["Content-Disposition"] = f'inline; filename="pq-adoption-{snap["week"]}.csv"'
     return _open_data(response)
 
@@ -1575,11 +2280,27 @@ def admin():
                            scans_daily=sales_db.scans_per_day(conn, (dt.date.today() - dt.timedelta(days=13)).isoformat()),
                            card=scorecard.build(conn, current_app.config["OWNER_EMAIL"], monitor.PLANS),
                            events=analytics_db.event_funnel(conn, (dt.date.today() - dt.timedelta(days=13)).isoformat()),
+                           scan_errors=analytics_db.error_details(conn, (dt.date.today() - dt.timedelta(days=13)).isoformat()),
                            by_source=sales_db.funnel_by_source(conn, (dt.date.today() - dt.timedelta(days=30)).isoformat()),
-                           free_alert_counts=dict(conn.execute("SELECT status, COUNT(*) FROM free_alerts GROUP BY status").fetchall())))
+                           free_alert_counts=dict(conn.execute("SELECT status, COUNT(*) FROM free_alerts GROUP BY status").fetchall()),
+                           audit_orders=audit_checkout.recent(conn), billing_records=company_billing.recent(conn), audit_msg=request.args.get("audit_msg", "")[:40]))
     # كوكي دائم لسنة: كل زيارات هذا المتصفح لا تُحسب في الإحصاءات.
     response.set_cookie(ADMIN_COOKIE, admin_cookie_value(), max_age=365 * 24 * 3600, httponly=True,
                         secure=request.is_secure, samesite="Lax")
+    return response
+
+
+@bp.get("/transparency")
+def transparency():
+    """Public, privacy-preserving aggregates. Individual scans and customer data stay private."""
+    return render_template("transparency.html", stats=public_stats.build(db()))
+
+
+@bp.get("/api/public-stats.json")
+def public_stats_api():
+    """Machine-readable counterpart to the public transparency page."""
+    response = jsonify(public_stats.build(db()))
+    response.headers["Cache-Control"] = "public, max-age=300"
     return response
 
 
@@ -1591,6 +2312,7 @@ def api_scan():
     try:
         scan_id, result = perform_scan(data.get("domain", ""), data.get('source') or "api")
     except quantum_vuln_scanner.ScanError as exc:
+        note_scan_error(exc, data.get("domain", ""), data.get('source') or "api", "/api/scan")
         return jsonify(error=exc.code, message=str(exc)), 400
     return jsonify(scan_summary(scan_id, result)), 201
 
@@ -1641,10 +2363,10 @@ def api_scan_get(scan_id):
 
 @bp.post("/api/paypal/orders")
 def paypal_create_order():
+    data = json_object()  # a malformed body is the caller's error (400) even while payments are off
     paypal = current_app.extensions["paypal"]
     if paypal is None:
         return jsonify(error="payments_disabled"), 503
-    data = json_object()
     if data.get("consent") is not True:
         return jsonify(error="consent_required"), 400
     conn = db()
@@ -1662,6 +2384,7 @@ def paypal_create_order():
         return jsonify(error="paypal_unavailable"), 502
     sales_db.create_order(conn, order["id"], scan["id"], cfg["PRICE"], cfg["CURRENCY"], consent_at=now_iso(),
                           is_test=is_test_request())
+    record_conversion_event("checkout_start", "/scan/*")
     return jsonify(id=order["id"]), 201
 
 
@@ -1706,7 +2429,11 @@ def capture_and_record(order_id):
     except requests.RequestException:
         return "UNAVAILABLE", scan
     status, capture_id = verify_capture(order, scan["id"], row["amount"], row["currency"])
-    sales_db.update_order(conn, order_id, status, capture_id)
+    if not sales_db.update_order(conn, order_id, status, capture_id):
+        # already COMPLETED by a parallel capture (or a late FAILED after success): never downgrade, never re-notify
+        return ("COMPLETED", scan) if sales_db.is_scan_paid(conn, scan["id"]) else (status, scan)
+    if status == "COMPLETED":
+        record_conversion_event("purchase_complete", "/scan/*", is_test=row["is_test"])
     if status == "COMPLETED" and not row["is_test"]:
         send_report_receipt(scan, row["amount"], row["currency"], order_id, (order.get("payer") or {}).get("email_address"))
     if status == "FAILED":
@@ -1771,6 +2498,7 @@ def api_v1_create_order():
         return jsonify(error="paypal_unavailable"), 502
     sales_db.create_order(conn, order["id"], scan["id"], cfg["PRICE"], cfg["CURRENCY"], consent_at=now_iso(),
                           is_test=is_test_request())
+    record_conversion_event("checkout_start", "/scan/*")
     return jsonify(order_id=order["id"], approve_url=approve_url,
                    status_url=base + url_for(".api_v1_order_status", order_id=order["id"]),
                    amount=cfg["PRICE"], currency=cfg["CURRENCY"]), 201
@@ -1830,13 +2558,16 @@ def crypto_create_order():
     if sales_db.is_scan_paid(conn, scan["id"]):
         return jsonify(error="already_paid"), 409
     net = networks[key]
-    amount = str(crypto_pay.unique_amount(current_app.config["PRICE"], sales_db.open_amounts(conn, net["token"])))
     email = str(data.get("email", "")).strip() or None
     if email and not EMAIL_RE.match(email):
         return jsonify(error="invalid_email"), 400
     order_id = f"cx-{key}-{secrets.token_urlsafe(9)}"
-    sales_db.create_order(conn, order_id, scan["id"], amount, net["token"], consent_at=now_iso(),
-                          is_test=is_test_request(), email=email)
+    try:  # amount chosen and stored in one transaction; never reuses a recent amount, paid or open
+        amount = sales_db.create_crypto_order(conn, order_id, scan["id"], current_app.config["PRICE"], net["token"],
+                                              consent_at=now_iso(), is_test=is_test_request(), email=email)
+    except RuntimeError:
+        return jsonify(error="payment_capacity_reached"), 503
+    record_conversion_event("checkout_start", "/scan/*")
     return jsonify(_crypto_order_body(order_id, key, net, amount)), 201
 
 
@@ -1862,6 +2593,11 @@ def crypto_verify(order_id):
     used = sales_db.order_by_capture(conn, tx_hash)
     if used and used["order_id"] != order_id:
         return jsonify(error="tx_already_used"), 409
+    if not sales_db.crypto_amount_is_unique(conn, row):
+        # Another order (e.g. created before amounts were reserved atomically) has the same amount: the transfer
+        # cannot be attributed automatically. The owner reconciles it by hand.
+        log.warning("crypto order %s: amount %s %s is shared with another order", order_id, row["amount"], row["currency"])
+        return jsonify(error="ambiguous_payment_amount"), 409
     created = dt.datetime.strptime(row["created_at"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=dt.timezone.utc)
     try:
         status, details = crypto_pay.verify_transfer(current_app.extensions["chain"], key, net, tx_hash,
@@ -1874,9 +2610,12 @@ def crypto_verify(order_id):
     if status != "OK":
         return jsonify(dict(details, error=status.lower(), expected=row["amount"], token=net["token"])), 402
     try:
-        sales_db.update_order(conn, order_id, "COMPLETED", tx_hash)
+        updated = sales_db.update_order(conn, order_id, "COMPLETED", tx_hash)
     except sales_db.sqlite3.IntegrityError:
         return jsonify(error="tx_already_used"), 409
+    if not updated:  # a parallel request completed it first: no second receipt or notification
+        return jsonify(status="COMPLETED", report_url=public_base() + url_for(".report", token=scan["report_token"]))
+    record_conversion_event("purchase_complete", "/scan/*", is_test=row["is_test"])
     if not row["is_test"]:
         send_report_receipt(scan, row["amount"], row["currency"], order_id, row["email"])
     owner = current_app.config["OWNER_EMAIL"]
@@ -1963,6 +2702,7 @@ def x402_agent_report(scan_id):
         sales_db.update_order(conn,order_id,"COMPLETED",transaction)
     except sales_db.sqlite3.IntegrityError:
         return jsonify(error="payment_already_consumed"),409
+    record_conversion_event("purchase_complete", "/scan/*", is_test=bool(scan.get("is_test")))
     report_url=public_base()+url_for(".report",token=scan["report_token"])
     response=jsonify(status="COMPLETED",report_url=report_url,order_id=order_id,transaction=transaction,network="eip155:8453",currency="USDC",amount=price)
     response.headers["PAYMENT-RESPONSE"]=base64.b64encode(json.dumps(settlement,separators=(",",":" )).encode()).decode()
@@ -1985,6 +2725,11 @@ def paypal_return():
 
 @bp.get("/healthz")
 def healthz():
+    try:
+        db().execute("SELECT 1").fetchone()
+    except Exception:  # an unreadable database is not healthy, whatever the web worker says
+        log.exception("health check: database unavailable")
+        return jsonify(status="unavailable"), 503
     return jsonify(status="ok", payments=payments_enabled())
 
 
@@ -2003,9 +2748,47 @@ def now_iso():
     return dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def plan_ids():
+def subscription_currency():
+    """EUR once both EUR plans exist (or QS_SUBSCRIPTION_CURRENCY forces a currency), else the legacy USD plans."""
     cfg = current_app.config
-    return {name: cfg[p["env"]] for name, p in monitor.PLANS.items()}
+    forced = (cfg.get("SUBSCRIPTION_CURRENCY") or "").upper()
+    if forced in ("EUR", "USD"):
+        return forced
+    return "EUR" if all(cfg.get(p["env_eur"]) for p in monitor.PLANS.values()) else "USD"
+
+
+def plan_ids():
+    """PayPal plan ids offered to new subscribers (in subscription_currency())."""
+    cfg = current_app.config
+    key = "env_eur" if subscription_currency() == "EUR" else "env"
+    return {name: cfg.get(p[key]) or "" for name, p in monitor.PLANS.items()}
+
+
+def accepted_plan_ids(plan):
+    """Every plan id that may activate this plan: the EUR plan and the legacy USD plan."""
+    cfg = current_app.config
+    p = monitor.PLANS[plan]
+    return {v for v in (cfg.get(p["env"]), cfg.get(p["env_eur"])) if v}
+
+
+def _subscription_note():
+    return audit.COPY[current_lang()]["checkout"]["pay_note_sub"]
+
+
+def _store_subscription_billing(conn, account_id, plan, fields):
+    cfg = current_app.config
+    company_billing.create(conn, kind="subscription", ref_id=account_id, fields=fields,
+                           amount=monitor.PLANS[plan]["price"], currency=subscription_currency(),
+                           consent_at=now_iso(), client_hash=client_hash(), is_test=_main_paypal_is_test(),
+                           paypal_env=cfg["PAYPAL_ENV"], plan=plan, plan_id=plan_ids()[plan])
+
+
+def account_currency(conn, account):
+    """Currency a subscriber pays: from the billing record, legacy accounts without one were sold in USD."""
+    record = company_billing.get(conn, "subscription", account["id"])
+    if record:
+        return record["currency"]
+    return "USD" if account["status"] not in ("PENDING", "TRIAL", "TRIAL_ENDED") else subscription_currency()
 
 
 def subscriptions_enabled():
@@ -2034,7 +2817,8 @@ def monitoring():
         except quantum_vuln_scanner.ScanError:
             domain = ""
     base = public_base()
-    offer = lambda name, price, desc: {"@type": "Offer", "name": name, "price": price, "priceCurrency": cfg["CURRENCY"],
+    currency = subscription_currency()
+    offer = lambda name, price, desc: {"@type": "Offer", "name": name, "price": price, "priceCurrency": currency,
                                        "description": desc, "url": f"{base}/monitoring?lang={current_lang()}"}
     mon_jsonld = {
         "@context": "https://schema.org", "@type": "Service", "name": "Quantum Aether post-quantum TLS monitoring",
@@ -2045,32 +2829,51 @@ def monitoring():
     }
     return render_template("monitoring.html", plans=monitor.PLANS, plan_ids=plan_ids(), mon_jsonld=mon_jsonld,
                            enabled=subscriptions_enabled(), paypal_client_id=cfg["PAYPAL_CLIENT_ID"],
-                           currency=cfg["CURRENCY"], sent=request.args.get("sent"), domain=domain)
+                           currency=currency, usd_per_eur=business_pages.USD_PER_EUR,
+                           fx_rate_date=business_pages.FX_RATE_DATE, c=audit.COPY[current_lang()],
+                           sub_note=_subscription_note(), sandbox=cfg["PAYPAL_ENV"] != "live",
+                           sent=request.args.get("sent"), domain=domain)
 
 
 TRIALS_PER_CLIENT_PER_DAY = 3
+FREEMAIL_DOMAINS = frozenset((
+    "gmail.com", "googlemail.com", "outlook.com", "hotmail.com", "hotmail.de", "live.com", "live.de", "msn.com",
+    "yahoo.com", "yahoo.de", "ymail.com", "icloud.com", "me.com", "mac.com", "aol.com", "gmx.at", "gmx.de", "gmx.net",
+    "gmx.ch", "web.de", "t-online.de", "freenet.de", "aon.at", "chello.at", "a1.net", "bluewin.ch", "proton.me",
+    "protonmail.com", "pm.me", "mail.com", "mail.ru", "yandex.com", "yandex.ru", "zoho.com", "tutanota.com", "tuta.io",
+    "posteo.de", "mailbox.org", "outlook.de", "qq.com", "163.com"))
 
 
 def send_dashboard_link(conn, account):
-    """يدوّر رمز الحساب ويرسل رابط اللوحة الجديد بالبريد. الرابط لا يظهر في المتصفح أبداً."""
-    token = monitor_db.rotate_token(conn, account["id"])
+    """يرسل رابط لوحة جديداً بالبريد ثم يدوّر الرمز. الرابط لا يظهر في المتصفح أبداً."""
+    # The new token is stored only after the email went out: a failed send must not revoke the current link.
+    token = secrets.token_urlsafe(32)
     url = dashboard_url(token, account["lang"])
     if account["status"] in ("TRIAL", "TRIAL_ENDED"):
         doms = monitor_db.list_domains(conn, account["id"])
         subject, text = monitor.trial_welcome_email(account["lang"], doms[0]["domain"] if doms else account["email"].split("@")[-1], url)
     else:
         subject, text = monitor.welcome_email(account, url)
-    return current_app.extensions["mailer"].send(account["email"], subject, text)
+    if not current_app.extensions["mailer"].send(account["email"], subject, text):
+        return False
+    monitor_db.set_token(conn, account["id"], token)
+    return True
 
 
 @bp.post("/monitoring/trial")
 def monitor_trial():
     """تجربة مجانية 14 يوماً بلا دفع: البريد + نطاق الشركة. رابط اللوحة يصل بالبريد فقط (إثبات ملكية البريد)."""
     email = (request.form.get("email") or "").strip().lower()[:254]
-    raw = request.form.get("domain") or ""
+    raw = (request.form.get("domain") or "").strip()
+    src = analytics_db.clean_detail(request.form.get("src") or "")
     domain, state, status = None, "sent", 200
+    if not raw and EMAIL_RE.match(email):
+        # Email-only start (home, pricing): a work address names the company domain; free-mail needs the field.
+        mail_domain = email.rsplit("@", 1)[-1]
+        if mail_domain not in FREEMAIL_DOMAINS:
+            raw = mail_domain
     try:
-        domain = monitor.normalize(raw)
+        domain = monitor.normalize(raw) if raw else None
     except quantum_vuln_scanner.ScanError:
         pass
     mailer = current_app.extensions["mailer"]
@@ -2079,14 +2882,15 @@ def monitor_trial():
         state, status = "consent_missing", 400
     elif not EMAIL_RE.match(email):
         state, status = "bad_email", 400
+    elif not raw:
+        state, status = "need_domain", 400
     elif not domain:
         state, status = "bad_domain", 400
     elif not mailer.enabled:
         state, status = "unavailable", 503
     elif monitor_db.has_account(conn, email):
-        # تجربة واحدة لكل بريد. الرد نفسه دائماً؛ صاحب الحساب يستلم رابطه من جديد.
-        for account in monitor_db.accounts_for_login(conn, email):
-            send_dashboard_link(conn, account)
+        # تجربة واحدة لكل بريد. الرد نفسه دائماً؛ صاحب الحساب يستلم رابط استرجاع (رابطه الحالي يبقى صالحاً).
+        send_recovery(conn, email, "monitor")
     else:
         day_ago = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
         if monitor_db.trials_by_client_since(conn, client_hash(), day_ago) >= TRIALS_PER_CLIENT_PER_DAY:
@@ -2097,13 +2901,21 @@ def monitor_trial():
             monitor_db.add_domain(conn, account_id, domain)
             account = monitor_db.get_account(conn, account_id)
             if send_dashboard_link(conn, account):
-                monitor.notify_owner(mailer, current_app.config["OWNER_EMAIL"], "New free trial", account,
-                                     f"Domain: {domain} · lang: {current_lang()}")
+                record_conversion_event("trial_created", detail=src)
+                # Owner/test requests (admin cookie or remembered owner client) must not email a "new customer" alert.
+                if not is_test_request():
+                    monitor.notify_owner(mailer, current_app.config["OWNER_EMAIL"], "New free trial", account,
+                                         f"Domain: {domain} · lang: {current_lang()}")
             else:
                 with conn:  # لم يصل الرابط: لا نترك حساباً لا يستطيع صاحبه دخوله
                     conn.execute("DELETE FROM monitor_domains WHERE account_id = ?", (account_id,))
                     conn.execute("DELETE FROM monitor_accounts WHERE id = ?", (account_id,))
                 state, status = "unavailable", 503
+    if status != 200:
+        # Visible failure reason (journalctl -u quantum_saas | grep "trial rejected"). Domain only, never the address.
+        log_domain = re.sub(r"[^a-z0-9.\-]", "", (domain or raw or email.rpartition("@")[2]).lower())[:80] or "-"
+        log.warning("trial rejected: reason=%s domain=%s lang=%s", state, log_domain, current_lang())
+        record_conversion_event("trial_failed", detail=src)
     return render_template("trial.html", state=state, email=email, domain=domain or raw), status
 
 
@@ -2120,27 +2932,32 @@ def monitor_upgrade():
     plan = str(data.get("plan", ""))
     if plan not in monitor.PLANS:
         return jsonify(error="invalid_plan"), 400
-    if data.get("consent") is not True:
-        return jsonify(error="consent_required"), 400
+    fields, error = _audit_order_fields(data)  # company billing form, same rules as the audit checkout
+    if error:
+        return jsonify(error=error), 400
     monitor_db.set_plan(conn, account["id"], plan, now_iso())
+    _store_subscription_billing(conn, account["id"], plan, fields)
+    record_conversion_event("subscription_start", "/monitoring")
     return jsonify(account_id=account["id"], plan_id=plan_ids()[plan])
 
 
 @bp.post("/api/monitor/signup")
 def monitor_signup():
     """الخطوة 1: ينشئ حساباً معلقاً ويعيد معرّفه ليُرفق بالاشتراك في PayPal (custom_id)."""
+    data = json_object()  # a malformed body is the caller's error (400) even while subscriptions are off
     if not subscriptions_enabled():
         return jsonify(error="subscriptions_disabled"), 503
-    data = json_object()
-    email, plan = str(data.get("email", "")).strip().lower(), str(data.get("plan", ""))
+    plan = str(data.get("plan", ""))
     if plan not in monitor.PLANS:
         return jsonify(error="invalid_plan"), 400
-    if not EMAIL_RE.match(email):
-        return jsonify(error="invalid_email"), 400
-    if data.get("consent") is not True:
-        return jsonify(error="consent_required"), 400
+    fields, error = _audit_order_fields(data)  # company billing form, same rules as the audit checkout
+    if error:
+        return jsonify(error=error), 400
+    email = fields["email"]
     conn = db()
     account_id, _token = monitor_db.create_account(conn, email, plan, current_lang(), consent_at=now_iso())
+    _store_subscription_billing(conn, account_id, plan, fields)
+    record_conversion_event("subscription_start", "/monitoring")
     raw_domain = str(data.get("domain", "")).strip()
     if raw_domain:
         try:
@@ -2180,19 +2997,26 @@ def monitor_activate():
     except requests.RequestException as exc:
         log.warning("PayPal subscription lookup failed for %s: %s", subscription_id, exc)
         return jsonify(error="paypal_unavailable"), 502
-    status = verify_subscription(subscription, plan_ids()[account["plan"]], account["id"])
+    record = company_billing.get(conn, "subscription", account["id"])
+    allowed = {record["plan_id"]} if record and record.get("plan_id") else accepted_plan_ids(account["plan"])
+    expected = subscription.get("plan_id") if subscription.get("plan_id") in allowed else plan_ids()[account["plan"]]
+    status = verify_subscription(subscription, expected, account["id"])
     if status not in SUBSCRIPTION_LIVE_STATUSES:
         log.warning("Subscription %s for %s not active: %s", subscription_id, account["id"], status)
         return jsonify(error="subscription_not_active", status=status), 402
     monitor_db.set_status(conn, account["id"], "ACTIVE", subscription_id)
+    record_conversion_event("subscription_active")
     token = monitor_db.rotate_token(conn, account["id"])  # الرمز يُكشف مرة واحدة فقط، هنا
     url = dashboard_url(token, account["lang"])
     subject, text = monitor.welcome_email(account, url)
     mailer = current_app.extensions["mailer"]
     mailer.send(account["email"], subject, text)
     upgraded = account["status"] in ("TRIAL", "TRIAL_ENDED")
+    billing = (f"Company: {record['org']}\nContact: {record['name']} <{record['email']}>\n"
+               f"Billing address:\n{record['billing_address']}\nDomain: {record['domain']}\nPlan id: {expected}") if record else ""
     monitor.notify_owner(mailer, current_app.config["OWNER_EMAIL"], "New subscription (from free trial)" if upgraded else "New subscription",
-                         dict(account, status="ACTIVE", subscription_id=subscription_id))
+                         dict(account, status="ACTIVE", subscription_id=subscription_id,
+                              currency=record["currency"] if record else "USD"), billing)
     return jsonify(dashboard_url=url)
 
 
@@ -2200,12 +3024,71 @@ def monitor_activate():
 def monitor_login():
     """يرسل رابط لوحة التحكم إلى بريد مشترك فعّال. الرد نفسه دائماً حتى لا يُكشف من هو مشترك."""
     email = request.form.get("email", "").strip().lower()
-    conn = db()
-    # بلا بريد مفعّل لا نغيّر الرمز، وإلا فقد المشترك رابطه الحالي دون أن يصله بديل.
-    if EMAIL_RE.match(email) and current_app.extensions["mailer"].enabled:
-        for account in monitor_db.accounts_for_login(conn, email):
-            send_dashboard_link(conn, account)
+    send_recovery(db(), email, "monitor")
     return redirect(url_for(".monitoring", lang=current_lang(), sent=1, _anchor="login"), code=303)
+
+
+RECOVERY_MAIL = {
+    "ar": ("استرجاع الوصول إلى الأثير الكمومي",
+           "افتح الرابط وأكّد استرجاع الوصول خلال 15 دقيقة:\n{url}\n"
+           "إذا لم تطلب هذا، تجاهل الرسالة؛ رابطك الحالي يظل صالحاً."),
+    "de": ("Quantum Aether: Zugang wiederherstellen",
+           "Öffnen Sie den Link und bestätigen Sie innerhalb von 15 Minuten:\n{url}\n"
+           "Falls Sie dies nicht angefordert haben, ignorieren Sie diese E-Mail. Ihr bisheriger Zugang bleibt gültig."),
+    "en": ("Recover your Quantum Aether access",
+           "Open this link and confirm within 15 minutes:\n{url}\n"
+           "If you did not request this, ignore this email. Your current access remains valid."),
+}
+
+
+def send_recovery(conn, email, kind):
+    """Emails a one-use, 15-minute recovery link. Requesting one never revokes the current link: the old dashboard
+    or pack link is replaced only when the recipient opens the emailed link and confirms (POST /access/<token>).
+    A link whose email could not be sent is deleted at once. Limited per address (3/h) and per client (5/h);
+    the caller's response is identical either way, so nothing discloses whether the address has an account."""
+    mailer = current_app.extensions["mailer"]
+    if not EMAIL_RE.fullmatch(email or "") or not mailer.enabled:
+        return
+    email_hash = hmac.new(current_app.config["HASH_SALT"].encode(), email.encode(), hashlib.sha256).hexdigest()
+    if not access_links.allow_request(conn, client_hash(), email_hash):
+        return
+    if kind == "monitor":
+        targets = monitor_db.accounts_for_login(conn, email)
+    else:
+        targets = [dict(r) for r in conn.execute(
+            "SELECT * FROM packs WHERE lower(email) = ? AND status = 'COMPLETED'", (email,))]
+    for target in targets:
+        token = access_links.issue(conn, kind, target["id"])
+        lang = target.get("lang") if target.get("lang") in RECOVERY_MAIL else "en"
+        url = public_base() + url_for(".recover_access", token=token, lang=lang)
+        subject, body = RECOVERY_MAIL[lang]
+        if not mailer.send(email, subject, body.format(url=url)):
+            access_links.revoke(conn, token)
+
+
+@bp.post("/agency/recover")
+def pack_recovery():
+    """Lost agency-pack link: same one-use recovery flow, sent to the PayPal/billing address of a paid pack."""
+    email = request.form.get("email", "").strip().lower()
+    send_recovery(db(), email, "pack")
+    return redirect(url_for(".agency_page", lang=current_lang(), sent=1, _anchor="recover"), code=303)
+
+
+@bp.route("/access/<token>", methods=["GET", "POST"])
+def recover_access(token):
+    """GET only shows a confirm button (mail scanners that pre-fetch links change nothing); POST rotates the
+    dashboard/pack token in one transaction and revokes the previous link."""
+    conn = db()
+    if request.method == "POST":
+        outcome = access_links.consume(conn, token)
+        if outcome is None:
+            abort(404)
+        kind, new_token = outcome
+        endpoint = ".monitor_dashboard" if kind == "monitor" else ".pack_page"
+        return redirect(url_for(endpoint, token=new_token, lang=current_lang()), code=303)
+    if access_links.lookup(conn, token) is None:
+        abort(404)
+    return render_template("recover_access.html")
 
 
 @bp.get("/monitor/<token>")
@@ -2227,7 +3110,9 @@ def monitor_dashboard(token):
                            plans=monitor.PLANS, plan_ids=plan_ids(), enabled=trial and subscriptions_enabled(),
                            history=monitor_db.check_history(conn, account["id"], limit=60),
                            seeds=assets.summary_for(conn, account["id"]), seed_limit=assets.seed_limit(account),
-                           paypal_client_id=cfg["PAYPAL_CLIENT_ID"], currency=cfg["CURRENCY"])
+                           paypal_client_id=cfg["PAYPAL_CLIENT_ID"], currency=account_currency(conn, account),
+                           offer_currency=subscription_currency(), c=audit.COPY[current_lang()],
+                           usd_per_eur=business_pages.USD_PER_EUR, fx_rate_date=business_pages.FX_RATE_DATE)
 
 
 CSV_COLUMNS = ("checked_at_utc", "domain", "grade", "post_quantum", "key_exchange_group", "tls_version", "cert_days_left",
@@ -2256,6 +3141,21 @@ def monitor_history_csv(token):
     response = make_response(out.getvalue())
     response.headers["Content-Type"] = "text/csv; charset=utf-8"
     response.headers["Content-Disposition"] = f'attachment; filename="quantum-aether-history-{dt.date.today().isoformat()}.csv"'
+    return response
+
+
+@bp.get("/monitor/<token>/evidence.pdf")
+def monitor_evidence_pdf(token):
+    """NIS2/DORA evidence PDF: domains, check history, regressions/alerts, certificate expiry. Not legal advice."""
+    account = account_or_404(token)
+    conn = db()
+    data = evidence.evidence_pdf(account, monitor_db.list_domains(conn, account["id"]),
+                                 monitor_db.check_history(conn, account["id"]),
+                                 monitor_db.recent_alerts(conn, account["id"], limit=500))
+    response = make_response(data)
+    response.headers["Content-Type"] = "application/pdf"
+    response.headers["Content-Disposition"] = (f'attachment; filename="quantum-aether-evidence-'
+                                               f'{dt.date.today().isoformat()}.pdf"')
     return response
 
 
@@ -2716,6 +3616,11 @@ def _sitemap_pages():
     pages += [(f"/reports/{rid}", reports.load(rid)["published"], de_langs) for rid in reports.ids()]
     pages.append(("/compare", _template_day("compare.html"), site_langs))
     pages.append(("/agents", agent_discovery.UPDATED, site_langs))
+    pages.append(("/transparency", _template_day("transparency.html"), site_langs))
+    pages.append(("/exposure", _template_day("exposure_index.html"), de_langs))
+    pages.append(("/data-license", _template_day("data_license.html"), de_langs))
+    if dach_hosting.load(BASE_DIR):
+        pages.append(("/adoption/dach-hosting", dach_hosting.updated(BASE_DIR), de_langs))
     legal_date = os.path.getmtime(os.path.join(BASE_DIR, "legal.py"))
     legal_day = dt.datetime.fromtimestamp(legal_date, dt.timezone.utc).date().isoformat()
     pages += [(f"/{slug}", legal_day, legal_langs) for slug in legal.PAGES]
@@ -2763,6 +3668,7 @@ def sitemap():
     for i in range(0, len(domains), SITEMAP_CHUNK):
         chunk = domains[i:i + SITEMAP_CHUNK]
         entries.append((f"{base}/sitemap-sites-{i // SITEMAP_CHUNK + 1}.xml", max(day for _, day in chunk)))
+    entries += exposure_web.sitemap_entries(db(), base, adoption.load_optout(conn=db()))
     body = ('<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
             + "".join(f"  <sitemap><loc>{url}</loc><lastmod>{day}</lastmod></sitemap>\n" for url, day in entries)
             + "</sitemapindex>\n")
@@ -2872,7 +3778,7 @@ def feed():
 
 @bp.get("/llms.txt")
 def llms_txt():
-    return Response(render_template("llms.txt", base=public_base(), price=current_app.config["PRICE"],
+    return Response(render_template("llms.txt", base=public_base(), **public_price_labels(),
                                     retry_count=len(study_retry_domains())),
                     mimetype="text/plain")
 
@@ -2931,7 +3837,7 @@ def llms_full_txt():
     """كل المحتوى المفيد في ملف واحد: ملخص llms.txt + أرقام المتتبّع الحية + نص الأدلة كاملاً.
     زواحف الذكاء الاصطناعي ووكلاؤه يقرؤونه بطلب واحد بدل عشرات الصفحات."""
     base = public_base()
-    parts = [render_template("llms.txt", base=base, price=current_app.config["PRICE"]).strip()]
+    parts = [render_template("llms.txt", base=base, **public_price_labels()).strip()]
     snap = cached_snapshot()
     if snap:
         lines = [f"\n\n## Live adoption figures (week {snap['week']}, scanned {snap['scanned_at'][:10]})\n",
@@ -3022,8 +3928,9 @@ def track_event():
         ua = request.headers.get("User-Agent", "")
         salt = current_app.config["HASH_SALT"].encode()
         visitor = hmac.new(salt, f"{day}|{request.remote_addr}|{ua}".encode(), hashlib.sha256).hexdigest()[:16]
+        detail = analytics_db.clean_detail(data.get("detail", ""))
         analytics_db.record_event(db(), day, str(data.get("name", ""))[:20], page, lang, visitor,
-                                  not ua or bool(analytics_db.BOT_RE.search(ua)))
+                                  not ua or bool(analytics_db.BOT_RE.search(ua)), is_test_request(), detail)
     except Exception:  # الإحصاءات ثانوية
         log.exception("event tracking failed")
     return "", 204
@@ -3040,12 +3947,13 @@ def _security_headers(response):
     if request.path.startswith(('/scan/', '/api/')) or (request.endpoint == 'site.compare' and request.args.get('a')):
         response.headers.setdefault('Cache-Control', 'no-store')
         response.headers.setdefault('X-Robots-Tag', 'noindex')
-    if request.path.startswith('/scan/'):
+    if request.path.startswith(('/scan/', '/api/v1/orders', '/api/paypal/', '/api/crypto/', '/api/v1/crypto/',
+                                '/api/monitor/')):
         response.headers['Referrer-Policy'] = 'no-referrer'
-    if request.path == '/gravity':
+    if request.path in ('/gravity', '/research'):
         # لوحة داخلية لفرص الطلب، ليست صفحة منتج: لا تُفهرس.
         response.headers['X-Robots-Tag'] = 'noindex, nofollow'
-    if request.path.startswith(("/report/", "/admin", "/monitor/", "/alerts/", "/pack/", "/discovery/")):
+    if request.path.startswith(("/report/", "/admin", "/monitor/", "/alerts/", "/pack/", "/discovery/", "/access/")):
         # رابط التقرير يحمل مفتاح الوصول: لا نخزنه ولا نرسله في Referer ولا نسمح بالفهرسة.
         response.headers["Cache-Control"] = "no-store"
         response.headers["Referrer-Policy"] = "no-referrer"
@@ -3129,6 +4037,15 @@ agent_discovery.register(bp, {'base': public_base, 'db': db, 'scan': perform_sca
 
 import gravity_web
 gravity_web.register(bp, db)
+
+import dach_hosting  # noqa: E402  DACH hosting study page (self-contained module)
+dach_hosting.register(bp, {"base_dir": BASE_DIR, "db": db, "lang": current_lang, "client_hash": client_hash,
+                           "de_pages": DE_PAGES, "de_endpoints": i18n.DE_ENDPOINTS})
+
+import exposure_web  # noqa: E402  Quantum Exposure Registry (/exposure, self-contained module)
+exposure_web.register(bp, {"db": db, "lang": current_lang, "base": public_base, "de_pages": DE_PAGES,
+                           "de_endpoints": i18n.DE_ENDPOINTS, "data_dir": lambda: current_app.config["DATA_DIR"],
+                           "salt": lambda: current_app.config["HASH_SALT"]})
 
 app = create_app()
 

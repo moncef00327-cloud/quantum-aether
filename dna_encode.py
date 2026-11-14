@@ -58,6 +58,8 @@ def restore(dna: str) -> bytes:
         decoded, _, _ = RSCodec(RS_NSYM).decode(raw)
     except ReedSolomonError as exc:
         raise ValueError(f"الأخطاء تتجاوز قدرة التصحيح: {exc}") from exc
+    if len(decoded) < _HEADER.size:
+        raise ValueError("ليست أرشيف QDNA v1: الترويسة ناقصة")
     magic, version, length, crc = _HEADER.unpack_from(decoded)
     if magic != MAGIC or version != FORMAT_VERSION:
         raise ValueError("ليست أرشيف QDNA v1")

@@ -1,7 +1,14 @@
 {% extends "base.html" %}
+{% from "_trial_cta.html" import trial_cta with context %}
 {% block title %}{{ t.trial_title }} · {{ t.brand }}{% endblock %}
 {% block head %}<meta name="robots" content="noindex">{% endblock %}
 {% block content %}
+{% set fixable = {'consent_missing': 'consent', 'bad_email': 'email', 'need_domain': 'domain', 'bad_domain': 'domain'} %}
+{% if state in fixable %}
+{# Fixable input problem: show the form again, filled in, with the reason next to it (no "Back" round trip). #}
+{{ trial_cta('trial-retry', title=t.trial_title, compact=true, prefill=domain, email=email,
+             error=t.trial_states[state].format(email=email, domain=domain), focus=fixable[state]) }}
+{% else %}
 <section class="card">
   <h1>{{ t.trial_title }}</h1>
   <p role="status">{{ t.trial_states[state].format(email=email, domain=domain) }}</p>
@@ -11,4 +18,5 @@
   <p class="muted small">{{ t.trial_spam_hint }}</p>
   {% endif %}
 </section>
+{% endif %}
 {% endblock %}

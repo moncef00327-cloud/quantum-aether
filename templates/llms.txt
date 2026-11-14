@@ -1,6 +1,7 @@
+{%- set u = '?utm_source=llms_txt&utm_medium=referral&utm_campaign=llms' -%}{%- set ua = '&utm_source=llms_txt&utm_medium=referral&utm_campaign=llms' -%}
 # Quantum Aether — post-quantum TLS readiness scanner
 
-> Checks whether an HTTPS server negotiates the hybrid post-quantum key exchange X25519MLKEM768 (ML-KEM, FIPS 203) used by Chrome and Firefox, and reports TLS version and certificate details. Free summary; full report with remediation steps costs ${{ price }} via PayPal, or the same in USDT/USDC.
+> Checks whether an HTTPS server negotiates the hybrid post-quantum key exchange X25519MLKEM768 (ML-KEM, FIPS 203) used by Chrome and Firefox, and reports TLS version and certificate details. Free summary; full report with remediation steps costs {{ report_price_dual }} via PayPal, or the same in USDT/USDC.
 
 Full text of every guide plus the live weekly figures in one file: {{ base }}/llms-full.txt
 
@@ -16,17 +17,19 @@ Full text of every guide plus the live weekly figures in one file: {{ base }}/ll
 - Badge verification: GET {{ base }}/api/v1/badge/<domain> — stored evidence, timestamps and fresh/stale/undetermined state; never starts a scan. Human verification: {{ base }}/verify/<domain>.
 - API consumers must inspect observation_status. A false post_quantum_key_exchange flag can mean classical or undetermined. Each public IP address (IPv4 and IPv6, up to 6) gets its own handshake; endpoint_summary.mixed=true means the servers disagree. This is an external observation from one location, not a comprehensive security assessment.
 
-- "Does <domain> use post-quantum TLS / X25519MLKEM768?" — scan it: GET {{ base }}/api/v1/scan?domain=<domain> , or see {{ base }}/site/<domain>.
-- "How do I enable post-quantum TLS on nginx / Apache / Caddy / Cloudflare?" — step-by-step guides at {{ base }}/guides .
-- "How do I keep it enabled over time?" — daily monitoring with email alerts at {{ base }}/monitoring .
-- "What is harvest-now-decrypt-later and does it affect me?" — {{ base }}/guides/harvest-now-decrypt-later .
-- "When do I have to move to post-quantum cryptography? (NIST, CNSA 2.0, EU, UK deadlines)" — {{ base }}/deadlines (every date with its official source).
+- "Does <domain> use post-quantum TLS / X25519MLKEM768?" — scan it: GET {{ base }}/api/v1/scan?domain=<domain> , or see {{ base }}/site/<domain>{{ u }}.
+- "How do I enable post-quantum TLS on nginx / Apache / Caddy / Cloudflare?" — step-by-step guides at {{ base }}/guides{{ u }} .
+- "Since when does <domain> use post-quantum key exchange, and how long was it harvest-now-decrypt-later exposed before?" — Quantum Exposure Registry: {{ base }}/exposure/<domain>{{ u }} (human page, en/ar/de) or GET {{ base }}/api/v1/exposure/<domain> (JSON: first_observed, first_pq_week, exposure_window, weekly timeline, OpenTimestamps anchor proofs). MCP tool: exposure_window(domain). Weekly anchors: {{ base }}/exposure#anchors . External observation, not a compliance certification.
+- Data licence and terms of use: {{ base }}/data-license — open files stay CC BY 4.0; quote individual registry entries with attribution; bulk copying or rebuilding the registry needs a licence. Automated access is rate-limited (HTTP 429 + Retry-After); verified search and AI crawlers are exempt; API keys get higher limits, full history (GET /api/v1/exposure/<domain>?history=full) and bulk export (/api/v1/registry/export.csv).
+- "How do I keep it enabled over time?" — daily monitoring with email alerts at {{ base }}/monitoring{{ u }} (14-day free trial, no card).
+- "What is harvest-now-decrypt-later and does it affect me?" — {{ base }}/guides/harvest-now-decrypt-later{{ u }} .
+- "When do I have to move to post-quantum cryptography? (NIST, CNSA 2.0, EU, UK deadlines)" — {{ base }}/deadlines{{ u }} (every date with its official source).
 
 ## Agent discovery and remote tools
 
-- Agent guide: {{ base }}/agents?lang=en — implemented capabilities, examples, limitations and current payment status.
+- Agent guide: {{ base }}/agents?lang=en{{ ua }} — implemented capabilities, examples, limitations and current payment status.
 - Service discovery JSON: {{ base }}/.well-known/agent-service.json — custom service metadata with real endpoints and configured limits; not an A2A Agent Card.
-- Remote MCP: {{ base }}/mcp — stateless Streamable HTTP with JSON responses; initialize, tools/list and tools/call. Tools: scan_tls, get_tls_evidence, get_methodology, get_example_result, get_service_info.
+- Remote MCP: {{ base }}/mcp — stateless Streamable HTTP with JSON responses; initialize, tools/list and tools/call. Tools: scan_tls, get_tls_evidence, exposure_window, get_methodology, get_example_result, get_service_info.
 - Microsoft Copilot Studio: add {{ base }}/mcp as a Model Context Protocol tool with authentication None. Microsoft Security Copilot: custom plugin manifest at {{ base }}/security-copilot.yaml (read and scan tools only).
 - get_tls_evidence is read-only. scan_tls starts a public HTTPS probe, consumes the existing scan quota, and stores a publicly accessible result. Never treat noindex as confidentiality.
 - Machine-readable methodology: {{ base }}/api/v1/agent/methodology
@@ -40,7 +43,7 @@ Full text of every guide plus the live weekly figures in one file: {{ base }}/ll
 - `GET {{ base }}/api/scan/{scan_id}` returns the same summary later.
 - `GET {{ base }}/api/v1/scan?domain=<your-domain>` runs a scan over GET (easy for CLIs and agents) and returns JSON; add `&format=text` for a plain-text terminal report. Also available as `npx quantum-aether <your-domain>`.
 - `POST {{ base }}/api/v1/quantum-scan` is the agent endpoint: `{"domain": "<your-domain>"}` runs the same real scan; `{"key_size": 2048}` alone returns an honest assessment of that RSA key size (no network scan). Any RSA or ECC key size is breakable by Shor's algorithm; key exchange is what needs upgrading.
-- Buying the full report (${{ price }}): `POST {{ base }}/api/v1/orders` with `{"scan_id": "...", "consent_immediate_delivery": true}` (set the flag only after the payer expressly agreed to immediate delivery and to losing the right of withdrawal) returns a PayPal `approve_url` and a `status_url`. After the payer (or an agent the payer authorized in PayPal) approves, the site captures and verifies the payment automatically, and `GET status_url` returns `report_url`.
+- Buying the full report ({{ report_price_dual }}): `POST {{ base }}/api/v1/orders` with `{"scan_id": "...", "consent_immediate_delivery": true}` (set the flag only after the payer expressly agreed to immediate delivery and to losing the right of withdrawal) returns a PayPal `approve_url` and a `status_url`. After the payer (or an agent the payer authorized in PayPal) approves, the site captures and verifies the payment automatically, and `GET status_url` returns `report_url`.
 - Paying with a direct stablecoin transfer instead: `POST {{ base }}/api/v1/crypto/orders` with `{"scan_id": "...", "network": "polygon-usdt" | "arbitrum-usdc" | "base-usdc", "consent_immediate_delivery": true}` returns a unique `amount` and a `pay_to` address. Send exactly that token amount on the named network, then `POST verify_url` with `{"tx_hash": "0x..."}`; the server checks the transfer on-chain and returns `report_url` once confirmed (HTTP 202 while confirming).
 - OpenAPI description: {{ base }}/openapi.yaml
 
@@ -51,17 +54,13 @@ Full text of every guide plus the live weekly figures in one file: {{ base }}/ll
 - C: no TLS 1.3.
 - F: invalid certificate, legacy TLS, static RSA key exchange or RSA below 2048 bits.
 
-## Research
-
-- {{ base }}/research — a 3-qubit GHZ circuit run on IBM Quantum hardware (ibm_marrakesh) and a research report archived as digital DNA with Reed-Solomon error correction.
-
 ## Guides and data
 
-- {{ base }}/study/top-1000-post-quantum-tls — scan of the Tranco top 1,000 domains (November 2026): share that negotiate X25519MLKEM768, grade distribution, full per-domain table. Raw data: {{ base }}/study/top-1000-post-quantum-tls.json (CC BY 4.0).
-- {{ base }}/adoption — weekly tracker: every Monday the Tranco top 10,000 and watchlists of government, bank and company sites in Germany, Austria and Switzerland are re-scanned (the top 100,000 monthly); shows which sites switched to or lost X25519MLKEM768 that week and the share of sites ready per hosting provider / CDN network. Data: {{ base }}/adoption.json and {{ base }}/adoption.csv (CC BY 4.0).
-- {{ base }}/guides/enable-x25519mlkem768-nginx — enable post-quantum TLS on nginx (OpenSSL 3.5+) and verify it.
-- {{ base }}/guides/post-quantum-tls-apache-caddy-haproxy-cloudflare — the same for Apache, Caddy, HAProxy and Cloudflare.
-- {{ base }}/guides/harvest-now-decrypt-later — why key exchange must be upgraded before certificates.
+- {{ base }}/study/top-1000-post-quantum-tls{{ u }} — scan of the Tranco top 1,000 domains (November 2026): share that negotiate X25519MLKEM768, grade distribution, full per-domain table. Raw data: {{ base }}/study/top-1000-post-quantum-tls.json (CC BY 4.0).
+- {{ base }}/adoption{{ u }} — weekly tracker: every Monday the Tranco top 10,000 and watchlists of government, bank and company sites in Germany, Austria and Switzerland are re-scanned (the top 100,000 monthly); shows which sites switched to or lost X25519MLKEM768 that week and the share of sites ready per hosting provider / CDN network. Data: {{ base }}/adoption.json and {{ base }}/adoption.csv (CC BY 4.0).
+- {{ base }}/guides/enable-x25519mlkem768-nginx{{ u }} — enable post-quantum TLS on nginx (OpenSSL 3.5+) and verify it.
+- {{ base }}/guides/post-quantum-tls-apache-caddy-haproxy-cloudflare{{ u }} — the same for Apache, Caddy, HAProxy and Cloudflare.
+- {{ base }}/guides/harvest-now-decrypt-later{{ u }} — why key exchange must be upgraded before certificates.
 
 ## Ranking by country
 
@@ -70,11 +69,11 @@ Full text of every guide plus the live weekly figures in one file: {{ base }}/ll
 
 ## Agency pack
 
-- {{ base }}/agency — 10 full reports for $199 (one payment, no expiry): after paying, a private pack page lets you scan any domain and open its full report immediately, one credit each.
+- {{ base }}/agency — {{ credits }} full reports for {{ agency_price_dual }} (one payment, no expiry): after paying, a private pack page lets you scan any domain and open its full report immediately, one credit each.
 
 ## Monitoring subscription (for teams)
 
-- {{ base }}/monitoring — daily scans of up to 10 domains ($29/month) or 100 domains ($99/month), billed monthly through PayPal, cancel any time.
+- {{ base }}/monitoring — daily scans of up to 10 domains ({{ starter_price_dual }}/month) or 100 domains ({{ business_price_dual }}/month), billed monthly through PayPal, cancel any time.
 - Free trial: 14 days, up to 10 domains, no payment details; it ends automatically and never turns into a paid subscription by itself. Start at {{ base }}/monitoring#trial (company domain + work email; the dashboard link is emailed).
 - Every public IPv4/IPv6 address of a domain (up to 6) gets its own handshake; an alert fires when some addresses negotiate post-quantum key exchange and others do not (CDN edges or load-balanced servers out of sync).
 - Email alerts when post-quantum key exchange is lost, a grade changes, a result becomes inconclusive, or a certificate nears expiry.

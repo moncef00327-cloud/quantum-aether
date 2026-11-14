@@ -22,6 +22,10 @@ WEEKLY_TOP = 10000
 MONTHLY_TOP = 100000
 KEEP_WEEKS = 52
 KEEP_MONTHS = 6
+# سجل التعرّض الكمّي: التاريخ أصل لا يُعوَّض، فلا حذف افتراضياً.
+# QS_ADOPTION_PRUNE: off (افتراضي، لا يُحذف شيء) | archive (تُنقل الأسابيع/الأشهر القديمة إلى جداول *_archive)
+# | delete (السلوك القديم، لا يُستعمل إلا صراحةً)
+PRUNE_MODES = ("off", "archive", "delete")
 PROVIDER_MIN_SITES = 20       # لا نعرض مزوّداً بأقل من 20 موقعاً مُجيباً: العيّنة أصغر من أن تُقارن
 
 SCHEMA = """
@@ -416,15 +420,42 @@ def purge_excluded(conn):
     return deleted
 
 
-def prune(conn, keep_weeks=KEEP_WEEKS, keep_months=KEEP_MONTHS):
+def prune_mode(mode=None):
+    mode = (mode or os.environ.get("QS_ADOPTION_PRUNE") or "off").strip().lower()
+    return mode if mode in PRUNE_MODES else "off"
+
+
+def _archive_table(conn, table):
+    """ينشئ جدول الأرشيف إن لم يوجد، ويضيف إليه أي عمود جديد في الجدول الأصلي."""
+    conn.execute(f"CREATE TABLE IF NOT EXISTS {table}_archive AS SELECT * FROM {table} WHERE 0")
+    have = {r[1] for r in conn.execute(f"PRAGMA table_info({table}_archive)")}
+    for r in conn.execute(f"PRAGMA table_info({table})").fetchall():
+        if r[1] not in have:
+            conn.execute(f"ALTER TABLE {table}_archive ADD COLUMN {r[1]} {r[2] or ''}")
+    return [r[1] for r in conn.execute(f"PRAGMA table_info({table})")]
+
+
+def prune(conn, keep_weeks=KEEP_WEEKS, keep_months=KEEP_MONTHS, mode=None):
+    """يحذف المحتوى المستبعد دائماً. أما التاريخ: off = لا شيء (افتراضي)، archive = نقل إلى *_archive، delete = حذف (قديم).
+    يعيد {"mode", "weeks", "months"} بعدد الصفوف التي نُقلت أو حُذفت."""
     purge_excluded(conn)
+    mode = prune_mode(mode)
+    out = {"mode": mode, "weeks": 0, "months": 0}
+    if mode == "off":
+        return out
     keep_w = weeks(conn)[-keep_weeks:]
     keep_m = [r[0] for r in conn.execute("SELECT DISTINCT month FROM adoption_monthly ORDER BY month")][-keep_months:]
     with conn:
-        if keep_w:
-            conn.execute(f"DELETE FROM adoption_results WHERE week NOT IN ({','.join('?' * len(keep_w))})", keep_w)
-        if keep_m:
-            conn.execute(f"DELETE FROM adoption_monthly WHERE month NOT IN ({','.join('?' * len(keep_m))})", keep_m)
+        for table, col, keep, key in (("adoption_results", "week", keep_w, "weeks"),
+                                      ("adoption_monthly", "month", keep_m, "months")):
+            if not keep:
+                continue
+            marks = ",".join("?" * len(keep))
+            if mode == "archive":
+                cols = ",".join(_archive_table(conn, table))
+                conn.execute(f"INSERT INTO {table}_archive ({cols}) SELECT {cols} FROM {table} WHERE {col} NOT IN ({marks})", keep)
+            out[key] = conn.execute(f"DELETE FROM {table} WHERE {col} NOT IN ({marks})", keep).rowcount
+    return out
 
 
 # ---------------------------------------------------------------- القراءة
@@ -540,7 +571,7 @@ def snapshot(conn, watchlists=None):
     }
 
 
-EXPORT_FIELDS = ["week", "domain", "rank", "sector", "ok", "grade", "grp", "tls", "pq", "unsure", "asn", "as_name", "scanned_at"]
+EXPORT_FIELDS = ["week", "methodology", "domain", "rank", "sector", "ok", "grade", "grp", "tls", "pq", "unsure", "asn", "as_name", "scanned_at"]
 
 
 def to_csv(rows):

@@ -29,17 +29,13 @@ class ResultOrderTests(unittest.TestCase):
         return {name: page.index(marker) for name, marker in
                 (("buy", 'id="buy"'), ("alert", 'id="alert"'), ("badge", 'data-copy="#badge-html"'))}
 
-    def test_grade_a_shows_badge_and_alert_first(self):
-        p = self.positions(render("A"))
-        self.assertLess(p["badge"], p["alert"])
-        self.assertLess(p["alert"], p["buy"])
-
-    def test_other_grades_show_the_fix_first(self):
-        for grade in ("B", "C", "F"):
+    def test_alert_then_dev_tools_then_optional_report_for_every_grade(self):
+        # 2026-11-14: trial + free fix at the top; free alert, then badge/MCP/Action/CLI, then the collapsed report.
+        for grade in ("A", "B", "C", "F"):
             with self.subTest(grade=grade):
                 p = self.positions(render(grade))
-                self.assertLess(p["buy"], p["alert"])
                 self.assertLess(p["alert"], p["badge"])
+                self.assertLess(p["badge"], p["buy"])
 
     def test_each_card_appears_once(self):
         for grade in ("A", "B"):

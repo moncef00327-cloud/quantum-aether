@@ -10,8 +10,8 @@
   <table class="data" dir="ltr">
     <tr><th>{{ t.rank }}</th><th>{{ t.host_col }}</th><th>{{ t.adoption_before }}</th><th>{{ t.adoption_after }}</th></tr>
     {% for r in rows %}<tr><td>{{ r.rank or "–" }}</td><td>{{ host_link(r.domain) }}</td>
-      <td><span class="grade-chip grade-{{ r.grade_before }}">{{ r.grade_before }}</span> <code>{{ r.grp_before or "?" }}</code></td>
-      <td><span class="grade-chip grade-{{ r.grade }}">{{ r.grade }}</span> <code>{{ r.grp or "?" }}</code></td></tr>{% endfor %}
+      <td><a href="{{ grade_guide_url }}" class="grade-chip grade-{{ r.grade_before }}">{{ r.grade_before }}</a> <code>{{ r.grp_before or "?" }}</code></td>
+      <td><a href="{{ grade_guide_url }}" class="grade-chip grade-{{ r.grade }}">{{ r.grade }}</a> <code>{{ r.grp or "?" }}</code></td></tr>{% endfor %}
   </table>
 {% endmacro %}
 {% block content %}
@@ -45,7 +45,7 @@
   <h2>{{ t.adoption_timeline }}</h2>
   <div class="bars weeks" dir="ltr">
     {% for p in s.timeline %}
-    <div class="bar-row"><span class="muted small">{{ p.week }}</span>
+    <div class="bar-row"><span class="muted small">{{ p.week }}{% if p.week >= '2026-W47' %} <span class="tag">{{ 'منهجية جديدة' if lang == 'ar' else ('Neue Methodik' if lang == 'de' else 'New method') }}</span>{% elif p.week == '2026-W46' %} <span class="tag">{{ 'آخر أسبوع بالمنهجية السابقة' if lang == 'ar' else ('Letzte Woche der bisherigen Methodik' if lang == 'de' else 'Last week of previous method') }}</span>{% endif %}</span>
       <div class="bar"><span style="width: {{ p.pct }}%"></span></div>
       <span class="bar-value">{{ p.pct }}%</span></div>
     {% endfor %}
@@ -101,7 +101,7 @@
           {% elif r.unsure %}<span class="muted">{{ t.adoption_status_unsure }}</span>
           {% elif r.pq %}<span class="pq-on">{{ t.adoption_status_on }}</span>{% if r.pq_since %} <span class="muted small">{{ t.adoption_status_since.format(week=iso(r.pq_since)) }}</span>{% endif %}
           {% else %}<span class="pq-off">{{ t.adoption_status_off }}</span>{% endif %}</td>
-      <td>{% if r.ok and not r.unsure %}<span class="grade-chip grade-{{ r.grade }}">{{ r.grade }}</span>{% endif %}</td>
+      <td>{% if r.ok and not r.unsure %}<a href="{{ grade_guide_url }}" class="grade-chip grade-{{ r.grade }}">{{ r.grade }}</a>{% endif %}</td>
       <td>{% if r.ok and not r.unsure %}<code>{{ r.grp or r.tls or "?" }}</code>{% endif %}</td></tr>{% endfor %}
   </table>
   {% if sector.rows | length > 100 %}</details>{% endif %}
@@ -123,6 +123,7 @@
   <p class="small">{{ t.adoption_download }}
     <a href="{{ url_for('site.adoption_json') }}">JSON</a> ·
     <a href="{{ url_for('site.adoption_csv') }}">CSV</a> ·
-    <a href="{{ url_for('site.study', lang=lang) }}">{{ t.study_title }}</a></p>
+    <a href="{{ url_for('site.study', lang=lang) }}">{{ t.study_title }}</a> ·
+    <a href="{{ url_for('site.data_license', lang=lang) }}">{{ 'ترخيص البيانات وشروط الاستخدام' if lang == 'ar' else ('Datenlizenz und Nutzungsbedingungen' if lang == 'de' else 'Data licence and terms of use') }}</a></p>
 </section>
 {% endblock %}

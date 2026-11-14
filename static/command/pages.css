@@ -85,3 +85,18 @@
 html{background:#0b1324}
 .command-service footer,footer{padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))}
 @media(max-width:850px){.command-service footer,footer{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}}
+
+
+/* Funnel round 4 (2026-11-14): trial form is the first screen on /monitoring; weak scan results get a stronger CTA */
+.service-content .trial-fold{padding:4px 0 16px;margin-bottom:16px;border-bottom:1px solid var(--qa-glass-border,#28203c)}
+.service-content .trial-fold h1{margin:0 0 8px}
+.service-content .trial-fold .trial-cta{margin:0;padding:16px 18px}
+.service-content .trial-fold .trial-cta > p:first-of-type{font-size:16px;font-weight:600;margin:0 0 12px;color:var(--qa-text,#efeef4)}
+.service-content .trial-cta-urgent{border:2px solid #c68efa;box-shadow:0 0 0 4px #c68efa33,0 12px 32px #c68efa22}
+.service-content .trial-cta-urgent h2{font-size:clamp(20px,3.2vw,28px);margin-top:0}
+.service-content .trial-cta-urgent .trial-submit button,.service-content .trial-fold .trial-submit button{font-weight:700;font-size:16px;padding:14px 16px}
+@media(max-width:600px){
+  .service-content .trial-fold{padding-top:0}
+  .service-content .trial-fold h1{font-size:26px;line-height:1.25}
+  .service-content .hero.trial-fold{padding:0 0 12px;margin-bottom:16px}
+}

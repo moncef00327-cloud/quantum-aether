@@ -10,6 +10,7 @@ import monitor_db
 import monitor_job
 import quantum_saas_app
 import sales_db
+from tests.test_monitor import company
 from tests.test_monitor import PLAN_IDS, FakeMailer, FakePayPal, FakeScanner
 
 
@@ -182,12 +183,12 @@ class TrialTest(unittest.TestCase):
         self.start_trial()
         token = self.trial_token()
         acc_id = self.account()["id"]
-        r = self.client.post("/api/monitor/upgrade", json={"token": token, "plan": "business", "consent": True})
+        r = self.client.post("/api/monitor/upgrade", json=company(token=token, plan="business", email="it@example.com"))
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.get_json(), {"account_id": acc_id, "plan_id": PLAN_IDS["PAYPAL_PLAN_BUSINESS"]})
-        self.assertEqual(self.client.post("/api/monitor/upgrade", json={"token": token, "plan": "gold", "consent": True}).status_code, 400)
-        self.assertEqual(self.client.post("/api/monitor/upgrade", json={"token": token, "plan": "starter"}).status_code, 400)
-        self.assertEqual(self.client.post("/api/monitor/upgrade", json={"token": "nope", "plan": "starter", "consent": True}).status_code, 404)
+        self.assertEqual(self.client.post("/api/monitor/upgrade", json=company(token=token, plan="gold", email="it@example.com")).status_code, 400)
+        self.assertEqual(self.client.post("/api/monitor/upgrade", json=company(token=token, plan="starter", email="it@example.com", agb_consent=False)).status_code, 400)
+        self.assertEqual(self.client.post("/api/monitor/upgrade", json=company(token="nope", plan="starter", email="it@example.com")).status_code, 404)
 
         sub_id = "I-UP"
         self.paypal.subscriptions[sub_id] = {"id": sub_id, "status": "ACTIVE", "custom_id": acc_id,

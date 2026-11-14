@@ -16,7 +16,8 @@ CREATE INDEX IF NOT EXISTS pageviews_day ON pageviews (day);
 
 BOT_RE = re.compile(r"bot|crawl|spider|slurp|curl|wget|python|httpclient|go-http|java/|headless|scan|censys|"
                     r"preview|monitor|verification|facebookexternalhit|embedly|whatsapp|telegram", re.I)
-TRACKED_PREFIXES = ("/", "/monitoring", "/guides", "/study", "/research", "/scan/", "/deadlines", "/site/", "/adoption", "/compare")
+TRACKED_PREFIXES = ("/", "/monitoring", "/guides", "/study", "/research", "/scan/", "/deadlines", "/site/", "/adoption", "/compare",
+                    "/pricing", "/business", "/agency", "/sample-report", "/audit")
 
 
 def init(conn):
@@ -29,6 +30,8 @@ def normalize_path(path):
         return None
     if path.startswith("/scan/"):
         return "/scan/*"
+    if path == "/scan":  # the result of a failed scan form (POST /scan) is rendered here
+        return "/scan"
     if path == "/" or path.startswith(TRACKED_PREFIXES[1:]):
         return path
     return None
@@ -118,8 +121,15 @@ EVENT_NAMES = ("focus", "type", "example", "submit", "result", "lang", "monitori
                "business_cta", "agents_cta", "explore",
                "disc_start", "disc_email", "cfg_copy",
                "trial_start",  # زر «ابدأ التجربة المجانية» في /monitoring
-               "history_csv",  # تنزيل سجل الفحوص من لوحة المراقبة
-               "seed_add")  # إضافة نطاق أساسي لجرد الأصول
+               "trial_created", "subscription_start", "subscription_active",
+               "checkout_start", "purchase_complete",  # أحداث الخادم بعد إنشاء الطلب أو تأكيد الدفع
+               "agency_start", "agency_paid",  # تحويلات باقة تقارير العملاء لمقدمي الخدمات
+               "history_csv", "evidence_pdf", "fix_copy",  # تنزيل سجل الفحوص من لوحة المراقبة
+               "seed_add",  # إضافة نطاق أساسي لجرد الأصول
+               # 2026-11-14: names already sent by pages/server but dropped until now, and the trial-first CTA
+               "trial_cta", "audit_cta", "exec_brief", "audit_checkout_start",
+               # 2026-11-14: trial funnel detail: passed browser checks / blocked in the browser / rejected by the server
+               "trial_submit", "trial_invalid", "trial_failed")
 EVENTS_SCHEMA = """
 CREATE TABLE IF NOT EXISTS events (
     day      TEXT NOT NULL,
@@ -128,7 +138,8 @@ CREATE TABLE IF NOT EXISTS events (
     lang     TEXT NOT NULL,
     visitor  TEXT NOT NULL,
     is_bot   INTEGER NOT NULL,
-    is_test  INTEGER NOT NULL DEFAULT 0
+    is_test  INTEGER NOT NULL DEFAULT 0,
+    detail   TEXT NOT NULL DEFAULT ''
 );
 CREATE INDEX IF NOT EXISTS events_day ON events (day, name);
 """
@@ -136,19 +147,39 @@ CREATE INDEX IF NOT EXISTS events_day ON events (day, name);
 
 def init_events(conn):
     conn.executescript(EVENTS_SCHEMA)
+    # 2026-11-14: "detail" carries a machine code (e.g. "dns_failure:example.com" for a scan error), never PII.
+    if "detail" not in {row[1] for row in conn.execute("PRAGMA table_info(events)")}:
+        with conn:
+            conn.execute("ALTER TABLE events ADD COLUMN detail TEXT NOT NULL DEFAULT ''")
 
 
-def record_event(conn, day, name, page, lang, visitor, is_bot):
-    """حدث واحد لكل (زائر، يوم، اسم، صفحة): التكرار لا يضخّم الأرقام."""
+DETAIL_RE = re.compile(r"[^a-z0-9_.:\-]")
+
+
+def clean_detail(value):
+    """Lower-case code/domain text only (letters, digits, _ . : -), at most 120 characters."""
+    return DETAIL_RE.sub("", str(value or "").lower())[:120]
+
+
+def record_event(conn, day, name, page, lang, visitor, is_bot, is_test=False, detail=""):
+    """حدث واحد لكل (زائر، يوم، اسم، صفحة، تفصيل): التكرار لا يضخّم الأرقام."""
     if name not in EVENT_NAMES:
         return False
+    detail = clean_detail(detail)
     with conn:
-        exists = conn.execute("SELECT 1 FROM events WHERE day = ? AND name = ? AND page = ? AND visitor = ? LIMIT 1",
-                              (day, name, page, visitor)).fetchone()
+        exists = conn.execute("SELECT 1 FROM events WHERE day = ? AND name = ? AND page = ? AND visitor = ? "
+                              "AND (detail = ? OR ? = '') LIMIT 1", (day, name, page, visitor, detail, detail)).fetchone()
         if not exists:
-            conn.execute("INSERT INTO events (day, name, page, lang, visitor, is_bot) VALUES (?, ?, ?, ?, ?, ?)",
-                         (day, name, page, lang, visitor, int(is_bot)))
+            conn.execute("INSERT INTO events (day, name, page, lang, visitor, is_bot, is_test, detail) "
+                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (day, name, page, lang, visitor, int(is_bot), int(is_test), detail))
     return True
+
+
+def error_details(conn, since_day, limit=50):
+    """Most frequent scan error codes and domains (humans only), for the admin page."""
+    return conn.execute("SELECT detail, COUNT(*) AS n, MAX(day) AS last_day FROM events WHERE name = 'error' AND detail != '' "
+                        "AND is_bot = 0 AND is_test = 0 AND day >= ? GROUP BY detail ORDER BY n DESC, last_day DESC LIMIT ?",
+                        (since_day, limit)).fetchall()
 
 
 def event_funnel(conn, since_day, until_day="9999-12-31"):

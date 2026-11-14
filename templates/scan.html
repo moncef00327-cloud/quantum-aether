@@ -1,5 +1,7 @@
 {% extends "base.html" %}
+{% from "_trial_cta.html" import trial_cta with context %}
 {% set kx = r.key_exchange %}{% set cert = r.certificate %}
+{% set dbase = r.domain[4:] if r.domain.startswith("www.") and r.domain.count(".") >= 2 else r.domain %}
 {% block title %}{{ r.domain }} · {{ t.result_title }}{% endblock %}
 {% block og_image %}{{ abs_url('site.og_scan', scan_id=scan.id) }}{% endblock %}
 {% block head %}<meta name="robots" content="noindex">{% endblock %}
@@ -14,6 +16,66 @@
     <p class="muted small">{{ t.scanned_at }}: <span dir="ltr">{{ r.scanned_at }}</span></p>
   </div>
 </section>
+{% set immediate_a_offer = observation == 'observed_pq' and r.grade == 'A' %}
+{% if not paid %}
+{% if immediate_a_offer %}
+{{ trial_cta('scan-trial', domain=dbase, title=t.scan_trial_title_a.format(domain=dbase), sub=t.scan_trial_sub_a, source='scan_result') }}
+{% else %}
+{{ trial_cta('scan-trial', domain=dbase, title=t.scan_trial_title.format(domain=dbase), sub=t.scan_trial_sub, source='scan_result', urgent=true) }}
+{% endif %}
+{% endif %}
+{% set glang = lang if lang in ("en", "ar") else "en" %}
+{% if observation != 'observed_pq' and t.ins_reasons.get(pq_reason) %}
+<section class="card fix-now" id="why">
+  <h2>{{ t.ins_why_title }}</h2>
+  <p>{{ t.ins_reasons[pq_reason].format(group=kx.group or '—') }}</p>
+  <h3>{{ t.ins_fix_title }}</h3>
+  <p class="ins-detected" hidden data-msg="{{ t.ins_detected }}"></p>
+  <p class="ins-pick muted small">{{ t.ins_pick }}</p>
+  <div class="fix-tabs">
+  {% for f in fix_tabs %}
+    <details class="fix-tab" data-stack="{{ f.stack }}"{% if loop.first %} open{% endif %}>
+      <summary>{{ f.name }}</summary>
+      {% if f.line %}<div class="snippet"><div class="snippet-head"><span>{{ f.name }}</span>
+        <button type="button" class="copy-btn" data-ev="fix_copy" data-copy="#fix-{{ f.stack }}" data-done="{{ t.copied }}">{{ t["copy"] }}</button></div>
+        <pre id="fix-{{ f.stack }}" dir="ltr"><code>{{ f.line }}</code></pre></div>
+      {% else %}<p class="small"><strong>{{ t.ins_no_line }}</strong></p>{% endif %}
+      {% if f.note %}<p class="small">{{ f.note }}</p>{% endif %}
+      {% if f.requires %}<p class="small muted">{{ t.ins_requires }}: {{ f.requires }}</p>{% endif %}
+      <p class="small"><a href="{{ url_for('site.guide', slug=f.guide, lang=glang) }}">{{ t.ins_guide }} →</a>
+        · <a href="{{ url_for('site.pq_config_server', server=f.stack, lang=lang) }}">{{ t.ins_all }} →</a></p>
+    </details>
+  {% endfor %}
+  </div>
+</section>
+{% endif %}
+<section class="card highlight common-hosts" id="common-hosts"
+         data-api="{{ url_for('site.scan_insights_api', scan_id=scan.id, lang=lang) }}" data-domain="{{ r.domain }}"
+         data-grade-a="{{ '1' if observation == 'observed_pq' and r.grade == 'A' else '' }}"
+         data-msg='{{ {"st": t.ins_st, "alert_a": t.ins_alert_a, "alert": t.ins_alert, "all_ok": t.ins_all_ok, "nothing": t.ins_nothing, "failed": t.ins_failed, "running": t.ins_running} | tojson | forceescape }}'>
+  <h2>{{ t.ins_hosts_title }}</h2>
+  <p class="ins-alert" role="status" aria-live="polite">{{ t.ins_running }}</p>
+  <ul class="ins-hosts" dir="ltr"></ul>
+  <p class="muted small">{{ t.ins_hosts_sub.format(names=common_prefixes|join(', '), base=dbase) }}</p>
+</section>
+
+{% set alert_card %}
+<section class="card highlight" id="alert">
+  <h2>{{ t.alert_card_title }}</h2>
+  <p>{{ t.alert_card_sub.format(domain=r.domain) }}</p>
+  <form method="post" action="{{ url_for('site.alerts_subscribe', lang=lang) }}" class="alert-form">
+    <input type="hidden" name="domain" value="{{ r.domain }}">
+    <input type="hidden" name="consent" value="1">
+    <div class="scan-row">
+      <input type="email" name="email" required maxlength="254" dir="ltr" autocomplete="email" placeholder="you@{{ dbase }}"
+             aria-label="{{ t.alert_email_label }}">
+      <button type="submit" data-ev="alert_signup">{{ t.alert_button }}</button>
+    </div>
+    <p class="muted small">{{ t.alert_consent }} (<a href="{{ url_for('site.legal_page', slug='datenschutz', lang=legal_lang) }}" target="_blank">{{ t.legal_privacy }}</a>)</p>
+  </form>
+  <p><a class="button-link" href="{{ url_for('site.monitoring', domain=r.domain, lang=lang) }}" data-ev="monitoring_cta">{{ t.mon_shield_cta.format(domain=r.domain) }}</a></p>
+</section>
+{% endset %}
 
 <section class="card">
   <h2>{{ t.summary_title }}</h2>
@@ -28,24 +90,6 @@
 </section>
 {% include "_endpoints.html" %}
 
-{% set dbase = r.domain[4:] if r.domain.startswith("www.") and r.domain.count(".") >= 2 else r.domain %}
-{# نتيجة تقليدية (غير محمية): أول ما يراه الزائر بعد الملخص هو المراقبة المجانية، بنموذج في الصفحة نفسها #}
-{% if observation == 'observed_classical' and not paid %}
-<section class="card highlight" id="scan-trial">
-  <h2>{{ t.scan_trial_title.format(domain=dbase) }}</h2>
-  <p>{{ t.scan_trial_sub }}</p>
-  <form method="post" action="{{ url_for('site.monitor_trial', lang=lang) }}" class="scan-form">
-    <input type="hidden" name="domain" value="{{ dbase }}">
-    <label for="scan-trial-email">{{ t.trial_email_label }}</label>
-    <div class="scan-row">
-      <input id="scan-trial-email" name="email" type="email" autocomplete="email" dir="ltr" required maxlength="254" placeholder="security@{{ dbase }}">
-      <button type="submit" data-ev="trial_start">{{ t.trial_button }}</button>
-    </div>
-    <p class="consent"><label><input type="checkbox" name="consent" value="1" required>
-      <span>{{ t.trial_consent }} (<a href="{{ url_for('site.legal_page', slug='agb', lang=legal_lang) }}" target="_blank">{{ t.legal_terms }}</a> · <a href="{{ url_for('site.legal_page', slug='datenschutz', lang=legal_lang) }}" target="_blank">{{ t.legal_privacy }}</a>)</span></label></p>
-  </form>
-</section>
-{% endif %}
 <section class="card discovery" id="discovery" data-api="{{ url_for('site.discovery_api', scan_id=scan.id) }}"
          data-msg='{{ {"running": t.disc_running, "result": t.disc_result, "none": t.disc_none, "failed": t.disc_failed, "rate_limited": t.disc_limited, "busy": t.disc_busy} | tojson | forceescape }}'>
   <h2>{{ t.disc_title }}</h2>
@@ -97,14 +141,10 @@
 </section>
 
 {% set buy_card %}
-<section class="card buy" id="buy">
-  <h2>{{ t.buy_title }} — ${{ price }}</h2>
-  <p class="one-time">{{ t.one_time }} · <a href="{{ url_for('site.agency_page', lang=lang) }}" data-ev="agency_cta">{{ t.agency_home_link }}</a></p>
+<details class="card buy buy-more" id="buy"{% if paid %} open{% endif %}>
+  <summary><strong>{{ t.buy_title }} — <bdi>{{ price }} {{ currency }}</bdi></strong></summary>
+  <p class="one-time">{{ t.one_time }} · <a href="{{ url_for('site.agency_page', lang=lang) }}" data-ev="agency_cta">{{ t.agency_home_link.format(credits=agency_credits, price_dual=agency_price_dual) }}</a></p>
   <ul class="ticks">{% for item in t.paid_items %}<li>{{ item }}</li>{% endfor %}</ul>
-  <p>
-    <a class="button-link" href="{{ url_for('site.executive_brief', domain=r.domain, lang=lang) }}" target="_blank" data-ev="exec_brief">{{ t.exec_brief_cta }}</a>
-    · <a href="{{ url_for('site.sample_report', lang=lang) }}" target="_blank" data-ev="sample_report">{{ t.sample_link }} →</a>
-  </p>
   {% if paid %}
     <p class="notice">{{ t.already_paid }}</p>
   {% elif payments_enabled or crypto_networks %}
@@ -145,24 +185,7 @@
   {% else %}
     <p class="notice">{{ t.payments_off }}</p>
   {% endif %}
-</section>
-{% endset %}
-{% set alert_card %}
-<section class="card" id="alert">
-  <h2>{{ t.alert_card_title }}</h2>
-  <p>{{ t.alert_card_sub.format(domain=r.domain) }}</p>
-  <form method="post" action="{{ url_for('site.alerts_subscribe', lang=lang) }}" class="alert-form">
-    <input type="hidden" name="domain" value="{{ r.domain }}">
-    <input type="hidden" name="consent" value="1">
-    <div class="scan-row">
-      <input type="email" name="email" required maxlength="254" dir="ltr" autocomplete="email" placeholder="you@{{ dbase }}"
-             aria-label="{{ t.alert_email_label }}">
-      <button type="submit" data-ev="alert_signup">{{ t.alert_button }}</button>
-    </div>
-    <p class="muted small">{{ t.alert_consent }} (<a href="{{ url_for('site.legal_page', slug='datenschutz', lang=legal_lang) }}" target="_blank">{{ t.legal_privacy }}</a>)</p>
-  </form>
-  <p><a class="button-link" href="{{ url_for('site.monitoring', domain=r.domain, lang=lang) }}" data-ev="monitoring_cta">{{ t.mon_shield_cta.format(domain=r.domain) }}</a></p>
-</section>
+</details>
 {% endset %}
 {% set badge_card %}
 <section class="card">
@@ -192,34 +215,30 @@
   </div>
 </section>
 {% endset %}
-{# Grade A: the visitor already did well, so showing it (badge) and keeping it (free alert) come first;
-   otherwise the fix (paid report) comes first. #}
-{% if r.grade == 'A' and not paid %}
-{{ badge_card }}
+{# 2026-11-14: trial and the free fix come first (top of page); then the free alert and sharing;
+   developer tools (badge/MCP/Action/CLI) and the optional one-time report sit at the bottom for every grade. #}
 {{ alert_card }}
-{{ buy_card }}
-{% else %}
-{{ buy_card }}
-{{ alert_card }}
-{{ badge_card }}
-{% endif %}
-
 <section class="card no-print">
   <h2>{{ t.share_title }}</h2>
-  {% set share_url = url_for('site.site_page', domain=r.domain, _external=True) %}
+  {% set share_li = url_for('site.site_page', domain=r.domain, _external=True, utm_source='linkedin', utm_medium='social', utm_campaign='scan_share') %}
+  {% set share_x = url_for('site.site_page', domain=r.domain, _external=True, utm_source='x', utm_medium='social', utm_campaign='scan_share') %}
   {% set share_text = t.share_text.format(domain=r.domain, grade=r.grade) %}
   <p>
     <a class="button-link" target="_blank" rel="noopener" data-ev="share"
-       href="https://www.linkedin.com/sharing/share-offsite/?url={{ share_url | urlencode }}">LinkedIn</a>
+       href="https://www.linkedin.com/sharing/share-offsite/?url={{ share_li | urlencode }}">LinkedIn</a>
     <a class="button-link" target="_blank" rel="noopener" data-ev="share"
-       href="https://twitter.com/intent/tweet?text={{ share_text | urlencode }}&url={{ share_url | urlencode }}">X</a>
+       href="https://twitter.com/intent/tweet?text={{ share_text | urlencode }}&url={{ share_x | urlencode }}">X</a>
   </p>
 </section>
+
+{{ badge_card }}
+{{ buy_card }}
 
 <p><a class="button-link" href="{{ url_for('site.index', lang=lang) }}">{{ t.scan_again }}</a></p>
 {% endblock %}
 {% block scripts %}
 <script src="{{ url_for('static', filename='discovery.js') }}" defer></script>
+<script src="{{ url_for('static', filename='insights.js') }}?v=20261114-b2" defer></script>
 {% if payments_enabled and not paid %}
 <script src="https://www.paypal.com/sdk/js?client-id={{ paypal_client_id | urlencode }}&currency={{ currency }}&intent=capture"></script>
 <script src="{{ url_for('static', filename='checkout.js') }}"></script>

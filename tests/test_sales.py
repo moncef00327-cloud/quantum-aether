@@ -23,7 +23,7 @@ class SalesBatchTest(unittest.TestCase):
         self.client = self.app.test_client()
 
     def tearDown(self):
-        shutil.rmtree(self.tmp, ignore_errors=True)
+        shutil.rmtree(self.tmp)
 
     def conn(self):
         return sales_db.connect(f"{self.tmp}/quantum_saas.db")
@@ -51,7 +51,10 @@ class SalesBatchTest(unittest.TestCase):
         self.assertIn("/guides/enable-x25519mlkem768-nginx?lang=en", body)
         self.assertIn("One-time payment. No subscription.", body)
         self.assertIn('action="/alerts?lang=en"', body)
-        self.assertNotIn("ssl_ecdh_curve", body)   # لا خطوات إصلاح من التقرير المدفوع
+        # 2026-11-14 (owner request): the free result names the one config line per stack (from the public config
+        # generator), but not the paid report's full remediation blocks.
+        self.assertIn("ssl_ecdh_curve X25519MLKEM768", body)
+        self.assertNotIn("ssl_protocols TLSv1.2 TLSv1.3", body)
 
     def test_grade_a_has_no_fix_hint(self):
         self.scanner.results["good.test"] = result_for("good.test")

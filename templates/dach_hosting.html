@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}{{ d.title }} · {{ t.brand }}{% endblock %}
+{% block description %}{{ d.meta }}{% endblock %}
+{% block head %}<style>
+.dach-badge{display:inline-block;margin:0 0 .75rem;padding:.3rem .7rem;border-radius:999px;font-weight:600;font-size:.85rem;background:rgba(245,166,35,.15);color:#b26b00;border:1px solid rgba(245,166,35,.45)}
+.dach-table th,.dach-table td{overflow-wrap:normal;word-break:normal}.dach-table td.n,.dach-table th.n{white-space:nowrap;text-align:end}
+.dach-form{display:grid;gap:.6rem;max-width:40rem}.dach-form label{display:grid;gap:.25rem;font-weight:500}
+.dach-form input,.dach-form select,.dach-form textarea{font:inherit;padding:.5rem .6rem;border-radius:.5rem;border:1px solid rgba(127,127,127,.4);background:transparent;color:inherit}
+.dach-form .check{display:flex;gap:.5rem;align-items:center;font-weight:400}.dach-hp{position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden}
+</style>
+<script type="application/ld+json">{{ {"@context": "https://schema.org", "@type": "Dataset", "name": d.title, "description": d.meta, "isAccessibleForFree": true, "creator": {"@type": "Organization", "name": "Quantum Aether"}, "spatialCoverage": "DE, AT, CH", "measurementTechnique": "TLS 1.3 handshake on port 443 offering X25519MLKEM768"} | tojson }}</script>{% endblock %}
+{% macro result(p) %}{% if p.graded %}<strong class="{{ 'pq-on' if (p.pct or 0) >= 50 else 'pq-off' }}">{{ d.result_fmt.format(pq=p.pq, n=p.determined, pct=p.pct if p.pct is not none else 0) }}</strong>{% if p.unreachable %} <span class="muted small">· {{ d.unreachable_note.format(n=p.unreachable) }}</span>{% endif %}{% else %}<span class="muted">{{ d.insufficient }}</span> <span class="muted small">({{ d.reason[p.reason] }})</span>{% endif %}{% endmacro %}
+{% block content %}
+<section class="card">
+  <span class="dach-badge" role="note">{{ d.badge }}</span>
+  <h1>{{ d.title }}</h1>
+  <p class="lead">{{ d.lead }}</p>
+  <h2>{{ d.dates }}</h2>
+  <ul>{% for n, start, end in v.rounds %}<li>{{ d.round }} {{ n }}: {% if start %}<bdi dir="ltr">{{ start }}–{{ end }}</bdi>{% else %}<span class="muted">{{ d.pending }}</span>{% endif %}</li>{% endfor %}</ul>
+  <p class="muted small">{{ d.tz }} · <a href="{{ url_for('site.hosting_page', lang=lang) }}">{{ d.back }}</a></p>
+</section>
+
+<section class="card">
+  <h2>{{ d.providers }} · {{ d.sample_title }}</h2>
+  <table class="data dach-table">
+    <tr><th>{{ d.col_provider }}</th><th>{{ d.col_country }}</th><th class="n">{{ d.col_sample }}</th><th>{{ d.col_result }}</th></tr>
+    {% for p in v.providers %}<tr><td><bdi>{{ p.name }}</bdi></td><td>{{ country[p.country][lang] if lang in country[p.country] else p.country }}</td>
+      <td class="n">{{ p.verified }}</td><td>{{ result(p) }}</td></tr>{% endfor %}
+  </table>
+</section>
+
+<section class="card">
+  <h2>{{ d.segments_title }}</h2>
+  <p>{{ d.segments_intro }}</p>
+  {% for seg in ["managed", "vps", "unspecified"] %}{% set rows = v.segments.get(seg, []) %}{% if rows %}
+  <h3>{{ d.seg[seg] }}</h3>
+  <table class="data dach-table">
+    <tr><th>{{ d.col_provider }}</th><th class="n">{{ d.seg_col }}</th></tr>
+    {% for r in rows %}<tr><td><bdi>{{ r.name }}</bdi></td><td class="n">{% if r.graded %}<bdi dir="ltr">{{ r.pq }} / {{ r.sites }}</bdi>{% else %}<span class="muted">{{ d.insufficient }}</span> <bdi dir="ltr" class="muted small">(n = {{ r.sites }})</bdi>{% endif %}</td></tr>{% endfor %}
+  </table>{% endif %}{% endfor %}
+</section>
+
+<section class="card">
+  <h2>{{ d.method_title }}</h2>
+  {% for para in d.method %}<p>{{ para }}</p>{% endfor %}
+</section>
+
+<section class="card" id="correction">
+  <h2>{{ d.correction_title }}</h2>
+  <p>{{ d.correction_intro }}</p>
+  {% if sent %}<p class="notice" role="status">{{ d.sent }}</p>{% endif %}
+  {% if error %}<p class="notice" role="alert">{{ error }}</p>{% endif %}
+  <form method="post" action="{{ url_for('site.dach_hosting_correction') }}" class="dach-form">
+    <input type="hidden" name="lang" value="{{ lang }}">
+    <label>{{ d.f_provider }}<select name="provider" required>{% for n in provider_names %}<option value="{{ n }}">{{ n }}</option>{% endfor %}</select></label>
+    <label>{{ d.f_name }}<input name="name" maxlength="120" required autocomplete="name"></label>
+    <label>{{ d.f_email }}<input name="email" type="email" maxlength="254" dir="ltr" required autocomplete="email"></label>
+    <label>{{ d.f_role }}<input name="role" maxlength="200" autocomplete="organization"></label>
+    <label>{{ d.f_domains }}<input name="domains" maxlength="1000" dir="ltr" placeholder="example.de, example.at"></label>
+    <label>{{ d.f_message }}<textarea name="message" rows="5" minlength="5" maxlength="4000" required></textarea></label>
+    <label class="check"><input type="checkbox" name="rescan" value="1" checked> {{ d.f_rescan }}</label>
+    <div class="dach-hp" aria-hidden="true"><label>Website<input name="website" tabindex="-1" autocomplete="off"></label></div>
+    <p class="muted small">{{ d.f_privacy }} <a href="{{ url_for('site.legal_page', slug='datenschutz', lang=legal_lang) }}">{{ t.legal_privacy }}</a></p>
+    <div><button type="submit">{{ d.f_submit }}</button></div>
+  </form>
+  <p class="muted small">{{ d.f_alt }} <a href="mailto:{{ fallback_email }}?subject={{ 'DACH hosting study: correction request' | urlencode }}" dir="ltr">{{ fallback_email }}</a></p>
+</section>
+{% endblock %}

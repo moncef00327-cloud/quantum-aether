@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% from "_trial_cta.html" import trial_cta with context %}
+{% block title %}{{ x.title.format(domain=domain) }}{% endblock %}
+{% block description %}{{ meta or x.unknown.format(domain=domain) }}{% endblock %}
+{% block head %}{% if not indexable %}<meta name="robots" content="noindex, follow">{% endif %}
+{% if w %}<script type="application/ld+json">{{ {"@context": "https://schema.org", "@type": "Dataset",
+  "name": domain ~ " — post-quantum key exchange exposure window",
+  "description": meta, "url": metadata_url(lang), "inLanguage": lang,
+  "temporalCoverage": w.first_observed ~ "/" ~ w.last_checked[:10], "dateModified": w.last_checked[:10],
+  "isAccessibleForFree": true, "license": abs_url('site.data_license'),
+  "creator": {"@type": "Organization", "name": "Quantum Aether"},
+  "about": {"@type": "WebSite", "name": domain, "url": "https://" ~ domain},
+  "distribution": [{"@type": "DataDownload", "encodingFormat": "application/json", "contentUrl": abs_url('site.exposure_api', domain=domain)}]} | tojson }}</script>{% endif %}
+<style>
+.exp-badge{display:inline-block;padding:.2em .7em;border-radius:999px;background:#1f2a44;color:#9fd3ff;font-size:.85em;margin-bottom:.5em}
+.exp-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.8em;margin:1em 0}
+.exp-fact{border:1px solid rgba(127,127,127,.3);border-radius:10px;padding:.7em .9em}
+.exp-fact b{display:block;font-size:1.25em;margin-top:.2em}
+.exp-tl{width:100%;border-collapse:collapse;font-size:.92em}.exp-tl td,.exp-tl th{padding:.35em .5em;border-bottom:1px solid rgba(127,127,127,.25);text-align:start}
+.st-observed_pq{color:#2e9d5b;font-weight:600}.st-observed_classical{color:#d0563b;font-weight:600}.st-undetermined,.st-unreachable{color:#888}
+.exp-hash{font-family:monospace;font-size:.78em;word-break:break-all}
+.exp-claim code{font-size:.85em;word-break:break-all}
+.table-scroll{overflow-x:auto}
+</style>{% endblock %}
+{% block content %}
+<section class="card result-head">
+  {% if w and w.timeline[-1].grade %}<div class="grade grade-{{ w.timeline[-1].grade }}">{{ w.timeline[-1].grade }}</div>{% endif %}
+  <div>
+    <span class="exp-badge">{{ x.badge }}</span>
+    <h1><bdi dir="ltr">{{ domain }}</bdi></h1>
+    {% if w %}<p class="grade-text">{{ x["st_" ~ w.status] }}</p>
+    {% if claimed %}<p class="small">✔ {{ x.claimed.format(date=claimed[:10]) }}</p>{% endif %}
+    {% else %}<p>{{ x.unknown.format(domain=domain) }}</p>{% endif %}
+  </div>
+</section>
+{% if w %}
+<section class="card">
+  <div class="exp-facts">
+    <div class="exp-fact">{{ x.first_observed }}<b dir="ltr">{{ w.first_observed }}</b><span class="muted small" dir="ltr">{{ w.first_observed_week }}</span></div>
+    <div class="exp-fact">{{ x.went_pq }}<b dir="ltr">{{ w.first_pq_date or x.never }}</b>{% if w.first_pq_week %}<span class="muted small" dir="ltr">{{ w.first_pq_week }}</span>{% endif %}</div>
+    <div class="exp-fact">{{ x.window }}<b>{% if w.exposure_window.days is not none %}{% if w.exposure_window.open %}≥ {% endif %}{{ x.days.format(n=w.exposure_window.days) }}{% else %}—{% endif %}</b>
+      <span class="muted small">{% if w.exposure_window.start %}<bdi dir="ltr">{{ w.exposure_window.start }} → {{ w.exposure_window.end if not w.exposure_window.open else '' }}</bdi>{% if w.exposure_window.open %} {{ x.open }}{% endif %}{% endif %}</span></div>
+    <div class="exp-fact">{{ x.current }}<b dir="ltr">{{ w.last_checked[:10] }}</b><span class="muted small" dir="ltr">{{ w.network or '' }}{% if w.rank %} · {{ x.rank }} {{ w.rank }}{% endif %}</span></div>
+  </div>
+  {% if w.regression_weeks %}<p class="notice">{{ x.regression.format(weeks=w.regression_weeks|join(', ')) }}</p>{% endif %}
+  {% if w.status in ('went_pq', 'classical') %}<p class="muted small">{{ x.lower_bound }}</p>{% endif %}
+  <p class="notice small"><strong>⚠</strong> {{ x.disclaimer }}</p>
+</section>
+
+<section class="card">
+  <h2>{{ x.timeline }}</h2>
+  <div class="table-scroll"><table class="exp-tl">
+    <tr><th>{{ x.week }}</th><th>{{ x.state }}</th><th>{{ x.grade }}</th><th>{{ x.group }}</th><th>{{ x.proof }}</th></tr>
+    {% for r in w.timeline|reverse %}<tr>
+      <td dir="ltr">{{ r.week }}<br><span class="muted small">{{ r.checked_at[:10] }}</span></td>
+      <td class="st-{{ r.state }}">{{ x.states[r.state] }}</td>
+      <td>{{ r.grade or '—' }}</td>
+      <td dir="ltr">{{ r.group or '—' }}{% if r.tls %} <span class="muted small">{{ r.tls }}</span>{% endif %}</td>
+      <td>{% if r.anchor %}<a href="{{ url_for('site.exposure_anchor_file', name=r.week ~ '.manifest.txt') }}" rel="nofollow">manifest</a> · <a href="{{ url_for('site.exposure_anchor_file', name=r.week ~ '.manifest.txt.ots') }}" rel="nofollow">.ots</a><br>
+        <span class="muted small">{{ x.anchor_complete.format(block=r.anchor.bitcoin_block) if r.anchor.status == 'complete' else x.anchor_pending }}</span>
+        {% else %}<span class="muted small">{{ x.anchor_none }}</span>{% endif %}
+        {% if r.leaf_hash %}<div class="exp-hash" dir="ltr" title="row fingerprint">{{ r.leaf_hash }}</div>{% endif %}</td>
+    </tr>{% endfor %}
+  </table></div>
+</section>
+
+{% if w.peers %}
+<section class="card">
+  <h2>{{ x.peers }}</h2>
+  {% if w.network_stats and w.network_stats.measured %}<p>{{ x.peers_stat.format(net=w.network_stats.as_name, pq=w.network_stats.pq, n=w.network_stats.measured, pct=w.network_stats.pct) }}</p>{% endif %}
+  <ul>{% for p in w.peers %}<li><a href="{{ url_for('site.exposure_page', domain=p.domain, lang=lang) }}" dir="ltr">{{ p.domain }}</a> —
+    {% if p.pq %}<span class="st-observed_pq">{{ x.since.format(week=p.first_pq_week) }}</span>{% elif p.unsure %}<span class="st-undetermined">{{ x.states.undetermined }}</span>{% else %}<span class="st-observed_classical">{{ x.states.observed_classical }}</span>{% endif %}
+    ({{ p.grade }})</li>{% endfor %}</ul>
+</section>
+{% endif %}
+
+{{ trial_cta('trial', domain=domain, title=x.trial_title.format(domain=domain), sub=x.trial_sub) }}
+
+<section class="card exp-claim" id="claim">
+  <h2>{{ x.claim_title }}</h2>
+  {% if claim_msg %}<p class="notice">{{ claim_msg }}</p>{% endif %}
+  {% if claimed %}<p>✔ {{ x.claimed.format(date=claimed[:10]) }}</p>{% else %}
+  <p>{{ x.claim_body }}</p>
+  <p dir="ltr"><code>{{ claim_record }}  TXT  "{{ claim_token }}"</code></p>
+  <form method="post" action="{{ url_for('site.exposure_claim', domain=domain) }}">
+    <input type="hidden" name="lang" value="{{ lang }}">
+    <button type="submit" data-ev="exposure_claim">{{ x.claim_button }}</button>
+  </form>{% endif %}
+</section>
+
+<section class="card">
+  <h2>{{ x.verify_title }}</h2>
+  <p class="small">{{ x.verify_body.format(domain=domain) }}</p>
+  <p class="small" dir="ltr">domain key: <span class="exp-hash">{{ domain_key }}</span></p>
+  <p class="small"><a href="{{ url_for('site.exposure_api', domain=domain) }}" rel="nofollow">JSON</a> ·
+    <a href="{{ url_for('site.site_page', domain=domain, lang=lang) }}">{{ x.related_site }}</a> ·
+    <a href="{{ url_for('site.exposure_index', lang=lang) }}">{{ x.related_registry }}</a> ·
+    <a href="{{ url_for('site.data_license', lang=lang) }}">{{ x.terms_link }}</a></p>
+  {% if w.history_truncated %}<p class="muted small">{{ x.truncated.format(n=w.public_weeks) }}</p>{% endif %}
+</section>
+{% else %}
+<section class="card"><p><a href="{{ url_for('site.exposure_index', lang=lang) }}">{{ x.related_registry }}</a></p></section>
+{% endif %}
+{% endblock %}

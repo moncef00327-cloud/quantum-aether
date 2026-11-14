@@ -14,9 +14,7 @@ It wraps the public Quantum Aether API. No API key. No secrets.
 |------|--------------|
 | `scan_tls(domain)` | Scans a host and returns an honest summary. If the site already uses post-quantum key exchange it says so; otherwise it states the "harvest now, decrypt later" risk and the fix. |
 | `scan_tls_raw(domain)` | The structured result (grade, key exchange group, post-quantum yes/no, certificate, scan_id, price). |
-| `get_scan(scan_id)` | Fetches the stored result of an earlier scan, without scanning again. |
 | `buy_full_report(scan_id, consent_immediate_delivery)` | Returns a PayPal approval link for the $49 report. Consent required (Austrian FAGG). |
-| `get_order_status(order_id)` | Status of a report order; returns `report_url` once the payment is completed. |
 | `start_monitoring(email, plan, consent)` | Starts a daily monitoring subscription ($29 or $99 / month). |
 
 ## Install
@@ -44,9 +42,6 @@ Add to `claude_desktop_config.json`:
 
 Then ask your assistant: *"Is example.com ready for post-quantum TLS?"* — it will call `scan_tls`.
 
-Set `QUANTUM_AETHER_BASE` to point the tools at another deployment (default `https://ather-quantum.com`).
-If the API cannot be reached, the tools return an `error` field with the reason instead of failing.
-
 ## Honesty by design
 
 The tool reports the **real** scan result. A site that already negotiates X25519MLKEM768 is told
@@ -73,7 +68,12 @@ execute changes on the scanned system.
 Agent guide: https://ather-quantum.com/agents?lang=en
 Service manifest: https://ather-quantum.com/.well-known/agent-service.json
 
-The MCP registry metadata and the PyPI stdio wrapper are both version 1.4.1.
-The stdio wrapper defaults to ather-quantum.com and uses the human-assisted checkout
+The MCP registry metadata declares remote server version 1.4.0. The separate
+PyPI stdio wrapper is version 1.0.2 (defaults to ather-quantum.com) and uses the human-assisted checkout
 flow described by its local tools; automatic x402 payment is provided by the
 remote MCP tool. Signed scan receipts are not implemented.
+
+
+## exposure_window(domain)
+
+Read-only lookup in the Quantum Exposure Registry (`GET /api/v1/exposure/<domain>`): first observation, first post-quantum week, observed exposure window, weekly timeline and OpenTimestamps anchor proofs. Never scans. External observation, not a compliance certification.

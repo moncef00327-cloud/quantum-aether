@@ -1,0 +1,1885 @@
+{
+ "generated_utc": "2026-11-14T11:54:53+00:00",
+ "rounds": [
+  {
+   "round": 1,
+   "started_utc": "2026-11-14T07:22:36+00:00",
+   "finished_utc": "2026-11-14T07:22:52+00:00",
+   "scanner_version": "2.0",
+   "vantage": "Omer",
+   "sites": 42,
+   "probe": "TLS 1.3 ClientHello on port 443 only"
+  },
+  {
+   "round": 2,
+   "started_utc": "2026-11-14T09:27:39+00:00",
+   "finished_utc": "2026-11-14T09:27:55+00:00",
+   "scanner_version": "2.0",
+   "vantage": "Omer",
+   "sites": 42,
+   "probe": "TLS 1.3 ClientHello on port 443 only"
+  },
+  {
+   "round": 3,
+   "started_utc": "2026-11-14T11:32:01+00:00",
+   "finished_utc": "2026-11-14T11:32:17+00:00",
+   "scanner_version": "2.0",
+   "vantage": "Omer",
+   "sites": 42,
+   "probe": "TLS 1.3 ClientHello on port 443 only"
+  }
+ ],
+ "min_sites": 5,
+ "max_sites": 10,
+ "providers": [
+  {
+   "provider": "IONOS",
+   "country": "DE",
+   "website": "ionos.de",
+   "asns": [
+    8560
+   ],
+   "asn_note": "IONOS SE",
+   "candidates": 10,
+   "verified": 6,
+   "segments": {
+    "managed": {
+     "sites": 4,
+     "pq": 0
+    },
+    "vps": {
+     "sites": 2,
+     "pq": 0
+    }
+   },
+   "counts": {
+    "pq": 0,
+    "classical": 6,
+    "mixed": 0,
+    "undetermined": 0,
+    "unreachable": 0,
+    "variable": 0
+   },
+   "graded": true,
+   "insufficient_reason": "",
+   "pq_share": 0.0,
+   "excluded": [
+    {
+     "domain": "anmut.bar",
+     "reason": "dns_no_address"
+    },
+    {
+     "domain": "optimerch.de",
+     "reason": "asn_not_provider"
+    },
+    {
+     "domain": "soul-surf.com",
+     "reason": "asn_not_provider"
+    },
+    {
+     "domain": "vmapit.de",
+     "reason": "cdn:google"
+    }
+   ],
+   "sites": [
+    {
+     "domain": "brechtmann-bistro.de",
+     "scan_host": "brechtmann-bistro.de",
+     "segment": "managed",
+     "asns": "8560",
+     "source_url": "https://www.ionos.de/hostingyoursuccess/brechtmanns-bistro",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "consistent": true,
+     "result": "classical"
+    },
+    {
+     "domain": "goldene-zeiten.info",
+     "scan_host": "goldene-zeiten.info",
+     "segment": "vps",
+     "asns": "8560",
+     "source_url": "https://www.ionos.de/hostingyoursuccess/goldene-zeiten",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "consistent": true,
+     "result": "classical"
+    },
+    {
+     "domain": "meilisu.de",
+     "scan_host": "meilisu.de",
+     "segment": "managed",
+     "asns": "8560",
+     "source_url": "https://www.ionos.de/hostingyoursuccess/meilisu",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "consistent": true,
+     "result": "classical"
+    },
+    {
+     "domain": "schwarzeheidi.de",
+     "scan_host": "schwarzeheidi.de",
+     "segment": "managed",
+     "asns": "8560",
+     "source_url": "https://www.ionos.de/hostingyoursuccess/schwarze-heidi",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "consistent": true,
+     "result": "classical"
+    },
+    {
+     "domain": "spreadfilms.de",
+     "scan_host": "spreadfilms.de",
+     "segment": "vps",
+     "asns": "8560",
+     "source_url": "https://www.ionos.de/hostingyoursuccess/spreadfilms",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "consistent": true,
+     "result": "classical"
+    },
+    {
+     "domain": "wohlfuehlmomente-landau.de",
+     "scan_host": "wohlfuehlmomente-landau.de",
+     "segment": "managed",
+     "asns": "8560",
+     "source_url": "https://www.ionos.de/hostingyoursuccess/wohlfuehlmomente",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "consistent": true,
+     "result": "classical"
+    }
+   ]
+  },
+  {
+   "provider": "STRATO",
+   "country": "DE",
+   "website": "strato.de",
+   "asns": [
+    6724
+   ],
+   "asn_note": "Strato GmbH (IONOS group, own ASN)",
+   "candidates": 5,
+   "verified": 3,
+   "segments": {
+    "managed": {
+     "sites": 3,
+     "pq": 3
+    }
+   },
+   "counts": {
+    "pq": 3,
+    "classical": 0,
+    "mixed": 0,
+    "undetermined": 0,
+    "unreachable": 0,
+    "variable": 0
+   },
+   "graded": false,
+   "insufficient_reason": "fewer_than_5_verified",
+   "pq_share": null,
+   "excluded": [
+    {
+     "domain": "martinkulawik.de",
+     "reason": "asn_not_provider"
+    },
+    {
+     "domain": "malermeister-straube.de",
+     "reason": "asn_not_provider"
+    }
+   ],
+   "sites": [
+    {
+     "domain": "moderndutchart.com",
+     "scan_host": "moderndutchart.com",
+     "segment": "managed",
+     "asns": "6724",
+     "source_url": "https://www.strato.de/ueber-uns/25-jahre/",
+     "rounds": [
+      "pq",
+      "pq",
+      "pq"
+     ],
+     "groups": [
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ]
+     ],
+     "consistent": true,
+     "result": "pq"
+    },
+    {
+     "domain": "artikulttheater.de",
+     "scan_host": "artikulttheater.de",
+     "segment": "managed",
+     "asns": "6724",
+     "source_url": "https://www.strato.de/ueber-uns/25-jahre/",
+     "rounds": [
+      "pq",
+      "pq",
+      "pq"
+     ],
+     "groups": [
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ]
+     ],
+     "consistent": true,
+     "result": "pq"
+    },
+    {
+     "domain": "andorf.de",
+     "scan_host": "andorf.de",
+     "segment": "managed",
+     "asns": "6724",
+     "source_url": "https://www.strato.de/ueber-uns/25-jahre/",
+     "rounds": [
+      "pq",
+      "pq",
+      "pq"
+     ],
+     "groups": [
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ]
+     ],
+     "consistent": true,
+     "result": "pq"
+    }
+   ]
+  },
+  {
+   "provider": "Hetzner",
+   "country": "DE",
+   "website": "hetzner.com",
+   "asns": [
+    24940,
+    212317,
+    213230
+   ],
+   "asn_note": "Hetzner Online GmbH",
+   "candidates": 9,
+   "verified": 5,
+   "segments": {
+    "vps": {
+     "sites": 5,
+     "pq": 1
+    }
+   },
+   "counts": {
+    "pq": 1,
+    "classical": 4,
+    "mixed": 0,
+    "undetermined": 0,
+    "unreachable": 0,
+    "variable": 0
+   },
+   "graded": true,
+   "insufficient_reason": "",
+   "pq_share": 20.0,
+   "excluded": [
+    {
+     "domain": "otrs.com",
+     "reason": "asn_not_provider"
+    },
+    {
+     "domain": "chop-solutions.com",
+     "reason": "asn_not_provider"
+    },
+    {
+     "domain": "it-logic.ch",
+     "reason": "asn_not_provider"
+    },
+    {
+     "domain": "elara-aerospace.com",
+     "reason": "cdn:fastly"
+    }
+   ],
+   "sites": [
+    {
+     "domain": "entwicklerheld.de",
+     "scan_host": "entwicklerheld.de",
+     "segment": "vps",
+     "asns": "24940",
+     "source_url": "https://www.hetzner.com/de/customers/entwicklerheld/",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "consistent": true,
+     "result": "classical"
+    },
+    {
+     "domain": "mariadb.org",
+     "scan_host": "mariadb.org",
+     "segment": "vps",
+     "asns": "24940",
+     "source_url": "https://www.hetzner.com/de/customers/mariadb-foundation/",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "consistent": true,
+     "result": "classical"
+    },
+    {
+     "domain": "talkwalker.com",
+     "scan_host": "talkwalker.com",
+     "segment": "vps",
+     "asns": "24940",
+     "source_url": "https://www.hetzner.com/de/customers/talkwalker/",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "consistent": true,
+     "result": "classical"
+    },
+    {
+     "domain": "tutkit.com",
+     "scan_host": "tutkit.com",
+     "segment": "vps",
+     "asns": "24940",
+     "source_url": "https://www.hetzner.com/de/customers/tutkit/",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "consistent": true,
+     "result": "classical"
+    },
+    {
+     "domain": "twipla.com",
+     "scan_host": "twipla.com",
+     "segment": "vps",
+     "asns": "24940",
+     "source_url": "https://www.hetzner.com/de/customers/twipla/",
+     "rounds": [
+      "pq",
+      "pq",
+      "pq"
+     ],
+     "groups": [
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ]
+     ],
+     "consistent": true,
+     "result": "pq"
+    }
+   ]
+  },
+  {
+   "provider": "netcup",
+   "country": "DE",
+   "website": "netcup.com",
+   "asns": [
+    197540
+   ],
+   "asn_note": "netcup GmbH",
+   "candidates": 0,
+   "verified": 0,
+   "segments": {},
+   "counts": {
+    "pq": 0,
+    "classical": 0,
+    "mixed": 0,
+    "undetermined": 0,
+    "unreachable": 0,
+    "variable": 0
+   },
+   "graded": false,
+   "insufficient_reason": "no_published_references",
+   "pq_share": null,
+   "excluded": [],
+   "sites": []
+  },
+  {
+   "provider": "ALL-INKL.COM",
+   "country": "DE",
+   "website": "all-inkl.com",
+   "asns": [
+    34788
+   ],
+   "asn_note": "Neue Medien Muennich GmbH = ALL-INKL.COM",
+   "candidates": 10,
+   "verified": 5,
+   "segments": {
+    "managed": {
+     "sites": 5,
+     "pq": 0
+    }
+   },
+   "counts": {
+    "pq": 0,
+    "classical": 5,
+    "mixed": 0,
+    "undetermined": 0,
+    "unreachable": 0,
+    "variable": 0
+   },
+   "graded": true,
+   "insufficient_reason": "",
+   "pq_share": 0.0,
+   "excluded": [
+    {
+     "domain": "aohostels.com",
+     "reason": "cdn:cloudflare"
+    },
+    {
+     "domain": "anwr-media.de",
+     "reason": "asn_not_provider"
+    },
+    {
+     "domain": "pamconsult.de",
+     "reason": "dns_no_address"
+    },
+    {
+     "domain": "racing-planet.de",
+     "reason": "cdn:cloudflare"
+    },
+    {
+     "domain": "blulife.de",
+     "reason": "asn_not_provider"
+    }
+   ],
+   "sites": [
+    {
+     "domain": "sebastianvettel.de",
+     "scan_host": "sebastianvettel.de",
+     "segment": "managed",
+     "asns": "34788",
+     "source_url": "https://all-inkl.com/downloads/datenundfakten-all-inkl-com.html",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "consistent": true,
+     "result": "classical"
+    },
+    {
+     "domain": "bluray-disc.de",
+     "scan_host": "bluray-disc.de",
+     "segment": "managed",
+     "asns": "34788",
+     "source_url": "https://all-inkl.com/downloads/datenundfakten-all-inkl-com.html",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "consistent": true,
+     "result": "classical"
+    },
+    {
+     "domain": "ippen-digital.de",
+     "scan_host": "ippen-digital.de",
+     "segment": "managed",
+     "asns": "34788",
+     "source_url": "https://all-inkl.com/sv/om-oss/referenser",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "consistent": true,
+     "result": "classical"
+    },
+    {
+     "domain": "shooks.de",
+     "scan_host": "shooks.de",
+     "segment": "managed",
+     "asns": "34788",
+     "source_url": "https://all-inkl.com/sv/om-oss/referenser",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "consistent": true,
+     "result": "classical"
+    },
+    {
+     "domain": "extratip-goettingen.de",
+     "scan_host": "extratip-goettingen.de",
+     "segment": "managed",
+     "asns": "34788",
+     "source_url": "https://all-inkl.com/sv/om-oss/referenser",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "consistent": true,
+     "result": "classical"
+    }
+   ]
+  },
+  {
+   "provider": "DomainFactory",
+   "country": "DE",
+   "website": "df.eu",
+   "asns": [
+    20773,
+    21499,
+    34011
+   ],
+   "asn_note": "Host Europe group networks (DomainFactory belongs to Host Europe Group)",
+   "candidates": 4,
+   "verified": 1,
+   "segments": {
+    "managed": {
+     "sites": 1,
+     "pq": 0
+    }
+   },
+   "counts": {
+    "pq": 0,
+    "classical": 0,
+    "mixed": 0,
+    "undetermined": 0,
+    "unreachable": 1,
+    "variable": 0
+   },
+   "graded": false,
+   "insufficient_reason": "fewer_than_5_verified",
+   "pq_share": null,
+   "excluded": [
+    {
+     "domain": "tierra-colombiana.com",
+     "reason": "cdn:cloudflare"
+    },
+    {
+     "domain": "tramcafe.de",
+     "reason": "dns_no_address"
+    },
+    {
+     "domain": "darkhorse.de",
+     "reason": "asn_not_provider"
+    }
+   ],
+   "sites": [
+    {
+     "domain": "de.urban-motor.de",
+     "scan_host": "de.urban-motor.de",
+     "segment": "managed",
+     "asns": "34011",
+     "source_url": "https://www.df.eu/de/unternehmen/referenzen/",
+     "rounds": [
+      "unreachable",
+      "unreachable",
+      "unreachable"
+     ],
+     "groups": [
+      [],
+      [],
+      []
+     ],
+     "consistent": true,
+     "result": "unreachable"
+    }
+   ]
+  },
+  {
+   "provider": "Host Europe",
+   "country": "DE",
+   "website": "hosteurope.de",
+   "asns": [
+    20773,
+    21499,
+    34011
+   ],
+   "asn_note": "Host Europe GmbH (GoDaddy group)",
+   "candidates": 11,
+   "verified": 4,
+   "segments": {
+    "unspecified": {
+     "sites": 4,
+     "pq": 0
+    }
+   },
+   "counts": {
+    "pq": 0,
+    "classical": 4,
+    "mixed": 0,
+    "undetermined": 0,
+    "unreachable": 0,
+    "variable": 0
+   },
+   "graded": false,
+   "insufficient_reason": "fewer_than_5_verified",
+   "pq_share": null,
+   "excluded": [
+    {
+     "domain": "ipconn.de",
+     "reason": "cdn:cloudflare"
+    },
+    {
+     "domain": "mbmedien.de",
+     "reason": "asn_not_provider"
+    },
+    {
+     "domain": "amalyze.com",
+     "reason": "cdn:cloudflare"
+    },
+    {
+     "domain": "beyondtellerrand.com",
+     "reason": "asn_not_provider"
+    },
+    {
+     "domain": "eitelsonnenschein.de",
+     "reason": "asn_not_provider"
+    },
+    {
+     "domain": "artplants.de",
+     "reason": "asn_not_provider"
+    },
+    {
+     "domain": "kulturbanause.de",
+     "reason": "cdn:sucuri"
+    }
+   ],
+   "sites": [
+    {
+     "domain": "medien31.de",
+     "scan_host": "medien31.de",
+     "segment": "unspecified",
+     "asns": "21499",
+     "source_url": "https://www.hosteurope.de/Host-Europe/Experten/",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "consistent": true,
+     "result": "classical"
+    },
+    {
+     "domain": "noeo.de",
+     "scan_host": "noeo.de",
+     "segment": "unspecified",
+     "asns": "21499",
+     "source_url": "https://www.hosteurope.de/Host-Europe/Experten/",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "consistent": true,
+     "result": "classical"
+    },
+    {
+     "domain": "berlin-school.com",
+     "scan_host": "berlin-school.com",
+     "segment": "unspecified",
+     "asns": "21499",
+     "source_url": "https://www.hosteurope.de/Host-Europe/Experten/",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "consistent": true,
+     "result": "classical"
+    },
+    {
+     "domain": "leanderwattig.de",
+     "scan_host": "leanderwattig.de",
+     "segment": "unspecified",
+     "asns": "20773",
+     "source_url": "https://www.hosteurope.de/Host-Europe/Experten/",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "consistent": true,
+     "result": "classical"
+    }
+   ]
+  },
+  {
+   "provider": "mittwald",
+   "country": "DE",
+   "website": "mittwald.de",
+   "asns": [
+    15817
+   ],
+   "asn_note": "Mittwald CM Service GmbH",
+   "candidates": 8,
+   "verified": 5,
+   "segments": {
+    "managed": {
+     "sites": 5,
+     "pq": 5
+    }
+   },
+   "counts": {
+    "pq": 5,
+    "classical": 0,
+    "mixed": 0,
+    "undetermined": 0,
+    "unreachable": 0,
+    "variable": 0
+   },
+   "graded": true,
+   "insufficient_reason": "",
+   "pq_share": 100.0,
+   "excluded": [
+    {
+     "domain": "nuonic.de",
+     "reason": "cdn:cloudflare"
+    },
+    {
+     "domain": "hueske.digital",
+     "reason": "asn_not_provider"
+    },
+    {
+     "domain": "rolling-space.de",
+     "reason": "asn_not_provider"
+    }
+   ],
+   "sites": [
+    {
+     "domain": "intercaravaning.de",
+     "scan_host": "intercaravaning.de",
+     "segment": "managed",
+     "asns": "15817",
+     "source_url": "https://www.mittwald.de/cases/e-commerce/15-mal-schnellere-ladezeiten-fuer-europas-groessten-caravan-marktplatz",
+     "rounds": [
+      "pq",
+      "pq",
+      "pq"
+     ],
+     "groups": [
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ]
+     ],
+     "consistent": true,
+     "result": "pq"
+    },
+    {
+     "domain": "forty-four.de",
+     "scan_host": "forty-four.de",
+     "segment": "managed",
+     "asns": "15817",
+     "source_url": "https://www.mittwald.de/blog/hosting/agentur-forty-four-realisiert-eine-performante-plattform-fuer-intercaravaning-interview-daniel-vordemvenne",
+     "rounds": [
+      "pq",
+      "pq",
+      "pq"
+     ],
+     "groups": [
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ]
+     ],
+     "consistent": true,
+     "result": "pq"
+    },
+    {
+     "domain": "codefryx.de",
+     "scan_host": "codefryx.de",
+     "segment": "managed",
+     "asns": "15817",
+     "source_url": "https://www.mittwald.de/cases/container-hosting/chatbot-integration-mit-n8n-im-container-und-ai-hosting",
+     "rounds": [
+      "pq",
+      "pq",
+      "pq"
+     ],
+     "groups": [
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ]
+     ],
+     "consistent": true,
+     "result": "pq"
+    },
+    {
+     "domain": "mrpixel.de",
+     "scan_host": "mrpixel.de",
+     "segment": "managed",
+     "asns": "15817",
+     "source_url": "https://www.mittwald.de/cases/e-commerce/outdoor-onlineshop-mit-shopware-6",
+     "rounds": [
+      "pq",
+      "pq",
+      "pq"
+     ],
+     "groups": [
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ]
+     ],
+     "consistent": true,
+     "result": "pq"
+    },
+    {
+     "domain": "einmahl.de",
+     "scan_host": "einmahl.de",
+     "segment": "managed",
+     "asns": "15817",
+     "source_url": "https://www.mittwald.de/cases/container-hosting/agentur-automation-von-make-com-zu-self-hosted-n8n",
+     "rounds": [
+      "pq",
+      "pq",
+      "pq"
+     ],
+     "groups": [
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ]
+     ],
+     "consistent": true,
+     "result": "pq"
+    }
+   ]
+  },
+  {
+   "provider": "webgo",
+   "country": "DE",
+   "website": "webgo.de",
+   "asns": [
+    48324
+   ],
+   "asn_note": "webgo GmbH",
+   "candidates": 0,
+   "verified": 0,
+   "segments": {},
+   "counts": {
+    "pq": 0,
+    "classical": 0,
+    "mixed": 0,
+    "undetermined": 0,
+    "unreachable": 0,
+    "variable": 0
+   },
+   "graded": false,
+   "insufficient_reason": "no_published_references",
+   "pq_share": null,
+   "excluded": [],
+   "sites": []
+  },
+  {
+   "provider": "manitu",
+   "country": "DE",
+   "website": "manitu.de",
+   "asns": [
+    34240
+   ],
+   "asn_note": "manitu GmbH",
+   "candidates": 0,
+   "verified": 0,
+   "segments": {},
+   "counts": {
+    "pq": 0,
+    "classical": 0,
+    "mixed": 0,
+    "undetermined": 0,
+    "unreachable": 0,
+    "variable": 0
+   },
+   "graded": false,
+   "insufficient_reason": "no_published_references",
+   "pq_share": null,
+   "excluded": [],
+   "sites": []
+  },
+  {
+   "provider": "goneo",
+   "country": "DE",
+   "website": "goneo.de",
+   "asns": [
+    25394
+   ],
+   "asn_note": "MK Netzdienste GmbH & Co. KG (operator of goneo)",
+   "candidates": 0,
+   "verified": 0,
+   "segments": {},
+   "counts": {
+    "pq": 0,
+    "classical": 0,
+    "mixed": 0,
+    "undetermined": 0,
+    "unreachable": 0,
+    "variable": 0
+   },
+   "graded": false,
+   "insufficient_reason": "no_published_references",
+   "pq_share": null,
+   "excluded": [],
+   "sites": []
+  },
+  {
+   "provider": "World4You",
+   "country": "AT",
+   "website": "world4you.com",
+   "asns": [],
+   "asn_note": "World4You networks inside IONOS AS8560, identified by RIPE netname WORLD4YOU-*",
+   "candidates": 7,
+   "verified": 5,
+   "segments": {
+    "managed": {
+     "sites": 5,
+     "pq": 0
+    }
+   },
+   "counts": {
+    "pq": 0,
+    "classical": 5,
+    "mixed": 0,
+    "undetermined": 0,
+    "unreachable": 0,
+    "variable": 0
+   },
+   "graded": true,
+   "insufficient_reason": "",
+   "pq_share": 0.0,
+   "excluded": [
+    {
+     "domain": "bitsfabrik.com",
+     "reason": "asn_not_provider"
+    },
+    {
+     "domain": "dsz-linz.at",
+     "reason": "cdn:amazon"
+    }
+   ],
+   "sites": [
+    {
+     "domain": "rudybohrer.com",
+     "scan_host": "rudybohrer.com",
+     "segment": "managed",
+     "asns": "8560",
+     "source_url": "https://www.world4you.com/unternehmen/kundenstorys",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "consistent": true,
+     "result": "classical"
+    },
+    {
+     "domain": "kilometermacher.at",
+     "scan_host": "kilometermacher.at",
+     "segment": "managed",
+     "asns": "8560",
+     "source_url": "https://www.world4you.com/unternehmen/kundenstorys",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "consistent": true,
+     "result": "classical"
+    },
+    {
+     "domain": "mad-bucket.com",
+     "scan_host": "mad-bucket.com",
+     "segment": "managed",
+     "asns": "8560",
+     "source_url": "https://www.world4you.com/unternehmen/kundenstorys",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "consistent": true,
+     "result": "classical"
+    },
+    {
+     "domain": "go-vital.fit",
+     "scan_host": "go-vital.fit",
+     "segment": "managed",
+     "asns": "8560",
+     "source_url": "https://www.world4you.com/unternehmen/kundenstorys",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "consistent": true,
+     "result": "classical"
+    },
+    {
+     "domain": "dasfranzi.at",
+     "scan_host": "dasfranzi.at",
+     "segment": "managed",
+     "asns": "8560",
+     "source_url": "https://www.world4you.com/unternehmen/kundenstorys",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "consistent": true,
+     "result": "classical"
+    }
+   ]
+  },
+  {
+   "provider": "easyname",
+   "country": "AT",
+   "website": "easyname.at",
+   "asns": [],
+   "asn_note": "easyname GmbH",
+   "candidates": 0,
+   "verified": 0,
+   "segments": {},
+   "counts": {
+    "pq": 0,
+    "classical": 0,
+    "mixed": 0,
+    "undetermined": 0,
+    "unreachable": 0,
+    "variable": 0
+   },
+   "graded": false,
+   "insufficient_reason": "no_published_references",
+   "pq_share": null,
+   "excluded": [],
+   "sites": []
+  },
+  {
+   "provider": "Domaintechnik.at",
+   "country": "AT",
+   "website": "domaintechnik.at",
+   "asns": [
+    25575
+   ],
+   "asn_note": "Ledl.net GmbH & Co. KG (Domaintechnik)",
+   "candidates": 0,
+   "verified": 0,
+   "segments": {},
+   "counts": {
+    "pq": 0,
+    "classical": 0,
+    "mixed": 0,
+    "undetermined": 0,
+    "unreachable": 0,
+    "variable": 0
+   },
+   "graded": false,
+   "insufficient_reason": "no_published_references",
+   "pq_share": null,
+   "excluded": [],
+   "sites": []
+  },
+  {
+   "provider": "HostProfis",
+   "country": "AT",
+   "website": "hostprofis.com",
+   "asns": [],
+   "asn_note": "HostProfis ISP Telekom GmbH",
+   "candidates": 0,
+   "verified": 0,
+   "segments": {},
+   "counts": {
+    "pq": 0,
+    "classical": 0,
+    "mixed": 0,
+    "undetermined": 0,
+    "unreachable": 0,
+    "variable": 0
+   },
+   "graded": false,
+   "insufficient_reason": "no_published_references",
+   "pq_share": null,
+   "excluded": [],
+   "sites": []
+  },
+  {
+   "provider": "hoststar",
+   "country": "AT",
+   "website": "hoststar.at",
+   "asns": [],
+   "asn_note": "hoststar",
+   "candidates": 0,
+   "verified": 0,
+   "segments": {},
+   "counts": {
+    "pq": 0,
+    "classical": 0,
+    "mixed": 0,
+    "undetermined": 0,
+    "unreachable": 0,
+    "variable": 0
+   },
+   "graded": false,
+   "insufficient_reason": "no_published_references",
+   "pq_share": null,
+   "excluded": [],
+   "sites": []
+  },
+  {
+   "provider": "Hostpoint",
+   "country": "CH",
+   "website": "hostpoint.ch",
+   "asns": [
+    29097
+   ],
+   "asn_note": "Hostpoint AG",
+   "candidates": 1,
+   "verified": 0,
+   "segments": {},
+   "counts": {
+    "pq": 0,
+    "classical": 0,
+    "mixed": 0,
+    "undetermined": 0,
+    "unreachable": 0,
+    "variable": 0
+   },
+   "graded": false,
+   "insufficient_reason": "fewer_than_5_verified",
+   "pq_share": null,
+   "excluded": [
+    {
+     "domain": "hdzuerisee.ch",
+     "reason": "cdn:cloudflare"
+    }
+   ],
+   "sites": []
+  },
+  {
+   "provider": "Infomaniak",
+   "country": "CH",
+   "website": "infomaniak.com",
+   "asns": [
+    29222
+   ],
+   "asn_note": "Infomaniak Network SA",
+   "candidates": 10,
+   "verified": 5,
+   "segments": {
+    "managed": {
+     "sites": 1,
+     "pq": 0
+    },
+    "unspecified": {
+     "sites": 4,
+     "pq": 0
+    }
+   },
+   "counts": {
+    "pq": 0,
+    "classical": 5,
+    "mixed": 0,
+    "undetermined": 0,
+    "unreachable": 0,
+    "variable": 0
+   },
+   "graded": true,
+   "insufficient_reason": "",
+   "pq_share": 0.0,
+   "excluded": [
+    {
+     "domain": "rgoods.com",
+     "reason": "cdn:cloudflare"
+    },
+    {
+     "domain": "wwf.be",
+     "reason": "cdn:cloudflare"
+    },
+    {
+     "domain": "annecyfestival.com",
+     "reason": "cdn:amazon"
+    },
+    {
+     "domain": "idakto.com",
+     "reason": "asn_not_provider"
+    },
+    {
+     "domain": "xilam.com",
+     "reason": "asn_not_provider"
+    }
+   ],
+   "sites": [
+    {
+     "domain": "helpro.ch",
+     "scan_host": "helpro.ch",
+     "segment": "managed",
+     "asns": "29222",
+     "source_url": "https://news.infomaniak.com/hebergement-tres-haute-disponibilite/",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "consistent": true,
+     "result": "classical"
+    },
+    {
+     "domain": "mediaonegroup.ch",
+     "scan_host": "mediaonegroup.ch",
+     "segment": "unspecified",
+     "asns": "29222",
+     "source_url": "https://news.infomaniak.com/etude-de-cas-mediaonegroup/",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "consistent": true,
+     "result": "classical"
+    },
+    {
+     "domain": "geneve.com",
+     "scan_host": "geneve.com",
+     "segment": "unspecified",
+     "asns": "29222",
+     "source_url": "https://news.infomaniak.com/etude-de-cas-ideative-geneve-tourisme/",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "consistent": true,
+     "result": "classical"
+    },
+    {
+     "domain": "pottu-seitz.ch",
+     "scan_host": "pottu-seitz.ch",
+     "segment": "unspecified",
+     "asns": "29222",
+     "source_url": "https://news.infomaniak.com/etude-de-cas-pottu-et-seitz/",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "consistent": true,
+     "result": "classical"
+    },
+    {
+     "domain": "energy.ch",
+     "scan_host": "energy.ch",
+     "segment": "unspecified",
+     "asns": "29222",
+     "source_url": "https://news.infomaniak.com/la-premiere-radio-privee-de-suisse-energy-sappuie-sur-infomaniak-pour-accompagner-la-croissance-de-son-audience/",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "consistent": true,
+     "result": "classical"
+    }
+   ]
+  },
+  {
+   "provider": "cyon",
+   "country": "CH",
+   "website": "cyon.ch",
+   "asns": [],
+   "asn_note": "cyon AG",
+   "candidates": 2,
+   "verified": 0,
+   "segments": {},
+   "counts": {
+    "pq": 0,
+    "classical": 0,
+    "mixed": 0,
+    "undetermined": 0,
+    "unreachable": 0,
+    "variable": 0
+   },
+   "graded": false,
+   "insufficient_reason": "fewer_than_5_verified",
+   "pq_share": null,
+   "excluded": [
+    {
+     "domain": "casinotheater.ch",
+     "reason": "provider_asn_not_established"
+    },
+    {
+     "domain": "zeisch.ch",
+     "reason": "cdn:cloudflare"
+    }
+   ],
+   "sites": []
+  },
+  {
+   "provider": "METANET",
+   "country": "CH",
+   "website": "metanet.ch",
+   "asns": [
+    21069
+   ],
+   "asn_note": "METANET AG",
+   "candidates": 3,
+   "verified": 1,
+   "segments": {
+    "unspecified": {
+     "sites": 1,
+     "pq": 0
+    }
+   },
+   "counts": {
+    "pq": 0,
+    "classical": 1,
+    "mixed": 0,
+    "undetermined": 0,
+    "unreachable": 0,
+    "variable": 0
+   },
+   "graded": false,
+   "insufficient_reason": "fewer_than_5_verified",
+   "pq_share": null,
+   "excluded": [
+    {
+     "domain": "openair-etziken.ch",
+     "reason": "asn_not_provider"
+    },
+    {
+     "domain": "viforpharma.com",
+     "reason": "asn_not_provider"
+    }
+   ],
+   "sites": [
+    {
+     "domain": "syndicom.ch",
+     "scan_host": "syndicom.ch",
+     "segment": "unspecified",
+     "asns": "21069",
+     "source_url": "https://www.metanet.ch/de/solutions/referenzen",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "consistent": true,
+     "result": "classical"
+    }
+   ]
+  },
+  {
+   "provider": "green.ch",
+   "country": "CH",
+   "website": "green.ch",
+   "asns": [
+    1836
+   ],
+   "asn_note": "Green.ch AG",
+   "candidates": 0,
+   "verified": 0,
+   "segments": {},
+   "counts": {
+    "pq": 0,
+    "classical": 0,
+    "mixed": 0,
+    "undetermined": 0,
+    "unreachable": 0,
+    "variable": 0
+   },
+   "graded": false,
+   "insufficient_reason": "no_published_references",
+   "pq_share": null,
+   "excluded": [],
+   "sites": []
+  },
+  {
+   "provider": "hosttech",
+   "country": "CH",
+   "website": "hosttech.ch",
+   "asns": [
+    207143
+   ],
+   "asn_note": "hosttech GmbH",
+   "candidates": 4,
+   "verified": 2,
+   "segments": {
+    "unspecified": {
+     "sites": 1,
+     "pq": 1
+    },
+    "vps": {
+     "sites": 1,
+     "pq": 1
+    }
+   },
+   "counts": {
+    "pq": 2,
+    "classical": 0,
+    "mixed": 0,
+    "undetermined": 0,
+    "unreachable": 0,
+    "variable": 0
+   },
+   "graded": false,
+   "insufficient_reason": "fewer_than_5_verified",
+   "pq_share": null,
+   "excluded": [
+    {
+     "domain": "saldia.ch",
+     "reason": "cdn:cloudflare"
+    },
+    {
+     "domain": "primedion.ch",
+     "reason": "dns_no_address"
+    }
+   ],
+   "sites": [
+    {
+     "domain": "aronet.ch",
+     "scan_host": "aronet.ch",
+     "segment": "unspecified",
+     "asns": "207143",
+     "source_url": "https://www.hosttech.ch/unternehmen/ueber-uns/",
+     "rounds": [
+      "pq",
+      "pq",
+      "pq"
+     ],
+     "groups": [
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ]
+     ],
+     "consistent": true,
+     "result": "pq"
+    },
+    {
+     "domain": "amzracing.ch",
+     "scan_host": "amzracing.ch",
+     "segment": "vps",
+     "asns": "207143",
+     "source_url": "https://www.hosttech.ch/unternehmen/ueber-uns/",
+     "rounds": [
+      "pq",
+      "pq",
+      "pq"
+     ],
+     "groups": [
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ]
+     ],
+     "consistent": true,
+     "result": "pq"
+    }
+   ]
+  }
+ ]
+}

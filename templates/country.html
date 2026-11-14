@@ -2,6 +2,7 @@
 {% block title %}{{ t.country_title.format(name=e.name) }} · {{ t.brand }}{% endblock %}
 {% block description %}{{ t.country_lead.format(name=e.name, pct=e.pct, rank=e.rank, total=b.countries, measured=e.measured, week=b.week) }}{% endblock %}
 {% block og_image %}{{ abs_url('site.og_country', code=e.code) }}{% endblock %}
+{% block head %}<script type="application/ld+json">{{ jsonld | tojson }}</script>{% endblock %}
 {% block content %}
 <section class="card result-head">
   <div class="grade grade-{{ 'A' if e.pct >= 50 else 'B' }}" dir="ltr">#{{ e.rank }}</div>
@@ -18,8 +19,8 @@
 <section class="card">
   <h2>{{ t.share_title }}</h2>
   <p>
-    <a class="button-link" target="_blank" rel="noopener" data-ev="share" href="https://www.linkedin.com/sharing/share-offsite/?url={{ share_url | urlencode }}">LinkedIn</a>
-    <a class="button-link" target="_blank" rel="noopener" data-ev="share" href="https://twitter.com/intent/tweet?text={{ share_text | urlencode }}&url={{ share_url | urlencode }}">X</a>
+    <a class="button-link" target="_blank" rel="noopener" data-ev="share" href="https://www.linkedin.com/sharing/share-offsite/?url={{ share_url | utm('linkedin', 'country_share') | urlencode }}">LinkedIn</a>
+    <a class="button-link" target="_blank" rel="noopener" data-ev="share" href="https://twitter.com/intent/tweet?text={{ share_text | urlencode }}&url={{ share_url | utm('x', 'country_share') | urlencode }}">X</a>
   </p>
 </section>
 
@@ -27,7 +28,7 @@
 <section class="card">
   <h2>{{ t[key] }} ({{ rows|length }})</h2>
   <ul class="related" dir="ltr">
-    {% for r in rows %}<li>{% if domain_discoverable(r.domain) %}<a href="{{ url_for('site.site_page', domain=r.domain) }}">{{ r.domain }}</a>{% else %}<span>{{ r.domain }}</span>{% endif %}
+    {% for r in rows %}<li>{% if domain_discoverable(r.domain) %}<a href="{{ url_for('site.site_page', domain=r.domain) }}">{{ r.domain }}</a> <a class="small muted" href="{{ url_for('site.exposure_page', domain=r.domain, lang=lang) }}" title="exposure registry">⏱</a>{% else %}<span>{{ r.domain }}</span>{% endif %}
       <span class="muted">{{ r.grade }}{% if r.rank %} · #{{ r.rank }}{% endif %}</span></li>{% endfor %}
   </ul>
 </section>

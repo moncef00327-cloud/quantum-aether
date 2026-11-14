@@ -49,7 +49,8 @@ def run(app, mode="weekly", day=None, workers=None, asn_lookup="auto"):
             outcome = adoption.run_week(conn, tracker_scanner(app.extensions["scanner"]), targets, day=day or dt.date.today(),
                                         workers=workers or 24, asn_lookup=lookup)
             log.info("adoption week %s: %d targets, %d answered", outcome["week"], outcome["targets"], outcome["answered"])
-        adoption.prune(conn)
+        pruned = adoption.prune(conn)
+        log.info("adoption history retention: mode=%s, week rows moved=%d, month rows moved=%d", pruned["mode"], pruned["weeks"], pruned["months"])
         return outcome
     finally:
         conn.close()

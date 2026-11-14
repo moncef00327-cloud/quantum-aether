@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_trial_cta.html" import trial_cta with context %}
 {% set kx = r.key_exchange %}{% set cert = r.certificate %}
 {% block title %}{% if sample %}{{ t.sample_title }}{% else %}{{ t.report_title }}{% endif %} · {{ r.domain }}{% endblock %}
 {% block description %}{% if sample %}{{ t.sample_meta }}{% else %}{{ t.hero_sub }}{% endif %}{% endblock %}
@@ -9,8 +10,10 @@
 <section class="card notice no-print">
   <h2>{{ t.sample_title }}</h2>
   <p>{{ t.sample_banner.format(date=r.scanned_at[:10]) }}</p>
+  <p><strong>{{ t.sample_excerpt_title }}.</strong> {{ t.sample_excerpt_body }}</p>
   <p><a class="button-link" href="{{ url_for('site.index', lang=lang) }}">{{ t.sample_buy }}</a></p>
 </section>
+{{ trial_cta('trial', compact=true) }}
 {% endif %}
 <section class="card result-head">
   <div class="grade grade-{{ r.grade }}">{{ '?' if observation == 'undetermined' else r.grade }}</div>
@@ -18,6 +21,7 @@
     <p class="muted">{{ t.report_title }}</p>
     <h1 dir="ltr" class="domain">{{ r.domain }}</h1>
     <p class="grade-text">{{ sx.undetermined if observation == 'undetermined' else t.grades[r.grade] }}</p>
+    <p class="small"><a href="{{ grade_guide_url }}">{{ 'كيف حُسبت الدرجة؟' if lang == 'ar' else ('How is this grade determined?' if lang == 'en' else 'Wie wird diese Note vergeben?') }}</a></p>
     <p class="muted small">{{ t.scanned_at }}: <span dir="ltr">{{ r.scanned_at }}</span> · IP <span dir="ltr">{{ r.ip }}</span></p>
   </div>
   <button type="button" class="print-button no-print">{{ t.print }}</button>
@@ -30,9 +34,10 @@
   {% for f in findings %}
   <article class="finding status-{{ f.status }}">
     <h3><span class="badge">{{ t.status_names[f.status] }}</span> {{ f.text[0] }}</h3>
-    <p>{{ f.text[1] }}</p>
+    {% if not sample or loop.index <= 2 %}<p>{{ f.text[1] }}</p>{% endif %}
   </article>
   {% endfor %}
+  {% if sample and findings|length > 2 %}<p class="notice no-print">{{ t.sample_excerpt_title }} · {{ t.sample_excerpt_body }}</p>{% endif %}
 </section>
 
 {% if observation == 'observed_classical' %}
@@ -40,12 +45,18 @@
   <h2>{{ t.remediation_title }}</h2>
   <p>{{ t.remediation_intro }}</p>
   {% for name, snippet in remediation %}
+  {% if not sample or loop.first %}
   <h3 dir="ltr">{{ name }}</h3>
   <pre dir="ltr"><code>{{ snippet }}</code></pre>
+  {% else %}
+  <h3 dir="ltr" class="muted">{{ name }} · 🔒</h3>
+  {% endif %}
   {% endfor %}
   <p>{{ t.verify_after }}</p>
+  {% if sample %}<p><a class="button-link" href="{{ url_for('site.index', lang=lang) }}">{{ t.sample_buy }}</a></p>{% endif %}
 </section>
 {% endif %}
+{% if not sample %}
 
 <section class="card">
   <h2>{{ t.details_title }}</h2>
@@ -70,6 +81,7 @@
   <ul>{% for item in t.context_items %}<li>{{ item }}</li>{% endfor %}</ul>
 </section>
 
+{% endif %}
 <section class="card">
   <h2>{{ t.limits_title }}</h2>
   <ul>{% for item in t.limits_items %}<li>{{ item }}</li>{% endfor %}</ul>

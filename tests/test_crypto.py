@@ -68,12 +68,12 @@ class CryptoPaymentTest(unittest.TestCase):
     def units(self, amount):
         return crypto_pay.to_units(amount, 6)
 
-    def test_scan_page_offers_network_dropdown(self):
-        self.app.config["USDC_BASE_ADDR"] = "0x" + "33" * 20
+    def test_scan_page_offers_both_networks(self):
         body = self.client.get(f"/scan/{self.scan_id}?lang=ar").get_data(as_text=True)
+        # The networks are offered in one <select class="crypto-network"> since the paid card was collapsed (2026-11-14).
         self.assertIn('class="crypto-network"', body)
-        for network in ("polygon-usdt", "arbitrum-usdc", "base-usdc"):
-            self.assertIn(f'<option value="{network}">', body)
+        self.assertIn('<option value="polygon-usdt">', body)
+        self.assertIn('<option value="arbitrum-usdc">', body)
         self.assertIn("crypto.js", body)
 
     def test_disabled_without_addresses(self):
@@ -118,21 +118,6 @@ class CryptoPaymentTest(unittest.TestCase):
         with closing(sales_db.connect(f"{self.tmp}/quantum_saas.db")) as c:
             self.assertEqual(sales_db.stats(c)["revenue"], {"USDT": f"{Decimal(o['amount']):.2f}"})
 
-    def test_base_usdc_payment_flow_with_simulated_chain(self):
-        receiver = "0x" + "44" * 20
-        self.app.config["USDC_BASE_ADDR"] = receiver
-        o = self.order("base-usdc").get_json()
-        self.assertEqual(o["pay_to"], receiver)
-        self.assertEqual(o["token"], "USDC")
-        self.chain.pay(TX, self.units(o["amount"]), to=receiver,
-                       contract=crypto_pay.NETWORKS["base-usdc"]["contract"], block=900)
-        self.chain.latest = 1100
-        verified = self.client.post(f"/api/crypto/orders/{o['order_id']}/verify", json={"tx_hash": TX})
-        self.assertEqual(verified.status_code, 200)
-        self.assertEqual(verified.get_json()["status"], "COMPLETED")
-        with closing(sales_db.connect(f"{self.tmp}/quantum_saas.db")) as c:
-            self.assertEqual(sales_db.stats(c)["revenue"], {"USDC": f"{Decimal(o['amount']):.2f}"})
-
     def test_rejects_wrong_amount_wrong_address_wrong_token(self):
         o = self.order().get_json()
         url = f"/api/crypto/orders/{o['order_id']}/verify"
@@ -152,7 +137,8 @@ class CryptoPaymentTest(unittest.TestCase):
     def test_old_transaction_and_reused_transaction_are_rejected(self):
         o1, o2 = self.order().get_json(), self.order().get_json()
         self.chain.block_time = int(time.time()) - 3600
-        self.chain.pay(TX, self.units("50"))
+        # exact amount: an overpayment is rejected on its own (test_security.test_overpayment_cannot_claim_another_order)
+        self.chain.pay(TX, self.units(o1["amount"]))
         r = self.client.post(f"/api/crypto/orders/{o1['order_id']}/verify", json={"tx_hash": TX})
         self.assertEqual(r.get_json()["error"], "too_old")
         self.chain.block_time = int(time.time())

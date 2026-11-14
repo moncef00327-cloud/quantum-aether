@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}{{ d.title }} · Quantum Aether{% endblock %}
+{% block description %}{{ d.lead }}{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>{{ d.title }}</h1>
+  <p>{{ d.lead }}</p>
+</section>
+{% for heading, paras in d.sections %}
+<section class="card" id="s{{ loop.index }}">
+  <h2>{{ heading }}</h2>
+  {% for p in paras %}<p>{{ p }}</p>{% endfor %}
+</section>
+{% endfor %}
+<section class="card">
+  <p>{{ d.contact }} <a href="mailto:{{ contact_email }}?subject=Data%20licence" dir="ltr">{{ contact_email }}</a></p>
+  <p class="small"><a href="{{ url_for('site.exposure_index', lang=lang) }}#anchors">OpenTimestamps anchors</a> ·
+    <a href="{{ url_for('site.adoption_page', lang=lang) }}">/adoption</a> ·
+    <a href="https://creativecommons.org/licenses/by/4.0/" rel="nofollow">CC BY 4.0</a> ·
+    <a href="https://eur-lex.europa.eu/eli/dir/1996/9/oj" rel="nofollow">Directive 96/9/EC</a></p>
+</section>
+{% endblock %}

@@ -13,11 +13,13 @@ import concurrent.futures
 import datetime as dt
 import ipaddress
 import json
+import queue
 import re
 import secrets
 import socket
 import ssl
 import sys
+import threading
 import time
 from urllib.parse import urlsplit
 
@@ -89,10 +91,15 @@ class TLSAlert(Exception):
 
 # ---------------------------------------------------------------- الإدخال والشبكة
 
+_INVISIBLE = re.compile("[\u200b-\u200f\u202a-\u202e\u2066-\u2069\ufeff]")
+
+
 def normalize_domain(raw: str) -> str:
     if not isinstance(raw, str):
         raise ScanError("invalid_domain", "enter a domain name or an HTTP(S) URL")
-    value = raw.strip()
+    # Pasted input often carries invisible marks (RTL/LTR marks from Arabic text, zero-width spaces, BOM),
+    # a no-break space, or wrapping quotes/brackets/trailing punctuation. Drop those at the edges only.
+    value = _INVISIBLE.sub("", raw).replace("\u00a0", " ").strip().strip("\"'`<>()[]{},;").strip()
     if not value or len(value) > 4096 or "\\" in value or any(c.isspace() or ord(c) < 32 or ord(c) == 127 for c in value):
         raise ScanError("invalid_domain", "invalid domain name")
     try:
@@ -121,11 +128,34 @@ MAX_ENDPOINTS = 6         # نفحص حتى هذا العدد من عناوين 
 ENDPOINT_TIMEOUT = 5.0    # مهلة كل عنوان إضافي (تُفحص بالتوازي)
 
 
+DNS_TIMEOUT = 8.0  # getaddrinfo has no timeout of its own; a hung resolver must not hold a web worker
+
+
+def _getaddrinfo_with_deadline(host: str, timeout: float = DNS_TIMEOUT):
+    """getaddrinfo in a daemon thread with a deadline. Returns the address list or raises the lookup error."""
+    answer = queue.Queue(maxsize=1)
+
+    def lookup():
+        try:
+            answer.put((True, socket.getaddrinfo(host, PORT, type=socket.SOCK_STREAM)))
+        except Exception as exc:  # handed to the caller
+            answer.put((False, exc))
+
+    threading.Thread(target=lookup, name="dns-lookup", daemon=True).start()
+    try:
+        ok, value = answer.get(timeout=timeout)
+    except queue.Empty:
+        raise ScanError("dns_failure", f"DNS lookup for {host} timed out after {timeout:g}s") from None
+    if not ok:
+        raise value
+    return value
+
+
 def resolve_public_ips(host: str) -> list:
     """كل عناوين النطاق العامة بلا تكرار: IPv4 أولاً ثم IPv6، بحد MAX_ENDPOINTS ومع إبقاء عنوان IPv6 واحد."""
     try:
-        infos = socket.getaddrinfo(host, PORT, type=socket.SOCK_STREAM)
-    except socket.gaierror as exc:
+        infos = _getaddrinfo_with_deadline(host)
+    except (socket.gaierror, UnicodeError) as exc:
         raise ScanError("dns_failure", f"could not resolve {host}") from exc
     ipv4, ipv6 = [], []
     for family, _, _, _, sockaddr in infos:

@@ -11,6 +11,8 @@ scanning.ather-quantum.com {
     redir https://ather-quantum.com/scanning 301
 }
 
+# Legacy typo domain (2026-11 launch). Not used in any public text any more; kept only so links and old
+# published clients (MCP registry 1.1.0-1.3.0, PyPI quantum-aether-mcp 1.0.1, pq-tls-action v1.0.x) keep working.
 ather-quatum.cloud, www.ather-quatum.cloud {
     @machine path /api/* /mcp /mcp/* /sse /sse/* /messages /messages/*
     handle @machine {

@@ -10,7 +10,7 @@
 <article class="card prose">
   <p class="muted small"><a href="{{ url_for('site.bank_report_page', report_id=r.id, lang=tl) }}">{{ c.title }} {{ r.measured_on[:4] }}</a> · {{ countries[b.country][tl] }}{% if b.central %} · {{ c.central }}{% endif %}</p>
   <h1>{{ name }}</h1>
-  <p class="muted" dir="ltr">{{ b.domain }}</p>
+  <p class="muted" dir="ltr">{{ b.domain }} · <a href="{{ url_for('site.exposure_page', domain=b.domain, lang=tl) }}">{{ 'سجل التعرّض' if tl == 'ar' else ('Expositionsregister' if tl == 'de' else 'Exposure registry') }}</a></p>
   {% if d.winner %}<p class="notice"><strong>🏆 {{ c.d_winner }}</strong></p>{% endif %}
   {% if b.share is not none %}
     <p class="lead"><strong style="font-size:2.2em">{{ b.share }}%</strong><br>{{ c.d_subs.format(pq=b.subs.pq, responding=b.subs.responding) }}</p>
@@ -25,9 +25,9 @@
     <p>{{ c.d_unranked.format(few=c.few.format(n=min_resp)) }}</p>
   {% endif %}
   <p class="row" style="display:flex;gap:12px;flex-wrap:wrap">
-    <a class="button-link" target="_blank" rel="noopener" data-ev="bank_share_linkedin" href="https://www.linkedin.com/sharing/share-offsite/?url={{ page | urlencode }}">LinkedIn ↗</a>
-    <a class="button-link" target="_blank" rel="noopener" data-ev="bank_share_x" href="https://twitter.com/intent/tweet?text={{ (c.share_text.format(name=name, share=b.share if b.share is not none else '–')) | urlencode }}&url={{ page | urlencode }}">X ↗</a>
-    <a href="https://wa.me/?text={{ (c.share_text.format(name=name, share=b.share if b.share is not none else '–') ~ ' ' ~ page) | urlencode }}" target="_blank" rel="noopener" data-ev="bank_share_whatsapp">WhatsApp ↗</a>
+    <a class="button-link" target="_blank" rel="noopener" data-ev="bank_share_linkedin" href="https://www.linkedin.com/sharing/share-offsite/?url={{ page | utm('linkedin', 'bank_share') | urlencode }}">LinkedIn ↗</a>
+    <a class="button-link" target="_blank" rel="noopener" data-ev="bank_share_x" href="https://twitter.com/intent/tweet?text={{ (c.share_text.format(name=name, share=b.share if b.share is not none else '–')) | urlencode }}&url={{ page | utm('x', 'bank_share') | urlencode }}">X ↗</a>
+    <a href="https://wa.me/?text={{ (c.share_text.format(name=name, share=b.share if b.share is not none else '–') ~ ' ' ~ (page | utm('whatsapp', 'bank_share'))) | urlencode }}" target="_blank" rel="noopener" data-ev="bank_share_whatsapp">WhatsApp ↗</a>
   </p>
 </article>
 

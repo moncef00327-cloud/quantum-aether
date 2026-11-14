@@ -63,7 +63,10 @@ function get(url, timeoutMs = 90000) {
 }
 
 function report(r) {
-  const pq = r.post_quantum_key_exchange;
+  // The API's flag is false both for "classical" and for "undetermined"; observation_status tells them apart.
+  // An undetermined probe is never shown as classical (fail-closed: --require-pq still exits 2).
+  const undetermined = r.observation_status === "undetermined" || r.post_quantum_key_exchange == null;
+  const pq = undetermined ? null : r.post_quantum_key_exchange === true;
   const lines = [
     "",
     "  Quantum Aether — post-quantum TLS check",
@@ -74,6 +77,7 @@ function report(r) {
   ];
   if (r.tls_version) lines.push(`  TLS           ${r.tls_version}`);
   if (r.scan_url) lines.push(`  result page   ${r.scan_url}`);
+  if (undetermined) lines.push("  note          the probe did not observe a negotiated key-exchange group; re-run the check");
   if (pq === false) lines.push(`  how to fix    ${BASE}/tools/pq-tls-config?utm_source=npm&utm_medium=cli&utm_campaign=cli`);
   lines.push(`  monitor daily ${BASE}/monitoring?domain=${encodeURIComponent(r.domain)}&utm_source=npm&utm_medium=cli&utm_campaign=cli`, "");
   return lines.join("\n");

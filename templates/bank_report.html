@@ -36,7 +36,7 @@
     {% for b in rows %}
     <tr>
       <td>{% if b.share is not none %}{{ loop.index }}{% else %}–{% endif %}</td>
-      <td><a href="{{ url_for('site.bank_detail_page', report_id=r.id, domain=b.domain, lang=tl) }}">{{ b.name[tl] }}</a>{% if b.domain in winners|map(attribute='domain')|list %} 🏆{% endif %}{% if b.central %} <span class="muted small">({{ c.central }})</span>{% endif %}<br><span class="muted small" dir="ltr">{{ b.domain }}</span></td>
+      <td><a href="{{ url_for('site.bank_detail_page', report_id=r.id, domain=b.domain, lang=tl) }}">{{ b.name[tl] }}</a>{% if b.domain in winners|map(attribute='domain')|list %} 🏆{% endif %}{% if b.central %} <span class="muted small">({{ c.central }})</span>{% endif %}<br><span class="muted small" dir="ltr">{{ b.domain }} · <a href="{{ url_for('site.exposure_page', domain=b.domain, lang=tl) }}">{{ 'التعرّض' if tl == 'ar' else ('Exposition' if tl == 'de' else 'exposure') }}</a></span></td>
       <td>{{ countries[b.country][tl] }}</td>
       <td>{% if b.share is not none %}<strong>{{ b.share }}%</strong> <span class="muted small" dir="ltr">({{ b.subs.pq }} / {{ b.subs.responding }})</span>
           <div class="bar-track" aria-hidden="true" style="background:rgba(127,127,127,.25);height:6px;border-radius:3px;margin-top:4px"><div style="width:{{ b.share }}%;height:6px;border-radius:3px;background:currentColor;opacity:.75"></div></div>

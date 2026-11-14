@@ -3,7 +3,7 @@
 
 GUIDES = {
     "enable-x25519mlkem768-nginx": {
-        "updated": "2026-11-13",
+        "updated": "2026-11-14",
         "en": {
             "title": "How to enable post-quantum TLS (X25519MLKEM768) on nginx",
             "description": "Turn on the hybrid ML-KEM key exchange that Chrome and Firefox already use, on nginx with OpenSSL 3.5, and verify it.",
@@ -95,6 +95,53 @@ openssl version</pre>
 <ul>
 <li><strong>رسالة ClientHello الكبيرة.</strong> مفتاح ML-KEM يزيد أول رسالة من المتصفح بنحو 1.2 كيلوبايت، فتمتد غالباً على حزمتي TCP. بعض الجدران النارية وموازنات الحمل القديمة تتوقعها في حزمة واحدة فتقطع الاتصال. الفحص يذكر هذا كنتيجة مستقلة.</li>
 <li><strong>الشهادات مسألة منفصلة.</strong> شهادة RSA أو ECDSA قابلة للكسر بخوارزمية Shor، لكن هذا يهم فقط بعد وجود حاسوب كمومي وفقط لانتحال الموقع لحظياً. تبادل المفاتيح هو ما يحمي الحركة المسجلة، فابدأ به.</li>
+</ul>
+""",
+        },
+        "de": {
+            "title": "So aktivieren Sie Post-Quantum-TLS (X25519MLKEM768) auf nginx",
+            "description": "Aktivieren Sie den hybriden ML-KEM-Schlüsselaustausch, den Chrome und Firefox bereits nutzen, auf nginx mit OpenSSL 3.5, und prüfen Sie ihn.",
+            "body": """
+<p>Chrome (since version 131) and Firefox already offer the hybrid key exchange <code>X25519MLKEM768</code> in every HTTPS connection. If your server accepts it, the session keys are protected against a future quantum computer. If it does not, the browser falls back to plain X25519 and the traffic can be recorded today and decrypted later (<a href="/guides/harvest-now-decrypt-later?lang=en">harvest now, decrypt later</a>).</p>
+
+<h2>1. Check your OpenSSL version</h2>
+<p>nginx gets its TLS from the OpenSSL library it was built against. ML-KEM arrived in <strong>OpenSSL 3.5</strong>.</p>
+<pre dir="ltr">nginx -V 2>&amp;1 | grep -o 'OpenSSL [0-9.]*'
+openssl version</pre>
+<p>If either shows 3.0, 3.1, 3.2, 3.3 or 3.4, nginx cannot negotiate ML-KEM no matter what you put in the config. Ubuntu 22.04 and 24.04 ship OpenSSL 3.0; Debian 13 (trixie) ships 3.5. On Ubuntu, the <a href="/guides/ubuntu-openssl-3-0-post-quantum-tls?lang=en">Ubuntu / OpenSSL 3.0 guide</a> walks through all three ways out. Your options are to upgrade the OS, use an nginx build linked against OpenSSL 3.5, or put a post-quantum capable proxy or CDN in front (see the <a href="/guides/post-quantum-tls-apache-caddy-haproxy-cloudflare?lang=en">other servers guide</a>).</p>
+
+<h2>2. Configure nginx</h2>
+<p>With OpenSSL 3.5, X25519MLKEM768 is in the default group list, so nginx's default <code>ssl_ecdh_curve auto</code> already offers it. The common mistake is an explicit curve list copied from an old hardening guide: it replaces OpenSSL's default list instead of extending it, and silently removes the hybrid. The cleanest fix is to delete that line. If you want an explicit list, put the hybrid group first:</p>
+<pre dir="ltr">server {
+    listen 443 ssl;
+    http2 on;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ecdh_curve X25519MLKEM768:X25519:prime256v1;
+    # ... certificates and the rest of your config
+}</pre>
+<p>Also look in included files such as <code>/etc/letsencrypt/options-ssl-nginx.conf</code> for another <code>ssl_ecdh_curve</code> line. Then:</p>
+<pre dir="ltr">nginx -t &amp;&amp; systemctl reload nginx</pre>
+
+<h2>3. Verify</h2>
+<p>With an OpenSSL 3.5 client:</p>
+<pre dir="ltr">openssl s_client -connect example.com:443 -groups X25519MLKEM768 &lt;/dev/null 2&gt;/dev/null | grep -i group</pre>
+<p>You should see <code>X25519MLKEM768</code> as the negotiated group. Or run the <a href="/?lang=en">free scan</a>: grade A means TLS 1.3 with a hybrid post-quantum key exchange.</p>
+
+<h2>nginx won't start after adding X25519MLKEM768</h2>
+<p>If <code>nginx -t</code> or a restart fails with an error like this:</p>
+<pre dir="ltr">nginx: [emerg] SSL_CTX_set1_curves_list("X25519MLKEM768:X25519:prime256v1") failed</pre>
+<p>then the OpenSSL that nginx actually uses does not know the group, which means it is older than 3.5. OpenSSL rejects the whole list when one name is unknown, so nginx stops while reading its configuration. Check the library nginx runs with, which can differ from the <code>openssl</code> command on the same machine:</p>
+<pre dir="ltr">nginx -V 2&gt;&amp;1 | grep -i openssl</pre>
+<ul>
+<li><strong>Get the site back now:</strong> remove <code>X25519MLKEM768</code> from the line, or delete the <code>ssl_ecdh_curve</code> line entirely (safe on every OpenSSL version), then <code>nginx -t &amp;&amp; systemctl reload nginx</code>.</li>
+<li><strong>Then get a newer OpenSSL:</strong> on Ubuntu 22.04 / 24.04 see <a href="/guides/ubuntu-openssl-3-0-post-quantum-tls?lang=en">the Ubuntu guide</a> (upgrade to 26.04, put Caddy or a CDN in front, or build nginx with OpenSSL 3.5).</li>
+<li><strong>Always run <code>nginx -t</code> first.</strong> A <code>reload</code> with a broken config keeps the old workers serving, but a <code>restart</code> or a reboot leaves the site down.</li>
+</ul>
+
+<h2>Watch out for</h2>
+<ul>
+<li><strong>Large ClientHello.</strong> The ML-KEM key share makes the browser's first message about 1.2 KB larger and it often spans two TCP packets. Old firewalls, load balancers and middleboxes that expect it in one packet drop the connection. The scan reports this as a separate finding.</li>
+<li><strong>Certificates are a separate problem.</strong> Your RSA or ECDSA certificate is still breakable by Shor's algorithm, but that only matters once a quantum computer exists and only for live impersonation. Key exchange is what protects recorded traffic, so fix it first.</li>
 </ul>
 """,
         },

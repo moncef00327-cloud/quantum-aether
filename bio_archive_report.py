@@ -6,6 +6,7 @@
 #   python bio_archive_report.py restore [sequence.txt] [restored.md]
 #   python bio_archive_report.py verify  [report.md] [sequence.txt]
 import hashlib
+import re
 import sys
 
 from dna_encode import RS_NSYM, archive, restore, sequence_stats
@@ -24,8 +25,18 @@ def to_fasta(name: str, data: bytes) -> str:
 
 
 def from_fasta(text: str) -> bytes:
-    sequence = "".join(line for line in text.splitlines() if not line.startswith(">"))
-    return restore(sequence)
+    """Restores the bytes and checks the header's sha256 (and byte count) when the header carries them."""
+    lines = text.splitlines()
+    header = next((line for line in lines if line.startswith(">")), "")
+    sequence = "".join(line for line in lines if not line.startswith(">"))
+    data = restore(sequence)
+    digest = re.search(r"\bsha256=([0-9a-f]{64})\b", header)
+    if digest and hashlib.sha256(data).hexdigest() != digest.group(1):
+        raise ValueError("sha256 in the FASTA header does not match the restored data")
+    size = re.search(r"\bbytes=(\d+)\b", header)
+    if size and int(size.group(1)) != len(data):
+        raise ValueError("byte count in the FASTA header does not match the restored data")
+    return data
 
 
 def file_to_dna(report_path: str = DEFAULT_REPORT, output_path: str = DEFAULT_SEQUENCE) -> dict:

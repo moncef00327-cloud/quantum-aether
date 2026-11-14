@@ -102,7 +102,9 @@ def verify_transfer(client, network, net, tx_hash, address, amount, not_before_t
         return "NO_TRANSFER", {}
     expected = to_units(amount, net["decimals"])
     details = {"received": str(Decimal(received) / (10 ** net["decimals"]))}
-    if received < expected:
+    if received != expected:
+        # The exact amount identifies the order. Accepting more would let a transfer made for a dearer order
+        # (another buyer's payment) unlock this one; an over- or underpayment is reconciled by hand.
         return "WRONG_AMOUNT", details
     block = int(receipt["blockNumber"], 16)
     latest = int(client.call(network, "eth_blockNumber", []), 16)

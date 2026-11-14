@@ -1,8 +1,9 @@
 {% extends "base.html" %}
+{% from "_trial_cta.html" import trial_cta with context %}
 {% block title %}{{ page.title }} · {{ t.brand }}{% endblock %}
 {% block description %}{{ page.description }}{% endblock %}
 {% block head %}
-<script type="application/ld+json">{{ {"@context": "https://schema.org", "@type": "TechArticle", "headline": page.title, "description": page.description, "dateModified": updated, "inLanguage": lang, "publisher": {"@type": "Organization", "name": "Quantum Aether"}} | tojson }}</script>
+<script type="application/ld+json">{{ {"@context": "https://schema.org", "@type": "TechArticle", "headline": page.title, "description": page.description, "dateModified": updated, "inLanguage": lang, "url": abs_url('site.guide', slug=slug, lang=lang), "author": org_jsonld(False), "publisher": org_jsonld()} | tojson }}</script>
 {% endblock %}
 {% block content %}
 <article class="card prose">
@@ -11,5 +12,13 @@
   {% with box_id='domain-box-top', box_src='guide' %}{% include "_scan_box.html" %}{% endwith %}
   {{ page.body | safe }}
 </article>
+{% if slug == "enable-x25519mlkem768-nginx" %}
+<section class="card highlight trial-cta" id="guide-next">
+  <h2>{{ t.guide_nginx_next_title }}</h2>
+  <p>{{ t.guide_nginx_next_sub }}</p>
+  <p><a class="button-link" href="https://github.com/marketplace/actions/post-quantum-tls-check-quantum-aether" target="_blank" rel="noopener" data-ev="explore">{{ t.guide_nginx_action }}</a></p>
+  {{ trial_cta('guide-trial', source='nginx_guide', title=t.guide_nginx_trial_title, sub=t.guide_nginx_trial_sub) }}
+</section>
+{% endif %}
 {% include "_scan_box.html" %}
 {% endblock %}

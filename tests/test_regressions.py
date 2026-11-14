@@ -4,6 +4,7 @@ import tempfile
 import unittest
 
 import quantum_saas_app
+from tests.test_monitor import COMPANY
 from paypal_client import PayPalError
 from tests import test_app, test_monitor
 
@@ -56,7 +57,7 @@ class ActivationErrorCodeTests(unittest.TestCase):
         shutil.rmtree(self.tmp)
 
     def test_unknown_subscription_is_404_not_502(self):
-        r = self.client.post("/api/monitor/signup", json={"email": "ops@example.com", "plan": "starter", "consent": True})
+        r = self.client.post("/api/monitor/signup", json=dict(COMPANY, email="ops@example.com", plan="starter"))
         account_id = r.get_json()["account_id"]
         self.app.extensions["paypal"] = MissingSubscriptionPayPal()
         r = self.client.post("/api/monitor/activate", json={"account_id": account_id, "subscription_id": "I-FAKE"})
