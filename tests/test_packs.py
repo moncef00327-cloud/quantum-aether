@@ -53,11 +53,12 @@ class PackTest(unittest.TestCase):
         return oid, cap.get_json()["pack_url"]
 
     def test_agency_page_all_languages(self):
-        for lang, needle in (("en", "10 full reports for $199"), ("ar", "10 تقارير كاملة مقابل 199$"), ("de", "199 $")):
+        for lang, needle in (("en", "10 full reports"), ("ar", "10 تقارير كاملة"), ("de", "10 vollständige Berichte")):
             body = self.client.get(f"/agency?lang={lang}").get_data(as_text=True)
             self.assertIn(needle, body)
+            self.assertIn("199.00 USD", body)
             self.assertIn("pack-checkout.js", body)
-        self.assertIn("$19.90 each", self.client.get("/agency?lang=en").get_data(as_text=True))
+        self.assertIn("19.9 USD", self.client.get("/agency?lang=en").get_data(as_text=True))
         self.assertIn("/agency?lang=de", self.client.get("/sitemap-pages.xml").get_data(as_text=True))
         self.assertIn("/agency", self.client.get("/?lang=en").get_data(as_text=True))
 

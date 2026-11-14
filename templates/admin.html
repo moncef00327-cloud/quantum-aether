@@ -9,6 +9,12 @@
     <tr><td>{{ events.focus }}</td><td>{{ events.type }}</td><td>{{ events.example }}</td><td>{{ events.submit }}</td><td>{{ events.result }}</td><td>{{ events.error }}</td></tr>
     <tr><th>switched language</th><th>monitoring CTA</th><th>sample report</th><th title="Consent checkbox ticked or crypto button pressed. Not a payment; paid orders are listed under sales.">buy clicks (not payments)</th><th>share</th><th>badge copy</th></tr>
     <tr><td>{{ events.lang }}</td><td>{{ events.monitoring_cta }}</td><td>{{ events.sample_report }}</td><td>{{ events.buy_click }}</td><td>{{ events.share }}</td><td>{{ events.badge_copy }}</td></tr>
+    <tr><th>trial requested</th><th>trial created and access email sent</th><th>subscription checkout started</th><th>subscription verified active</th></tr>
+    <tr><td>{{ events.trial_start }}</td><td>{{ events.trial_created }}</td><td>{{ events.subscription_start }}</td><td>{{ events.subscription_active }}</td></tr>
+    <tr><th>report checkout created</th><th>report payment confirmed</th><th colspan="2">Server-confirmed conversion events</th></tr>
+    <tr><td>{{ events.checkout_start }}</td><td>{{ events.purchase_complete }}</td><td colspan="2">Counts start after deployment; no email addresses or account IDs are stored here.</td></tr>
+    <tr><th>agency pack checkout</th><th>agency pack paid</th><th colspan="2">MSP / consultant offer</th></tr>
+    <tr><td>{{ events.agency_start }}</td><td>{{ events.agency_paid }}</td><td colspan="2">Use these to assess demand for client-report packs.</td></tr>
   </table>
   <p class="muted small">Unique visitor-days, bots and admin excluded. Tracking started 2026-11-04.</p>
   <h3>Real scans and sales by where the scan started (30 days)</h3>
@@ -113,6 +119,34 @@
     {% endfor %}
     </tbody>
   </table>
+</section>
+
+<section class="card" dir="ltr">
+  <h2>Organization audit payments</h2>
+  {% if audit_orders %}
+  <table class="data">
+    <thead><tr><th>Invoice / date</th><th>Organization</th><th>Buyer</th><th>Domain</th><th>Payment</th><th>Scan</th><th>Action</th></tr></thead>
+    <tbody>{% for o in audit_orders %}
+      <tr>
+        <td>{{ o.invoice_number or '—' }}<br><span class="muted small">{{ o.created_at }}</span></td>
+        <td>{{ o.org }}</td>
+        <td dir="ltr">{{ o.name }}<br>{{ o.email }}</td>
+        <td dir="ltr">{{ o.domain }}</td>
+        <td class="{{ 'ok' if o.status == 'COMPLETED' else 'warn' }}">{{ o.status }} · {{ o.amount }} {{ o.currency }}{% if o.is_test %} · TEST{% endif %}</td>
+        <td>{{ o.audit_status }}<br><span class="muted small">Invoice email: {{ 'sent' if o.customer_email_sent else 'pending' }}</span></td>
+        <td>{% if o.invoice_number %}<a href="{{ url_for('site.admin_audit_invoice', audit_id=o.id) }}">Invoice PDF</a>{% endif %}
+          {% if o.status == 'COMPLETED' and not o.customer_email_sent %}
+          <form method="post" action="{{ url_for('site.admin_retry_audit_delivery', audit_id=o.id) }}">
+            <button type="submit">Retry invoice email</button>
+          </form>{% endif %}
+          {% if o.status == 'COMPLETED' and o.audit_status == 'ACCESS_ISSUE' %}
+          <form method="post" action="{{ url_for('site.admin_refund_audit', audit_id=o.id) }}">
+            <button type="submit">Refund {{ o.amount }} {{ o.currency }}</button>
+          </form>{% endif %}</td>
+      </tr>
+    {% endfor %}</tbody>
+  </table>
+  {% else %}<p class="muted">No audit purchases yet.</p>{% endif %}
 </section>
 
 <section class="card">

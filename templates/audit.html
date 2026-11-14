@@ -8,7 +8,7 @@
   <h1>{{ c.title }}</h1>
   <p class="lead">{{ c.lead }}</p>
   <p class="notice">{{ c.example }}</p>
-  <div class="commercial-actions"><a class="button-link" href="#request" data-ev="audit_cta">{{ c.submit }}</a><a href="{{ url_for('site.sample_report', lang=lang if lang != 'de' else 'en') }}">{{ t.sample_link }} ↗</a></div>
+  <div class="commercial-actions"><a class="button-link" href="#buy-audit" data-ev="audit_cta">{{ c.checkout.title }}</a><a href="#enterprise-quote">{{ c.submit }}</a><a href="{{ url_for('site.sample_report', lang=lang if lang != 'de' else 'en') }}">{{ t.sample_link }} ↗</a></div>
 </section>
 
 <section class="card">
@@ -23,7 +23,39 @@
   <p class="one-time">{{ c.pay_line }}</p>
 </section>
 
-<section class="card" id="request">
+<section class="card" id="buy-audit">
+  <h2>{{ c.checkout.title }} — <bdi>{{ c.checkout.price }}</bdi></h2>
+  <form id="audit-checkout-form" class="audit-form" autocomplete="on" data-lang="{{ lang }}">
+    <div class="grid-2">
+      <p><label>{{ c.checkout.company }}<br><input name="org" required maxlength="200" autocomplete="organization"></label></p>
+      <p><label>{{ c.checkout.name }}<br><input name="name" required maxlength="120" autocomplete="name"></label></p>
+      <p><label>{{ c.checkout.email }}<br><input name="email" type="email" required maxlength="254" dir="ltr" autocomplete="email"></label></p>
+      <p><label>{{ c.checkout.domain }}<br><input name="domain" required maxlength="253" dir="ltr" inputmode="url" autocomplete="url"></label></p>
+      <p><label>{{ c.checkout.street }}<br><input name="street" required maxlength="200" autocomplete="address-line1"></label></p>
+      <p><label>{{ c.checkout.postal_code }}<br><input name="postal_code" required maxlength="30" autocomplete="postal-code"></label></p>
+      <p><label>{{ c.checkout.city }}<br><input name="city" required maxlength="100" autocomplete="address-level2"></label></p>
+      <p><label>{{ c.checkout.country }}<br><input name="country" required maxlength="100" autocomplete="country-name"></label></p>
+    </div>
+    <p class="consent"><label><input type="checkbox" name="company_buyer" required>
+      <span>{{ c.checkout.company_buyer }}</span></label></p>
+    <p class="consent"><label><input type="checkbox" name="agb_consent" required>
+      <span>{{ c.checkout.agb }} (<a href="{{ url_for('site.legal_page', slug='agb', lang=legal_lang) }}" target="_blank">{{ t.legal_terms }}</a>)</span></label></p>
+    <p class="consent"><label><input type="checkbox" name="contact_consent" required>
+      <span>{{ c.checkout.contact }} (<a href="{{ url_for('site.legal_page', slug='datenschutz', lang=legal_lang) }}" target="_blank">{{ c.privacy }}</a>)</span></label></p>
+    <p class="muted small">{{ c.checkout.pay_note }}</p>
+    {% if audit_payments_enabled %}
+      <div id="audit-paypal-buttons" data-msg-error="{{ c.checkout.error }}" data-msg-success="{{ c.checkout.success }}"
+           data-msg-email-pending="{{ c.checkout.email_pending }}"></div>
+      <p id="audit-pay-message" class="form-error" role="status"></p>
+    {% else %}
+      <p class="notice" role="status">{{ c.err_unavailable }}</p>
+    {% endif %}
+  </form>
+</section>
+
+<section class="card" id="enterprise-quote">
+  <h2>{{ c.checkout.enterprise_title }}</h2>
+  <p>{{ c.checkout.enterprise_note }}</p>
   {% if state == 'sent' %}
     <h2>{{ c.sent_title }}</h2>
     <p role="status">{{ c.sent.format(email=form.email) }}</p>
@@ -42,4 +74,10 @@
     </form>
   {% endif %}
 </section>
+{% endblock %}
+{% block scripts %}
+{% if audit_payments_enabled %}
+<script src="https://www.paypal.com/sdk/js?client-id={{ audit_paypal_client_id | urlencode }}&currency={{ currency }}&intent=capture&enable-funding=card"></script>
+<script src="{{ url_for('static', filename='audit-checkout.js') }}"></script>
+{% endif %}
 {% endblock %}

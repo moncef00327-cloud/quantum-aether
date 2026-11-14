@@ -2,6 +2,7 @@
 # إرسال البريد عبر Resend (https://resend.com). المنفذ 25 مغلق على الخادم، فنستخدم واجهة HTTPS.
 # يحتاج RESEND_API_KEY وQS_MAIL_FROM (عنوان من نطاق موثّق في Resend). بدونهما يُعطَّل الإرسال بهدوء.
 import html as htmlmod
+import base64
 import logging
 import re
 
@@ -25,7 +26,7 @@ class Mailer:
     def enabled(self):
         return bool(self.api_key and self.sender)
 
-    def send(self, to, subject, text, html=None):
+    def send(self, to, subject, text, html=None, attachments=None):
         """يعيد True إن قبل Resend الرسالة. لا يرفع استثناءً: فشل البريد لا يوقف الخدمة."""
         if not self.enabled:
             log.info("mail disabled; not sending %r to %s", subject, to)
@@ -34,7 +35,7 @@ class Mailer:
             html = render_html(subject, text, self.site_url)
         senders = [self.sender] + ([self.fallback_sender] if self.fallback_sender and self.fallback_sender != self.sender else [])
         for i, sender in enumerate(senders):
-            ok, status = self._post(sender, to, subject, text, html)
+            ok, status = self._post(sender, to, subject, text, html, attachments)
             if ok:
                 if i:
                     log.warning("mail sent with FALLBACK sender after primary was rejected: %s", self.last_error)
@@ -43,10 +44,15 @@ class Mailer:
                 break
         return False
 
-    def _post(self, sender, to, subject, text, html):
+    def _post(self, sender, to, subject, text, html, attachments=None):
         body = {"from": sender, "to": [to], "subject": subject, "text": text}
         if html:
             body["html"] = html
+        if attachments:
+            body["attachments"] = [
+                {"filename": item["filename"], "content": base64.b64encode(item["content"]).decode("ascii")}
+                for item in attachments
+            ]
         if self.reply_to:
             body["reply_to"] = self.reply_to  # ردود العملاء تصل إلى صاحب الموقع
         try:

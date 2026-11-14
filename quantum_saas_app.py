@@ -8,6 +8,7 @@ import datetime as dt
 import csv
 import base64
 import functools
+from email.utils import parseaddr
 import glob
 import hashlib
 import hmac
@@ -15,6 +16,7 @@ import io
 import json
 import logging
 import os
+from pathlib import Path
 import re
 import secrets
 import urllib.parse
@@ -39,6 +41,7 @@ import countries
 import deadlines
 import free_alerts
 import audit
+import audit_checkout
 import bank_report
 import discovery
 import config_gen
@@ -50,10 +53,12 @@ import og_image
 import i18n
 import quantum_vuln_scanner
 import sales_db
+import scan_followups
 import scorecard
 import scan_experience
 import search_indexing
 import badge_evidence
+import public_stats
 from mailer import Mailer
 from paypal_client import SUBSCRIPTION_LIVE_STATUSES, PayPalClient, PayPalError, verify_capture, verify_subscription
 
@@ -84,8 +89,13 @@ def _config_from_env():
         "ADMIN_PASSWORD_HASH": env("QS_ADMIN_PASSWORD_HASH", ""),
         "PRICE": env("QS_PRICE", "49.00"),
         "PACK_PRICE": env("QS_PACK_PRICE", "199.00"),
-        "AUDIT_PRICE": env("QS_AUDIT_PRICE", "490"),
-        "AUDIT_CURRENCY": env("QS_AUDIT_CURRENCY", "EUR"),
+        "AUDIT_PRICE": "490.00",
+        "AUDIT_CURRENCY": "EUR",
+        # Separate PayPal credentials keep sandbox testing isolated from report and subscription payments.
+        "AUDIT_PAYPAL_CLIENT_ID": env("QS_AUDIT_PAYPAL_CLIENT_ID", ""),
+        "AUDIT_PAYPAL_CLIENT_SECRET": env("QS_AUDIT_PAYPAL_CLIENT_SECRET", ""),
+        "AUDIT_PAYPAL_ENV": env("QS_AUDIT_PAYPAL_ENV", "sandbox"),
+        "AUDIT_PAYMENTS_ENABLED": env("QS_AUDIT_PAYMENTS_ENABLED", "0").lower() in ("1", "true", "yes", "on"),
         "PACK_CREDITS": int(env("QS_PACK_CREDITS", "10")),
         "CURRENCY": env("QS_CURRENCY", "USD"),
         "SCANS_PER_HOUR": int(env("QS_SCANS_PER_HOUR", "10")),
@@ -108,7 +118,8 @@ def _config_from_env():
     }
 
 
-def create_app(overrides=None, scanner=None, paypal=None, mailer=None, chain=None, discovery_http=None, discovery_probe=None):
+def create_app(overrides=None, scanner=None, paypal=None, mailer=None, chain=None, discovery_http=None, discovery_probe=None,
+               audit_paypal=None, audit_discovery=None):
     app = Flask(__name__)
     app.config['MAX_CONTENT_LENGTH'] = 128 * 1024
     app.config.update(_config_from_env())
@@ -124,12 +135,21 @@ def create_app(overrides=None, scanner=None, paypal=None, mailer=None, chain=Non
         paypal = PayPalClient(app.config["PAYPAL_CLIENT_ID"], app.config["PAYPAL_CLIENT_SECRET"], app.config["PAYPAL_ENV"])
     app.extensions["scanner"] = scanner or quantum_vuln_scanner.scan_full  # كل عناوين النطاق؛ المتتبّع يستخدم عنواناً واحداً
     app.extensions["paypal"] = paypal
+    if audit_paypal is None:
+        audit_id = app.config["AUDIT_PAYPAL_CLIENT_ID"]
+        audit_secret = app.config["AUDIT_PAYPAL_CLIENT_SECRET"]
+        if audit_id and audit_secret:
+            audit_paypal = PayPalClient(audit_id, audit_secret, app.config["AUDIT_PAYPAL_ENV"])
+        elif app.config["TESTING"]:
+            audit_paypal = paypal
+    app.extensions["audit_paypal"] = audit_paypal
     app.extensions["chain"] = chain or crypto_pay.ChainClient()
     app.extensions["discovery_http"] = discovery_http or requests.Session()
     app.extensions["discovery_probe"] = discovery_probe or discovery.probe_host
     # جرد أصول المشتركين: نفس كشف النطاقات العام (سجلات الشهادات + فحص كل اسم)
     app.extensions["asset_discover"] = lambda base: discovery.run_discovery(
         base, app.extensions["discovery_http"], app.extensions["discovery_probe"])
+    app.extensions["audit_discover"] = audit_discovery or app.extensions["asset_discover"]
     app.extensions["mailer"] = mailer or Mailer(app.config["RESEND_API_KEY"], app.config["MAIL_FROM"],
                                                      app.config["REPLY_TO"],
                                                      fallback_sender=app.config["MAIL_FROM_FALLBACK"],
@@ -174,6 +194,29 @@ def current_lang():
     return request.accept_languages.best_match(["en", "ar"] + (["de"] if german_allowed() else [])) or "en"
 
 
+def contact_email_address():
+    address = parseaddr(current_app.config.get("MAIL_FROM") or current_app.config.get("REPLY_TO")
+                        or current_app.config.get("OWNER_EMAIL") or "")[1]
+    return address if "@" in address else "sajad.vip56@gmail.com"
+
+
+def dual_price_label(amount, currency):
+    if currency == "USD":
+        return f"{amount} USD (≈ EUR {float(amount) / business_pages.USD_PER_EUR:.2f})"
+    return f"{amount} {currency}"
+
+
+def public_price_labels():
+    cfg = current_app.config
+    return {
+        "report_price_dual": dual_price_label(cfg["PRICE"], cfg["CURRENCY"]),
+        "agency_price_dual": dual_price_label(cfg["PACK_PRICE"], cfg["CURRENCY"]),
+        "starter_price_dual": dual_price_label(monitor.PLANS["starter"]["price"], cfg["CURRENCY"]),
+        "business_price_dual": dual_price_label(monitor.PLANS["business"]["price"], cfg["CURRENCY"]),
+        "credits": cfg["PACK_CREDITS"],
+    }
+
+
 # الصفحات التي لها نسخة ألمانية فعلية (لمبدّل اللغة وhreflang وخريطة الموقع).
 DE_PAGES = {"site.monthly_report", "site.press_page", "site.pq_config", "site.pq_config_server", "site.index", "site.study", "site.monitoring", "site.adoption_page", "site.scanning_page", "site.deadlines_page",
             "site.business_page", "site.pricing_page", "site.agency_page", "site.audit_page", "site.audit_request", "site.countries_page", "site.country_page"}
@@ -186,8 +229,15 @@ def texts():
 @bp.app_context_processor
 def _inject():
     lang = current_lang()
+    contact_email = contact_email_address()
     return {"t": i18n.TEXTS[lang], "lang": lang, "other_lang": "en" if lang == "ar" else "ar",
-            "legal_lang": "de" if lang == "de" else "en", "lang_names": i18n.LANG_NAMES,
+            "legal_lang": "de", "contact_email": contact_email, "lang_names": i18n.LANG_NAMES,
+            "grade_guide_url": url_for("site.study", lang=lang) + "#grade-definitions",
+            "report_price": current_app.config["PRICE"], "currency": current_app.config["CURRENCY"],
+            "agency_price_dual": dual_price_label(current_app.config["PACK_PRICE"], current_app.config["CURRENCY"]),
+            "agency_credits": current_app.config["PACK_CREDITS"],
+            "starter_price": monitor.PLANS["starter"]["price"],
+            "usd_per_eur": business_pages.USD_PER_EUR, "fx_rate_date": business_pages.FX_RATE_DATE,
             "page_langs": ["en", "ar", "de"] if request.endpoint in DE_PAGES or guide_has_german() else ["en", "ar"],
             "abs_url": lambda endpoint, **kw: public_base() + url_for(endpoint, **kw),
             "localized_url": localized_url, "metadata_url": metadata_url,
@@ -268,6 +318,22 @@ def is_test_request():
 def client_hash():
     salt = current_app.config["HASH_SALT"].encode()
     return hmac.new(salt, (request.remote_addr or "").encode(), hashlib.sha256).hexdigest()[:32]
+
+
+def record_conversion_event(name, page="/monitoring", is_test=None):
+    """Record an aggregate funnel event; no account identifier or email enters analytics."""
+    try:
+        if is_admin_visitor():
+            return
+        day = dt.date.today().isoformat()
+        ua = request.headers.get("User-Agent", "")
+        salt = current_app.config["HASH_SALT"].encode()
+        visitor = hmac.new(salt, f"{day}|{request.remote_addr}|{ua}".encode(), hashlib.sha256).hexdigest()[:16]
+        test_event = is_test_request() if is_test is None else bool(is_test)
+        analytics_db.record_event(db(), day, name, page, current_lang(), visitor,
+                                  not ua or bool(analytics_db.BOT_RE.search(ua)), test_event)
+    except Exception:
+        log.exception("conversion event tracking failed")
 
 
 def payments_enabled():
@@ -435,6 +501,41 @@ def scan_page(scan_id):
     )
 
 
+@bp.post("/scan/<scan_id>/follow-up")
+def scan_followup_submit(scan_id):
+    scan = sales_db.get_scan(db(), scan_id) or abort(404)
+    if scan["result"].get("grade") not in ("B", "C"):
+        abort(404)
+    if request.headers.get("Sec-Fetch-Site", "same-origin") not in ("same-origin", "none"):
+        abort(400)
+    if request.form.get("website") or not request.form.get("consent"):
+        return redirect(url_for(".scan_page", scan_id=scan_id, lang=current_lang(), followup="not-saved"), code=303)
+    email = (request.form.get("email") or "").strip().lower()[:254]
+    if not EMAIL_RE.match(email):
+        abort(400)
+    country_code = (request.form.get("country_code") or "").strip().upper()
+    recipient_type = request.form.get("recipient_type", "")
+    if not re.fullmatch(r"[A-Z]{2}", country_code) or recipient_type not in ("registered_company", "sole_trader", "individual_contact"):
+        abort(400)
+    scan_followups.record(db(), scan, email, country_code, recipient_type)
+    return redirect(url_for(".scan_page", scan_id=scan_id, lang=current_lang(), followup="received"), code=303)
+
+
+@bp.route("/scan-followup/unsubscribe/<rid>", methods=["GET", "POST"])
+def scan_followup_unsubscribe(rid):
+    row = db().execute("SELECT * FROM scan_followups WHERE id=?", (rid,)).fetchone()
+    token = request.args.get("token", "")
+    if not row or not scan_followups.token_valid(row, current_app.config["HASH_SALT"], token):
+        abort(404)
+    if request.method == "POST":
+        scan_followups.suppress_email(db(), row["email"],
+            dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat())
+        return "You are unsubscribed from Quantum Aether scan follow-up emails.", 200
+    return ("<!doctype html><meta charset=utf-8><title>Unsubscribe</title>"
+            "<h1>Stop scan follow-up emails</h1><p>Confirm to stop future emails.</p>"
+            f"<form method=post><button type=submit>Unsubscribe</button><input type=hidden name=token value=\"{token}\"></form>"), 200
+
+
 @bp.get("/report/<token>")
 def report(token):
     scan = paid_scan_or_404(token)
@@ -509,6 +610,8 @@ def _study_filtered(excluded):
     d.update({
         "total": len(kept), "excluded": len(rows) - len(kept), "reachable": len(ok), "unreachable": len(kept) - len(ok),
         "pq": sum(1 for r in ok if kx(r).get("pq")),
+        "pq_critical": sum(1 for r in ok if kx(r).get("pq") and any(
+            finding.get("status") == "critical" for finding in r.get("findings", []))),
         "grades": dict(sorted(collections.Counter(r.get("grade") for r in ok).items())),
         "groups": [list(x) for x in collections.Counter(kx(r).get("group") or "?" for r in ok).most_common()],
         "versions": [list(x) for x in collections.Counter(kx(r).get("version") or cert(r).get("negotiated_version") for r in ok).most_common()],
@@ -542,7 +645,12 @@ def legal_page(slug):
     other = "en" if lang == "de" else "de"
     # الصفحة بالألمانية أو الإنجليزية: نمرر لغة القالب صراحة فتتجاوز لغة الموقع (عربي/إنجليزي).
     t = dict(i18n.TEXTS["en"], dir="ltr", other_lang="English" if lang == "de" else "Deutsch")
-    return render_template("legal.html", page=legal.PAGES[slug][lang], t=t, lang=lang, other_lang=other,
+    import html
+    contact_email = contact_email_address()
+    contact_html = f'<a href="mailto:{html.escape(contact_email, quote=True)}">{html.escape(contact_email)}</a>'
+    body = legal.PAGES[slug][lang]["body"].replace(legal.EMAIL, contact_html)
+    page = dict(legal.PAGES[slug][lang], body=body)
+    return render_template("legal.html", page=page, t=t, lang=lang, other_lang=other,
                            legal_lang=lang, page_langs=list(legal.LANGS))
 
 
@@ -724,6 +832,9 @@ def commercial_page(section):
     return render_template("commercial.html", commercial=business_pages.COPY[current_lang()],
                            section=section, plans=monitor.PLANS, price=cfg["PRICE"],
                            pack_price=cfg["PACK_PRICE"], credits=cfg["PACK_CREDITS"],
+                           audit_price=cfg["AUDIT_PRICE"], audit_currency=cfg["AUDIT_CURRENCY"],
+                           contact_email=contact_email_address(),
+                           usd_per_eur=business_pages.USD_PER_EUR, fx_rate_date=business_pages.FX_RATE_DATE,
                            currency=cfg["CURRENCY"], recurring_enabled=subscriptions_enabled(),
                            payments_enabled=payments_enabled())
 
@@ -732,13 +843,23 @@ def commercial_page(section):
 def agency_page():
     cfg = current_app.config
     return render_template("agency.html", price=cfg["PACK_PRICE"], credits=cfg["PACK_CREDITS"], currency=cfg["CURRENCY"],
-                           single=cfg["PRICE"], payments_enabled=payments_enabled(), paypal_client_id=cfg["PAYPAL_CLIENT_ID"])
+                           price_dual=dual_price_label(cfg["PACK_PRICE"], cfg["CURRENCY"]),
+                           each_dual=dual_price_label(float(cfg["PACK_PRICE"]) / cfg["PACK_CREDITS"], cfg["CURRENCY"]),
+                           single=cfg["PRICE"], single_dual=dual_price_label(cfg["PRICE"], cfg["CURRENCY"]),
+                           payments_enabled=payments_enabled(), paypal_client_id=cfg["PAYPAL_CLIENT_ID"])
 
 
 def _audit_page(state=None, status=200, form=None):
     cfg = current_app.config
     return render_template("audit.html", c=audit.COPY[current_lang()], price=cfg["AUDIT_PRICE"],
-                           currency=cfg["AUDIT_CURRENCY"], state=state, form=form or {}), status
+                           currency=cfg["AUDIT_CURRENCY"], state=state, form=form or {},
+                           audit_payments_enabled=audit_payments_enabled(),
+                           audit_paypal_client_id=cfg["AUDIT_PAYPAL_CLIENT_ID"]), status
+
+
+def audit_payments_enabled():
+    return bool(current_app.extensions.get("audit_paypal") and
+                (current_app.testing or current_app.config.get("AUDIT_PAYMENTS_ENABLED")))
 
 
 @bp.get("/audit")
@@ -777,6 +898,237 @@ def audit_request():
     return _audit_page("sent", 200, f)
 
 
+def _audit_order_fields(data):
+    fields = {key: str(data.get(key) or "").strip() for key in
+              ("name", "email", "org", "street", "postal_code", "city", "country", "domain")}
+    fields["name"] = fields["name"][:120]
+    fields["email"] = fields["email"].lower()[:254]
+    fields["org"] = fields["org"][:200]
+    fields["street"] = fields["street"][:200]
+    fields["postal_code"] = fields["postal_code"][:30]
+    fields["city"] = fields["city"][:100]
+    fields["country"] = fields["country"][:100]
+    if not EMAIL_RE.match(fields["email"]):
+        return None, "invalid_email"
+    if not all(fields[k] for k in ("name", "org", "street", "postal_code", "city", "country", "domain")):
+        return None, "required_fields"
+    if data.get("company_buyer") is not True or data.get("agb_consent") is not True or data.get("contact_consent") is not True:
+        return None, "consent_required"
+    try:
+        domain = quantum_vuln_scanner.normalize_domain(fields["domain"])
+    except quantum_vuln_scanner.ScanError:
+        return None, "invalid_domain"
+    fields["domain"] = discovery.base_domain(domain)
+    fields["billing_address"] = f"{fields['street']}\n{fields['postal_code']} {fields['city']}\n{fields['country']}"
+    return fields, None
+
+
+@bp.post("/api/paypal/audit")
+def paypal_create_audit():
+    if request.headers.get("Sec-Fetch-Site", "same-origin") not in ("same-origin", "none"):
+        abort(400)
+    if not audit_payments_enabled():
+        return jsonify(error="audit_payments_disabled"), 503
+    paypal = current_app.extensions["audit_paypal"]
+    data = json_object()
+    fields, error = _audit_order_fields(data)
+    if error:
+        return jsonify(error=error), 400
+    conn = db()
+    if audit_checkout.rate_limited(conn, client_hash()):
+        return jsonify(error="rate_limited"), 429
+    cfg = current_app.config
+    lang = data.get("lang") or request.args.get("lang") or current_lang()
+    if lang not in ("en", "ar", "de"):
+        lang = current_lang()
+    audit_id = audit_checkout.new_id()
+    try:
+        order = paypal.create_order(audit_id, cfg["AUDIT_PRICE"], cfg["AUDIT_CURRENCY"],
+                                    f"Post-quantum TLS subdomain audit: {fields['domain']}")
+    except (PayPalError, requests.RequestException) as exc:
+        log.warning("PayPal audit order creation failed: %s", exc)
+        return jsonify(error="paypal_unavailable"), 502
+    now = now_iso()
+    try:
+        audit_checkout.create(conn, audit_id=audit_id, order_id=order["id"], email=fields["email"],
+                              name=fields["name"], org=fields["org"], billing_address=fields["billing_address"],
+                              domain=fields["domain"], lang=lang, amount=cfg["AUDIT_PRICE"],
+                              currency=cfg["AUDIT_CURRENCY"], agb_consent_at=now,
+                              contact_consent_at=now, client_hash=client_hash(), is_test=is_test_request())
+    except Exception:
+        log.exception("Could not store created PayPal audit order %s", order.get("id"))
+        return jsonify(error="order_storage_failed"), 500
+    record_conversion_event("audit_checkout_start", "/audit")
+    return jsonify(id=order["id"], amount=cfg["AUDIT_PRICE"], currency=cfg["AUDIT_CURRENCY"]), 201
+
+
+def _audit_seller():
+    email = re.search(r"mailto:([^\"'>]+)", legal.EMAIL)
+    return {"name": legal.OWNER, "address": legal.ADDRESS, "email": email.group(1) if email else ""}
+
+
+def _run_audit_discovery(app, order_id):
+    with app.app_context():
+        conn = db()
+        order = audit_checkout.by_order(conn, order_id)
+        if not order or order["status"] != "COMPLETED" or order["audit_status"] in ("DONE", "ACCESS_ISSUE"):
+            return
+        audit_checkout.set_audit_result(conn, order_id, "RUNNING")
+        try:
+            result = app.extensions["audit_discover"](order["domain"])
+            summary = json.dumps({k: result.get(k) for k in ("status", "source", "names", "responding", "pq",
+                                                                 "not_pq", "unknown", "error")}, ensure_ascii=False)
+            access_issue = result.get("status") != "DONE" or int(result.get("responding") or 0) == 0
+            audit_checkout.set_audit_result(conn, order_id, "ACCESS_ISSUE" if access_issue else "DONE", summary)
+        except Exception as exc:
+            log.exception("Paid audit discovery failed for %s", order_id)
+            audit_checkout.set_audit_result(conn, order_id, "ACCESS_ISSUE", json.dumps({"error": type(exc).__name__}))
+
+
+def _finalize_audit_payment(order_id, capture_id, paypal_email=None):
+    conn = db()
+    order, newly_completed = audit_checkout.complete(conn, order_id, capture_id)
+    if not order or order["status"] != "COMPLETED":
+        return None
+    path = Path(order["invoice_path"]) if order.get("invoice_path") else audit_checkout.invoice_path(current_app.config["DATA_DIR"], order)
+    if not path.is_file():
+        path, pdf_data = audit_checkout.save_invoice(current_app.config["DATA_DIR"], order, _audit_seller())
+        audit_checkout.set_invoice_path(conn, order_id, path)
+    else:
+        pdf_data = path.read_bytes()
+    order = audit_checkout.by_order(conn, order_id)
+    mailer = current_app.extensions["mailer"]
+    if not order.get("customer_email_sent"):
+        subject, body = audit.paid_receipt_email(order, public_base())
+        if mailer.send(order["email"], subject, body,
+                       attachments=[{"filename": f"{order['invoice_number']}.pdf", "content": pdf_data}]):
+            audit_checkout.set_delivery_state(conn, order_id, customer=True)
+    order = audit_checkout.by_order(conn, order_id)
+    owner = current_app.config["OWNER_EMAIL"]
+    if owner and not order.get("owner_email_sent") and not order["is_test"]:
+        body = (f"Audit order {order_id}\nInvoice {order['invoice_number']}\nOrganization: {order['org']}\n"
+                f"Contact: {order['name']} <{order['email']}>\nBilling address:\n{order['billing_address']}\n"
+                f"Domain: {order['domain']}\nAmount: {order['amount']} {order['currency']}\n"
+                f"PayPal capture: {capture_id}")
+        if mailer.send(owner, f"[Quantum Aether] Audit paid: {order['org']}", body):
+            audit_checkout.set_delivery_state(conn, order_id, owner=True)
+    order = audit_checkout.by_order(conn, order_id)
+    if order["audit_status"] == "NOT_STARTED":
+        audit_checkout.set_audit_result(conn, order_id, "QUEUED")
+        app = current_app._get_current_object()
+        if app.testing:
+            _run_audit_discovery(app, order_id)
+        else:
+            import threading
+            threading.Thread(target=_run_audit_discovery, args=(app, order_id), daemon=True,
+                             name=f"paid-audit-{order_id}").start()
+    return audit_checkout.by_order(conn, order_id)
+
+
+@bp.post("/api/paypal/audit/<order_id>/capture")
+def paypal_capture_audit(order_id):
+    if request.headers.get("Sec-Fetch-Site", "same-origin") not in ("same-origin", "none"):
+        abort(400)
+    if not audit_payments_enabled():
+        return jsonify(error="audit_payments_disabled"), 503
+    conn = db()
+    row = audit_checkout.by_order(conn, order_id)
+    if not row:
+        return jsonify(error="order_not_found"), 404
+    if row["status"] != "COMPLETED":
+        try:
+            order = current_app.extensions["audit_paypal"].capture_order(order_id)
+        except PayPalError as exc:
+            if exc.issue == "INSTRUMENT_DECLINED":
+                return jsonify(error="INSTRUMENT_DECLINED"), 422
+            if exc.issue == "ORDER_NOT_APPROVED":
+                return jsonify(error="order_not_approved"), 409
+            if exc.issue == "ORDER_ALREADY_CAPTURED":
+                try:
+                    order = current_app.extensions["audit_paypal"].get_order(order_id)
+                except (PayPalError, requests.RequestException):
+                    return jsonify(error="paypal_unavailable"), 502
+            else:
+                log.warning("PayPal audit capture failed for %s: %s (%s)", order_id, exc, exc.issue)
+                return jsonify(error="capture_failed"), 502
+        except requests.RequestException:
+            return jsonify(error="paypal_unavailable"), 502
+        status, capture_id = verify_capture(order, row["id"], row["amount"], row["currency"])
+        if status == "FAILED":
+            audit_checkout.set_status(conn, order_id, "FAILED")
+            return jsonify(error="verification_failed"), 402
+        if status == "PENDING":
+            audit_checkout.set_status(conn, order_id, "PENDING")
+            return jsonify(status="PENDING"), 202
+        if not capture_id:
+            return jsonify(error="verification_failed"), 402
+        payer_email = (order.get("payer") or {}).get("email_address")
+    else:
+        capture_id, payer_email = row["capture_id"], None
+    final = _finalize_audit_payment(order_id, capture_id, payer_email)
+    if not final:
+        return jsonify(error="invoice_generation_failed"), 500
+    record_conversion_event("audit_payment_complete", "/audit", is_test=final["is_test"])
+    return jsonify(status="COMPLETED", invoice_number=final["invoice_number"],
+                   audit_status=final["audit_status"],
+                   invoice_email_sent=bool(final["customer_email_sent"])), 200
+
+
+@bp.post("/admin/audit/<audit_id>/retry-delivery")
+def admin_retry_audit_delivery(audit_id):
+    if not is_admin_visitor():
+        return Response(status=401, headers={"WWW-Authenticate": 'Basic realm="Quantum Aether admin", charset="UTF-8"'})
+    if request.headers.get("Sec-Fetch-Site", "same-origin") not in ("same-origin", "none"):
+        abort(400)
+    row = audit_checkout.by_id(db(), audit_id) or abort(404)
+    if row["status"] != "COMPLETED":
+        return jsonify(error="order_not_completed"), 409
+    final = _finalize_audit_payment(row["order_id"], row["capture_id"])
+    return jsonify(status="ok" if final and final["customer_email_sent"] else "email_pending",
+                   customer_email_sent=bool(final and final["customer_email_sent"])), 200
+
+
+@bp.post("/admin/audit/<audit_id>/refund")
+def admin_refund_audit(audit_id):
+    if not is_admin_visitor():
+        return Response(status=401, headers={"WWW-Authenticate": 'Basic realm="Quantum Aether admin", charset="UTF-8"'})
+    if request.headers.get("Sec-Fetch-Site", "same-origin") not in ("same-origin", "none"):
+        abort(400)
+    conn = db()
+    row = audit_checkout.by_id(conn, audit_id)
+    if not row:
+        abort(404)
+    if row["status"] != "COMPLETED" or row["audit_status"] != "ACCESS_ISSUE" or not row["capture_id"]:
+        return jsonify(error="refund_not_eligible"), 409
+    try:
+        refund = current_app.extensions["audit_paypal"].refund_capture(
+            row["capture_id"], request_id=f"audit-refund-{audit_id}")
+    except (PayPalError, requests.RequestException) as exc:
+        log.warning("PayPal audit refund failed for %s: %s", audit_id, exc)
+        return jsonify(error="refund_failed"), 502
+    if refund.get("status") != "COMPLETED" or not refund.get("id"):
+        return jsonify(error="refund_pending"), 202
+    audit_checkout.set_refunded(conn, row["order_id"], refund["id"])
+    mailer = current_app.extensions["mailer"]
+    mailer.send(row["email"], f"Rückerstattung – Audit {row['invoice_number']}",
+                f"Guten Tag {row['name']},\n\nwir haben den vollständigen Betrag von {row['amount']} "
+                f"{row['currency']} über PayPal erstattet, da die Prüfung des Hauptbereichs nicht möglich war.\n\n"
+                f"{legal.OWNER}\n{public_base()}")
+    return jsonify(status="REFUNDED", refund_id=refund["id"]), 200
+
+
+@bp.get("/admin/audit/<audit_id>/invoice")
+def admin_audit_invoice(audit_id):
+    if not is_admin_visitor():
+        return Response(status=401, headers={"WWW-Authenticate": 'Basic realm="Quantum Aether admin", charset="UTF-8"'})
+    row = audit_checkout.by_id(db(), audit_id) or abort(404)
+    path = Path(row.get("invoice_path") or "")
+    if row["status"] not in ("COMPLETED", "REFUNDED") or not path.is_file():
+        abort(404)
+    return send_file(path, mimetype="application/pdf", as_attachment=True,
+                     download_name=f"{row['invoice_number']}.pdf", max_age=0)
+
+
 @bp.post("/api/paypal/packs")
 def paypal_create_pack():
     paypal = current_app.extensions["paypal"]
@@ -795,6 +1147,7 @@ def paypal_create_pack():
         return jsonify(error="paypal_unavailable"), 502
     packs.create(db(), pack_id, order["id"], cfg["PACK_CREDITS"], cfg["PACK_PRICE"], cfg["CURRENCY"], current_lang(),
                  now_iso(), is_test_request())
+    record_conversion_event("agency_start", "/agency")
     return jsonify(id=order["id"]), 201
 
 
@@ -834,6 +1187,7 @@ def paypal_capture_pack(order_id):
         return jsonify(error="verification_failed"), 402
     if status != "COMPLETED":
         return jsonify(status=status), 202
+    record_conversion_event("agency_paid", "/agency", is_test=pack["is_test"])
     pack_url = public_base() + url_for(".pack_page", token=token, lang=pack["lang"])
     mailer = current_app.extensions["mailer"]
     if email and mailer.enabled:
@@ -1229,7 +1583,13 @@ def api_optout_verify():
 @bp.get("/adoption.json")
 def adoption_json():
     snap = adoption_snapshot()
-    body = dict(snap, license="CC BY 4.0", source=public_base() + url_for(".adoption_page"),
+    cutoff = "2026-W47"
+    timeline = [dict(point, methodology="hrr_retry_once" if point["week"] >= cutoff else "hrr_unanswered")
+                for point in snap["timeline"]]
+    body = dict(snap, timeline=timeline, license="CC BY 4.0", source=public_base() + url_for(".adoption_page"),
+                methodology_change={"introduced_week": cutoff, "current_methodology":
+                                    "hrr_retry_once" if snap["week"] >= cutoff else "hrr_unanswered",
+                                    "note": "HelloRetryRequest is retried once on the same connection from 2026-W47; earlier weeks treated retries as undetermined."},
                 method="Two TLS connections to port 443 per hostname from one vantage point; "
                        "pq = the server negotiated X25519MLKEM768 with a Chrome-like ClientHello.")
     return _open_data(current_app.response_class(json.dumps(body, ensure_ascii=False), mimetype="application/json"))
@@ -1238,7 +1598,10 @@ def adoption_json():
 @bp.get("/adoption.csv")
 def adoption_csv():
     snap = adoption_snapshot()
-    response = Response(adoption.to_csv(snap["rows"]), mimetype="text/csv")
+    cutoff = "2026-W47"
+    rows = [dict(row, methodology="hrr_retry_once" if row["week"] >= cutoff else "hrr_unanswered")
+            for row in snap["rows"]]
+    response = Response(adoption.to_csv(rows), mimetype="text/csv")
     response.headers["Content-Disposition"] = f'inline; filename="pq-adoption-{snap["week"]}.csv"'
     return _open_data(response)
 
@@ -1576,10 +1939,25 @@ def admin():
                            card=scorecard.build(conn, current_app.config["OWNER_EMAIL"], monitor.PLANS),
                            events=analytics_db.event_funnel(conn, (dt.date.today() - dt.timedelta(days=13)).isoformat()),
                            by_source=sales_db.funnel_by_source(conn, (dt.date.today() - dt.timedelta(days=30)).isoformat()),
-                           free_alert_counts=dict(conn.execute("SELECT status, COUNT(*) FROM free_alerts GROUP BY status").fetchall())))
+                           free_alert_counts=dict(conn.execute("SELECT status, COUNT(*) FROM free_alerts GROUP BY status").fetchall()),
+                           audit_orders=audit_checkout.recent(conn)))
     # كوكي دائم لسنة: كل زيارات هذا المتصفح لا تُحسب في الإحصاءات.
     response.set_cookie(ADMIN_COOKIE, admin_cookie_value(), max_age=365 * 24 * 3600, httponly=True,
                         secure=request.is_secure, samesite="Lax")
+    return response
+
+
+@bp.get("/transparency")
+def transparency():
+    """Public, privacy-preserving aggregates. Individual scans and customer data stay private."""
+    return render_template("transparency.html", stats=public_stats.build(db()))
+
+
+@bp.get("/api/public-stats.json")
+def public_stats_api():
+    """Machine-readable counterpart to the public transparency page."""
+    response = jsonify(public_stats.build(db()))
+    response.headers["Cache-Control"] = "public, max-age=300"
     return response
 
 
@@ -1662,6 +2040,7 @@ def paypal_create_order():
         return jsonify(error="paypal_unavailable"), 502
     sales_db.create_order(conn, order["id"], scan["id"], cfg["PRICE"], cfg["CURRENCY"], consent_at=now_iso(),
                           is_test=is_test_request())
+    record_conversion_event("checkout_start", "/scan/*")
     return jsonify(id=order["id"]), 201
 
 
@@ -1707,6 +2086,8 @@ def capture_and_record(order_id):
         return "UNAVAILABLE", scan
     status, capture_id = verify_capture(order, scan["id"], row["amount"], row["currency"])
     sales_db.update_order(conn, order_id, status, capture_id)
+    if status == "COMPLETED":
+        record_conversion_event("purchase_complete", "/scan/*", is_test=row["is_test"])
     if status == "COMPLETED" and not row["is_test"]:
         send_report_receipt(scan, row["amount"], row["currency"], order_id, (order.get("payer") or {}).get("email_address"))
     if status == "FAILED":
@@ -1771,6 +2152,7 @@ def api_v1_create_order():
         return jsonify(error="paypal_unavailable"), 502
     sales_db.create_order(conn, order["id"], scan["id"], cfg["PRICE"], cfg["CURRENCY"], consent_at=now_iso(),
                           is_test=is_test_request())
+    record_conversion_event("checkout_start", "/scan/*")
     return jsonify(order_id=order["id"], approve_url=approve_url,
                    status_url=base + url_for(".api_v1_order_status", order_id=order["id"]),
                    amount=cfg["PRICE"], currency=cfg["CURRENCY"]), 201
@@ -1837,6 +2219,7 @@ def crypto_create_order():
     order_id = f"cx-{key}-{secrets.token_urlsafe(9)}"
     sales_db.create_order(conn, order_id, scan["id"], amount, net["token"], consent_at=now_iso(),
                           is_test=is_test_request(), email=email)
+    record_conversion_event("checkout_start", "/scan/*")
     return jsonify(_crypto_order_body(order_id, key, net, amount)), 201
 
 
@@ -1877,6 +2260,7 @@ def crypto_verify(order_id):
         sales_db.update_order(conn, order_id, "COMPLETED", tx_hash)
     except sales_db.sqlite3.IntegrityError:
         return jsonify(error="tx_already_used"), 409
+    record_conversion_event("purchase_complete", "/scan/*", is_test=row["is_test"])
     if not row["is_test"]:
         send_report_receipt(scan, row["amount"], row["currency"], order_id, row["email"])
     owner = current_app.config["OWNER_EMAIL"]
@@ -1963,6 +2347,7 @@ def x402_agent_report(scan_id):
         sales_db.update_order(conn,order_id,"COMPLETED",transaction)
     except sales_db.sqlite3.IntegrityError:
         return jsonify(error="payment_already_consumed"),409
+    record_conversion_event("purchase_complete", "/scan/*", is_test=bool(scan.get("is_test")))
     report_url=public_base()+url_for(".report",token=scan["report_token"])
     response=jsonify(status="COMPLETED",report_url=report_url,order_id=order_id,transaction=transaction,network="eip155:8453",currency="USDC",amount=price)
     response.headers["PAYMENT-RESPONSE"]=base64.b64encode(json.dumps(settlement,separators=(",",":" )).encode()).decode()
@@ -2045,7 +2430,9 @@ def monitoring():
     }
     return render_template("monitoring.html", plans=monitor.PLANS, plan_ids=plan_ids(), mon_jsonld=mon_jsonld,
                            enabled=subscriptions_enabled(), paypal_client_id=cfg["PAYPAL_CLIENT_ID"],
-                           currency=cfg["CURRENCY"], sent=request.args.get("sent"), domain=domain)
+                           currency=cfg["CURRENCY"], usd_per_eur=business_pages.USD_PER_EUR,
+                           fx_rate_date=business_pages.FX_RATE_DATE,
+                           sent=request.args.get("sent"), domain=domain)
 
 
 TRIALS_PER_CLIENT_PER_DAY = 3
@@ -2097,6 +2484,7 @@ def monitor_trial():
             monitor_db.add_domain(conn, account_id, domain)
             account = monitor_db.get_account(conn, account_id)
             if send_dashboard_link(conn, account):
+                record_conversion_event("trial_created")
                 monitor.notify_owner(mailer, current_app.config["OWNER_EMAIL"], "New free trial", account,
                                      f"Domain: {domain} · lang: {current_lang()}")
             else:
@@ -2123,6 +2511,7 @@ def monitor_upgrade():
     if data.get("consent") is not True:
         return jsonify(error="consent_required"), 400
     monitor_db.set_plan(conn, account["id"], plan, now_iso())
+    record_conversion_event("subscription_start", "/monitoring")
     return jsonify(account_id=account["id"], plan_id=plan_ids()[plan])
 
 
@@ -2141,6 +2530,7 @@ def monitor_signup():
         return jsonify(error="consent_required"), 400
     conn = db()
     account_id, _token = monitor_db.create_account(conn, email, plan, current_lang(), consent_at=now_iso())
+    record_conversion_event("subscription_start", "/monitoring")
     raw_domain = str(data.get("domain", "")).strip()
     if raw_domain:
         try:
@@ -2185,6 +2575,7 @@ def monitor_activate():
         log.warning("Subscription %s for %s not active: %s", subscription_id, account["id"], status)
         return jsonify(error="subscription_not_active", status=status), 402
     monitor_db.set_status(conn, account["id"], "ACTIVE", subscription_id)
+    record_conversion_event("subscription_active")
     token = monitor_db.rotate_token(conn, account["id"])  # الرمز يُكشف مرة واحدة فقط، هنا
     url = dashboard_url(token, account["lang"])
     subject, text = monitor.welcome_email(account, url)
@@ -2227,7 +2618,8 @@ def monitor_dashboard(token):
                            plans=monitor.PLANS, plan_ids=plan_ids(), enabled=trial and subscriptions_enabled(),
                            history=monitor_db.check_history(conn, account["id"], limit=60),
                            seeds=assets.summary_for(conn, account["id"]), seed_limit=assets.seed_limit(account),
-                           paypal_client_id=cfg["PAYPAL_CLIENT_ID"], currency=cfg["CURRENCY"])
+                           paypal_client_id=cfg["PAYPAL_CLIENT_ID"], currency=cfg["CURRENCY"],
+                           usd_per_eur=business_pages.USD_PER_EUR, fx_rate_date=business_pages.FX_RATE_DATE)
 
 
 CSV_COLUMNS = ("checked_at_utc", "domain", "grade", "post_quantum", "key_exchange_group", "tls_version", "cert_days_left",
@@ -2611,7 +3003,7 @@ EOF
     return Response(script, mimetype="text/x-shellscript")
 
 
-OG_VERSION = "2"  # 2: new domain ather-quantum.com in the footer (v1 images said ather-quatum.cloud); غيّره حين يتغير تصميم الصورة فتُبنى من جديد
+OG_VERSION = "2"  # 2: new domain ather-quantum.com in the footer (v1 images said ather-quantum.com); غيّره حين يتغير تصميم الصورة فتُبنى من جديد
 
 
 def _og_response(key, build):
@@ -2716,6 +3108,7 @@ def _sitemap_pages():
     pages += [(f"/reports/{rid}", reports.load(rid)["published"], de_langs) for rid in reports.ids()]
     pages.append(("/compare", _template_day("compare.html"), site_langs))
     pages.append(("/agents", agent_discovery.UPDATED, site_langs))
+    pages.append(("/transparency", _template_day("transparency.html"), site_langs))
     legal_date = os.path.getmtime(os.path.join(BASE_DIR, "legal.py"))
     legal_day = dt.datetime.fromtimestamp(legal_date, dt.timezone.utc).date().isoformat()
     pages += [(f"/{slug}", legal_day, legal_langs) for slug in legal.PAGES]
@@ -2872,7 +3265,7 @@ def feed():
 
 @bp.get("/llms.txt")
 def llms_txt():
-    return Response(render_template("llms.txt", base=public_base(), price=current_app.config["PRICE"],
+    return Response(render_template("llms.txt", base=public_base(), **public_price_labels(),
                                     retry_count=len(study_retry_domains())),
                     mimetype="text/plain")
 
@@ -2931,7 +3324,7 @@ def llms_full_txt():
     """كل المحتوى المفيد في ملف واحد: ملخص llms.txt + أرقام المتتبّع الحية + نص الأدلة كاملاً.
     زواحف الذكاء الاصطناعي ووكلاؤه يقرؤونه بطلب واحد بدل عشرات الصفحات."""
     base = public_base()
-    parts = [render_template("llms.txt", base=base, price=current_app.config["PRICE"]).strip()]
+    parts = [render_template("llms.txt", base=base, **public_price_labels()).strip()]
     snap = cached_snapshot()
     if snap:
         lines = [f"\n\n## Live adoption figures (week {snap['week']}, scanned {snap['scanned_at'][:10]})\n",
@@ -3023,7 +3416,7 @@ def track_event():
         salt = current_app.config["HASH_SALT"].encode()
         visitor = hmac.new(salt, f"{day}|{request.remote_addr}|{ua}".encode(), hashlib.sha256).hexdigest()[:16]
         analytics_db.record_event(db(), day, str(data.get("name", ""))[:20], page, lang, visitor,
-                                  not ua or bool(analytics_db.BOT_RE.search(ua)))
+                                  not ua or bool(analytics_db.BOT_RE.search(ua)), is_test_request())
     except Exception:  # الإحصاءات ثانوية
         log.exception("event tracking failed")
     return "", 204

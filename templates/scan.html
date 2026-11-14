@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% set kx = r.key_exchange %}{% set cert = r.certificate %}
+{% set dbase = r.domain[4:] if r.domain.startswith("www.") and r.domain.count(".") >= 2 else r.domain %}
 {% block title %}{{ r.domain }} · {{ t.result_title }}{% endblock %}
 {% block og_image %}{{ abs_url('site.og_scan', scan_id=scan.id) }}{% endblock %}
 {% block head %}<meta name="robots" content="noindex">{% endblock %}
@@ -10,10 +11,58 @@
     <p class="muted">{{ t.result_title }}</p>
     <h1 dir="ltr" class="domain">{{ r.domain }}</h1>
     <p class="grade-text">{{ sx.undetermined if observation == 'undetermined' else t.grades[r.grade] }}</p>
+    <p class="small"><a href="{{ grade_guide_url }}">{{ 'كيف حُسبت الدرجة؟' if lang == 'ar' else ('How is this grade determined?' if lang == 'en' else 'Wie wird diese Note vergeben?') }}</a></p>
     <p class="observation-status">{{ sx[observation] }}</p>
     <p class="muted small">{{ t.scanned_at }}: <span dir="ltr">{{ r.scanned_at }}</span></p>
   </div>
 </section>
+
+{% if r.grade in ['B', 'C'] %}
+<section class="card" id="scan-follow-up">
+  {% if request.args.get('followup') == 'received' %}
+  <p class="notice" role="status">{{ 'سُجّل طلبك. سنراجعه قبل إرسال رسالة متابعة واحدة.' if lang == 'ar' else 'Your request is recorded. We will review it before sending a single follow-up email.' }}</p>
+  {% elif request.args.get('followup') == 'not-saved' %}
+  <p class="notice" role="status">{{ 'لم يُسجّل الطلب. أدخل بريدك وحدد مربع الموافقة لطلب المتابعة.' if lang == 'ar' else 'No request was recorded. Enter an email and select the consent box to request follow-up.' }}</p>
+  {% endif %}
+  <h2>{{ 'هل ترغب أن يساعدك فريقنا في معالجة هذه النتائج؟' if lang == 'ar' else 'Would you like our team to help address these results?' }}</h2>
+  <p>{{ 'يمكنك طلب رسالة واحدة تتضمن مراجعة أو خطة إصلاح عملية لهذا الفحص. تصف درجة B أو C إعداد TLS الذي رُصد، ولا تعني أن الموقع مخترق.' if lang == 'ar' else 'Optionally request one email with a review or practical remediation plan for this scan. A B/C grade describes the observed TLS configuration; it does not mean the site is compromised.' }}</p>
+  <form method="post" action="{{ url_for('site.scan_followup_submit', scan_id=scan.id, lang=lang) }}">
+    <label>{{ 'البريد الإلكتروني' if lang == 'ar' else 'Email address' }}<br><input type="email" name="email" required maxlength="254" autocomplete="email" dir="ltr"></label>
+    <label>{{ 'بلد الشركة (رمز ISO من حرفين)' if lang == 'ar' else 'Company country (2-letter ISO code)' }}<br><input type="text" name="country_code" required maxlength="2" pattern="[A-Za-z]{2}" autocomplete="country" placeholder="US"></label>
+    <label>{{ 'صفة المستلم' if lang == 'ar' else 'Recipient type' }}<br><select name="recipient_type" required><option value="">{{ 'اختر…' if lang == 'ar' else 'Choose…' }}</option><option value="registered_company">{{ 'شركة مسجلة' if lang == 'ar' else 'Registered company' }}</option><option value="sole_trader">{{ 'صاحب عمل فردي' if lang == 'ar' else 'Sole trader' }}</option><option value="individual_contact">{{ 'شخص للتواصل لدى شركة' if lang == 'ar' else 'Individual contact at a company' }}</option></select></label>
+    <label class="consent"><input type="checkbox" name="consent" value="1" required>
+      {{ 'أوافق على استخدام Quantum Aether لهذا البريد ودرجة الفحص ونتائجه لإرسال رسالة متابعة واحدة عن الإصلاحات الفنية والخدمات المرتبطة بها. يمكنني سحب موافقتي في أي وقت عبر رابط إلغاء الاشتراك في الرسالة. راجع ' if lang == 'ar' else 'I agree that Quantum Aether may use this email and this scan\'s grade and findings to send me one follow-up email about technical remediation and related services. I can withdraw at any time using the unsubscribe link in the email. See our ' }}<a href="{{ url_for('site.legal_page', slug='datenschutz', lang=legal_lang) }}" target="_blank">{{ 'إشعار الخصوصية' if lang == 'ar' else 'privacy notice' }}</a>.</label>
+    <label hidden aria-hidden="true">{{ 'اترك هذا الحقل فارغًا' if lang == 'ar' else 'Leave this field empty' }}<input name="website" tabindex="-1" autocomplete="off"></label>
+    <button type="submit">{{ 'طلب متابعة فنية' if lang == 'ar' else 'Request technical follow-up' }}</button>
+  </form>
+</section>
+{% endif %}
+
+{% set alert_card %}
+<section class="card highlight" id="alert">
+  <h2>{{ t.alert_card_title }}</h2>
+  <p>{{ t.alert_card_sub.format(domain=r.domain) }}</p>
+  <form method="post" action="{{ url_for('site.alerts_subscribe', lang=lang) }}" class="alert-form">
+    <input type="hidden" name="domain" value="{{ r.domain }}">
+    <input type="hidden" name="consent" value="1">
+    <div class="scan-row">
+      <input type="email" name="email" required maxlength="254" dir="ltr" autocomplete="email" placeholder="you@{{ dbase }}"
+             aria-label="{{ t.alert_email_label }}">
+      <button type="submit" data-ev="alert_signup">{{ t.alert_button }}</button>
+    </div>
+    <p class="muted small">{{ t.alert_consent }} (<a href="{{ url_for('site.legal_page', slug='datenschutz', lang=legal_lang) }}" target="_blank">{{ t.legal_privacy }}</a>)</p>
+  </form>
+  <p><a class="button-link" href="{{ url_for('site.monitoring', domain=r.domain, lang=lang) }}" data-ev="monitoring_cta">{{ t.mon_shield_cta.format(domain=r.domain) }}</a></p>
+</section>
+{% endset %}
+{% set immediate_a_offer = observation == 'observed_pq' and r.grade == 'A' %}
+{% if immediate_a_offer %}
+<section class="card highlight" id="grade-a-next-step">
+  <h2>{{ 'ممتاز — رصدنا تبادلاً هجينًا مقاومًا للكم.' if lang == 'ar' else 'Excellent — hybrid post-quantum key exchange was observed.' }}</h2>
+  <p>{{ 'حافظ على النتيجة: فعّل فحصًا أسبوعيًا مجانيًا وتنبيهًا عند تراجع TLS. هذه ملاحظة لاتصال واحد من نقطة رصد واحدة، وليست تدقيقًا أمنيًا شاملًا.' if lang == 'ar' else 'Keep this result: enable free weekly checks and get an alert if TLS regresses. This is one connection observed from one vantage point, not a full security audit.' }}</p>
+</section>
+{{ alert_card }}
+{% endif %}
 
 <section class="card">
   <h2>{{ t.summary_title }}</h2>
@@ -28,7 +77,6 @@
 </section>
 {% include "_endpoints.html" %}
 
-{% set dbase = r.domain[4:] if r.domain.startswith("www.") and r.domain.count(".") >= 2 else r.domain %}
 {# نتيجة تقليدية (غير محمية): أول ما يراه الزائر بعد الملخص هو المراقبة المجانية، بنموذج في الصفحة نفسها #}
 {% if observation == 'observed_classical' and not paid %}
 <section class="card highlight" id="scan-trial">
@@ -98,8 +146,8 @@
 
 {% set buy_card %}
 <section class="card buy" id="buy">
-  <h2>{{ t.buy_title }} — ${{ price }}</h2>
-  <p class="one-time">{{ t.one_time }} · <a href="{{ url_for('site.agency_page', lang=lang) }}" data-ev="agency_cta">{{ t.agency_home_link }}</a></p>
+  <h2>{{ t.buy_title }} — {{ price }} {{ currency }}{% if currency == 'USD' %} · ≈ €{{ '%.2f'|format(price|float / usd_per_eur) }}{% endif %}</h2>
+  <p class="one-time">{{ t.one_time }} · <a href="{{ url_for('site.agency_page', lang=lang) }}" data-ev="agency_cta">{{ t.agency_home_link.format(credits=agency_credits, price_dual=agency_price_dual) }}</a></p>
   <ul class="ticks">{% for item in t.paid_items %}<li>{{ item }}</li>{% endfor %}</ul>
   <p>
     <a class="button-link" href="{{ url_for('site.executive_brief', domain=r.domain, lang=lang) }}" target="_blank" data-ev="exec_brief">{{ t.exec_brief_cta }}</a>
@@ -147,23 +195,6 @@
   {% endif %}
 </section>
 {% endset %}
-{% set alert_card %}
-<section class="card" id="alert">
-  <h2>{{ t.alert_card_title }}</h2>
-  <p>{{ t.alert_card_sub.format(domain=r.domain) }}</p>
-  <form method="post" action="{{ url_for('site.alerts_subscribe', lang=lang) }}" class="alert-form">
-    <input type="hidden" name="domain" value="{{ r.domain }}">
-    <input type="hidden" name="consent" value="1">
-    <div class="scan-row">
-      <input type="email" name="email" required maxlength="254" dir="ltr" autocomplete="email" placeholder="you@{{ dbase }}"
-             aria-label="{{ t.alert_email_label }}">
-      <button type="submit" data-ev="alert_signup">{{ t.alert_button }}</button>
-    </div>
-    <p class="muted small">{{ t.alert_consent }} (<a href="{{ url_for('site.legal_page', slug='datenschutz', lang=legal_lang) }}" target="_blank">{{ t.legal_privacy }}</a>)</p>
-  </form>
-  <p><a class="button-link" href="{{ url_for('site.monitoring', domain=r.domain, lang=lang) }}" data-ev="monitoring_cta">{{ t.mon_shield_cta.format(domain=r.domain) }}</a></p>
-</section>
-{% endset %}
 {% set badge_card %}
 <section class="card">
   <h2>{{ t.badge_title }}</h2>
@@ -196,11 +227,10 @@
    otherwise the fix (paid report) comes first. #}
 {% if r.grade == 'A' and not paid %}
 {{ badge_card }}
-{{ alert_card }}
 {{ buy_card }}
 {% else %}
 {{ buy_card }}
-{{ alert_card }}
+{% if not immediate_a_offer %}{{ alert_card }}{% endif %}
 {{ badge_card }}
 {% endif %}
 

@@ -32,7 +32,7 @@
     <div class="who">
       <p class="eyebrow">{{ L('ملخص تنفيذي للإدارة (CISO / CTO)', 'Executive Brief (CISO / CTO / Management)', 'Management-Zusammenfassung (CISO / CTO)') }}</p>
       <h1 class="domain" title="{{ domain }}">{{ domain }}</h1>
-      {% if summary %}<p class="grade-text">{{ t.grades[summary.grade] }}</p>{% endif %}
+      {% if summary %}<p class="grade-text">{{ t.grades[summary.grade] }}</p><p class="small"><a href="{{ grade_guide_url }}">{{ 'Grade definitions' if lang != 'ar' else 'تعريف الدرجات' }}</a></p>{% endif %}
     </div>
   </div>
   <div class="brief-actions no-print">
@@ -88,20 +88,20 @@
   {% if ar %}
   <p>تحديثات الخوادم أو تغييرات شبكة توزيع المحتوى <bdi class="nw">(CDN)</bdi> قد تُسقط التشفير المقاوم للكم دون أن يلاحظ أحد، كما أن النطاقات الفرعية الحساسة <bdi class="nw">(api, auth, mail, vpn)</bdi> كثيراً ما تتجاوز حماية الـ<bdi>CDN</bdi>.</p>
   <ul class="brief-options">
-    <li><strong>الخيار 1 — المراقبة اليومية للمؤسسات، ابتداءً من 29 دولاراً شهرياً:</strong> فحص يومي آلي للنطاق الرئيسي والنطاقات الفرعية، وتنبيه فوري عند أي تراجع صامت أو قرب انتهاء شهادة، ولوحة امتثال قابلة للطباعة.</li>
-    <li><strong>الخيار 2 — التقرير الهندسي الكامل لمرة واحدة، 49 دولاراً:</strong> خطوات الترقية التفصيلية لخوادم <bdi>Nginx</bdi> و<bdi>Apache</bdi> و<bdi>Caddy</bdi> و<bdi>Cloudflare</bdi> و<bdi>AWS</bdi>.</li>
+    <li><strong>الخيار 1 — المراقبة اليومية للمؤسسات، ابتداءً من <bdi>{{ starter_price }} {{ currency }}{% if currency == 'USD' %} (≈ €{{ '%.2f'|format(starter_price|float / usd_per_eur) }}){% endif %}</bdi> شهرياً:</strong> فحص يومي آلي للنطاق الرئيسي والنطاقات الفرعية، وتنبيه فوري عند أي تراجع صامت أو قرب انتهاء شهادة، ولوحة امتثال قابلة للطباعة.</li>
+    <li><strong>الخيار 2 — التقرير الهندسي الكامل لمرة واحدة، <bdi>{{ report_price }} {{ currency }}{% if currency == 'USD' %} (≈ €{{ '%.2f'|format(report_price|float / usd_per_eur) }}){% endif %}</bdi>:</strong> خطوات الترقية التفصيلية لخوادم <bdi>Nginx</bdi> و<bdi>Apache</bdi> و<bdi>Caddy</bdi> و<bdi>Cloudflare</bdi> و<bdi>AWS</bdi>.</li>
   </ul>
   {% elif de %}
   <p>Routine-Updates oder CDN-Änderungen können Post-Quanten-TLS unbemerkt deaktivieren (Silent TLS Downgrade), und direkte Subdomains (api, auth, mail, vpn) umgehen oft das CDN.</p>
   <ul class="brief-options">
-    <li><strong>Option 1 — Tägliche Unternehmensüberwachung (ab 29 $/Monat):</strong> Tägliche automatische Prüfung von Hauptdomain und Subdomains, Sofortwarnung bei stillen Rückschritten und druckbares Compliance-Protokoll.</li>
-    <li><strong>Option 2 — Einmaliger vollständiger Behebungsbericht (49 $):</strong> Genaue Konfigurationsschritte für Nginx, Apache, Caddy, Cloudflare und AWS.</li>
+    <li><strong>Option 1 — Tägliche Unternehmensüberwachung (ab <bdi>{{ starter_price }} {{ currency }}{% if currency == 'USD' %} (≈ €{{ '%.2f'|format(starter_price|float / usd_per_eur) }}){% endif %}</bdi>/Monat):</strong> Tägliche automatische Prüfung von Hauptdomain und Subdomains, Sofortwarnung bei stillen Rückschritten und druckbares Compliance-Protokoll.</li>
+    <li><strong>Option 2 — Einmaliger vollständiger Behebungsbericht (<bdi>{{ report_price }} {{ currency }}{% if currency == 'USD' %} (≈ €{{ '%.2f'|format(report_price|float / usd_per_eur) }}){% endif %}</bdi>):</strong> Genaue Konfigurationsschritte für Nginx, Apache, Caddy, Cloudflare und AWS.</li>
   </ul>
   {% else %}
   <p>Routine server updates or CDN changes can silently drop post-quantum encryption (Silent TLS Downgrade), and direct subdomains (api, auth, mail, vpn) frequently bypass CDN edge protection.</p>
   <ul class="brief-options">
-    <li><strong>Option 1 — Enterprise Daily Monitoring (from $29/month):</strong> Automated daily checks across primary and subdomain hosts, instant silent-downgrade alerts, certificate expiry warnings, and a printable compliance log.</li>
-    <li><strong>Option 2 — One-Time Full Remediation Report ($49):</strong> Exact step-by-step configuration for Nginx, Apache, Caddy, Cloudflare, and AWS.</li>
+    <li><strong>Option 1 — Enterprise Daily Monitoring (from <bdi>{{ starter_price }} {{ currency }}{% if currency == 'USD' %} (≈ €{{ '%.2f'|format(starter_price|float / usd_per_eur) }}){% endif %}</bdi>/month):</strong> Automated daily checks across primary and subdomain hosts, instant silent-downgrade alerts, certificate expiry warnings, and a printable compliance log.</li>
+    <li><strong>Option 2 — One-Time Full Remediation Report (<bdi>{{ report_price }} {{ currency }}{% if currency == 'USD' %} (≈ €{{ '%.2f'|format(report_price|float / usd_per_eur) }}){% endif %}</bdi>):</strong> Exact step-by-step configuration for Nginx, Apache, Caddy, Cloudflare, and AWS.</li>
   </ul>
   {% endif %}
   {% set act_url = url_for('site.monitoring', domain=domain, lang=lang, _external=True) %}

@@ -79,6 +79,11 @@ class PayPalClient:
     def get_order(self, order_id):
         return self._request("GET", f"/v2/checkout/orders/{order_id}")
 
+    def refund_capture(self, capture_id, request_id, note="Service could not be delivered"):
+        """Issue a full refund for a verified capture. Empty body means full refund in PayPal Payments v2."""
+        return self._request("POST", f"/v2/payments/captures/{capture_id}/refund",
+                             json={"note_to_payer": note}, request_id=request_id)
+
     # ------------------------------------------------------------ الاشتراكات (Subscriptions v1)
 
     def create_product(self, name, description, home_url):

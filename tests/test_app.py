@@ -1,4 +1,6 @@
 import base64
+import os
+import sqlite3
 import shutil
 import tempfile
 import unittest
@@ -10,6 +12,7 @@ import bio_archive_report
 import quantum_saas_app
 import quantum_vuln_scanner
 import sales_db
+import scan_followups
 from paypal_client import PayPalError
 
 class FakeMailer:
@@ -116,6 +119,36 @@ class PageTests(AppTestCase):
         page = self.client.get(response.headers["Location"]).get_data(as_text=True)
         self.assertIn("example.com", page)
         self.assertIn("paypal-button-container", page)
+
+    def test_b_c_followup_requires_unchecked_explicit_consent_and_unsubscribe_works(self):
+        response = self.client.post("/scan?lang=en", data={"domain": "https://Example.com/x"})
+        scan_id = response.headers["Location"].split("/scan/")[1].split("?")[0]
+        page = self.client.get(response.headers["Location"]).get_data(as_text=True)
+        self.assertIn("scan-follow-up", page)
+        self.assertIn('name="consent" value="1" required', page)
+        self.assertIn('name="country_code" required', page)
+        arabic_page = self.client.get(f"/scan/{scan_id}?lang=ar").get_data(as_text=True)
+        self.assertIn("هل ترغب أن يساعدك فريقنا", arabic_page)
+        db_path = os.path.join(self.data_dir, "quantum_saas.db")
+        form = {"email": "contact@example.com", "country_code": "US", "recipient_type": "registered_company"}
+        self.client.post(f"/scan/{scan_id}/follow-up", data=form)
+        conn = sqlite3.connect(db_path)
+        self.assertEqual(conn.execute("SELECT count(*) FROM scan_followups").fetchone()[0], 0)
+        form["consent"] = "1"
+        response = self.client.post(f"/scan/{scan_id}/follow-up", data=form)
+        self.assertEqual(response.status_code, 303)
+        conn.row_factory = sqlite3.Row
+        row = conn.execute("SELECT * FROM scan_followups").fetchone()
+        self.assertIsNotNone(row)
+        self.assertEqual(row["consent_source"], "scan-result")
+        self.assertEqual(row["country_code"], "US")
+        self.assertEqual(row["recipient_type"], "registered_company")
+        self.assertIsNone(row["sent_at"])
+        token = scan_followups.unsubscribe_token(row, self.app.config["HASH_SALT"])
+        unsub = self.client.post(f"/scan-followup/unsubscribe/{row['id']}?token={token}")
+        self.assertEqual(unsub.status_code, 200)
+        self.assertEqual(conn.execute("SELECT status FROM scan_followups").fetchone()[0], "UNSUBSCRIBED")
+        conn.close()
 
     def test_invalid_domain_shows_error(self):
         response = self.client.post("/scan?lang=en", data={"domain": "localhost"})

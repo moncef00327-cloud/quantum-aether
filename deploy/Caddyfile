@@ -11,7 +11,7 @@ scanning.ather-quantum.com {
     redir https://ather-quantum.com/scanning 301
 }
 
-ather-quatum.cloud, www.ather-quatum.cloud {
+ather-quantum.com, www.ather-quantum.com {
     @machine path /api/* /mcp /mcp/* /sse /sse/* /messages /messages/*
     handle @machine {
         # Old published clients (MCP 1.0.1, CLI) use Python urllib, which cannot follow 307/308 for POST:
@@ -24,6 +24,6 @@ ather-quatum.cloud, www.ather-quatum.cloud {
     }
 }
 
-scanning.ather-quatum.cloud {
+scanning.ather-quantum.com {
     redir https://ather-quantum.com/scanning 301
 }

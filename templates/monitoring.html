@@ -14,6 +14,18 @@
   <ul class="ticks">{% for item in t.mon_features %}<li>{{ item }}</li>{% endfor %}</ul>
 </section>
 
+<section class="card">
+  <h2>{{ 'حدود الباقات والبيانات' if lang == 'ar' else ('Plan- und Datengrenzen' if lang == 'de' else 'Plan and data limits') }}</h2>
+  <table class="data">
+    <tr><th>{{ 'الخطة' if lang == 'ar' else ('Plan' if lang == 'de' else 'Plan') }}</th><th>{{ 'المضيفون المشمولون' if lang == 'ar' else ('Enthaltene Hosts' if lang == 'de' else 'Included hosts') }}</th><th>{{ 'مدة الفحص' if lang == 'ar' else ('Prüfintervall' if lang == 'de' else 'Check interval') }}</th></tr>
+    <tr><td>{{ 'تجربة مجانية' if lang == 'ar' else ('Testphase' if lang == 'de' else 'Free trial') }}</td><td>10</td><td>{{ 'يومي لمدة 14 يوماً' if lang == 'ar' else ('Täglich für 14 Tage' if lang == 'de' else 'Daily for 14 days') }}</td></tr>
+    <tr><td>Starter</td><td>10</td><td>{{ 'يومي' if lang == 'ar' else ('Täglich' if lang == 'de' else 'Daily') }}</td></tr>
+    <tr><td>Business</td><td>100</td><td>{{ 'يومي' if lang == 'ar' else ('Täglich' if lang == 'de' else 'Daily') }}</td></tr>
+  </table>
+  <p>{{ 'تُحتسب المضيفات الفرعية المكتشفة والمستجيبة ضمن الحد نفسه، ولا تزيد السعة بسبب كونها نطاقات فرعية.' if lang == 'ar' else ('Erreichbare, automatisch erkannte Subdomains zählen zum selben Limit und erhöhen die Kapazität nicht.' if lang == 'de' else 'Automatically discovered, responding subdomains count toward the same host limit; they do not add extra capacity.') }}</p>
+  <p>{{ 'عند انتهاء التجربة تتوقف الفحوص اليومية وتبقى بياناتها محفوظة 90 يوماً؛ ثم تُحذف إن لم يبدأ اشتراك.' if lang == 'ar' else ('Nach Testende pausieren tägliche Checks. Die Daten bleiben 90 Tage gespeichert und werden danach ohne Abonnement gelöscht.' if lang == 'de' else 'After the trial, daily checks stop. Trial data is retained for 90 days and then deleted if no subscription starts.') }}</p>
+</section>
+
 <section class="card highlight" id="trial">
   <h2>{{ t.trial_card_title }}</h2>
   <p>{{ t.trial_card_sub }}</p>
@@ -43,12 +55,13 @@
   <div class="grid-2">
     {% for name, p in plans.items() %}
     <div class="price-box{% if name == 'business' %} highlight{% endif %}">
-      <h3>{{ p.name }} <span class="tag">${{ p.price | replace(".00", "") }}</span> <span class="muted small">{{ t.mon_per_month }}</span></h3>
+      <h3>{{ p.name }} <span class="tag">{{ p.price }} {{ currency }}{% if currency == 'USD' %} · ≈ €{{ '%.2f'|format(p.price|float / usd_per_eur) }}{% endif %}</span> <span class="muted small">{{ t.mon_per_month }}</span></h3>
       <p>{{ t.mon_domains.format(n=p.domains) }}</p>
       {% if enabled %}<div class="paypal-sub" data-plan="{{ name }}"></div>{% endif %}
     </div>
     {% endfor %}
   </div>
+  {% if currency == 'USD' %}<p class="muted small">{{ 'تحويل اليورو تقريبي وفق سعر البنك المركزي الأوروبي في ' if lang == 'ar' else ('EUR-Umrechnung nach EZB-Referenzkurs vom ' if lang == 'de' else 'EUR amounts are indicative at the ECB reference rate dated ') }}<time datetime="{{ fx_rate_date }}">{{ fx_rate_date }}</time>; {{ 'الخصم الفعلي بالدولار.' if lang == 'ar' else ('abgerechnet wird in USD.' if lang == 'de' else 'the actual charge is in USD.') }} <a href="https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html" rel="nofollow">ECB</a></p>{% endif %}
   {% if enabled %}
   <p id="sub-message" class="form-error" role="status"
      data-msg-email="{{ t.mon_email_first }}" data-msg-error="{{ t.mon_error }}" data-msg-consent="{{ t.consent_missing }}"></p>

@@ -16,7 +16,8 @@ CREATE INDEX IF NOT EXISTS pageviews_day ON pageviews (day);
 
 BOT_RE = re.compile(r"bot|crawl|spider|slurp|curl|wget|python|httpclient|go-http|java/|headless|scan|censys|"
                     r"preview|monitor|verification|facebookexternalhit|embedly|whatsapp|telegram", re.I)
-TRACKED_PREFIXES = ("/", "/monitoring", "/guides", "/study", "/research", "/scan/", "/deadlines", "/site/", "/adoption", "/compare")
+TRACKED_PREFIXES = ("/", "/monitoring", "/guides", "/study", "/research", "/scan/", "/deadlines", "/site/", "/adoption", "/compare",
+                    "/pricing", "/business", "/agency", "/sample-report", "/audit")
 
 
 def init(conn):
@@ -118,6 +119,9 @@ EVENT_NAMES = ("focus", "type", "example", "submit", "result", "lang", "monitori
                "business_cta", "agents_cta", "explore",
                "disc_start", "disc_email", "cfg_copy",
                "trial_start",  # زر «ابدأ التجربة المجانية» في /monitoring
+               "trial_created", "subscription_start", "subscription_active",
+               "checkout_start", "purchase_complete",  # أحداث الخادم بعد إنشاء الطلب أو تأكيد الدفع
+               "agency_start", "agency_paid",  # تحويلات باقة تقارير العملاء لمقدمي الخدمات
                "history_csv",  # تنزيل سجل الفحوص من لوحة المراقبة
                "seed_add")  # إضافة نطاق أساسي لجرد الأصول
 EVENTS_SCHEMA = """
@@ -138,7 +142,7 @@ def init_events(conn):
     conn.executescript(EVENTS_SCHEMA)
 
 
-def record_event(conn, day, name, page, lang, visitor, is_bot):
+def record_event(conn, day, name, page, lang, visitor, is_bot, is_test=False):
     """حدث واحد لكل (زائر، يوم، اسم، صفحة): التكرار لا يضخّم الأرقام."""
     if name not in EVENT_NAMES:
         return False
@@ -146,8 +150,8 @@ def record_event(conn, day, name, page, lang, visitor, is_bot):
         exists = conn.execute("SELECT 1 FROM events WHERE day = ? AND name = ? AND page = ? AND visitor = ? LIMIT 1",
                               (day, name, page, visitor)).fetchone()
         if not exists:
-            conn.execute("INSERT INTO events (day, name, page, lang, visitor, is_bot) VALUES (?, ?, ?, ?, ?, ?)",
-                         (day, name, page, lang, visitor, int(is_bot)))
+            conn.execute("INSERT INTO events (day, name, page, lang, visitor, is_bot, is_test) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                         (day, name, page, lang, visitor, int(is_bot), int(is_test)))
     return True
 
 

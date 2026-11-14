@@ -9,10 +9,12 @@ import adoption
 import analytics_db
 import free_alerts
 import audit
+import audit_checkout
 import discovery
 import packs
 import assets
 import monitor_db
+import scan_followups
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS scans (
@@ -63,10 +65,12 @@ def connect(path: str) -> sqlite3.Connection:
     free_alerts.init(conn)
     discovery.init(conn)
     audit.init(conn)
+    audit_checkout.init(conn)
     packs.init(conn)
     analytics_db.init(conn)
     analytics_db.init_events(conn)
     adoption.init(conn)
+    scan_followups.init(conn)
     _migrate(conn)
     return conn
 

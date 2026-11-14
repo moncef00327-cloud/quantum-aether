@@ -540,7 +540,7 @@ def snapshot(conn, watchlists=None):
     }
 
 
-EXPORT_FIELDS = ["week", "domain", "rank", "sector", "ok", "grade", "grp", "tls", "pq", "unsure", "asn", "as_name", "scanned_at"]
+EXPORT_FIELDS = ["week", "methodology", "domain", "rank", "sector", "ok", "grade", "grp", "tls", "pq", "unsure", "asn", "as_name", "scanned_at"]
 
 
 def to_csv(rows):

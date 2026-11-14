@@ -26,6 +26,13 @@ TEXTS = {
         "study_notable_note": "هذه النطاقات تتفق مع المتصفحات على تبادل مفاتيح تقليدي فقط، فحركتها معرّضة لهجوم «احفظ الآن، فُكّ لاحقاً».",
         "study_method_title": "المنهجية",
         "study_method": "لكل نطاق (بلا www) أجرينا اتصالين بالمنفذ 443 من خادم واحد: الأول يعرض X25519MLKEM768 مع X25519 كما يفعل Chrome، والثاني اتصال TLS عادي لقراءة الشهادة. «لم يُجب» تعني أن النطاق ليس له عنوان عام أو لا يقدم HTTPS على اسمه المجرد، وأغلبها نطاقات بنية تحتية وCDN. نتائج نقطة رصد واحدة قد تختلف عن مناطق أخرى.",
+        "grade_definitions": [
+            ("A", "رُصد تبادل مفاتيح ما بعد الكم", "TLS 1.3، تفاوض X25519MLKEM768 من أول محاولة، ولا توجد مشكلة حرجة."),
+            ("B", "آمن اليوم، لكنه معرّض لهجوم احفظ الآن وفك لاحقاً", "اتصال TLS 1.3 بتبادل تقليدي، أو تعذّر تأكيد التبادل الهجين مع بقاء إصدار TLS 1.3."),
+            ("C", "يحتاج ترقية: لا يدعم TLS 1.3", "TLS 1.2 دون مشكلة حرجة."),
+            ("F", "مشكلة حرجة يجب إصلاحها أولاً", "شهادة غير صالحة، أو RSA أضعف من 2048 بت، أو تبادل RSA ثابت، أو بروتوكول أقدم من TLS 1.2."),
+        ],
+        "grade_scope": "تقيس الدرجة اتصال HTTPS واحداً على المنفذ 443، وليست ضماناً أمنياً شاملاً. أي مشكلة حرجة تجعل الدرجة F ولو رُصد التبادل الهجين. انتهاء الشهادة خلال أقل من 14 يوماً تحذير لا يغيّر الدرجة. مفاتيح شهادات RSA وECDSA معلومة مستقبلية ولا تخفّضها. خلف CDN، تخص النتيجة خادم الحافة لا الخادم الأصلي.",
         "study_full_table": "كل النتائج",
         "study_download": "تنزيل البيانات (JSON)",
         "rank": "الترتيب",
@@ -188,6 +195,13 @@ TEXTS = {
         "study_notable_note": "These domains negotiate classical key exchange only, so their traffic is exposed to harvest-now-decrypt-later.",
         "study_method_title": "Methodology",
         "study_method": "For each bare domain (no www) we made two connections to port 443 from a single server: one offering X25519MLKEM768 plus X25519 as Chrome does, and one ordinary TLS connection to read the certificate. \"Did not answer\" means the name has no public address or serves no HTTPS on the bare domain; most are infrastructure and CDN names. Results are from one vantage point and may differ elsewhere.",
+        "grade_definitions": [
+            ("A", "Post-quantum key exchange observed", "TLS 1.3, X25519MLKEM768 negotiated on the first attempt, and no critical finding."),
+            ("B", "Secure today, exposed to harvest-now-decrypt-later", "TLS 1.3 with classical key exchange, or hybrid exchange could not be confirmed while TLS 1.3 remained negotiated."),
+            ("C", "Upgrade needed: no TLS 1.3", "TLS 1.2 with no critical finding."),
+            ("F", "Critical issue to fix first", "Invalid certificate, RSA key below 2048 bits, static RSA key exchange, or protocol older than TLS 1.2."),
+        ],
+        "grade_scope": "The grade measures one HTTPS connection on port 443; it is not a comprehensive security guarantee. Any critical finding makes the grade F, even if hybrid exchange was observed. A certificate expiring in under 14 days triggers a warning without changing the grade. RSA and ECDSA certificate keys are informational and do not lower it. Behind a CDN, the result describes the CDN edge, not the origin.",
         "study_full_table": "All results",
         "study_download": "Download the data (JSON)",
         "rank": "Rank",
@@ -561,7 +575,7 @@ TEXTS["ar"].update({
         "cancelled": "تم إلغاء الاشتراك.",
         "cancel_failed": "تعذّر الإلغاء الآن عبر PayPal. حاول لاحقاً أو ألغه من حسابك في PayPal.",
     },
-    "mon_cta_home": "للشركات: مراقبة يومية لعدة نطاقات مع تنبيهات بالبريد، من 29$ شهرياً",
+    "mon_cta_home": "للشركات: مراقبة يومية للنطاقات وتنبيهات عند تغيّر الإعدادات؛ راجع الأسعار والتفاصيل",
     "badge_title": "اعرض جاهزيتك على موقعك",
     "badge_sub": "انسخ هذا الكود في موقعك لعرض الشارة. تتحدث تلقائياً حسب آخر فحص خلال 30 يوماً.",
     "admin_subs_active": "اشتراكات فعّالة",
@@ -644,7 +658,7 @@ TEXTS["en"].update({
         "cancelled": "Your subscription has been cancelled.",
         "cancel_failed": "Could not cancel through PayPal right now. Try again later or cancel it in your PayPal account.",
     },
-    "mon_cta_home": "For teams: daily monitoring of many domains with email alerts, from $29/month",
+    "mon_cta_home": "For teams: daily domain monitoring and email alerts when settings change. See current pricing and plan details.",
     "badge_title": "Show your readiness on your site",
     "badge_sub": "Paste this code into your site to display the badge. It updates from your latest scan within 30 days.",
     "admin_subs_active": "Active subscriptions",
@@ -761,10 +775,10 @@ TEXTS["ar"].update({
     "ladder_sub": "أي أداة مجانية، ونحن منها، تقول لك «نعم أو لا» مرة واحدة. الصعب أن تُصلح الخلل وأن يبقى مُصلحاً مع تغيّر خوادمك وشبكات CDN والمتصفحات.",
     "ladder_step1_h": "افحص — مجاناً",
     "ladder_step1_b": "درجة موقعك في 10 ثوانٍ، نفس الفحص العام الذي تجريه أي أداة.",
-    "ladder_step2_h": "أصلِح — تقرير $49",
+    "ladder_step2_h": "أصلِح — التقرير الكامل",
     "ladder_step2_b": "خطوات إصلاح دقيقة لـ nginx وApache وCaddy وCloudflare، لا مجرد درجة.",
     "ladder_step3_h": "ابقَ آمناً — مراقبة يومية",
-    "ladder_step3_b": "نفحص كل نطاقاتك يومياً ونراسلك فور فقدان التبادل المقاوم للكم، أو هبوط الدرجة، أو اقتراب انتهاء شهادة. من 29$ شهرياً — وهذا ما لا تقدّمه أدوات الفحص اللحظي.",
+    "ladder_step3_b": "نفحص كل نطاقاتك يومياً ونراسلك فور فقدان التبادل المقاوم للكم، أو هبوط الدرجة، أو اقتراب انتهاء شهادة. راجع صفحة الأسعار لمعرفة الباقات الحالية.",
     "ladder_cta": "ابدأ المراقبة اليومية ←",
 })
 TEXTS["en"].update({
@@ -772,10 +786,10 @@ TEXTS["en"].update({
     "ladder_sub": "Every free checker — ours included — tells you yes or no, once. The hard part is fixing it, and keeping it fixed as your servers, CDNs and browsers change.",
     "ladder_step1_h": "Scan — free",
     "ladder_step1_b": "Grade your TLS in 10 seconds, the same public check any free tool runs.",
-    "ladder_step2_h": "Fix — the $49 report",
+    "ladder_step2_h": "Fix — the full report",
     "ladder_step2_b": "Exact remediation for nginx, Apache, Caddy and Cloudflare, not just a grade.",
     "ladder_step3_h": "Stay safe — daily monitoring",
-    "ladder_step3_b": "We scan all your domains every day and email you the moment post-quantum key exchange drops, a grade falls, or a certificate nears expiry. From $29/month — the thing one-off checkers do not do.",
+    "ladder_step3_b": "We scan all your domains daily and email you when post-quantum key exchange drops, a grade falls, or a certificate nears expiry. See the pricing page for current plans.",
     "ladder_cta": "Start daily monitoring →",
 })
 
@@ -792,7 +806,7 @@ TEXTS["ar"].update({
         ["هل الدرجة A تعني أن موقعي آمن كموميّاً بالكامل؟",
          "لا. نحن نقيس تبادل المفاتيح في اتصال TLS العام فقط. الشهادات ما زالت تقليدية في كل المواقع (المتصفحات لا تقبل شهادات ML-DSA بعد)، ولا نفحص تطبيقك ولا الاتصال بين CDN وخادمك الأصلي."],
         ["كم يكلّف؟",
-         "الفحص والملخص مجانيان. التقرير الكامل بخطوات الإصلاح 49$ لمرة واحدة. المراقبة اليومية لكل نطاقاتك من 29$ شهرياً."],
+         "الفحص والملخص مجانيان. التقرير الكامل بخطوات الإصلاح شراء لمرة واحدة، والمراقبة اليومية متاحة بباقات شهرية. راجع صفحة الأسعار للمبالغ الحالية."],
     ],
 })
 TEXTS["en"].update({
@@ -807,7 +821,7 @@ TEXTS["en"].update({
         ["Does an A grade mean my site is fully quantum-safe?",
          "No. We measure the key exchange on the public TLS connection only. Certificates are still classical on every site (browsers do not accept ML-DSA certificates yet), and we do not test your application or the CDN-to-origin link."],
         ["How much does it cost?",
-         "The scan and summary are free. The full report with fix steps is a one-off $49. Daily monitoring of all your domains starts at $29/month."],
+         "The scan and summary are free. The full report is a one-time purchase, and daily monitoring is available on monthly plans. See the pricing page for current amounts."],
     ],
 })
 
@@ -893,7 +907,7 @@ TEXTS["de"].update({
         "connect_failure": "Port 443 dieser Domain ist nicht erreichbar.",
         "tls_failure": "Der Server akzeptiert keine moderne HTTPS-Verbindung (TLS 1.2 oder neuer).",
     },
-    "mon_cta_home": "Für Unternehmen: tägliche Überwachung vieler Domains mit E-Mail-Benachrichtigungen, ab 29 $ pro Monat",
+    "mon_cta_home": "Für Unternehmen: tägliche Domain-Überwachung mit E-Mail-Warnungen bei Änderungen. Aktuelle Preise und Tarifdetails ansehen.",
     "scanbox_title": "Prüfen Sie Ihre Website jetzt kostenlos",
     "scan_cta": "Prüfen Sie Ihre Domain kostenlos",
     # الدراسة
@@ -915,6 +929,13 @@ TEXTS["de"].update({
                     "des Zertifikats. „Nicht geantwortet“ bedeutet, dass der Name keine öffentliche Adresse hat oder auf der "
                     "nackten Domain kein HTTPS anbietet; meist sind das Infrastruktur- und CDN-Namen. Die Ergebnisse stammen von "
                     "einem Messpunkt und können anderswo abweichen.",
+    "grade_definitions": [
+        ("A", "Post-Quanten-Schlüsselaustausch beobachtet", "TLS 1.3, X25519MLKEM768 beim ersten Versuch ausgehandelt und kein kritischer Befund."),
+        ("B", "Heute sicher, aber anfällig für „Harvest now, decrypt later“", "TLS 1.3 mit klassischem Schlüsselaustausch oder hybrider Austausch bei weiterhin ausgehandeltem TLS 1.3 nicht bestätigt."),
+        ("C", "Upgrade nötig: kein TLS 1.3", "TLS 1.2 ohne kritischen Befund."),
+        ("F", "Kritisches Problem, zuerst beheben", "Ungültiges Zertifikat, RSA-Schlüssel unter 2048 Bit, statischer RSA-Schlüsselaustausch oder Protokoll älter als TLS 1.2."),
+    ],
+    "grade_scope": "Die Note bewertet eine HTTPS-Verbindung auf Port 443 und ist keine umfassende Sicherheitsgarantie. Jeder kritische Befund führt zu F, auch bei beobachtetem hybriden Austausch. Bei weniger als 14 Tagen Zertifikatslaufzeit erscheint eine Warnung, ohne die Note zu ändern. RSA- und ECDSA-Zertifikatsschlüssel sind informativ und senken die Note nicht. Bei einem CDN gilt das Ergebnis für den CDN-Edge, nicht den Ursprungsserver.",
     "study_full_table": "Alle Ergebnisse",
     "study_download": "Daten herunterladen (JSON)",
     "rank": "Rang",
@@ -971,10 +992,10 @@ TEXTS["de"].update({
     "ladder_sub": "Jedes kostenlose Prüftool, auch unseres, sagt einmal Ja oder Nein. Schwierig ist, den Mangel zu beheben und behoben zu halten, während sich Server, CDNs und Browser ändern.",
     "ladder_step1_h": "Prüfen — kostenlos",
     "ladder_step1_b": "Ihre TLS-Note in 10 Sekunden, dieselbe öffentliche Prüfung, die jedes kostenlose Tool macht.",
-    "ladder_step2_h": "Beheben — der 49-$-Bericht",
+    "ladder_step2_h": "Beheben — der vollständige Bericht",
     "ladder_step2_b": "Konkrete Behebung für nginx, Apache, Caddy und Cloudflare, nicht nur eine Note.",
     "ladder_step3_h": "Sicher bleiben — tägliche Überwachung",
-    "ladder_step3_b": "Wir prüfen alle Ihre Domains täglich und mailen Ihnen sofort, wenn der quantenresistente Schlüsselaustausch wegfällt, die Note sinkt oder ein Zertifikat abläuft. Ab 29 $/Monat — genau das, was einmalige Prüftools nicht leisten.",
+    "ladder_step3_b": "Wir prüfen alle Ihre Domains täglich und mailen Ihnen bei Verlust des quantenresistenten Schlüsselaustauschs, sinkender Note oder bald ablaufendem Zertifikat. Aktuelle Tarife finden Sie auf der Preisseite.",
     "ladder_cta": "Tägliche Überwachung starten →",
 })
 
@@ -991,7 +1012,7 @@ TEXTS["de"].update({
         ["Bedeutet Note A, dass meine Website vollständig quantensicher ist?",
          "Nein. Wir messen nur den Schlüsselaustausch der öffentlichen TLS-Verbindung. Zertifikate sind überall noch klassisch, und wir prüfen weder Ihre Anwendung noch die Verbindung CDN–Ursprungsserver."],
         ["Was kostet es?",
-         "Prüfung und Zusammenfassung sind kostenlos. Der vollständige Bericht mit Behebungsschritten kostet einmalig 49 $. Tägliche Überwachung aller Domains ab 29 $/Monat."],
+         "Prüfung und Zusammenfassung sind kostenlos. Der vollständige Bericht ist ein Einmalkauf; die tägliche Überwachung gibt es in Monatstarifen. Aktuelle Preise stehen auf der Preisseite."],
     ],
 })
 
@@ -1316,10 +1337,10 @@ TEXTS["de"].update({k: v for k, v in TEXTS["en"].items() if k.startswith(("findi
 # باقة الوكالات
 TEXTS["en"].update({
     "agency_title": "Agency pack",
-    "agency_meta": "{credits} full post-quantum TLS reports for ${price}, one payment, no expiry. For agencies, MSPs and auditors checking client sites.",
-    "agency_lead": "Checking post-quantum readiness for clients? Get {credits} full reports for ${price}: one payment, no subscription, no expiry.",
+    "agency_meta": "{credits} full post-quantum TLS reports for {price_dual}, one payment, no expiry. For agencies, MSPs and auditors checking client sites.",
+    "agency_lead": "Checking post-quantum readiness for clients? Get {credits} full reports for {price_dual}: one payment, no subscription, no expiry.",
     "agency_items": [
-        "{credits} full reports, ${each} each instead of ${single}",
+        "{credits} full reports, {each_dual} each instead of {single_dual}",
         "Use them on any domains, whenever you like: enter a domain on your private pack page and its full report opens at once",
         "Every report: all findings with priority, fix steps for nginx, Apache, Caddy and Cloudflare, certificate and handshake details, printable as PDF for your client",
         "All your reports stay listed on your pack page",
@@ -1327,8 +1348,8 @@ TEXTS["en"].update({
     "agency_buy_title": "{credits} full reports",
     "agency_consent": "I agree that each report is delivered immediately when I use a credit, and I understand that I lose the right of withdrawal for every report already generated; unused reports can be withdrawn from within 14 days.",
     "agency_compare_title": "One report, or ongoing checks?",
-    "agency_compare": "Need just one site? A single full report is ${single} from any scan result. Need to know the moment something changes? Daily monitoring covers up to 100 domains.",
-    "agency_home_link": "Agencies: 10 full reports for $199",
+    "agency_compare": "Need just one site? A single full report is {single_dual} from any scan result. Need to know the moment something changes? Daily monitoring covers up to 100 domains.",
+    "agency_home_link": "MSPs and consultants: {credits} client reports for {price_dual}, one payment",
     "pack_title": "Your agency pack",
     "pack_left": "{left} of {total} reports left.",
     "pack_keep_link": "Keep this page's link private: anyone who has it can use your reports. We also emailed it to you.",
@@ -1339,10 +1360,10 @@ TEXTS["en"].update({
 })
 TEXTS["ar"].update({
     "agency_title": "باقة الوكالات",
-    "agency_meta": "{credits} تقارير كاملة لجاهزية TLS ما بعد الكم مقابل {price}$، دفعة واحدة وبلا انتهاء صلاحية. للوكالات ومزوّدي الخدمات والمدققين الذين يفحصون مواقع عملائهم.",
-    "agency_lead": "تفحص جاهزية مواقع عملائك لما بعد الكم؟ احصل على {credits} تقارير كاملة مقابل {price}$: دفعة واحدة، بلا اشتراك، بلا انتهاء صلاحية.",
+    "agency_meta": "{credits} تقارير كاملة لجاهزية TLS ما بعد الكم مقابل {price_dual}، دفعة واحدة وبلا انتهاء صلاحية. للوكالات ومزوّدي الخدمات والمدققين الذين يفحصون مواقع عملائهم.",
+    "agency_lead": "تفحص جاهزية مواقع عملائك لما بعد الكم؟ احصل على {credits} تقارير كاملة مقابل {price_dual}: دفعة واحدة، بلا اشتراك، بلا انتهاء صلاحية.",
     "agency_items": [
-        "{credits} تقارير كاملة، {each}$ للتقرير بدل {single}$",
+        "{credits} تقارير كاملة، {each_dual} للتقرير بدل {single_dual}",
         "استخدمها لأي نطاقات ومتى شئت: اكتب النطاق في صفحة باقتك الخاصة فيُفتح تقريره الكامل فوراً",
         "كل تقرير: جميع الملاحظات بأولوياتها، وخطوات الإصلاح لـ nginx وApache وCaddy وCloudflare، وتفاصيل الشهادة والمصافحة، وقابل للطباعة PDF لعميلك",
         "كل تقاريرك تبقى مدرجة في صفحة باقتك",
@@ -1350,8 +1371,8 @@ TEXTS["ar"].update({
     "agency_buy_title": "{credits} تقارير كاملة",
     "agency_consent": "أوافق على تسليم كل تقرير فوراً عند استخدام رصيد، وأعلم أنني أفقد حق التراجع عن كل تقرير أُنشئ؛ ويمكن التراجع عن التقارير غير المستخدمة خلال 14 يوماً.",
     "agency_compare_title": "تقرير واحد، أم فحص مستمر؟",
-    "agency_compare": "تحتاج موقعاً واحداً فقط؟ التقرير الكامل الواحد بـ {single}$ من صفحة أي نتيجة فحص. تريد أن تعرف فور تغيّر شيء؟ المراقبة اليومية تغطي حتى 100 نطاق.",
-    "agency_home_link": "للوكالات: 10 تقارير كاملة مقابل 199$",
+    "agency_compare": "تحتاج موقعاً واحداً فقط؟ التقرير الكامل الواحد بـ {single_dual} من صفحة أي نتيجة فحص. تريد أن تعرف فور تغيّر شيء؟ المراقبة اليومية تغطي حتى 100 نطاق.",
+    "agency_home_link": "لمقدمي الخدمات والاستشاريين: {credits} تقارير للعملاء مقابل {price_dual} دفعة واحدة",
     "pack_title": "باقة الوكالة الخاصة بك",
     "pack_left": "بقي {left} من {total} تقارير.",
     "pack_keep_link": "احفظ رابط هذه الصفحة سرّاً: من يملكه يستطيع استخدام تقاريرك. أرسلناه لك بالبريد أيضاً.",
@@ -1362,10 +1383,10 @@ TEXTS["ar"].update({
 })
 TEXTS["de"].update({
     "agency_title": "Agenturpaket",
-    "agency_meta": "{credits} vollständige Post-Quanten-TLS-Berichte für {price} $, einmalige Zahlung, ohne Ablaufdatum. Für Agenturen, IT-Dienstleister und Prüfer, die Kunden-Websites prüfen.",
-    "agency_lead": "Sie prüfen die Post-Quanten-Bereitschaft Ihrer Kunden? {credits} vollständige Berichte für {price} $: einmalige Zahlung, kein Abonnement, kein Ablaufdatum.",
+    "agency_meta": "{credits} vollständige Post-Quanten-TLS-Berichte für {price_dual}, einmalige Zahlung, ohne Ablaufdatum. Für Agenturen, IT-Dienstleister und Prüfer, die Kunden-Websites prüfen.",
+    "agency_lead": "Sie prüfen die Post-Quanten-Bereitschaft Ihrer Kunden? {credits} vollständige Berichte für {price_dual}: einmalige Zahlung, kein Abonnement, kein Ablaufdatum.",
     "agency_items": [
-        "{credits} vollständige Berichte, {each} $ pro Bericht statt {single} $",
+        "{credits} vollständige Berichte, {each_dual} pro Bericht statt {single_dual}",
         "Für beliebige Domains, wann Sie wollen: Domain auf Ihrer privaten Paketseite eingeben, der vollständige Bericht öffnet sich sofort",
         "Jeder Bericht: alle Befunde mit Priorität, Schritte für nginx, Apache, Caddy und Cloudflare, Zertifikats- und Handshake-Details, als PDF für Ihren Kunden druckbar",
         "Alle Berichte bleiben auf Ihrer Paketseite aufgelistet",
@@ -1373,8 +1394,8 @@ TEXTS["de"].update({
     "agency_buy_title": "{credits} vollständige Berichte",
     "agency_consent": "Ich stimme zu, dass jeder Bericht bei Nutzung eines Guthabens sofort bereitgestellt wird, und nehme zur Kenntnis, dass ich für jeden bereits erstellten Bericht mein Rücktrittsrecht verliere; vom Kauf nicht genutzter Berichte kann ich binnen 14 Tagen zurücktreten.",
     "agency_compare_title": "Ein Bericht oder laufende Prüfung?",
-    "agency_compare": "Nur eine Website? Ein einzelner vollständiger Bericht kostet {single} $ auf jeder Ergebnisseite. Sie wollen sofort wissen, wenn sich etwas ändert? Die tägliche Überwachung deckt bis zu 100 Domains ab.",
-    "agency_home_link": "Für Agenturen: 10 vollständige Berichte für 199 $",
+    "agency_compare": "Nur eine Website? Ein einzelner vollständiger Bericht kostet {single_dual} auf jeder Ergebnisseite. Sie wollen sofort wissen, wenn sich etwas ändert? Die tägliche Überwachung deckt bis zu 100 Domains ab.",
+    "agency_home_link": "Für MSPs und Berater: {credits} Kundenberichte für {price_dual}, einmalig",
     "pack_title": "Ihr Agenturpaket",
     "pack_left": "{left} von {total} Berichten übrig.",
     "pack_keep_link": "Halten Sie den Link dieser Seite privat: Wer ihn hat, kann Ihre Berichte nutzen. Wir haben ihn Ihnen auch per E-Mail geschickt.",
@@ -1740,11 +1761,11 @@ TEXTS["en"].update({
     "mon_domain_banner": "Start by monitoring {domain} daily (plus your subdomains and other hosts):",
     "mon_preview_title": "What your monitoring dashboard looks like",
     "mon_preview_sub": "Silent regressions happen when an OS update, container rebuild or CDN change drops X25519MLKEM768, or when a direct subdomain (api, mail, auth) bypasses the CDN. Every domain is checked daily, with instant email alerts and a printable log for NIS2 / DORA compliance.",
-    "mon_one_time_alt": "Prefer a one-time payment without a monthly subscription? See the Agency Pack (10 full reports for $199) →",
+    "mon_one_time_alt": "Prefer a one-time payment without a monthly subscription? See the current Agency Pack price →",
     "disc_monitor_cta": "Monitor {base} and its subdomains daily to prevent silent downgrades and keep your badge green →",
     "alerts_upsell_title": "Need daily protection across all your subdomains?",
     "alerts_upsell_body": "The free alert checks {domain} once a week. Daily monitoring checks up to 10 or 100 domains every day, catches silent TLS downgrades within 24 hours, warns 14 and 3 days before certificate expiry, and keeps your public badge green automatically.",
-    "alerts_upsell_cta": "Monitor {domain} and its subdomains daily ($29/mo) →",
+    "alerts_upsell_cta": "Monitor {domain} and its subdomains daily →",
     "site_compare_cta": "Compare {domain} side-by-side with another domain or competitor →",
     "site_legal_note": "Point-in-time public TLS handshake observation on port 443 (not a security audit or vulnerability test).",
     "scanning_dns_title": "Instant automated opt-out via DNS TXT (ownership verification)",
@@ -1768,11 +1789,11 @@ TEXTS["ar"].update({
     "mon_domain_banner": "ابدأ بمراقبة {domain} يومياً (مع نطاقاتك الفرعية وخوادمك الأخرى):",
     "mon_preview_title": "كيف تبدو لوحة المراقبة والتنبيهات",
     "mon_preview_sub": "يحدث التراجع الصامت حين يُسقط تحديث للنظام أو الخادم أو إعدادات CDN تبادل X25519MLKEM768، أو حين تتجاوز النطاقات الفرعية (مثل api وmail وauth) شبكة الـ CDN. نفحص كل نطاق يومياً مع تنبيه فوري بالبريد وسجل جاهز للطباعة لأغراض الامتثال (NIS2 / DORA).",
-    "mon_one_time_alt": "تفضّل دفعة واحدة بلا اشتراك شهري؟ اطّلع على باقة الوكالات (10 تقارير كاملة بـ 199$) ←",
+    "mon_one_time_alt": "تفضّل دفعة واحدة بلا اشتراك شهري؟ اطّلع على باقة الوكالات وأسعارها الحالية ←",
     "disc_monitor_cta": "راقب {base} ونطاقاته الفرعية يومياً لمنع التراجع الصامت وضمان بقاء شارتك خضراء ←",
     "alerts_upsell_title": "تحتاج حماية يومية لكل نطاقاتك ونطاقاتك الفرعية؟",
     "alerts_upsell_body": "التنبيه المجاني يفحص {domain} مرة كل أسبوع. أما المراقبة اليومية فتفحص حتى 10 أو 100 نطاق كل يوم، وترصد أي تراجع صامت في التشفير خلال 24 ساعة، وتنبّه قبل انتهاء الشهادة بـ 14 و3 أيام وعند توقف الخادم، وتُبقي شارتك الخضراء نشطة دائماً.",
-    "alerts_upsell_cta": "راقب {domain} ونطاقاته الفرعية يومياً (29$/شهر) ←",
+    "alerts_upsell_cta": "راقب {domain} ونطاقاته الفرعية يومياً ←",
     "site_compare_cta": "قارن {domain} جنباً إلى جنب مع نطاق آخر أو منافس ←",
     "site_legal_note": "رصد تقني سطحي لمصافحة TLS العامة على المنفذ 443 في وقت محدد (وليس فحص اختراق أو تقييماً أمنياً شاملاً).",
     "scanning_dns_title": "الاستبعاد الفوري المؤتمت عبر سجل DNS TXT (إثبات ملكية النطاق)",
@@ -1796,7 +1817,7 @@ TEXTS["de"].update({
     "mon_domain_banner": "Starten Sie mit der täglichen Überwachung von {domain} (plus Ihrer weiteren Subdomains und Hosts):",
     "mon_preview_title": "So sieht Ihr Überwachungs-Dashboard aus",
     "mon_preview_sub": "Stille Rückschritte passieren, wenn ein Server-Update oder eine CDN-Änderung X25519MLKEM768 deaktiviert oder direkte Subdomains (api, mail, auth) das CDN umgehen. Jede Domain wird täglich geprüft – mit Sofortwarnung per E-Mail und druckbarem Protokoll für NIS2 / DORA.",
-    "mon_one_time_alt": "Lieber eine Einmalzahlung ohne Monatsabo? Zum Agenturpaket (10 vollständige Berichte für 199 $) →",
+    "mon_one_time_alt": "Lieber eine Einmalzahlung ohne Monatsabo? Aktuellen Preis des Agenturpakets ansehen →",
     "disc_monitor_cta": "Überwachen Sie {base} und seine Subdomains täglich, um stille Rückschritte zu verhindern und Ihr Badge grün zu halten →",
     "alerts_upsell_title": "Tägliche Prüfung für alle Ihre Domains und Subdomains?",
     "alerts_upsell_body": "Die kostenlose Benachrichtigung prüft {domain} einmal pro Woche. Die tägliche Überwachung prüft bis zu 10 oder 100 Domains jeden Tag, warnt 14 und 3 Tage vor Zertifikatsablauf sowie bei Ausfällen und hält Ihr Badge automatisch aktuell.",
@@ -1825,7 +1846,7 @@ TEXTS["en"].update({
     "trial_card_sub": "No payment and no card. Enter your company domain and work email; we email you the dashboard link, scan up to 10 domains daily and alert you the moment anything regresses. When the trial ends, monitoring simply stops unless you subscribe.",
     "trial_domain_label": "Company domain",
     "trial_email_label": "Work email (the dashboard link is sent here)",
-    "trial_button": "Start free trial",
+    "trial_button": "Start 14-day free trial",
     "trial_consent": "I agree to the Terms and the Privacy Policy",
     "trial_or_subscribe": "Or subscribe right away",
     "trial_title": "Free monitoring trial",
@@ -1853,7 +1874,7 @@ TEXTS["ar"].update({
     "trial_card_sub": "بلا دفع ولا بطاقة. اكتب نطاق شركتك وبريد العمل؛ نرسل لك رابط لوحة التحكم، ونفحص حتى 10 نطاقات يومياً، وننبّهك فور أي تراجع. عند نهاية التجربة تتوقف المراقبة ببساطة ما لم تشترك.",
     "trial_domain_label": "نطاق الشركة",
     "trial_email_label": "بريد العمل (يصل إليه رابط لوحة التحكم)",
-    "trial_button": "ابدأ التجربة المجانية",
+    "trial_button": "ابدأ تجربة 14 يوماً مجاناً",
     "trial_consent": "أوافق على الشروط وسياسة الخصوصية",
     "trial_or_subscribe": "أو اشترك مباشرة",
     "trial_title": "تجربة المراقبة المجانية",
@@ -1881,7 +1902,7 @@ TEXTS["de"].update({
     "trial_card_sub": "Keine Zahlung, keine Karte. Geben Sie Ihre Unternehmensdomain und Ihre geschäftliche E-Mail-Adresse ein; wir senden Ihnen den Dashboard-Link, prüfen bis zu 10 Domains täglich und warnen Sie sofort bei jedem Rückschritt. Nach dem Test endet die Überwachung einfach, sofern Sie nicht abonnieren.",
     "trial_domain_label": "Unternehmensdomain",
     "trial_email_label": "Geschäftliche E-Mail (dorthin senden wir den Dashboard-Link)",
-    "trial_button": "Kostenlosen Test starten",
+    "trial_button": "14-Tage-Test kostenlos starten",
     "trial_consent": "Ich stimme den AGB und der Datenschutzerklärung zu",
     "trial_or_subscribe": "Oder direkt abonnieren",
     "trial_title": "Kostenloser Überwachungstest",
@@ -1981,9 +2002,9 @@ if "mon_features" in TEXTS["de"]:
         "Datierter Verlauf jeder Prüfung, als CSV für Audits exportierbar"]
 
 # ---------------------------------------------------------------- بطاقة المراقبة المجانية أعلى نتيجة غير محمية
-TEXTS["en"].update({"scan_trial_title": "{domain} is not protected yet. Watch it free for 14 days",
-                    "scan_trial_sub": "We check it every day, email you the moment anything changes, and confirm when your fix works. Up to 10 domains, no payment, no card, and it simply ends after 14 days."})
-TEXTS["ar"].update({"scan_trial_title": "{domain} غير محمي بعد. راقبه مجاناً لمدة 14 يوماً",
-                    "scan_trial_sub": "نفحصه كل يوم، ونراسلك فور أي تغيّر، ونؤكد لك عندما ينجح إصلاحك. حتى 10 نطاقات، بلا دفع ولا بطاقة، وتنتهي التجربة وحدها بعد 14 يوماً."})
-TEXTS["de"].update({"scan_trial_title": "{domain} ist noch nicht geschützt. 14 Tage kostenlos überwachen",
-                    "scan_trial_sub": "Wir prüfen die Domain täglich, melden jede Änderung sofort per E-Mail und bestätigen, wenn Ihre Korrektur wirkt. Bis zu 10 Domains, keine Zahlung, keine Karte, endet nach 14 Tagen von selbst."})
+TEXTS["en"].update({"scan_trial_title": "Monitor {domain} for 14 days — free",
+                    "scan_trial_sub": "Get a daily TLS re-check, an email when its status changes, and confirmation after a fix. Monitor up to 10 domains with no card or charge. The trial stops automatically unless you subscribe."})
+TEXTS["ar"].update({"scan_trial_title": "راقب {domain} لمدة 14 يوماً مجاناً",
+                    "scan_trial_sub": "إعادة فحص TLS يومياً، وتنبيه بالبريد عند تغيّر الحالة، وتأكيد بعد الإصلاح. راقب حتى 10 نطاقات بلا بطاقة أو رسوم؛ وتتوقف التجربة تلقائياً ما لم تشترك."})
+TEXTS["de"].update({"scan_trial_title": "{domain} 14 Tage kostenlos überwachen",
+                    "scan_trial_sub": "Tägliche TLS-Prüfung, eine E-Mail bei Statusänderungen und eine Bestätigung nach der Korrektur. Bis zu 10 Domains, ohne Karte und Kosten. Der Test endet automatisch, wenn Sie kein Abo abschließen."})
