@@ -1,0 +1,16 @@
+{
+  "name": "quantum-aether",
+  "version": "1.0.0",
+  "description": "Check whether an HTTPS site negotiates post-quantum TLS key exchange (X25519MLKEM768 / ML-KEM). Free CLI, zero dependencies.",
+  "bin": { "quantum-aether": "bin/cli.js" },
+  "type": "commonjs",
+  "engines": { "node": ">=18" },
+  "scripts": { "test": "node test/test.js" },
+  "keywords": ["tls", "post-quantum", "pqc", "ml-kem", "mlkem", "x25519mlkem768", "security", "https", "nis2", "dora", "cli"],
+  "homepage": "https://ather-quantum.com/?utm_source=npm&utm_medium=referral&utm_campaign=cli",
+  "repository": { "type": "git", "url": "git+https://github.com/moncef00327-cloud/quantum-aether.git", "directory": "npm/quantum-aether" },
+  "bugs": { "url": "https://github.com/moncef00327-cloud/quantum-aether/issues" },
+  "author": "Quantum Aether (https://ather-quantum.com)",
+  "license": "MIT",
+  "files": ["bin/cli.js", "README.md", "LICENSE"]
+}
