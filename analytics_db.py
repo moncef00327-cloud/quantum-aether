@@ -129,7 +129,9 @@ EVENT_NAMES = ("focus", "type", "example", "submit", "result", "lang", "monitori
                # 2026-11-14: names already sent by pages/server but dropped until now, and the trial-first CTA
                "trial_cta", "audit_cta", "exec_brief", "audit_checkout_start",
                # 2026-11-14: trial funnel detail: passed browser checks / blocked in the browser / rejected by the server
-               "trial_submit", "trial_invalid", "trial_failed")
+               "trial_submit", "trial_invalid", "trial_failed",
+               # 2026-11-14: ProofLab waitlist page view and accepted signup (server-side)
+               "prooflab_view", "prooflab_submit")
 EVENTS_SCHEMA = """
 CREATE TABLE IF NOT EXISTS events (
     day      TEXT NOT NULL,

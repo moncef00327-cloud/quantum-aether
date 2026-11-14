@@ -49,6 +49,7 @@ import discovery
 import config_gen
 import reports
 import packs
+import prooflab
 import business_pages
 import monitor_db
 import og_image
@@ -235,7 +236,7 @@ def public_price_labels():
 # الصفحات التي لها نسخة ألمانية فعلية (لمبدّل اللغة وhreflang وخريطة الموقع).
 DE_PAGES = {"site.monthly_report", "site.press_page", "site.pq_config", "site.pq_config_server", "site.index", "site.study", "site.monitoring", "site.adoption_page", "site.scanning_page", "site.deadlines_page",
             "site.business_page", "site.pricing_page", "site.agency_page", "site.audit_page", "site.audit_request", "site.countries_page", "site.country_page",
-            "site.scan_page", "site.site_page"}
+            "site.scan_page", "site.site_page", "site.prooflab_page", "site.prooflab_join"}
 
 
 def texts():
@@ -962,6 +963,51 @@ def agency_page():
                            single=cfg["PRICE"], single_dual=dual_price_label(cfg["PRICE"], cfg["CURRENCY"]),
                            payments_enabled=payments_enabled(), paypal_client_id=cfg["PAYPAL_CLIENT_ID"],
                            c=c, pay_note=c["checkout"]["pay_note"], sandbox=cfg["PAYPAL_ENV"] != "live")
+
+
+# ---------------------------------------------------------------- ProofLab waitlist (2026-11-14)
+def _prooflab_page(state=None, status=200, form=None):
+    return render_template("prooflab.html", p=prooflab.COPY[current_lang()], state=state, form=form or {},
+                           stacks=prooflab.STACKS, action_repo=prooflab.ACTION_REPO), status
+
+
+@bp.get("/prooflab")
+def prooflab_page():
+    record_conversion_event("prooflab_view", "/prooflab")
+    return _prooflab_page()
+
+
+@bp.post("/prooflab")
+def prooflab_join():
+    """Waitlist signup: work email, company/domain, stack, consent. No email goes to the visitor."""
+    f = {k: (request.form.get(k) or "").strip() for k in ("email", "company", "stack")}
+    f = dict(f, email=f["email"].lower()[:254], company=f["company"][:200], stack=f["stack"].lower()[:20])
+    if request.form.get("website"):  # honeypot: bots fill every field; answer like a success, store nothing
+        return _prooflab_page("ok", 200)
+    if not request.form.get("consent"):
+        return _prooflab_page("err_consent", 400, f)
+    if not EMAIL_RE.match(f["email"]):
+        return _prooflab_page("err_email", 400, f)
+    if not f["company"]:
+        return _prooflab_page("err_company", 400, f)
+    if f["stack"] not in prooflab.STACKS:
+        return _prooflab_page("err_stack", 400, f)
+    conn = db()
+    if prooflab.already_listed(conn, f["email"]):  # same answer as a new signup: no address enumeration
+        return _prooflab_page("ok", 200)
+    if prooflab.rate_limited(conn, client_hash()):
+        return _prooflab_page("err_limit", 429, f)
+    test = is_test_request()
+    row_id = prooflab.create(conn, email=f["email"], company=f["company"], stack=f["stack"], lang=current_lang(),
+                             client_hash=client_hash(), is_test=test)
+    record_conversion_event("prooflab_submit", "/prooflab", detail=f["stack"])
+    owner = current_app.config["OWNER_EMAIL"]
+    mailer = current_app.extensions["mailer"]
+    # Owner alert for real signups only; owner/test requests (admin cookie or remembered owner client) never email.
+    if owner and mailer.enabled and not test:
+        subject, text = prooflab.owner_email(row_id, f["email"], f["company"], f["stack"], current_lang(), public_base())
+        mailer.send(owner, subject, text)
+    return _prooflab_page("ok", 200)
 
 
 def _audit_page(state=None, status=200, form=None):
@@ -2283,7 +2329,7 @@ def admin():
                            scan_errors=analytics_db.error_details(conn, (dt.date.today() - dt.timedelta(days=13)).isoformat()),
                            by_source=sales_db.funnel_by_source(conn, (dt.date.today() - dt.timedelta(days=30)).isoformat()),
                            free_alert_counts=dict(conn.execute("SELECT status, COUNT(*) FROM free_alerts GROUP BY status").fetchall()),
-                           audit_orders=audit_checkout.recent(conn), billing_records=company_billing.recent(conn), audit_msg=request.args.get("audit_msg", "")[:40]))
+                           audit_orders=audit_checkout.recent(conn), prooflab_stats=prooflab.counts(conn), billing_records=company_billing.recent(conn), audit_msg=request.args.get("audit_msg", "")[:40]))
     # كوكي دائم لسنة: كل زيارات هذا المتصفح لا تُحسب في الإحصاءات.
     response.set_cookie(ADMIN_COOKIE, admin_cookie_value(), max_age=365 * 24 * 3600, httponly=True,
                         secure=request.is_secure, samesite="Lax")
@@ -3600,6 +3646,7 @@ def _sitemap_pages():
     pages.append(("/pricing", _template_day("commercial.html"), de_langs))
     pages.append(("/agency", _template_day("agency.html"), de_langs))
     pages.append(("/audit", _template_day("audit.html"), de_langs))
+    pages.append(("/prooflab", _template_day("prooflab.html"), de_langs))
     pages += [(f"/banks/{rid}", bank_report.load(rid)["measured_on"], site_langs) for rid in bank_report.ids()]
     for rid in bank_report.ids():
         rep = bank_report.load(rid)

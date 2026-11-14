@@ -2241,3 +2241,6 @@ TEXTS["ar"].update({
     "guide_nginx_trial_title": "راقب هذا النطاق 14 يوماً مجاناً، بلا بطاقة",
     "guide_nginx_trial_sub": "إعادة فحص يومية، ورسالة إن سقط تبادل المفاتيح المقاوم للكم. تنتهي تلقائياً ما لم تشترك.",
 })
+
+# ProofLab waitlist (2026-11-14): copy lives in prooflab.COPY
+DE_ENDPOINTS |= {"site.prooflab_page", "site.prooflab_join"}

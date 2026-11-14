@@ -27,6 +27,10 @@
   <table class="data"><tr><th>Source</th><th>Scans</th><th>Sales</th></tr>
     {% for row in by_source %}<tr><td>{{ row.source }}</td><td>{{ row.scans }}</td><td>{{ row.sales }}</td></tr>{% else %}<tr><td colspan="3">No real scans yet.</td></tr>{% endfor %}
   </table>
+  <h3>ProofLab waitlist</h3>
+  <p>Real signups: <strong>{{ prooflab_stats.total }}</strong>{% for k, v in prooflab_stats.by_stack.items() %} · {{ k }}: {{ v }}{% endfor %} · page views (14 days): {{ events.prooflab_view }} · signups tracked (14 days): {{ events.prooflab_submit }} · test rows: {{ prooflab_stats.tests }}</p>
+  {% if prooflab_stats.recent %}<table class="data"><tr><th>email</th><th>company</th><th>stack</th><th>lang</th><th>at (UTC)</th></tr>
+  {% for r in prooflab_stats.recent %}<tr><td>{{ r.email }}</td><td>{{ r.company }}</td><td>{{ r.stack }}</td><td>{{ r.lang }}</td><td>{{ r.created_at }}</td></tr>{% endfor %}</table>{% endif %}
   <p>Free change alerts: {{ free_alert_counts.get("ACTIVE", 0) }} active · {{ free_alert_counts.get("PENDING", 0) }} awaiting confirmation</p>
 </section>
 
