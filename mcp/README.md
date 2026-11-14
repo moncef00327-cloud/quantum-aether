@@ -73,7 +73,7 @@ execute changes on the scanned system.
 Agent guide: https://ather-quantum.com/agents?lang=en
 Service manifest: https://ather-quantum.com/.well-known/agent-service.json
 
-The MCP registry metadata declares remote server version 1.4.0. The separate
-PyPI stdio wrapper is version 1.1.0 (defaults to ather-quantum.com) and uses the human-assisted checkout
+The MCP registry metadata and the PyPI stdio wrapper are both version 1.4.1.
+The stdio wrapper defaults to ather-quantum.com and uses the human-assisted checkout
 flow described by its local tools; automatic x402 payment is provided by the
 remote MCP tool. Signed scan receipts are not implemented.

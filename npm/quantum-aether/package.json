@@ -1,6 +1,6 @@
 {
   "name": "quantum-aether",
-  "version": "1.0.0",
+  "version": "1.4.1",
   "description": "Check whether an HTTPS site negotiates post-quantum TLS key exchange (X25519MLKEM768 / ML-KEM). Free CLI, zero dependencies.",
   "bin": { "quantum-aether": "bin/cli.js" },
   "type": "commonjs",
