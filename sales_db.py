@@ -21,6 +21,7 @@ import company_billing
 import discovery
 import scan_insights
 import packs
+import prooflab
 import assets
 import monitor_db
 
@@ -63,7 +64,7 @@ CREATE TABLE IF NOT EXISTS owner_clients (
 
 
 _SCHEMA_MODULES = (monitor_db, assets, free_alerts, discovery, scan_insights, audit, audit_checkout, company_billing,
-                   packs, analytics_db, adoption, access_links)
+                   packs, analytics_db, adoption, access_links, prooflab)
 
 
 def _schema_version():
@@ -127,6 +128,7 @@ def initialize(conn):
     analytics_db.init_events(conn)
     adoption.init(conn)
     access_links.init(conn)
+    prooflab.init(conn)
     _migrate(conn)
 
 

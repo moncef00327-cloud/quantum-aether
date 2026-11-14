@@ -485,11 +485,11 @@ class AdminExclusionAndSeoTest(unittest.TestCase):
         self.assertIn('xmlns:xhtml="http://www.w3.org/1999/xhtml"', body)
         self.assertIn('<xhtml:link rel="alternate" hreflang="x-default" href="https://ather-quantum.com/guides?lang=en"/>', body)
         self.assertIn("https://ather-quantum.com/impressum?lang=de", body)
-        # Pages sitemap as of 2026-11-14: 29 trilingual + 44 bilingual paths
-        # (the nginx PQ-TLS guide gained a German version). Update when pages are added; every <loc> must stay unique.
+        # Pages sitemap as of 2026-11-14: 30 trilingual + 44 bilingual paths
+        # (the nginx PQ-TLS guide gained a German version; /prooflab added). Update when pages are added; every <loc> must stay unique.
         locs = re.findall(r"<loc>([^<]+)</loc>", body)
         self.assertEqual(len(locs), len(set(locs)))
-        self.assertEqual(body.count("<url>"), 29 * 3 + 44 * 2)
+        self.assertEqual(body.count("<url>"), 30 * 3 + 44 * 2)
         self.assertIn("https://ather-quantum.com/compare?lang=en", body)
         import quantum_saas_app
         sites_xml = client.get("/sitemap-sites-1.xml").get_data(as_text=True)

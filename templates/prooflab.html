@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{# ProofLab waitlist (2026-11-14). Copy: prooflab.COPY. Form posts to /prooflab; "website" is a honeypot. #}
+{% block title %}{{ p.title }} · {{ t.brand }}{% endblock %}
+{% block description %}{{ p.meta }}{% endblock %}
+{% block content %}
+<section class="card prooflab-hero">
+  <p class="muted small">{{ p.kicker }}</p>
+  <h1>{{ p.title }}</h1>
+  <p class="lead">{{ p.lead }}</p>
+  <p><a href="#prooflab-join" class="button">{{ p.pilot_title }} →</a></p>
+</section>
+
+<section class="card">
+  <h2>{{ p.how_title }}</h2>
+  <ol class="prooflab-steps">
+    {% for name, body in p.steps %}<li><strong>{{ name }}.</strong> {{ body }}</li>{% endfor %}
+  </ol>
+</section>
+
+<section class="card">
+  <h2>{{ p.scope_title }}</h2>
+  <p>{{ p.scope }}</p>
+  <p class="small">{{ p.proto }} <a href="{{ action_repo }}" rel="noopener" target="_blank" dir="ltr">github.com/moncef00327-cloud/prooflab-action</a></p>
+</section>
+
+<section class="card highlight" id="prooflab-join">
+  <h2>{{ p.pilot_title }}</h2>
+  {% if state == 'ok' %}
+    <p class="notice" role="status">{{ p.ok }}</p>
+  {% else %}
+  <p>{{ p.pilot_sub }}</p>
+  <form method="post" action="{{ url_for('site.prooflab_join', lang=lang) }}#prooflab-join" class="scan-form prooflab-form">
+    {% if state and state.startswith('err_') %}<p class="form-error" role="alert">{{ p[state] }}</p>{% endif %}
+    <p><label for="pl-email">{{ p.email }}</label><br>
+      <input id="pl-email" name="email" type="email" autocomplete="email" dir="ltr" required maxlength="254" placeholder="security@company.com" value="{{ form.email or '' }}" style="width:100%;box-sizing:border-box"></p>
+    <p><label for="pl-company">{{ p.company }}</label><br>
+      <input id="pl-company" name="company" type="text" autocomplete="organization" required maxlength="200" placeholder="company.com" value="{{ form.company or '' }}" style="width:100%;box-sizing:border-box"></p>
+    <p><label for="pl-stack">{{ p.stack }}</label><br>
+      <select id="pl-stack" name="stack" required style="width:100%;box-sizing:border-box">
+        <option value="">—</option>
+        {% for s in stacks %}<option value="{{ s }}"{% if form.stack == s %} selected{% endif %}>{{ p.stack_names[s] }}</option>{% endfor %}
+      </select></p>
+    <p style="position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden" aria-hidden="true">
+      <label for="pl-website">Website</label><input id="pl-website" name="website" type="text" tabindex="-1" autocomplete="off"></p>
+    <p class="consent"><label><input type="checkbox" name="consent" value="1" required>
+      <span>{{ p.consent }} (<a href="{{ url_for('site.legal_page', slug='agb', lang=legal_lang) }}" target="_blank">{{ t.legal_terms }}</a> · <a href="{{ url_for('site.legal_page', slug='datenschutz', lang=legal_lang) }}" target="_blank">{{ t.legal_privacy }}</a>)</span></label></p>
+    <div class="scan-row"><button type="submit" style="width:100%">{{ p.button }}</button></div>
+    <p class="muted small">{{ p.fine }}</p>
+  </form>
+  {% endif %}
+</section>
+{% endblock %}
