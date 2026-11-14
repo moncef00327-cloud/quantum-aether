@@ -424,3 +424,42 @@ main footer{padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))!importan
 /* 2026-11-13: sidebar labels stay on one line at narrow desktop widths */
 nav#workspace-nav :is(button,a){white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media(min-width:851px) and (max-width:1150px){nav#workspace-nav :is(button,a){font-size:13px;gap:8px;padding-inline:10px}}
+
+/* 2026-11-14 trial-first hero form */
+.qa-trial{margin:1.1rem 0 1rem;max-width:540px;padding:14px;border:1px solid rgba(192,132,252,.45);border-radius:12px;background:rgba(16,11,28,.55)}
+.qa-trial h2{font-size:1rem;margin:0 0 .6rem;color:#eef0ff}
+.qa-trial .input input{font-size:14px}
+.qa-trial .input button{width:auto}
+.qa-trial-domain{display:block;width:100%;box-sizing:border-box;margin-top:8px;padding:10px 12px;background:#100b1c;border:1px solid #494064;border-radius:6px;color:#dfdce8;font:13px Manrope}
+.qa-trial-consent{display:flex;gap:8px;align-items:flex-start;margin-top:10px;font-size:13px;color:#d4d6ee}
+.qa-trial-consent a{color:#67e8f9}
+.qa-trial-consent input{margin-top:3px}
+.qa-hero-content p.qa-trial-note{font-size:12px;margin:8px 0 0;color:#9d94b8}
+.qa-hero-content p.qa-target{font-size:.95rem;color:#c9c3e6}
+/* result page extras (2026-11-14) */
+.fix-tabs details.fix-tab{border:1px solid rgba(148,130,200,.35);border-radius:8px;padding:0 12px;margin:6px 0;background:rgba(16,11,28,.35)}
+.fix-tabs details.fix-tab[open]{border-color:rgba(103,232,249,.55)}
+.fix-tabs details.fix-tab summary{font-weight:600}
+.ins-detected{font-weight:600;color:#67e8f9}
+.ins-hosts{list-style:none;padding:0;margin:8px 0;text-align:left}
+.ins-hosts li{padding:6px 0;border-bottom:1px solid rgba(148,130,200,.18)}
+.ins-hosts li.host-pq span{color:#4ade80}
+.ins-hosts li.host-not_pq span{color:#fbbf24;font-weight:600}
+.ins-hosts li.host-none span,.ins-hosts li.host-unknown span{color:#9d94b8}
+.ins-alert.warn{font-weight:700;color:#fbbf24}
+details.buy-more>summary{cursor:pointer;min-height:44px}
+.more-offers ul{padding-inline-start:20px}
+.more-offers .small-h{font-size:1rem}
+
+/* 2026-11-14 trial form: consent sits directly above the submit button (button no longer inside the email box). */
+.qa-trial .input input{width:100%}
+.qa-trial-submit{display:flex;width:100%;justify-content:center;align-items:center;gap:6px;margin-top:10px;background:#bb79f9;border:0;border-radius:6px;color:#180f2d;padding:12px 14px;font-size:14px;font-weight:700;cursor:pointer}
+.qa-trial-submit:hover{background:#d6affb}
+.qa-trial-submit:focus-visible{outline:2px solid #67e8f9;outline-offset:2px}
+
+/* Funnel round 4: trial CTA on home/scanner result views */
+.trial-cta-urgent,.qa-result-trial.trial-cta-urgent{border:2px solid #c68efa;box-shadow:0 0 0 4px #c68efa33,0 12px 32px #c68efa22;border-radius:10px;padding:14px 16px;margin-top:14px}
+.qa-result-trial{margin-top:14px;padding:14px 16px;border:1px solid #3a3158;border-radius:10px;background:#1a1528}
+.qa-result-trial h2{font-size:18px;margin:0 0 6px}
+.qa-result-trial > p{margin:0 0 10px;color:#c6bfd8}
+.qa-result-trial .qa-trial-submit{margin-top:10px}

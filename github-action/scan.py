@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """GitHub Action: يفحص جاهزية TLS لما بعد الكم لنطاق ويكتب النتيجة في ملخّص الـ workflow.
 
-لا يكسر النشر بسبب عطل في خدمتنا أو تجاوز حدّ الفحص: يكتفي بتحذير. يفشل فقط حين يطلب المستخدم ذلك
-صراحةً (require-post-quantum أو min-grade) ويكون الموقع دون المطلوب، أو حين يكون اسم النطاق غير صالح.
+يفشل حين يطلب المستخدم ذلك صراحةً (require-post-quantum أو min-grade) ويكون الموقع دون المطلوب، أو حين يكون
+اسم النطاق غير صالح، أو حين يتعذّر الفحص (حدّ الفحص، عطل الخدمة، رد ناقص): فحص لم يجرِ لا يمرّ بصمت (منذ 2026-11-07).
+نتيجة غير محسومة (observation_status = undetermined) لا تُعرض كـ «كلاسيكي» ولا تُعدّ نجاحاً حين يُطلب PQ.
 مكتبة بايثون القياسية فقط، فيعمل على كل المشغّلات بلا تثبيت.
 """
 import json
@@ -19,7 +20,7 @@ GUIDE = "https://ather-quantum.com/guides/enable-x25519mlkem768-nginx"
 def fetch(base, domain, timeout=60):
     """يعيد (رمز HTTP، القاموس). لا يرفع استثناء لأخطاء HTTP."""
     url = base.rstrip("/") + "/api/v1/scan?domain=" + urllib.parse.quote(domain)
-    req = urllib.request.Request(url, headers={"User-Agent": "quantum-aether-action/1.0"})
+    req = urllib.request.Request(url, headers={"User-Agent": "quantum-aether-action/1.1.1"})
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
             return r.status, json.loads(r.read().decode("utf-8"))
@@ -34,26 +35,38 @@ def evaluate(result, require_pq, min_grade):
     """يعيد (ناجح؟، رسالة). يفشل فقط بما طلبه المستخدم صراحةً."""
     grade, pq = result.get("grade"), bool(result.get("post_quantum_key_exchange"))
     group = result.get("key_exchange_group") or "unknown"
+    if require_pq and _undetermined(result):
+        return False, (f"{result.get('domain')}: post-quantum key exchange is undetermined (the probe did not observe a "
+                       "negotiated group). Re-run the check.")
     if require_pq and not pq:
         return False, (f"{result.get('domain')} does not negotiate post-quantum key exchange (got {group}, grade {grade}). "
                        f"How to enable it: {GUIDE}")
     if min_grade in GRADES and grade in GRADES and GRADES.index(grade) > GRADES.index(min_grade):
         return False, f"{result.get('domain')} has grade {grade}, worse than the required {min_grade}."
-    return True, f"{result.get('domain')}: grade {grade}, key exchange {group}, post-quantum {'yes' if pq else 'no'}."
+    state = "undetermined" if _undetermined(result) else ("yes" if pq else "no")
+    return True, f"{result.get('domain')}: grade {grade}, key exchange {group}, post-quantum {state}."
+
+
+def _undetermined(result):
+    return result.get("post_quantum_key_exchange") is None or result.get("observation_status") == "undetermined"
 
 
 def summary_markdown(result):
     pq = bool(result.get("post_quantum_key_exchange"))
+    unknown = _undetermined(result)
     lines = [
         "### Post-quantum TLS check",
         "",
         "| Domain | Grade | Key exchange | Post-quantum |",
         "|---|---|---|---|",
         f"| `{result.get('domain')}` | **{result.get('grade')}** | `{result.get('key_exchange_group') or '?'}` | "
-        f"{'✅ yes' if pq else '⚠️ no'} |",
+        f"{'❔ undetermined' if unknown else ('✅ yes' if pq else '⚠️ no')} |",
         "",
     ]
-    if not pq:
+    if unknown:
+        lines += ["The probe did not observe a negotiated key-exchange group, so post-quantum support is undetermined. "
+                  "Re-run the check; this is not a classical-only result.", ""]
+    elif not pq:
         lines += ["Traffic to this site uses classical key exchange only, so it can be recorded today and decrypted "
                   f"later (\"harvest now, decrypt later\"). [How to enable X25519MLKEM768]({GUIDE})", ""]
     if result.get("scan_url"):

@@ -1,0 +1,28 @@
+{# Company billing form shared by /agency, /monitoring and the trial dashboard (same fields and boxes as /audit).
+   Pay buttons inside stay hidden until static/company-form.js reports every field filled and all boxes ticked. #}
+{% from "_countries.html" import country_options with context %}
+{% macro company_form(c, form_id, prefill={}, email_readonly=false) %}
+<style>.company-form .grid-2>p{min-width:0}.company-form input:not([type=checkbox]),.company-form select{width:100%;box-sizing:border-box}</style>
+<form id="{{ form_id }}" class="audit-form company-form" autocomplete="on" data-lang="{{ lang }}" novalidate
+      data-msg-latin="{{ c.checkout.err_latin }}" data-msg-fields="{{ c.checkout.err_fields }}"
+      data-msg-email="{{ c.err_email }}" data-msg-domain="{{ c.err_domain }}" data-msg-limit="{{ c.err_limit }}">
+  <div class="grid-2">
+    <p><label>{{ c.checkout.company }}<br><input name="org" required maxlength="200" autocomplete="organization"></label></p>
+    <p><label>{{ c.checkout.name }}<br><input name="name" required maxlength="120" autocomplete="name"></label></p>
+    <p><label>{{ c.checkout.email }}<br><input name="email" type="email" required maxlength="254" dir="ltr" autocomplete="email" value="{{ prefill.email or '' }}"{% if email_readonly %} readonly{% endif %}></label></p>
+    <p><label>{{ c.checkout.domain }}<br><input name="domain" required maxlength="253" dir="ltr" inputmode="url" autocomplete="url" value="{{ prefill.domain or '' }}"></label></p>
+    <p><label>{{ c.checkout.street }}<br><input name="street" required maxlength="200" autocomplete="address-line1"></label></p>
+    <p><label>{{ c.checkout.postal_code }}<br><input name="postal_code" required maxlength="30" autocomplete="postal-code"></label></p>
+    <p><label>{{ c.checkout.city }}<br><input name="city" required maxlength="100" autocomplete="address-level2"></label></p>
+    <p><label>{{ c.checkout.country }}<br><select name="country" required autocomplete="country">{{ country_options(lang) }}</select></label></p>
+  </div>
+  <p class="consent"><label><input type="checkbox" name="company_buyer" required>
+    <span>{{ c.checkout.company_buyer }}</span></label></p>
+  <p class="consent"><label><input type="checkbox" name="agb_consent" required>
+    <span>{{ c.checkout.agb }} (<a href="{{ url_for('site.legal_page', slug='agb', lang=legal_lang) }}" target="_blank">{{ t.legal_terms }}</a>)</span></label></p>
+  <p class="consent"><label><input type="checkbox" name="contact_consent" required>
+    <span>{{ c.checkout.contact_generic }} (<a href="{{ url_for('site.legal_page', slug='datenschutz', lang=legal_lang) }}" target="_blank">{{ c.privacy }}</a>)</span></label></p>
+  <p class="company-form-hint muted small" role="status">{{ c.checkout.err_fields }}</p>
+  {{ caller() }}
+</form>
+{% endmacro %}

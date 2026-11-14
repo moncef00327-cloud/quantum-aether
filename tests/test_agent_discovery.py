@@ -79,16 +79,16 @@ class AgentDiscoveryTests(unittest.TestCase):
 
  def test_tools_are_discoverable_and_read_only_calls_never_scan(self):
   tools=self.rpc('tools/list').json['result']['tools']
-  expected={'scan_tls','get_tls_evidence','get_methodology','get_example_result','get_service_info','get_full_report',
+  expected={'scan_tls','get_tls_evidence','exposure_window','get_methodology','get_example_result','get_service_info','get_full_report',
             'create_full_report_order','verify_full_report_payment'}
   self.assertEqual({t['name'] for t in tools},expected)
   read_only=[t for t in tools if t.get('annotations',{}).get('readOnlyHint') is True]
   self.assertEqual({t['name'] for t in read_only},
-                   {'get_tls_evidence','get_methodology','get_example_result','get_service_info'})
+                   {'get_tls_evidence','exposure_window','get_methodology','get_example_result','get_service_info'})
   self.assertEqual({t['name'] for t in tools if not t.get('annotations',{}).get('readOnlyHint')},
                    {'scan_tls','get_full_report','create_full_report_order','verify_full_report_payment'})
   for tool in read_only:
-   arguments={'domain':'example.com'} if tool['name']=='get_tls_evidence' else {}
+   arguments={'domain':'example.com'} if tool['name'] in ('get_tls_evidence','exposure_window') else {}
    response=self.rpc('tools/call',{'name':tool['name'],'arguments':arguments})
    self.assertEqual(response.status_code,200)
    self.assertFalse(response.json['result']['isError'])

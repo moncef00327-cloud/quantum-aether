@@ -9,8 +9,8 @@ for lang in ['ar','en']:
     aside=aside.replace('href="#"', 'href="{{ url_for(\'site.index\', lang=lang) }}"')
     nav=re.search(r'<nav\b.*?</nav>',aside).group()
     buttons=[b for b in re.findall(r'<button\b.*?</button>',nav) if 'nav-group-toggle' not in b]
-    ids=['overview','scanner','tracker','monitor','guides','business','llm']
-    destinations=["url_for('site.index',lang=lang)","url_for('site.index',lang=lang) ~ '#scanner'","url_for('site.adoption_page',lang=lang)","url_for('site.monitoring',lang=lang)","url_for('site.guides_index',lang=lang)","url_for('site.business_page',lang=lang)","url_for('site.agents_page',lang=lang)"]
+    ids=['overview','scanner','monitor','business','tracker','guides','llm']  # same order as items in App.tsx
+    destinations=["url_for('site.index',lang=lang)","url_for('site.index',lang=lang) ~ '#scanner'","url_for('site.monitoring',lang=lang)","url_for('site.pricing_page',lang=lang)","url_for('site.adoption_page',lang=lang)","url_for('site.guides_index',lang=lang)","url_for('site.agents_page',lang=lang)"]
     for button,id,url in zip(buttons,ids,destinations):
         inner=re.sub(r'^<button[^>]*>|</button>$','',button)
         inner=re.sub(r'<i></i>$','',inner)

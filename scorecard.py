@@ -47,15 +47,29 @@ def actual_weeks(conn, owner_email="", today=None):
             "scans": one("SELECT COUNT(*) FROM scans WHERE is_test = 0 AND created_at >= ? AND created_at < ?", a, b),
             "reports": one("SELECT COUNT(*) FROM orders WHERE is_test = 0 AND status = 'COMPLETED' "
                            "AND created_at >= ? AND created_at < ?", a, b),
-            "revenue": one("SELECT SUM(CAST(amount AS REAL)) FROM orders WHERE is_test = 0 AND status = 'COMPLETED' "
-                           "AND created_at >= ? AND created_at < ?", a, b)
-                       + one("SELECT SUM(CAST(amount AS REAL)) FROM packs WHERE is_test = 0 AND status = 'COMPLETED' "
-                             "AND paid_at >= ? AND paid_at < ?", a, b),
+            "revenue_by_currency": _revenue_by_currency(conn, a, b),
             "subs": one("SELECT COUNT(*) FROM monitor_accounts WHERE status = 'ACTIVE' AND lower(email) <> lower(?) "
                         "AND created_at >= ? AND created_at < ?", owner_email, a, b),
         })
+        weeks[-1]["revenue"] = weeks[-1]["revenue_by_currency"].get(REVENUE_CURRENCY, 0)
         start, index = end, index + 1
     return weeks
+
+
+REVENUE_CURRENCY = "USD"  # "revenue" (and net) is in USD only; other currencies are listed beside it, never added
+
+
+def _revenue_by_currency(conn, a, b):
+    """Paid reports and packs per currency (USD, EUR, USDT, USDC...). Amounts in different currencies are not summed."""
+    totals = {}
+    for sql in ("SELECT currency, SUM(CAST(amount AS REAL)) FROM orders WHERE is_test = 0 AND status = 'COMPLETED' "
+                "AND created_at >= ? AND created_at < ? GROUP BY currency",
+                "SELECT currency, SUM(CAST(amount AS REAL)) FROM packs WHERE is_test = 0 AND status = 'COMPLETED' "
+                "AND paid_at >= ? AND paid_at < ? GROUP BY currency"):
+        for currency, amount in conn.execute(sql, (a, b)).fetchall():
+            key = (currency or "?").upper()
+            totals[key] = round(totals.get(key, 0) + (amount or 0), 2)
+    return totals
 
 
 def closest_scenario(actual_visitors, week_index, fraction=1.0):
@@ -84,6 +98,11 @@ def build(conn, owner_email="", plans=None, today=None):
                           "GROUP BY plan", (owner_email,)).fetchall()
     mrr = sum(prices.get(plan, 0) * n for plan, n in active)
     totals = {m: sum(w[m] for w in weeks) for m in ("visitors", "scans", "reports", "revenue", "subs")}
+    by_currency = {}
+    for w in weeks:
+        for currency, amount in w["revenue_by_currency"].items():
+            by_currency[currency] = round(by_currency.get(currency, 0) + amount, 2)
+    totals["revenue_by_currency"] = by_currency
     day = min(today or dt.date.today(), dt.date.today())
     paid_days = max(0, (day - CREDIT_UNTIL).days + 1)   # الأيام بعد انتهاء الرصيد فقط تكلّف نقداً
     cost_so_far = COST_PER_MONTH * paid_days / 30.4
@@ -120,7 +139,10 @@ def as_text(card):
                      f"{e['optimistic']['visitors']:.0f}) | {w['scans']} (real. {e['realistic']['scans']:.0f}) | "
                      f"{w['reports']} | {w['subs']} | {SCENARIOS[w['closest']]['label']}")
     t = card["totals"]
-    lines += ["", f"Since launch: {t['visitors']} visitors, {t['scans']} scans, {t['reports']} reports (${t['revenue']:.2f}), "
+    others = ", ".join(f"{amount:.2f} {cur}" for cur, amount in sorted(t.get("revenue_by_currency", {}).items())
+                       if cur != REVENUE_CURRENCY)
+    lines += ["", f"Since launch: {t['visitors']} visitors, {t['scans']} scans, {t['reports']} reports (${t['revenue']:.2f}"
+                  f"{' + ' + others if others else ''}), "
                   f"{t['subs']} subscriptions. MRR ${card['mrr']:.2f}.",
               f"Cash cost so far ${card['cost_so_far']:.2f} (Vultr credit until {card['credit_until']}, then ~${card['cost_per_month']:.0f}/month); "
               f"net ${card['net_so_far']:.2f}. "

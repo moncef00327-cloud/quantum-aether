@@ -1,52 +1,54 @@
-// زر PayPal لباقة الوكالات: الطلب يُنشأ ويُلتقط على خادمنا، فلا يُفتح التقرير إلا بعد تحقق الخادم من الدفع.
+// Agency pack checkout: the company form must be complete before the PayPal buttons (PayPal, card, EPS where
+// PayPal offers it) appear. The server creates and captures the order and verifies amount and currency.
 (function () {
+  var form = document.getElementById("pack-checkout-form");
   var container = document.getElementById("paypal-button-container");
-  if (!container || !window.paypal) return;
   var message = document.getElementById("pay-message");
-  var consent = document.getElementById("consent");
+  if (!form || !container || !window.CompanyForm) return;
+  var mounted = false, company;
 
   function fail(text) { message.textContent = text || container.dataset.msgError; }
-  // خانة الموافقة فوق أزرار الدفع وقد تكون خارج الشاشة على الجوال: نمرّر إليها ونبرزها بدل رسالة لا يُعرف مكانها.
-  function showConsent(el) {
-    if (!el) return;
-    var label = el.closest("label") || el;
-    try { label.scrollIntoView({ block: "center" }); } catch (e) { label.scrollIntoView(); }
-    el.focus({ preventScroll: true });
-    label.style.outline = "3px solid #f59e0b"; label.style.outlineOffset = "4px"; label.style.borderRadius = "6px";
-    setTimeout(function () { label.style.outline = ""; label.style.outlineOffset = ""; }, 4000);
-    el.addEventListener("change", function () { label.style.outline = ""; }, { once: true });
+
+  function mount() {
+    if (mounted || !window.paypal) return;
+    mounted = true;
+    window.paypal.Buttons({
+      style: { layout: "vertical", color: "gold", shape: "rect", label: "pay" },
+      onClick: function (_data, actions) {
+        if (company.problem()) { company.touch(); return actions.reject(); }
+        message.textContent = "";
+        return actions.resolve();
+      },
+      createOrder: function () {
+        message.textContent = "";
+        return fetch("/api/paypal/packs?lang=" + encodeURIComponent(form.dataset.lang), {
+          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(company.payload())
+        }).then(function (response) {
+          return response.json().then(function (data) {
+            if (!response.ok || !data.id) {
+              var text = company.serverMessage(data.error);
+              if (text) fail(text);
+              throw new Error(data.error || "create_failed");
+            }
+            return data.id;
+          });
+        });
+      },
+      onApprove: function (data, actions) {
+        return fetch("/api/paypal/packs/" + encodeURIComponent(data.orderID) + "/capture", { method: "POST" })
+          .then(function (response) { return response.json(); })
+          .then(function (result) {
+            if (result.error === "INSTRUMENT_DECLINED") return actions.restart();
+            if (result.pack_url) { company.disable(); window.location.assign(result.pack_url); return; }
+            fail(result.status === "PENDING" ? container.dataset.msgPending : null);
+          });
+      },
+      onError: function () { if (!message.textContent) fail(); }
+    }).render(container);
   }
 
-  window.paypal.Buttons({
-    style: { layout: "vertical", color: "gold", shape: "rect", label: "paypal" },
-    onClick: function (_data, actions) {
-      // الموافقة الصريحة على التسليم الفوري شرط قبل فتح نافذة الدفع.
-      if (!consent || !consent.checked) { fail(container.dataset.msgConsent); showConsent(consent); return actions.reject(); }
-      message.textContent = "";
-      return actions.resolve();
-    },
-    createOrder: function () {
-      message.textContent = "";
-      return fetch("/api/paypal/packs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ consent: !!(consent && consent.checked) })
-      }).then(function (response) {
-        return response.json().then(function (data) {
-          if (!response.ok || !data.id) throw new Error(data.error || "create_failed");
-          return data.id;
-        });
-      });
-    },
-    onApprove: function (data, actions) {
-      return fetch("/api/paypal/packs/" + encodeURIComponent(data.orderID) + "/capture", { method: "POST" })
-        .then(function (response) { return response.json(); })
-        .then(function (result) {
-          if (result.error === "INSTRUMENT_DECLINED") return actions.restart();
-          if (result.pack_url) { window.location.assign(result.pack_url); return; }
-          fail(result.status === "PENDING" ? container.dataset.msgPending : null);
-        });
-    },
-    onError: function () { fail(); }
-  }).render("#paypal-button-container");
+  company = window.CompanyForm(form, function (ok) {
+    if (ok) mount();
+    container.hidden = !ok;
+  });
 })();

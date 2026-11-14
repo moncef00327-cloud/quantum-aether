@@ -52,7 +52,8 @@ class PayPalClient:
                               issue=details[0].get("issue") or payload.get("name"))
         return payload
 
-    def create_order(self, reference_id, amount, currency, description, return_url=None, cancel_url=None):
+    def create_order(self, reference_id, amount, currency, description, return_url=None, cancel_url=None,
+                     no_shipping=False):
         body = {
             "intent": "CAPTURE",
             "purchase_units": [{
@@ -62,6 +63,10 @@ class PayPalClient:
                 "amount": {"currency_code": currency, "value": amount},
             }],
         }
+        if no_shipping and not return_url:
+            # Service purchase: no shipping address step; funding-neutral, so the card button keeps working.
+            body["application_context"] = {"shipping_preference": "NO_SHIPPING", "user_action": "PAY_NOW",
+                                           "brand_name": "Quantum Aether"}
         if return_url:
             # طلب برابط موافقة (payer-action): يفتحه المشتري أو وكيله، ثم يعيده PayPal إلى return_url.
             body["payment_source"] = {"paypal": {"experience_context": {
@@ -78,6 +83,11 @@ class PayPalClient:
 
     def get_order(self, order_id):
         return self._request("GET", f"/v2/checkout/orders/{order_id}")
+
+    def refund_capture(self, capture_id, request_id, note="Service could not be delivered"):
+        """Issue a full refund for a verified capture. Empty body means full refund in PayPal Payments v2."""
+        return self._request("POST", f"/v2/payments/captures/{capture_id}/refund",
+                             json={"note_to_payer": note}, request_id=request_id)
 
     # ------------------------------------------------------------ الاشتراكات (Subscriptions v1)
 

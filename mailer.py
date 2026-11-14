@@ -2,6 +2,7 @@
 # إرسال البريد عبر Resend (https://resend.com). المنفذ 25 مغلق على الخادم، فنستخدم واجهة HTTPS.
 # يحتاج RESEND_API_KEY وQS_MAIL_FROM (عنوان من نطاق موثّق في Resend). بدونهما يُعطَّل الإرسال بهدوء.
 import html as htmlmod
+import base64
 import logging
 import re
 
@@ -25,7 +26,7 @@ class Mailer:
     def enabled(self):
         return bool(self.api_key and self.sender)
 
-    def send(self, to, subject, text, html=None):
+    def send(self, to, subject, text, html=None, attachments=None):
         """يعيد True إن قبل Resend الرسالة. لا يرفع استثناءً: فشل البريد لا يوقف الخدمة."""
         if not self.enabled:
             log.info("mail disabled; not sending %r to %s", subject, to)
@@ -34,7 +35,7 @@ class Mailer:
             html = render_html(subject, text, self.site_url)
         senders = [self.sender] + ([self.fallback_sender] if self.fallback_sender and self.fallback_sender != self.sender else [])
         for i, sender in enumerate(senders):
-            ok, status = self._post(sender, to, subject, text, html)
+            ok, status = self._post(sender, to, subject, text, html, attachments)
             if ok:
                 if i:
                     log.warning("mail sent with FALLBACK sender after primary was rejected: %s", self.last_error)
@@ -43,10 +44,15 @@ class Mailer:
                 break
         return False
 
-    def _post(self, sender, to, subject, text, html):
+    def _post(self, sender, to, subject, text, html, attachments=None):
         body = {"from": sender, "to": [to], "subject": subject, "text": text}
         if html:
             body["html"] = html
+        if attachments:
+            body["attachments"] = [
+                {"filename": item["filename"], "content": base64.b64encode(item["content"]).decode("ascii")}
+                for item in attachments
+            ]
         if self.reply_to:
             body["reply_to"] = self.reply_to  # ردود العملاء تصل إلى صاحب الموقع
         try:
@@ -67,11 +73,23 @@ _ARABIC = re.compile(r"[\u0600-\u06FF]")
 _URL = re.compile(r"https?://[^\s<>\"']+")
 
 
-def _linkify(escaped):
+UTM_EMAIL = "utm_source=email&amp;utm_medium=email&amp;utm_campaign=notification"
+
+
+def _with_utm(url, site_host):
+    """Links to our own site get UTM parameters in the href (the visible text stays the plain URL)."""
+    host = url.split("://", 1)[-1].split("/", 1)[0].split("?", 1)[0].lower()
+    if not site_host or host != site_host or "utm_source=" in url:
+        return url
+    base, hash_, frag = url.partition("#")
+    return base + ("&amp;" if "?" in base else "?") + UTM_EMAIL + hash_ + frag
+
+
+def _linkify(escaped, site_host=""):
     def repl(m):
         url = m.group(0).rstrip(".,;:)")
         tail = m.group(0)[len(url):]
-        return f'<a href="{url}" style="color:#6d3fc0;word-break:break-all">{url}</a>{tail}'
+        return f'<a href="{_with_utm(url, site_host)}" style="color:#6d3fc0;word-break:break-all">{url}</a>{tail}'
     return _URL.sub(repl, escaped)
 
 
@@ -79,10 +97,12 @@ def render_html(subject, text, site_url):
     """نسخة HTML بسيطة بشعار الموقع للنص نفسه. لا صور خارجية غير الشعار، ولا CSS خارجي (عملاء البريد يحذفونه)."""
     rtl = bool(_ARABIC.search(text))
     direction, align = ("rtl", "right") if rtl else ("ltr", "left")
+    site_host = site_url.split("://", 1)[-1].split("/", 1)[0].lower()
     paragraphs = "".join(
-        f'<p style="margin:0 0 16px;line-height:1.6">{_linkify(htmlmod.escape(block)).replace(chr(10), "<br>")}</p>'
+        f'<p style="margin:0 0 16px;line-height:1.6">{_linkify(htmlmod.escape(block), site_host).replace(chr(10), "<br>")}</p>'
         for block in text.strip().split("\n\n") if block.strip())
     host = site_url.split("://", 1)[-1]
+    home = _with_utm(site_url, site_host)
     logo = f"{site_url}/static/brand/logo-email.png"
     return f"""<!doctype html><html lang="{'ar' if rtl else 'en'}" dir="{direction}"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>{htmlmod.escape(subject)}</title></head>
@@ -90,10 +110,10 @@ def render_html(subject, text, site_url):
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f3f1f8"><tr><td align="center" style="padding:24px 12px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e4e0ee">
 <tr><td style="background:#191426;padding:18px 24px" dir="ltr">
-<a href="{site_url}" style="text-decoration:none;color:#ffffff;font:600 17px Arial,Helvetica,sans-serif">
+<a href="{home}" style="text-decoration:none;color:#ffffff;font:600 17px Arial,Helvetica,sans-serif">
 <img src="{logo}" width="40" height="40" alt="Quantum Aether" style="vertical-align:middle;border:0;border-radius:9px;margin-right:10px">
 <span style="vertical-align:middle">Quantum Aether</span></a></td></tr>
 <tr><td dir="{direction}" style="padding:28px 24px 12px;text-align:{align};color:#1c1830;font:15px Tahoma,Arial,Helvetica,sans-serif">{paragraphs}</td></tr>
 <tr><td style="padding:14px 24px 22px;border-top:1px solid #eeeaf5;text-align:center;color:#7a7390;font:12px Arial,Helvetica,sans-serif">
-<a href="{site_url}" style="color:#7a7390;text-decoration:none">{htmlmod.escape(host)}</a></td></tr>
+<a href="{home}" style="color:#7a7390;text-decoration:none">{htmlmod.escape(host)}</a></td></tr>
 </table></td></tr></table></body></html>"""

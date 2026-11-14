@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}{{ t.guides_title }} · {{ t.brand }}{% endblock %}
 {% block description %}{{ t.guides_intro }}{% endblock %}
+{% block head %}<script type="application/ld+json">{{ jsonld | tojson }}</script>{% endblock %}
 {% block content %}
 <section class="card">
   <h1>{{ t.guides_title }}</h1>

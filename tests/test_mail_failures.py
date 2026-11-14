@@ -8,7 +8,10 @@ import mailer as mailer_mod
 import quantum_saas_app
 import sales_db
 import uptime_check
-from test_discovery import FakeHTTP, fake_probe, _result
+try:
+    from tests.test_discovery import FakeHTTP, fake_probe, _result
+except ImportError:  # run from inside tests/
+    from test_discovery import FakeHTTP, fake_probe, _result
 
 
 class _Resp:
@@ -114,7 +117,8 @@ class BrandedHtmlTests(unittest.TestCase):
         self.assertTrue(m.send("u@y.z", "Hi <b>", "Hello\n\nOpen https://ather-quantum.com/x?a=1&b=2.\nBye"))
         h = sent["html"]
         self.assertIn('src="https://ather-quantum.com/static/brand/logo-email.png"', h)
-        self.assertIn('href="https://ather-quantum.com/x?a=1&amp;b=2"', h)
+        self.assertIn('href="https://ather-quantum.com/x?a=1&amp;b=2&amp;utm_source=email&amp;utm_medium=email&amp;utm_campaign=notification"', h)
+        self.assertIn('>https://ather-quantum.com/x?a=1&amp;b=2</a>', h)  # visible link text stays clean
         self.assertNotIn("<b>", h)
         self.assertIn('dir="ltr"', h)
         self.assertEqual(sent["text"].split("\n")[0], "Hello")

@@ -22,7 +22,8 @@ log = logging.getLogger("quantum_saas.monitor_job")
 
 
 def sync_subscriptions(conn, paypal, mailer=None, owner="", base_url="https://ather-quantum.com"):
-    """يوقف الحسابات التي ألغيت أو عُلّقت في PayPal (مثلاً من حساب المشترك أو لفشل الدفع)."""
+    """يوقف الحسابات التي ألغيت أو عُلّقت في PayPal (مثلاً من حساب المشترك أو لفشل الدفع)، ويعيد تفعيل المعلّقة
+    حين يستأنفها PayPal. Each transition is notified once."""
     if paypal is None:
         return
     for account in monitor_db.accounts_with_subscription(conn):
@@ -31,16 +32,25 @@ def sync_subscriptions(conn, paypal, mailer=None, owner="", base_url="https://at
         except (PayPalError, requests.RequestException) as exc:
             log.warning("could not check subscription of %s: %s", account["id"], exc)
             continue  # لا نوقف أحداً بسبب عطل مؤقت في PayPal
-        if status not in SUBSCRIPTION_LIVE_STATUSES:
-            log.info("account %s: PayPal status %s, deactivating", account["id"], status)
-            new_status = status if status in ("CANCELLED", "SUSPENDED", "EXPIRED") else "SUSPENDED"
-            monitor_db.set_status(conn, account["id"], new_status)
-            if mailer is not None:
-                if new_status in ("CANCELLED", "EXPIRED"):  # إلغاء نهائي: أكّد للعميل بلغته
-                    subj, body = monitor.cancel_email(account, f"{base_url}/monitoring?lang={account.get('lang') or 'en'}")
-                    mailer.send(account["email"], subj, body)
-                monitor.notify_owner(mailer, owner, f"Subscription {new_status.lower()} in PayPal", account,
-                                     f"PayPal status: {status}")
+        if status in SUBSCRIPTION_LIVE_STATUSES:
+            if account["status"] == "SUSPENDED":  # PayPal resumed it: monitoring resumes, owner told once
+                log.info("account %s: PayPal status %s, resuming", account["id"], status)
+                monitor_db.set_status(conn, account["id"], "ACTIVE")
+                if mailer is not None:
+                    monitor.notify_owner(mailer, owner, "Subscription resumed in PayPal", dict(account, status="ACTIVE"),
+                                         f"PayPal status: {status}")
+            continue
+        new_status = status if status in ("CANCELLED", "SUSPENDED", "EXPIRED") else "SUSPENDED"
+        if new_status == account["status"]:
+            continue  # already recorded (still suspended): no repeated notifications
+        log.info("account %s: PayPal status %s, deactivating", account["id"], status)
+        monitor_db.set_status(conn, account["id"], new_status)
+        if mailer is not None:
+            if new_status in ("CANCELLED", "EXPIRED"):  # إلغاء نهائي: أكّد للعميل بلغته
+                subj, body = monitor.cancel_email(account, f"{base_url}/monitoring?lang={account.get('lang') or 'en'}")
+                mailer.send(account["email"], subj, body)
+            monitor.notify_owner(mailer, owner, f"Subscription {new_status.lower()} in PayPal", account,
+                                 f"PayPal status: {status}")
 
 
 def handle_trials(conn, mailer, owner="", base_url="https://ather-quantum.com", now=None):

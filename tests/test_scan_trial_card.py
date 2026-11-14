@@ -43,9 +43,14 @@ class ScanTrialCardTest(unittest.TestCase):
         # result pages exist in en/ar (German visitors get English)
         self.assertIn("مجاناً", self.page(lang="ar").split('id="scan-trial"')[1][:600])
 
-    def test_grade_a_has_no_trial_card(self):
+    def test_grade_a_pitches_daily_monitoring_first_and_report_last(self):
+        # 2026-11-14: grade A also leads with the trial (silent regressions, subdomains behind/around the CDN)
         self.outcome = result("A", True, "X25519MLKEM768")
-        self.assertNotIn('id="scan-trial"', self.page())
+        html = self.page()
+        self.assertIn('id="scan-trial"', html)
+        self.assertIn("api.", html.split('id="scan-trial"')[1][:1500])
+        self.assertLess(html.index('id="scan-trial"'), html.index('id="discovery"'))
+        self.assertLess(html.index('id="alert"'), html.index('id="buy"'))  # the paid report comes last for A
 
     def test_inline_form_starts_a_trial(self):
         r = self.client.post("/monitoring/trial?lang=en", data={"email": "it@acme.org", "domain": "acme.org", "consent": "1"})

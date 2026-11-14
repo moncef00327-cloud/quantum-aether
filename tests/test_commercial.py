@@ -29,7 +29,9 @@ class CommercialPagesTest(unittest.TestCase):
                     self.assertIn('57.50 EUR', body)
                     self.assertIn('234.00 EUR', body)
                     self.assertIn('/agency?lang=' + lang + '#buy', body)
-                    self.assertIn('/monitoring?lang=' + lang + '#subscribe', body)
+                    self.assertIn('/monitoring?lang=' + lang + '&amp;subscribe=1#subscribe', body)
+                    self.assertIn('action="/monitoring/trial?lang=' + lang + '"', body)  # trial first (2026-11-14)
+                    self.assertLess(body.index('action="/monitoring/trial'), body.index('#subscribe'))
                     self.assertNotIn('paypal.com/sdk', body)
         self.assertIn('dir="rtl"', self.client.get('/business?lang=ar').text)
 

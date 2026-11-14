@@ -1,13 +1,16 @@
 {% extends "base.html" %}
+{% from "_trial_cta.html" import trial_cta with context %}
 {% block title %}{{ 'فحص TLS لما بعد الكم مجانًا' if lang == 'ar' else ('Kostenloser Post-Quantum-TLS-Check' if lang == 'de' else 'Free Post-Quantum TLS Checker') }} · Quantum Aether{% endblock %}
 {% block head %}{% for obj in jsonld %}
 <script type="application/ld+json">{{ obj | tojson }}</script>{% endfor %}{% endblock %}
 {% block content %}
 <section class="hero home-hero">
   <div class="hero-copy">
-  <p class="eyebrow"><span class="status-dot" aria-hidden="true"></span> {{ 'مرصد الويب لما بعد الكم' if lang == 'ar' else ('Das Post-Quantum-Web verstehen' if lang == 'de' else 'INTELLIGENCE FOR THE POST-QUANTUM WEB') }}</p>
-  <h1>{{ t.hero_title }}</h1>
-  <p class="lead">{{ t.hero_tagline }}</p>
+  <p class="eyebrow"><span class="status-dot" aria-hidden="true"></span> {{ 'فحص TLS لما بعد الكم للشركات' if lang == 'ar' else ('Post-Quantum-TLS-Check für Unternehmen' if lang == 'de' else 'POST-QUANTUM TLS CHECK FOR COMPANIES') }}</p>
+  <h1>{{ t.home_h1 }}</h1>
+  <p class="lead">{{ t.home_hndl }}</p>
+  <p>{{ t.home_target }}</p>
+  <p><a class="button-link" href="#trial" data-ev="trial_cta">{{ t.trial_button }}</a> <span class="muted small">{{ t.trial_after }} <bdi dir="ltr">{{ '%g'|format(starter_price|float) }} {{ '€' if sub_currency == 'EUR' else sub_currency }}</bdi> {{ t.mon_per_month }}</span></p>
   </div>
   <div class="scanner-panel">
   <div class="panel-heading"><span class="scanner-symbol" aria-hidden="true">⌁</span><div><h2>{{ 'ابدأ بفحص موقعك' if lang == 'ar' else ('Website jetzt prüfen' if lang == 'de' else 'Start with your website') }}</h2><p>{{ 'فحص مجاني · دون إنشاء حساب' if lang == 'ar' else ('Kostenlos · Ohne Anmeldung' if lang == 'de' else 'Free check · No account needed') }}</p></div><span class="tag">TLS</span></div>
@@ -41,6 +44,7 @@
   <p class="trustbar"><a href="{{ url_for('site.adoption_page', lang=lang) }}">{{ t.trust_bar }}</a></p>
   </div>
 </section>
+{{ trial_cta('trial', source='home') }}
 
 {% if study_snapshot %}
 <section class="stats platform-metrics" aria-label="{{ 'الدراسة المنشورة' if lang == 'ar' else 'Published study snapshot' }}">
@@ -48,6 +52,7 @@
   <div class="card stat"><h2>{{ 'استجابت عبر HTTPS' if lang == 'ar' else ('Über HTTPS erreichbar' if lang == 'de' else 'Responded over HTTPS') }}</h2><p class="value">{{ study_snapshot.reachable }}</p></div>
   <div class="card stat"><h2>{{ 'رُصد دعمها ضمن المستجيبة' if lang == 'ar' else ('PQ-Anteil der erreichbaren Domains' if lang == 'de' else 'PQ share of responding domains') }}</h2><p class="value">{{ (study_snapshot.pq / study_snapshot.reachable * 100)|round(1) }}%</p></div>
 </section>
+<p class="dataset-caption">{{ 'من ' if lang == 'ar' else ('Von ' if lang == 'de' else 'Of ') }}{{ study_snapshot.pq }}{{ ' نطاقاً تفاوضت على التبادل الهجين، نالت ' if lang == 'ar' else (' Domains handelten den hybriden Austausch aus; ' if lang == 'de' else ' domains negotiated hybrid exchange; ') }}{{ study_snapshot.grades.get('A', 0) }}{{ ' نالت A، و' if lang == 'ar' else (' erhielten Note A, und ' if lang == 'de' else ' received A, and ') }}{{ study_snapshot.pq_critical }}{{ ' خُفّضت بسبب نتيجة حرجة أخرى.' if lang == 'ar' else (' wurden wegen eines weiteren kritischen Befunds herabgestuft.' if lang == 'de' else ' were downgraded for another critical finding.') }}</p>
 <p class="dataset-caption">Tranco · <time datetime="{{ study_snapshot.scanned_on }}">{{ study_snapshot.scanned_on }}</time> · {{ 'عينة منشورة وليست إحصاءً عالميًا مباشرًا' if lang == 'ar' else ('Veröffentlichte Stichprobe, keine globale Live-Statistik' if lang == 'de' else 'Published sample, not a global live statistic') }} · <a href="{{ url_for('site.study', lang=lang) }}">{{ t.nav_study }}</a></p>
 {% endif %}
 
@@ -87,17 +92,16 @@
   <h2>{{ t.pricing_title }}</h2>
   <div class="grid-2">
     <div class="price-box">
-      <h3>{{ t.free_title }} <span class="tag">$0</span></h3>
+      <h3>{{ t.free_title }} <span class="tag">0</span></h3>
       <ul class="ticks">{% for item in t.free_items %}<li>{{ item }}</li>{% endfor %}</ul>
     </div>
     <div class="price-box highlight">
-      <h3>{{ t.paid_title }} <span class="tag">$49</span></h3>
+      <h3>{{ t.paid_title }} <span class="tag">{{ report_price }} {{ currency }}{% if currency == 'USD' %} · ≈ €{{ '%.2f'|format(report_price|float / usd_per_eur) }}{% endif %}</span></h3>
       <ul class="ticks">{% for item in t.paid_items %}<li>{{ item }}</li>{% endfor %}</ul>
       <p><a data-ev="sample_report" href="{{ url_for('site.sample_report', lang=lang if lang != 'de' else 'en') }}">{{ t.sample_link }} →</a></p>
     </div>
   </div>
   <p class="notice"><a href="{{ url_for('site.monitoring', lang=lang) }}">{{ t.mon_cta_home }} →</a></p>
-  <p><a href="{{ url_for('site.agency_page', lang=lang) }}" data-ev="agency_cta">{{ t.agency_home_link }} →</a></p>
 </section>
 
 <section class="card faq">

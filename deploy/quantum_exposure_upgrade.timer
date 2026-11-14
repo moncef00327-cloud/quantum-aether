@@ -1,0 +1,10 @@
+[Unit]
+Description=Upgrade pending OpenTimestamps proofs of the exposure registry daily
+
+[Timer]
+OnCalendar=*-*-* 14:20:00 UTC
+RandomizedDelaySec=20min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

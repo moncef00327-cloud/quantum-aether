@@ -23,12 +23,12 @@
     <h2>{{ t.study_grades }}</h2>
     <div class="bars" dir="ltr">
       {% for grade, n in d.grades.items() %}
-      <div class="bar-row"><span class="grade-chip grade-{{ grade }}">{{ grade }}</span>
+      <div class="bar-row"><a href="#grade-definitions" class="grade-chip grade-{{ grade }}">{{ grade }}</a>
         <div class="bar"><span style="width: {{ (n / d.reachable * 100) | round(1) }}%"></span></div>
         <span class="bar-value">{{ n }}</span></div>
       {% endfor %}
     </div>
-    <p class="muted small">A = TLS 1.3 + X25519MLKEM768 · B = TLS 1.3 · C = TLS 1.2 · F = invalid cert / legacy</p>
+    <p class="muted small"><a href="#grade-definitions">{{ 'تعريف الدرجات' if lang == 'ar' else ('Notendefinitionen' if lang == 'de' else 'Grade definitions') }}</a></p>
   </div>
   <div class="card">
     <h2>{{ t.study_groups }}</h2>
@@ -44,7 +44,7 @@
   <p class="muted">{{ t.study_notable_note }}</p>
   <table class="data" dir="ltr">
     <tr><th>{{ t.rank }}</th><th>{{ t.domain_col }}</th><th>{{ t.grade_col }}</th><th>{{ t.group_col }}</th><th>TLS</th></tr>
-    {% for s in notable %}<tr><td>{{ s.rank }}</td><td>{{ s.domain }}</td><td>{{ sx.undetermined if s.domain in retry_domains else s.grade }}</td><td><code>{{ s.group }}</code>{% if s.domain in retry_domains %} (HRR){% endif %}</td><td>{{ s.tls }}</td></tr>{% endfor %}
+    {% for s in notable %}<tr><td>{{ s.rank }}</td><td>{{ s.domain }}</td><td><a href="#grade-definitions">{{ sx.undetermined if s.domain in retry_domains else s.grade }}</a></td><td><code>{{ s.group }}</code>{% if s.domain in retry_domains %} (HRR){% endif %}</td><td>{{ s.tls }}</td></tr>{% endfor %}
   </table>
 </section>
 {% endif %}
@@ -53,6 +53,15 @@
   <h2>{{ t.study_certs }}</h2>
   <table class="kv" dir="ltr">
     {% for key, n in d.cert_keys %}<tr><th>{{ key }}</th><td>{{ n }}</td></tr>{% endfor %}
+  </table>
+</section>
+
+<section class="card">
+  <h2 id="grade-definitions">{{ 'تعريف الدرجات' if lang == 'ar' else ('Notendefinitionen' if lang == 'de' else 'Grade definitions') }}</h2>
+  <p>{{ t.grade_scope }}</p>
+  <table class="data">
+    <tr><th>{{ t.grade_col }}</th><th>{{ 'المعنى' if lang == 'ar' else ('Bedeutung' if lang == 'de' else 'Meaning') }}</th><th>{{ 'متى تُعطى' if lang == 'ar' else ('Vergabe' if lang == 'de' else 'Assigned when') }}</th></tr>
+    {% for grade, meaning, condition in t.grade_definitions %}<tr id="grade-{{ grade }}"><td><span class="grade-chip grade-{{ grade }}">{{ grade }}</span></td><td>{{ meaning }}</td><td>{{ condition }}</td></tr>{% endfor %}
   </table>
 </section>
 
@@ -69,7 +78,7 @@
     <summary><strong>{{ t.study_full_table }} ({{ d.reachable }})</strong></summary>
     <table class="data" dir="ltr">
       <tr><th>{{ t.rank }}</th><th>{{ t.domain_col }}</th><th>{{ t.grade_col }}</th><th>{{ t.group_col }}</th><th>TLS</th></tr>
-      {% for s in d.sites %}<tr><td>{{ s.rank }}</td><td>{{ s.domain }}</td><td>{{ sx.undetermined if s.domain in retry_domains else s.grade }}</td><td><code>{{ s.group }}</code>{% if s.domain in retry_domains %} (HRR){% endif %}</td><td>{{ s.tls }}</td></tr>{% endfor %}
+      {% for s in d.sites %}<tr><td>{{ s.rank }}</td><td>{{ s.domain }}</td><td><a href="#grade-definitions">{{ sx.undetermined if s.domain in retry_domains else s.grade }}</a></td><td><code>{{ s.group }}</code>{% if s.domain in retry_domains %} (HRR){% endif %}</td><td>{{ s.tls }}</td></tr>{% endfor %}
     </table>
   </details>
 </section>

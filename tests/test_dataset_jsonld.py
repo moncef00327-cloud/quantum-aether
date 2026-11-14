@@ -88,7 +88,7 @@ class DatasetJsonLdTests(unittest.TestCase):
 
     def test_non_dataset_pages_keep_their_structured_data_types(self):
         home=self.documents('/?lang=en')
-        self.assertEqual([d['@type'] for d in home],['WebSite','SoftwareApplication','FAQPage'])
+        self.assertEqual([d['@type'] for d in home],['Organization','WebSite','SoftwareApplication','FAQPage'])  # Organization+sameAs 2026-11-14
         guide=self.documents('/guides/enable-x25519mlkem768-nginx?lang=en')
         self.assertEqual([d['@type'] for d in guide],['TechArticle'])
         for docs in [home,guide]:

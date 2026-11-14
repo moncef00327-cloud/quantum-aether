@@ -1,0 +1,27 @@
+{# Billing-country dropdown. The submitted value is always the English (Latin) name printed on the invoice; only the
+   visible label is translated, so Arabic or German visitors never fail the Latin-script check on this field. #}
+{% macro country_options(lang, selected='Austria') %}
+{%- set countries = [
+  ('Austria', 'Österreich', 'النمسا'), ('Germany', 'Deutschland', 'ألمانيا'), ('Switzerland', 'Schweiz', 'سويسرا'),
+  ('Liechtenstein', 'Liechtenstein', 'ليختنشتاين'), ('Belgium', 'Belgien', 'بلجيكا'), ('Bulgaria', 'Bulgarien', 'بلغاريا'),
+  ('Croatia', 'Kroatien', 'كرواتيا'), ('Cyprus', 'Zypern', 'قبرص'), ('Czech Republic', 'Tschechien', 'التشيك'),
+  ('Denmark', 'Dänemark', 'الدنمارك'), ('Estonia', 'Estland', 'إستونيا'), ('Finland', 'Finnland', 'فنلندا'),
+  ('France', 'Frankreich', 'فرنسا'), ('Greece', 'Griechenland', 'اليونان'), ('Hungary', 'Ungarn', 'المجر'),
+  ('Ireland', 'Irland', 'أيرلندا'), ('Italy', 'Italien', 'إيطاليا'), ('Latvia', 'Lettland', 'لاتفيا'),
+  ('Lithuania', 'Litauen', 'ليتوانيا'), ('Luxembourg', 'Luxemburg', 'لوكسمبورغ'), ('Malta', 'Malta', 'مالطا'),
+  ('Netherlands', 'Niederlande', 'هولندا'), ('Poland', 'Polen', 'بولندا'), ('Portugal', 'Portugal', 'البرتغال'),
+  ('Romania', 'Rumänien', 'رومانيا'), ('Slovakia', 'Slowakei', 'سلوفاكيا'), ('Slovenia', 'Slowenien', 'سلوفينيا'),
+  ('Spain', 'Spanien', 'إسبانيا'), ('Sweden', 'Schweden', 'السويد'), ('Norway', 'Norwegen', 'النرويج'),
+  ('Iceland', 'Island', 'آيسلندا'), ('United Kingdom', 'Vereinigtes Königreich', 'المملكة المتحدة'),
+  ('United States', 'Vereinigte Staaten', 'الولايات المتحدة'), ('Canada', 'Kanada', 'كندا'),
+  ('Turkey', 'Türkei', 'تركيا'), ('United Arab Emirates', 'Vereinigte Arabische Emirate', 'الإمارات العربية المتحدة'),
+  ('Saudi Arabia', 'Saudi-Arabien', 'السعودية'), ('Qatar', 'Katar', 'قطر'), ('Kuwait', 'Kuwait', 'الكويت'),
+  ('Bahrain', 'Bahrain', 'البحرين'), ('Oman', 'Oman', 'عُمان'), ('Jordan', 'Jordanien', 'الأردن'),
+  ('Lebanon', 'Libanon', 'لبنان'), ('Iraq', 'Irak', 'العراق'), ('Syria', 'Syrien', 'سوريا'),
+  ('Egypt', 'Ägypten', 'مصر'), ('Morocco', 'Marokko', 'المغرب'), ('Tunisia', 'Tunesien', 'تونس'),
+  ('Algeria', 'Algerien', 'الجزائر'),
+] -%}
+{%- for en, de, ar in countries %}
+<option value="{{ en }}"{% if en == selected %} selected{% endif %}>{{ ar if lang == 'ar' else (de if lang == 'de' else en) }}</option>
+{%- endfor %}
+{% endmacro %}

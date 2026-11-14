@@ -186,9 +186,8 @@ class PaymentTests(AppTestCase):
         self.assertEqual(page.headers["Referrer-Policy"], "no-referrer")
         self.assertIn("ssl_ecdh_curve X25519MLKEM768", page.get_data(as_text=True))
 
-        fasta = self.client.get(report_url.split("?")[0] + "/dna.txt").get_data(as_text=True)
-        restored = bio_archive_report.from_fasta(fasta).decode("utf-8")
-        self.assertIn('"grade": "B"', restored)
+        # DNA/FASTA export disabled 2026-11-14 (product focus)
+        self.assertEqual(self.client.get(report_url.split("?")[0] + "/dna.txt").status_code, 404)
 
     def test_capture_is_idempotent(self):
         scan = self.scan()

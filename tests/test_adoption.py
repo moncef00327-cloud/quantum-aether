@@ -27,6 +27,12 @@ def result(domain, pq=True, grade=None, group=None):
     return r
 
 
+
+def study_rows_kept():
+    """Study rows that enter the tracker: the published 1000 minus reviewed excluded hosts (search_indexing)."""
+    with open(adoption.RAW_STUDY_FILE, encoding="utf-8") as source:
+        return sum(1 for line in source if not search_indexing.is_excluded(json.loads(line)["domain"]))
+
 class WeekScanner:
     """ماسح وهمي: يعيد نتيجة الدراسة لكل نطاق، إلا ما نغيّره في overrides."""
 
@@ -81,11 +87,15 @@ class UnitTests(unittest.TestCase):
         targets = adoption.load_targets()
         domains = [t["domain"] for t in targets]
         self.assertEqual(len(domains), len(set(domains)))
-        self.assertEqual(sum(1 for t in targets if t["rank"]),
-                         sum(1 for r, d in adoption.load_tranco(adoption.WEEKLY_TOP) if not search_indexing.is_excluded(d)))
-        study = [d for d in (json.loads(l)["domain"] for l in open(adoption.RAW_STUDY_FILE)) if not search_indexing.is_excluded(d)]
-        self.assertEqual([t["domain"] for t in targets[:len(study)]], study)   # الدراسة نفسها، بلا المحتوى المستبعد
-        self.assertFalse(any(search_indexing.is_excluded(t["domain"]) for t in targets))  # والمستبعد يُعوَّض بالتالي
+        # Reviewed excluded hosts (search_indexing) and opt-outs are not scanned; ranks stay real Tranco ranks.
+        top = [d for _, d in adoption.load_tranco(adoption.WEEKLY_TOP, adoption.TRANCO_FILE)]
+        optout = adoption.load_optout()
+        skipped = sum(1 for d in set(top) if search_indexing.is_excluded(d) or adoption.opted_out(d, optout))
+        self.assertGreater(skipped, 0)
+        self.assertEqual(sum(1 for t in targets if t["rank"]), len(set(top)) - skipped)
+        study = [d for d in (json.loads(l)["domain"] for l in open(adoption.RAW_STUDY_FILE))
+                 if not search_indexing.is_excluded(d) and not adoption.opted_out(d, optout)]
+        self.assertEqual([t["domain"] for t in targets[:len(study)]], study)   # الأكبر 1000 هي قائمة الدراسة نفسها
         watch = {d for s in adoption.load_watchlists().values() for d in s["domains"]}
         self.assertTrue(watch <= set(domains))
         for domain in watch:  # كل اسم في قوائم المراقبة صالح للماسح
@@ -113,15 +123,14 @@ class TrackerTests(unittest.TestCase):
 
     def test_seed_matches_published_study_and_runs_once(self):
         with self.conn() as c:
-            self.assertEqual(adoption.seed_from_study(c), quantum_saas_app.study_data()["total"])
+            self.assertEqual(adoption.seed_from_study(c), study_rows_kept())  # 1000 minus reviewed exclusions
             self.assertEqual(adoption.seed_from_study(c), 0)
             snap = adoption.snapshot(c)
         study = quantum_saas_app.study_data()
         self.assertEqual(snap["week"], "2026-W45")
         with open(adoption.RAW_STUDY_FILE, encoding='utf-8') as source:
             rows = (json.loads(line) for line in source)
-            retries = sum(bool(row.get('ok') and row.get('key_exchange', {}).get('hrr')) for row in rows
-                          if not search_indexing.is_excluded(row['domain']))
+            retries = sum(bool(row.get('ok') and row.get('key_exchange', {}).get('hrr')) for row in rows)
         # Preserve the archive; the new tracker excludes retry-only evidence from its denominator.
         self.assertEqual((snap["reachable"], snap["pq"]), (study["reachable"] - retries, study["pq"]))
         self.assertIsNone(snap["changes"])
@@ -193,7 +202,7 @@ class TrackerTests(unittest.TestCase):
         self.assertEqual(r.mimetype, "text/csv")
         self.assertEqual(r.headers["Access-Control-Allow-Origin"], "*")
         rows = list(csv.DictReader(io.StringIO(r.get_data(as_text=True))))
-        self.assertEqual(len(rows), quantum_saas_app.study_data()["total"])  # seeded study minus excluded content
+        self.assertEqual(len(rows), study_rows_kept())
         self.assertIn("/adoption?lang=de", self.client.get("/sitemap-pages.xml").get_data(as_text=True))
         self.assertIn("/adoption#2026-W45", self.client.get("/feed.xml").get_data(as_text=True))
         self.assertIn("/adoption.json", self.client.get("/llms.txt").get_data(as_text=True))

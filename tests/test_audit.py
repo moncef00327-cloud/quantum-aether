@@ -25,12 +25,15 @@ class AuditTests(unittest.TestCase):
         shutil.rmtree(self.dir, ignore_errors=True)
 
     def test_page_in_three_languages_with_price(self):
-        for lang, word in (("en", "Request audit"), ("ar", "اطلب التدقيق"), ("de", "Audit anfordern")):
+        for lang, word in (("en", "Request enterprise quote"),
+                           ("ar", "اطلب عرض سعر للمؤسسات"),
+                           ("de", "Enterprise-Angebot anfordern")):
             r = self.client.get(f"/audit?lang={lang}&domain=example.com")
             self.assertEqual(r.status_code, 200)
             html = r.get_data(as_text=True)
             self.assertIn(word, html)
-            self.assertIn("490 EUR", html)
+            self.assertIn("490", html)
+            self.assertTrue("EUR" in html or "€" in html)
             self.assertIn('value="example.com"', html)
             self.assertNotIn("noindex", html)
 

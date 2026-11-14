@@ -11,8 +11,11 @@ import quantum_vuln_scanner
 log = logging.getLogger("quantum_saas.monitor")
 
 PLANS = {
-    "starter": {"price": "29.00", "domains": 10, "env": "PAYPAL_PLAN_STARTER", "name": "Starter"},
-    "business": {"price": "99.00", "domains": 100, "env": "PAYPAL_PLAN_BUSINESS", "name": "Business"},
+    # env: legacy USD plan (existing subscribers keep it); env_eur: EUR plan offered to new subscribers.
+    "starter": {"price": "29.00", "domains": 10, "env": "PAYPAL_PLAN_STARTER", "env_eur": "PAYPAL_PLAN_STARTER_EUR",
+                "name": "Starter"},
+    "business": {"price": "99.00", "domains": 100, "env": "PAYPAL_PLAN_BUSINESS", "env_eur": "PAYPAL_PLAN_BUSINESS_EUR",
+                 "name": "Business"},
 }
 
 TRIAL_DAYS = 14          # تجربة مجانية للشركات بلا دفع
@@ -124,9 +127,10 @@ def diff(previous, result):
         alerts.append(('OBSERVATION_UNDETERMINED', {}))
     if not uncertain and not old_uncertain and previous["grade"] != result["grade"]:
         alerts.append(("GRADE_CHANGED", {"old": previous["grade"], "new": result["grade"]}))
-    if not uncertain and not old_uncertain and previous.get("pq") and not kx.get("pq"):
+    # PQ changes compare against the last determined answer (monitor_domains.pq survives undetermined checks).
+    if not uncertain and previous.get("pq") and not kx.get("pq"):
         alerts.append(("PQ_LOST", {"group": group}))
-    elif not uncertain and not old_uncertain and previous.get("pq") == 0 and kx.get("pq"):
+    elif not uncertain and previous.get("pq") == 0 and kx.get("pq"):
         alerts.append(("PQ_GAINED", {"group": group}))
     mixed = (result.get("endpoint_summary") or {}).get("mixed")
     old_mixed = ((old_result.get("endpoint_summary") or {}).get("mixed"))
@@ -278,17 +282,17 @@ def trial_reminder_email(account, days_left, login_url):
     bodies = {
         "ar": ("الأثير الكمومي: تنتهي تجربتكم المجانية خلال {k} أيام",
                "تنتهي تجربة المراقبة المجانية خلال {k} أيام. بعدها نتوقف عن فحص نطاقاتكم يومياً ولن تصلكم تنبيهات التراجع.\n\n"
-               "للاستمرار، افتحوا لوحة التحكم واختاروا خطة (Starter بـ 29$ أو Business بـ 99$ شهرياً). "
+               "للاستمرار، افتحوا لوحة التحكم واختاروا خطة (Starter بـ 29 € أو Business بـ 99 € شهرياً). "
                "نطاقاتكم وسجلّ التنبيهات يبقيان كما هما.\n\n"
                "إن لم يكن رابط اللوحة عندكم، اطلبوه هنا:\n{url}"),
         "de": ("Quantum Aether: Ihr kostenloser Test endet in {k} Tagen",
                "Ihr kostenloser Überwachungstest endet in {k} Tagen. Danach prüfen wir Ihre Domains nicht mehr täglich und Sie erhalten keine Warnungen.\n\n"
-               "Um fortzufahren, öffnen Sie Ihr Dashboard und wählen Sie einen Tarif (Starter 29 $ oder Business 99 $ pro Monat). "
+               "Um fortzufahren, öffnen Sie Ihr Dashboard und wählen Sie einen Tarif (Starter 29 € oder Business 99 € pro Monat). "
                "Ihre Domains und der Warnverlauf bleiben erhalten.\n\n"
                "Dashboard-Link nicht zur Hand? Hier anfordern:\n{url}"),
         "en": ("Quantum Aether: your free trial ends in {k} days",
                "Your free monitoring trial ends in {k} days. After that we stop scanning your domains daily and you won't get regression alerts.\n\n"
-               "To keep it running, open your dashboard and pick a plan (Starter $29 or Business $99 per month). "
+               "To keep it running, open your dashboard and pick a plan (Starter €29 or Business €99 per month). "
                "Your domains and alert history stay as they are.\n\n"
                "Don't have the dashboard link at hand? Request it here:\n{url}"),
     }
@@ -300,15 +304,15 @@ def trial_ended_email(account, login_url):
     bodies = {
         "ar": ("الأثير الكمومي: انتهت تجربتكم المجانية وتوقفت المراقبة",
                "انتهت تجربة المراقبة المجانية، وتوقف الفحص اليومي لنطاقاتكم.\n\n"
-               "نطاقاتكم وآخر النتائج محفوظة. لاستئناف المراقبة اشتركوا من لوحة التحكم (Starter بـ 29$ أو Business بـ 99$ شهرياً).\n\n"
+               "نطاقاتكم وآخر النتائج محفوظة. لاستئناف المراقبة اشتركوا من لوحة التحكم (Starter بـ 29 € أو Business بـ 99 € شهرياً).\n\n"
                "اطلبوا رابط اللوحة من هنا:\n{url}\n\nشكراً لتجربتكم الأثير الكمومي."),
         "de": ("Quantum Aether: Ihr kostenloser Test ist beendet",
                "Ihr kostenloser Überwachungstest ist beendet; die tägliche Prüfung Ihrer Domains ist pausiert.\n\n"
-               "Ihre Domains und die letzten Ergebnisse sind gespeichert. Abonnieren Sie im Dashboard, um fortzufahren (Starter 29 $ oder Business 99 $ pro Monat).\n\n"
+               "Ihre Domains und die letzten Ergebnisse sind gespeichert. Abonnieren Sie im Dashboard, um fortzufahren (Starter 29 € oder Business 99 € pro Monat).\n\n"
                "Dashboard-Link anfordern:\n{url}\n\nDanke, dass Sie Quantum Aether getestet haben."),
         "en": ("Quantum Aether: your free trial has ended",
                "Your free monitoring trial has ended and daily scanning of your domains is paused.\n\n"
-               "Your domains and latest results are saved. Subscribe from the dashboard to resume (Starter $29 or Business $99 per month).\n\n"
+               "Your domains and latest results are saved. Subscribe from the dashboard to resume (Starter €29 or Business €99 per month).\n\n"
                "Request your dashboard link here:\n{url}\n\nThanks for trying Quantum Aether."),
     }
     subject, body = bodies[_lang(account)]
@@ -366,13 +370,14 @@ def report_receipt_email(lang, domain, amount, currency, report_url, order_id):
 def owner_email(event, account, detail=""):
     """رسالة لصاحب الموقع عند اشتراك جديد أو إلغاء أو توقف."""
     plan = PLANS[account["plan"]]
+    currency = account.get("currency") or "EUR"
     trial = account.get("status") in ("TRIAL", "TRIAL_ENDED")
     subject = (f"[Quantum Aether] {event} — {account['email']}" if trial
-               else f"[Quantum Aether] {event}: {plan['name']} ${plan['price']} — {account['email']}")
+               else f"[Quantum Aether] {event}: {plan['name']} {plan['price']} {currency} — {account['email']}")
     text = "\n".join([
         f"Event: {event}",
         f"Customer: {account['email']}",
-        f"Plan: {plan['name']} (${plan['price']}/month, up to {plan['domains']} domains)" if account.get("status") not in ("TRIAL", "TRIAL_ENDED")
+        f"Plan: {plan['name']} ({plan['price']} {currency}/month, up to {plan['domains']} domains)" if account.get("status") not in ("TRIAL", "TRIAL_ENDED")
         else f"Free trial (ends {account.get('trial_ends_at') or '-'}, up to {TRIAL_DOMAINS} domains)",
         f"Account: {account['id']}",
         f"PayPal subscription: {account.get('subscription_id') or '-'}",

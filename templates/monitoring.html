@@ -1,60 +1,60 @@
 {% extends "base.html" %}
+{% from "_company_form.html" import company_form with context %}
+{% from "_trial_cta.html" import trial_cta with context %}
 {% block title %}{{ t.mon_seo_title }} · {{ t.brand }}{% endblock %}
 {% block description %}{{ t.mon_seo_desc }}{% endblock %}
 {% block head %}
 <script type="application/ld+json">{{ mon_jsonld | tojson }}</script>
 {% endblock %}
 {% block content %}
-<section class="hero">
+<section class="hero trial-fold" id="trial">
   <h1>{{ t.mon_title }}</h1>
-  <p class="lead">{{ t.mon_sub }}</p>
+  {{ trial_cta('trial-form', prefill=domain, title='', sub=t.trial_fold_line, source='monitoring', show_title=false) }}
 </section>
 
 <section class="card">
+  <p class="lead">{{ t.mon_sub }}</p>
   <ul class="ticks">{% for item in t.mon_features %}<li>{{ item }}</li>{% endfor %}</ul>
 </section>
 
-<section class="card highlight" id="trial">
-  <h2>{{ t.trial_card_title }}</h2>
-  <p>{{ t.trial_card_sub }}</p>
-  <form method="post" action="{{ url_for('site.monitor_trial', lang=lang) }}" class="scan-form">
-    <label for="trial-domain">{{ t.trial_domain_label }}</label>
-    <div class="scan-row"><input id="trial-domain" name="domain" type="text" dir="ltr" required value="{{ domain or '' }}" placeholder="company.com" autocomplete="url"></div>
-    <label for="trial-email">{{ t.trial_email_label }}</label>
-    <div class="scan-row">
-      <input id="trial-email" name="email" type="email" autocomplete="email" dir="ltr" required placeholder="security@{{ domain or 'company.com' }}">
-      <button type="submit" data-ev="trial_start">{{ t.trial_button }}</button>
-    </div>
-    <p class="consent"><label><input type="checkbox" name="consent" value="1" required>
-      <span>{{ t.trial_consent }} (<a href="{{ url_for('site.legal_page', slug='agb', lang=legal_lang) }}" target="_blank">{{ t.legal_terms }}</a> · <a href="{{ url_for('site.legal_page', slug='datenschutz', lang=legal_lang) }}" target="_blank">{{ t.legal_privacy }}</a>)</span></label></p>
-  </form>
+<section class="card">
+  <h2>{{ 'حدود الباقات والبيانات' if lang == 'ar' else ('Plan- und Datengrenzen' if lang == 'de' else 'Plan and data limits') }}</h2>
+  <table class="data">
+    <tr><th>{{ 'الخطة' if lang == 'ar' else ('Plan' if lang == 'de' else 'Plan') }}</th><th>{{ 'المضيفون المشمولون' if lang == 'ar' else ('Enthaltene Hosts' if lang == 'de' else 'Included hosts') }}</th><th>{{ 'مدة الفحص' if lang == 'ar' else ('Prüfintervall' if lang == 'de' else 'Check interval') }}</th></tr>
+    <tr><td>{{ 'تجربة مجانية' if lang == 'ar' else ('Testphase' if lang == 'de' else 'Free trial') }}</td><td>10</td><td>{{ 'يومي لمدة 14 يوماً' if lang == 'ar' else ('Täglich für 14 Tage' if lang == 'de' else 'Daily for 14 days') }}</td></tr>
+    <tr><td>Starter</td><td>10</td><td>{{ 'يومي' if lang == 'ar' else ('Täglich' if lang == 'de' else 'Daily') }}</td></tr>
+    <tr><td>Business</td><td>100</td><td>{{ 'يومي' if lang == 'ar' else ('Täglich' if lang == 'de' else 'Daily') }}</td></tr>
+  </table>
+  <p>{{ 'تُحتسب المضيفات الفرعية المكتشفة والمستجيبة ضمن الحد نفسه، ولا تزيد السعة بسبب كونها نطاقات فرعية.' if lang == 'ar' else ('Erreichbare, automatisch erkannte Subdomains zählen zum selben Limit und erhöhen die Kapazität nicht.' if lang == 'de' else 'Automatically discovered, responding subdomains count toward the same host limit; they do not add extra capacity.') }}</p>
+  <p>{{ 'عند انتهاء التجربة تتوقف الفحوص اليومية وتبقى بياناتها محفوظة 90 يوماً؛ ثم تُحذف إن لم يبدأ اشتراك.' if lang == 'ar' else ('Nach Testende pausieren tägliche Checks. Die Daten bleiben 90 Tage gespeichert und werden danach ohne Abonnement gelöscht.' if lang == 'de' else 'After the trial, daily checks stop. Trial data is retained for 90 days and then deleted if no subscription starts.') }}</p>
 </section>
 
+
 <section class="card" id="subscribe" data-domain="{{ domain or '' }}">
-  <h2>{{ t.trial_or_subscribe }}</h2>
+  <details{% if request.args.get('subscribe') %} open{% endif %}>
+  <summary><h2 style="display:inline">{{ t.trial_or_subscribe }}</h2></summary>
   {% if domain %}<p class="notice"><strong>{{ t.mon_domain_banner.format(domain=domain) }}</strong></p>{% endif %}
-  {% if enabled %}
-  <label for="sub-email">{{ t.mon_email_label }}</label>
-  <div class="scan-row"><input id="sub-email" type="email" autocomplete="email" dir="ltr" placeholder="you@{{ domain or 'company.com' }}" required></div>
-  <p class="consent"><label><input type="checkbox" id="consent">
-    <span>{{ t.consent_subscription }} (<a href="{{ url_for('site.legal_page', slug='agb', lang=legal_lang) }}" target="_blank">{{ t.legal_terms }}</a>)</span></label></p>
+  {% if currency != 'EUR' %}<p class="notice">{{ c.checkout.currency_note.format(currency=currency) }}</p>{% endif %}
+  {% if enabled and sandbox %}<p class="notice">{{ 'وضع الاختبار (PayPal Sandbox): لا يُحصَّل أي مبلغ حقيقي.' if lang == 'ar' else ('Testmodus (PayPal-Sandbox): Es wird kein echtes Geld abgebucht.' if lang == 'de' else 'Test mode (PayPal sandbox): no real money is charged.') }}</p>{% endif %}
+  {% call company_form(c, 'sub-company-form', {'domain': domain}) %}
   <p class="muted">{{ t.mon_choose }}</p>
-  {% endif %}
   <div class="grid-2">
     {% for name, p in plans.items() %}
     <div class="price-box{% if name == 'business' %} highlight{% endif %}">
-      <h3>{{ p.name }} <span class="tag">${{ p.price | replace(".00", "") }}</span> <span class="muted small">{{ t.mon_per_month }}</span></h3>
+      <h3>{{ p.name }} <span class="tag"><bdi>{{ p.price }} {{ currency }}</bdi></span> <span class="muted small">{{ t.mon_per_month }}</span></h3>
       <p>{{ t.mon_domains.format(n=p.domains) }}</p>
-      {% if enabled %}<div class="paypal-sub" data-plan="{{ name }}"></div>{% endif %}
+      {% if enabled %}<div class="paypal-sub" data-plan="{{ name }}" hidden></div>{% endif %}
     </div>
     {% endfor %}
   </div>
+  <p class="muted small">{{ sub_note }}</p>
   {% if enabled %}
-  <p id="sub-message" class="form-error" role="status"
-     data-msg-email="{{ t.mon_email_first }}" data-msg-error="{{ t.mon_error }}" data-msg-consent="{{ t.consent_missing }}"></p>
+  <p id="sub-message" class="form-error" role="status" data-msg-error="{{ t.mon_error }}"></p>
   {% else %}
   <p class="notice">{{ t.mon_disabled }}</p>
   {% endif %}
+  {% endcall %}
+  </details>
   <p class="muted small"><a href="{{ url_for('site.agency_page', lang=lang) }}" data-ev="agency_cta">{{ t.mon_one_time_alt }}</a></p>
 </section>
 
@@ -84,7 +84,8 @@
 {% endblock %}
 {% block scripts %}
 {% if enabled %}
-<script src="https://www.paypal.com/sdk/js?client-id={{ paypal_client_id | urlencode }}&vault=true&intent=subscription&currency={{ currency }}"></script>
+<script src="https://www.paypal.com/sdk/js?client-id={{ paypal_client_id | urlencode }}&vault=true&intent=subscription&currency={{ currency }}&components=buttons"></script>
+<script src="{{ url_for('static', filename='company-form.js') }}"></script>
 <script src="{{ url_for('static', filename='subscribe.js') }}"></script>
 {% endif %}
 {% endblock %}

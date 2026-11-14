@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_trial_cta.html" import trial_cta with context %}
 {% block title %}{{ t.site_question.format(domain=domain) }}{% if summary %} {{ t.site_title_grade.format(grade=summary.grade) }}{% endif %}{% endblock %}
 {% block og_image %}{% if summary %}{{ abs_url('site.og_site', domain=domain) }}{% else %}{{ super() }}{% endif %}{% endblock %}
 {% block description %}{{ meta_description or t.site_meta.format(domain=domain) }}{% endblock %}
@@ -10,9 +11,13 @@
   <div>
     <p class="muted">{{ t.site_title }}</p>
     <h1 dir="ltr" class="domain">{{ domain }}</h1>
-    {% if summary %}<p class="grade-text">{{ t.grades[summary.grade] }}</p>{% endif %}
+    {% if summary %}<p class="grade-text">{{ t.grades[summary.grade] }}</p><p class="small"><a href="{{ grade_guide_url }}">{{ 'تعريف الدرجة' if lang == 'ar' else ('Grade definition' if lang == 'en' else 'Notendefinition') }}</a></p>{% endif %}
   </div>
 </section>
+
+{% set site_urgent = (not summary or not summary.pq or summary.unsure or summary.grade != 'A') %}
+{{ trial_cta('site-trial', domain=domain, title=t.scan_trial_title.format(domain=domain),
+             sub=t.scan_trial_sub, source='scan_result', urgent=site_urgent) }}
 
 {% if summary %}
 <section class="card">
@@ -101,6 +106,7 @@
 {% else %}
 <section class="card"><p>{{ t.site_unknown.format(domain=domain) }}</p></section>
 {% endif %}
+
 
 <section class="card" id="alert">
   <h2>{{ t.alert_card_title }}</h2>

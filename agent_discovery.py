@@ -21,6 +21,7 @@ REPORT_SCHEMA={'type':'object','properties':{'scan_id':{'type':'string','minLeng
 TOOLS=[
  {'name':'scan_tls','title':'Measure TLS and post-quantum key exchange','description':'Run a new, rate-limited TLS scan of a public hostname on port 443. Returns observation_status, measured time, negotiated group and certificate summary. Starts an external connection and stores a publicly accessible result. Does not judge application safety.', 'inputSchema':DOMAIN_SCHEMA,'annotations':{'readOnlyHint':False,'destructiveHint':False,'idempotentHint':False,'openWorldHint':True}},
  {'name':'get_tls_evidence','title':'Read stored TLS evidence without scanning','description':'Read existing TLS evidence with source, checked_at, expires_at and fresh/stale/undetermined/not_scanned state. Never starts a new network scan. A missing record is not proof that a domain is unsafe.', 'inputSchema':DOMAIN_SCHEMA,'annotations':{'readOnlyHint':True,'idempotentHint':True,'openWorldHint':False}},
+ {'name':'exposure_window','title':'Read a domain\'s post-quantum exposure window (registry, no scan)','description':'Quantum Exposure Registry: from when a domain was first observed, the week it first negotiated post-quantum key exchange (first_pq_week), the observed classical exposure window (harvest-now-decrypt-later, a lower bound), regressions, the weekly timeline with row fingerprints and OpenTimestamps anchor proofs, and same-network peers. Read-only, never scans. External observation, not a compliance certification.','inputSchema':DOMAIN_SCHEMA,'annotations':{'readOnlyHint':True,'idempotentHint':True,'openWorldHint':False}},
  {'name':'get_methodology','title':'Understand measurement scope and limitations','description':'Get the documented measurement scope, observation states, certificate-grade rules and privacy limitations before interpreting a TLS result.','inputSchema':EMPTY_SCHEMA,'annotations':{'readOnlyHint':True,'idempotentHint':True,'openWorldHint':False}},
  {'name':'get_example_result','title':'Inspect an archived example without scanning','description':'Return an explicitly labeled archived example, not live telemetry. No payment and no network scan.','inputSchema':EMPTY_SCHEMA,'annotations':{'readOnlyHint':True,'idempotentHint':True,'openWorldHint':False}},
  {'name':'get_service_info','title':'Discover Quantum Aether capabilities and current pricing','description':'Get live endpoints, quotas, report price, x402 Base USDC checkout status and limitations.','inputSchema':EMPTY_SCHEMA,'annotations':{'readOnlyHint':True,'idempotentHint':True,'openWorldHint':False}},
@@ -170,7 +171,7 @@ def register(bp, services):
    names={t['name'] for t in TOOLS}
    if not isinstance(name,str) or name not in names:return rpc_error(-32602,'Unknown tool',request_id)
    if not isinstance(args,dict):return rpc_error(-32602,'arguments must be an object',request_id)
-   domain_tools={'scan_tls','get_tls_evidence'}
+   domain_tools={'scan_tls','get_tls_evidence','exposure_window'}
    if name in domain_tools:
     if set(args)!={'domain'} or not isinstance(args['domain'],str) or not 1<=len(args['domain'])<=253:
      return rpc_error(-32602,'Expected one domain string, at most 253 characters',request_id)
@@ -187,6 +188,9 @@ def register(bp, services):
     if name=='scan_tls':
      scan_id,raw=services['scan'](domain,'mcp');value=services['summary'](scan_id,raw)
     elif name=='get_tls_evidence':value=dict(badge_evidence.for_domain(services['db'](),domain),verification_url=base()+'/verify/'+domain)
+    elif name=='exposure_window':
+     import exposure_web
+     value=exposure_web.window_for(services['db'](),domain) or {'domain':domain,'error':'not_tracked','message':'No weekly observation of this domain in the registry yet. Not proof of anything.'}
     elif name=='get_methodology':value=methodology(base())
     elif name=='get_example_result':value=example()
     elif name=='get_full_report':

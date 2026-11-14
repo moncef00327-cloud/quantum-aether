@@ -153,6 +153,12 @@ def set_plan(conn, account_id, plan, consent_at):
                      " WHERE id = ?", (plan, consent_at, account_id))
 
 
+def set_token(conn, account_id, token):
+    """Stores a token that was already delivered (e.g. emailed successfully); the previous link stops working."""
+    with conn:
+        conn.execute("UPDATE monitor_accounts SET token_hash = ? WHERE id = ?", (hash_token(token), account_id))
+
+
 def rotate_token(conn, account_id):
     token = secrets.token_urlsafe(32)
     with conn:
@@ -176,7 +182,9 @@ def active_accounts_by_email(conn, email):
 
 
 def accounts_with_subscription(conn):
-    rows = conn.execute("SELECT * FROM monitor_accounts WHERE subscription_id IS NOT NULL AND status = 'ACTIVE'").fetchall()
+    # SUSPENDED too: PayPal may resume a subscription (e.g. after a failed payment is retried), and the account must follow
+    rows = conn.execute("SELECT * FROM monitor_accounts WHERE subscription_id IS NOT NULL"
+                        " AND status IN ('ACTIVE', 'SUSPENDED')").fetchall()
     return [dict(r) for r in rows]
 
 
@@ -234,7 +242,9 @@ def save_check(conn, domain_id, result=None, error=None):
                                      es.get("total"), es.get("pq"), None if not es else int(bool(es.get("mixed"))),
                                      None, result.get("scanner_version"), domain_id))
             conn.execute(
-                "UPDATE monitor_domains SET grade = ?, pq = ?, days_left = ?, error = NULL, fail_streak = 0, result_json = ?,"
+                # pq keeps the last *determined* answer: an undetermined probe (None) must not erase it, otherwise
+                # a later classical result could never raise PQ_LOST. The check log above keeps the raw None.
+                "UPDATE monitor_domains SET grade = ?, pq = COALESCE(?, pq), days_left = ?, error = NULL, fail_streak = 0, result_json = ?,"
                 " checked_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now') WHERE id = ?",
                 (result["grade"], pq, result["certificate"].get("days_left"),
                  json.dumps(result, ensure_ascii=False), domain_id))

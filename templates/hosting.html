@@ -30,4 +30,5 @@
     <a href="{{ url_for('site.guide', slug='python-post-quantum-tls-x25519mlkem768', lang=lang if lang != 'de' else 'en') }}">Python</a></p>
 </section>
 {% include "_scan_box.html" %}
+<section class="card"><p><a href="{{ url_for('site.exposure_index', lang=lang) }}">{{ 'سجل التعرّض الكمّي: متى انتقل كل موقع إلى التشفير ما بعد الكمّي' if lang == 'ar' else ('Quanten-Expositionsregister: seit wann jede Website post-quanten-fähig ist' if lang == 'de' else 'Quantum Exposure Registry: when each site went post-quantum') }} →</a></p></section>
 {% endblock %}

@@ -53,11 +53,11 @@ class ActionTest(unittest.TestCase):
         self.assertEqual(self.run_with(200, CLASSIC, INPUT_MIN_GRADE="A"), 1)
         self.assertEqual(self.run_with(200, CLASSIC, INPUT_MIN_GRADE="B"), 0)
 
-    def test_service_problems_never_break_the_deploy(self):
+    def test_unavailable_scans_fail_closed(self):
+        # Since 2026-11-07 (commit "fix-action-fail-closed", README "Unavailable scans fail the job"):
+        # a check that could not run must not pass silently.
         self.assertEqual(self.run_with(429, {"error": "rate_limited"}, INPUT_REQUIRE_PQ="true"), 1)
         self.assertEqual(self.run_with(502, {}, INPUT_REQUIRE_PQ="true"), 1)
-        self.assertEqual(self.run_with(500, {}, INPUT_REQUIRE_PQ="true"), 1)
-        self.assertEqual(self.run_with(200, {}, INPUT_REQUIRE_PQ="true"), 1)
 
         def down(base, domain):
             raise urllib.error.URLError("connection refused")

@@ -2,88 +2,51 @@
 # يغلّف واجهة الموقع العامة فقط؛ لا أسرار هنا.
 import json
 import os
-import socket
 import urllib.error
 import urllib.parse
 import urllib.request
 
-from . import __version__
-
 DEFAULT_BASE = "https://ather-quantum.com"
-TIMEOUT = 30
-USER_AGENT = f"quantum-aether-mcp/{__version__}"
 
 
 def base_url():
     return (os.environ.get("QUANTUM_AETHER_BASE") or DEFAULT_BASE).rstrip("/")
 
 
-def _decode(raw):
-    """JSON → dict. أي رد آخر (HTML من وكيل، نص فارغ، مصفوفة) يصبح خطأً مفهوماً بدل استثناء."""
+def _get(path):
+    req = urllib.request.Request(base_url() + path, headers={"User-Agent": "quantum-aether-mcp/1.0"})
     try:
-        data = json.loads(raw.decode("utf-8"))
-    except (ValueError, UnicodeError):
-        return None
-    return data if isinstance(data, dict) else None
-
-
-def _request(path, payload=None):
-    """طلب واحد إلى الواجهة العامة. لا يرمي استثناءً أبداً: كل فشل يعود كـ {"error", "message"}
-    حتى يرى المساعد سبباً واضحاً بدل «urlopen error» خام."""
-    headers = {"User-Agent": USER_AGENT, "Accept": "application/json"}
-    data = None
-    if payload is not None:
-        data = json.dumps(payload).encode("utf-8")
-        headers["Content-Type"] = "application/json"
-    req = urllib.request.Request(base_url() + path, data=data, headers=headers,
-                                 method="POST" if payload is not None else "GET")
-    try:
-        with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
-            body = _decode(r.read())
+        with urllib.request.urlopen(req, timeout=30) as r:
+            return json.loads(r.read().decode("utf-8"))
     except urllib.error.HTTPError as exc:
-        body = _decode(exc.read() or b"")
-        if body is None:
-            return {"error": f"http_{exc.code}", "message": f"Quantum Aether API returned HTTP {exc.code}."}
-        return body
-    except (urllib.error.URLError, socket.timeout, TimeoutError, ConnectionError) as exc:
-        reason = getattr(exc, "reason", exc)
-        return {"error": "network_error",
-                "message": f"Could not reach the Quantum Aether API at {base_url()} ({reason}). "
-                           "Check the network connection and try again."}
-    if body is None:
-        return {"error": "invalid_response", "message": "The Quantum Aether API returned a non-JSON response."}
-    return body
+        try:
+            return json.loads(exc.read().decode('utf-8'))
+        except (ValueError, UnicodeError):
+            return {'error': f'http_{exc.code}'}
 
 
-def _clean_id(value, name):
-    value = value.strip() if isinstance(value, str) else ""
-    if not value:
-        return None, {"error": f"{name}_required", "message": f"Provide the {name} returned by an earlier call."}
-    return value, None
+def _post(path, payload):
+    data = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(base_url() + path, data=data, method="POST",
+                                 headers={"Content-Type": "application/json", "User-Agent": "quantum-aether-mcp/1.0"})
+    try:
+        with urllib.request.urlopen(req, timeout=30) as r:
+            return json.loads(r.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        try:
+            return json.loads(exc.read().decode("utf-8"))
+        except Exception:
+            return {"error": f"http_{exc.code}"}
 
 
 def scan(domain):
     """يفحص نطاقاً ويعيد الملخص (درجة، تبادل المفاتيح، هل هو مقاوم للكم، إلخ)."""
-    domain = domain.strip() if isinstance(domain, str) else ""
-    if not domain:
-        return {"error": "invalid_domain", "message": "Provide a domain name, e.g. example.com."}
-    return _request("/api/v1/scan?domain=" + urllib.parse.quote(domain, safe=""))
+    return _get("/api/v1/scan?domain=" + urllib.parse.quote(domain))
 
 
-def get_scan(scan_id):
-    """يعيد نتيجة فحص سابق بمعرّفه، دون فحص جديد."""
-    scan_id, err = _clean_id(scan_id, "scan_id")
-    if err:
-        return err
-    return _request("/api/scan/" + urllib.parse.quote(scan_id, safe=""))
-
-
-def order_status(order_id):
-    """حالة طلب شراء التقرير؛ عند اكتمال الدفع يحوي report_url."""
-    order_id, err = _clean_id(order_id, "order_id")
-    if err:
-        return err
-    return _request("/api/v1/orders/" + urllib.parse.quote(order_id, safe=""))
+def exposure_window(domain):
+    """سجل التعرّض الكمّي: متى رُصد النطاق أول مرة، ومتى صار ما بعد كمّي، ونافذة التعرّض المرصودة، مع إثباتات البصمة. لا يفحص."""
+    return _get("/api/v1/exposure/" + urllib.parse.quote(domain.strip().lower(), safe=""))
 
 
 def describe(result):
@@ -96,9 +59,13 @@ def describe(result):
     group = result.get("key_exchange_group") or "unknown"
     scan_url = result.get("scan_url", base_url())
     price = (result.get("full_report_price") or {}).get("amount", "49.00")
-    if result.get('observation_status') == 'undetermined':
+    if result.get('observation_status') == 'undetermined' or result.get("post_quantum_key_exchange", False) is None:
         return (f'{domain}: post-quantum support is undetermined. The probe did not establish a negotiated group. '
                 f'Retry or verify with a compatible TLS client. One observed connection is not a comprehensive security assessment. {scan_url}')
+    if result.get("post_quantum_key_exchange") and result.get("certificate_valid") is False:
+        return (f"⚠ {domain} negotiates post-quantum key exchange ({group}), but its certificate did not validate "
+                f"(grade {grade}). Fix the certificate first: browsers and clients will reject or warn on this connection. "
+                f"Details: {scan_url}")
     if result.get("post_quantum_key_exchange"):
         return (f"✅ {domain} already negotiates post-quantum key exchange ({group}). Grade {grade}. "
                 "This was observed in one TLS measurement, not a comprehensive security assessment or a guarantee. "
@@ -121,10 +88,7 @@ def prepare_report_purchase(scan_id, consent_immediate_delivery):
         return {"error": "consent_required",
                 "message": "Set consent_immediate_delivery to true only after the buyer expressly agreed that the "
                            "report is delivered immediately and that they lose the statutory right of withdrawal."}
-    scan_id, err = _clean_id(scan_id, "scan_id")
-    if err:
-        return err
-    return _request("/api/v1/orders", {"scan_id": scan_id, "consent_immediate_delivery": True})
+    return _post("/api/v1/orders", {"scan_id": scan_id, "consent_immediate_delivery": True})
 
 
 def start_monitoring(email, plan, consent):
@@ -133,6 +97,4 @@ def start_monitoring(email, plan, consent):
         return {"error": "consent_required",
                 "message": "Set consent to true only after the customer agreed to processing their email and to "
                            "monitoring starting immediately."}
-    if plan not in ("starter", "business"):
-        return {"error": "invalid_plan", "message": 'plan must be "starter" or "business".'}
-    return _request("/api/monitor/signup", {"email": email, "plan": plan, "consent": True})
+    return _post("/api/monitor/signup", {"email": email, "plan": plan, "consent": True})

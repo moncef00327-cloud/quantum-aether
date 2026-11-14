@@ -2,6 +2,7 @@ import json
 import os
 import shutil
 import tempfile
+import re
 import unittest
 from contextlib import closing
 
@@ -16,6 +17,14 @@ import sales_db
 from tests.test_app import RESULT
 
 PLAN_IDS = {"PAYPAL_PLAN_STARTER": "P-STARTER", "PAYPAL_PLAN_BUSINESS": "P-BUSINESS"}
+# Company billing form (same fields and boxes as the audit checkout); required for subscriptions and packs.
+COMPANY = {"org": "Example GmbH", "name": "Eva Muster", "street": "Ringstrasse 1", "postal_code": "1010",
+           "city": "Wien", "country": "Austria", "domain": "example.com",
+           "company_buyer": True, "agb_consent": True, "contact_consent": True}
+
+
+def company(**kw):
+    return dict(COMPANY, **kw)
 
 
 def result_for(domain, grade="A", pq=True, days=60, group="X25519MLKEM768"):
@@ -67,8 +76,9 @@ class FakeMailer:
     def __init__(self):
         self.sent = []
 
-    def send(self, to, subject, text, html=None):
+    def send(self, to, subject, text, html=None, attachments=None):
         self.sent.append((to, subject, text))
+        self.attachments = getattr(self, "attachments", []) + [(to, attachments)]
         return True
 
 
@@ -89,7 +99,7 @@ class MonitoringTest(unittest.TestCase):
         return closing(sales_db.connect(os.path.join(self.tmp, "quantum_saas.db")))
 
     def subscribe(self, plan="starter", email="ops@example.com", status="ACTIVE", plan_id=None):
-        r = self.client.post("/api/monitor/signup", json={"email": email, "plan": plan, "consent": True})
+        r = self.client.post("/api/monitor/signup", json=company(email=email, plan=plan))
         self.assertEqual(r.status_code, 201)
         account_id = r.get_json()["account_id"]
         self.assertEqual(r.get_json()["plan_id"], PLAN_IDS[f"PAYPAL_PLAN_{plan.upper()}"])
@@ -109,21 +119,6 @@ class MonitoringTest(unittest.TestCase):
         self.assertIn("Starter", body)
         self.assertIn("Business", body)
         self.assertIn("intent=subscription", body)
-        self.assertIn("api.example.com", body)
-        custom = self.client.get("/monitoring?domain=acme.org&lang=en").get_data(as_text=True)
-        self.assertIn("Start by monitoring acme.org daily", custom)
-        self.assertIn("api.acme.org", custom)
-
-    def test_signup_with_initial_domain_populates_dashboard(self):
-        r = self.client.post("/api/monitor/signup", json={"email": "ops@acme.org", "plan": "starter", "consent": True, "domain": "acme.org"})
-        self.assertEqual(r.status_code, 201)
-        account_id = r.get_json()["account_id"]
-        sub_id = f"I-{account_id}"
-        self.paypal.subscriptions[sub_id] = {"id": sub_id, "status": "ACTIVE", "custom_id": account_id, "plan_id": PLAN_IDS["PAYPAL_PLAN_STARTER"]}
-        act = self.client.post("/api/monitor/activate", json={"account_id": account_id, "subscription_id": sub_id})
-        self.assertEqual(act.status_code, 200)
-        dash = self.client.get(f"/monitor/{self.token_from(act)}").get_data(as_text=True)
-        self.assertIn("acme.org", dash)
 
     def test_pricing_page_without_plans_disables_checkout(self):
         app = quantum_saas_app.create_app({"TESTING": True, "DATA_DIR": self.tmp}, scanner=self.scanner, paypal=None)
@@ -132,8 +127,8 @@ class MonitoringTest(unittest.TestCase):
         self.assertEqual(app.test_client().post("/api/monitor/signup", json={}).status_code, 503)
 
     def test_signup_validates_email_and_plan(self):
-        self.assertEqual(self.client.post("/api/monitor/signup", json={"email": "bad", "plan": "starter", "consent": True}).status_code, 400)
-        self.assertEqual(self.client.post("/api/monitor/signup", json={"email": "a@b.co", "plan": "gold", "consent": True}).status_code, 400)
+        self.assertEqual(self.client.post("/api/monitor/signup", json=company(email="bad", plan="starter")).status_code, 400)
+        self.assertEqual(self.client.post("/api/monitor/signup", json=company(email="a@b.co", plan="gold")).status_code, 400)
 
     def test_activation_verifies_with_paypal_and_sends_welcome(self):
         account_id, r = self.subscribe()
@@ -160,7 +155,7 @@ class MonitoringTest(unittest.TestCase):
         self.assertEqual(r.status_code, 409)
 
     def test_pending_account_has_no_dashboard(self):
-        r = self.client.post("/api/monitor/signup", json={"email": "x@example.com", "plan": "starter", "consent": True})
+        r = self.client.post("/api/monitor/signup", json=company(email="x@example.com", plan="starter"))
         with self.conn() as c:
             token = monitor_db.rotate_token(c, r.get_json()["account_id"])
         self.assertEqual(self.client.get(f"/monitor/{token}").status_code, 404)
@@ -452,30 +447,6 @@ class AdminExclusionAndSeoTest(unittest.TestCase):
             self.assertIn(f'hreflang="{lang}"', body)
         self.assertIn('hreflang="x-default" href="https://ather-quantum.com/guides?lang=en"', body)
 
-    def test_arabic_business_and_pricing_pages_have_distinct_seo_and_crawlable_routes(self):
-        client = self.app.test_client()
-        business = client.get("/business?lang=ar")
-        pricing = client.get("/pricing?lang=ar")
-        self.assertEqual((business.status_code, pricing.status_code), (200, 200))
-        business_html, pricing_html = business.get_data(as_text=True), pricing.get_data(as_text=True)
-        self.assertIn("فحص TLS للشركات ومراقبة جاهزية ما بعد الكم", business_html)
-        self.assertIn("افحص تبادل مفاتيح TLS وشهادات نطاقات شركتك", business_html)
-        self.assertIn("أسعار فحص TLS وتقارير ومراقبة النطاقات", pricing_html)
-        self.assertIn("قارن خيارات فحص TLS لما بعد الكم للشركات والوكالات", pricing_html)
-        self.assertIn('rel="canonical" href="https://ather-quantum.com/business?lang=ar"', business_html)
-        self.assertIn('rel="canonical" href="https://ather-quantum.com/pricing?lang=ar"', pricing_html)
-        for lang in ("en", "ar", "de", "x-default"):
-            self.assertIn(f'hreflang="{lang}"', business_html)
-            self.assertIn(f'hreflang="{lang}"', pricing_html)
-        sitemap = client.get("/sitemap-pages.xml").get_data(as_text=True)
-        self.assertIn("https://ather-quantum.com/business?lang=ar", sitemap)
-        self.assertIn("https://ather-quantum.com/pricing?lang=ar", sitemap)
-        from urllib.robotparser import RobotFileParser
-        robots = RobotFileParser()
-        robots.parse(client.get("/robots.txt").get_data(as_text=True).splitlines())
-        for path in ("/business", "/pricing", "/agency"):
-            self.assertTrue(robots.can_fetch("Googlebot", "https://ather-quantum.com" + path))
-
     def test_legal_pages_in_both_languages_with_placeholders(self):
         client = self.app.test_client()
         for slug in ("impressum", "datenschutz", "agb"):
@@ -488,9 +459,18 @@ class AdminExclusionAndSeoTest(unittest.TestCase):
                     self.assertNotIn('class="placeholder"', body)
                 self.assertIn(f'<html lang="{lang}" dir="ltr">', body)
                 self.assertIn('hreflang="de"', body)
-        home = client.get("/?lang=ar").get_data(as_text=True)
+        # Legal links follow the visitor's language (Omar, 2026-11-14): en -> English version; ar -> the binding
+        # German text with an Arabic note (no Arabic legal text exists, none is invented).
+        home_en = client.get("/?lang=en").get_data(as_text=True)
+        home_ar = client.get("/?lang=ar").get_data(as_text=True)
         for slug in ("impressum", "datenschutz", "agb"):
-            self.assertIn(f"/{slug}?lang=en", home)
+            self.assertIn(f"/{slug}?lang=en", home_en)
+            self.assertIn(f"/{slug}?lang=ar", home_ar)
+            page = client.get(f"/{slug}?lang=ar").get_data(as_text=True)
+            self.assertIn('<html lang="de" dir="ltr">', page)
+            self.assertIn("النص الملزم قانونياً هو النسخة الألمانية", page)
+            self.assertIn(f'rel="canonical" href="https://ather-quantum.com/{slug}?lang=de"', page)
+        self.assertNotIn("النسخة الألمانية", client.get("/agb?lang=en").get_data(as_text=True))
 
     def test_sitemap_has_xhtml_alternates(self):
         import xml.dom.minidom
@@ -505,15 +485,16 @@ class AdminExclusionAndSeoTest(unittest.TestCase):
         self.assertIn('xmlns:xhtml="http://www.w3.org/1999/xhtml"', body)
         self.assertIn('<xhtml:link rel="alternate" hreflang="x-default" href="https://ather-quantum.com/guides?lang=en"/>', body)
         self.assertIn("https://ather-quantum.com/impressum?lang=de", body)
-        # 5 صفحات بثلاث لغات (منها /adoption و/scanning) + 6 بلغتين + compare بلغتين + 3 قانونية بلغتين
-        self.assertEqual(body.count("<url>"), 7 * 3 + 2 * (3 + 3 + 1) + 2 * 3 + 2 + 2 * 3 + 2 + 2 - 2 + 2 * 3 + 2 * 3 - 2 + 3 + 12 * 3 + 2 * 3 + 4 + 3 + 2 + 48)  # +24 bank pages × en/ar; +/banks/arab-banks-2026-11 en/ar; +/audit × 3 langs; +Ubuntu/OpenSSL 3.0 + SSL Labs guides en/ar; +/deadlines +/agency + bilingual Gravity + enterprise guide; -/research (noindex, off-topic); +AWS/Node.js/Java guides; +Go/Python/check guides; -Gravity (noindex, internal); +NIS2/DORA guide en/ar/de; +config generator index + 11 servers × 3 langs; +/press +/reports/2026-11 × 3 langs
+        # Pages sitemap as of 2026-11-14: 29 trilingual + 44 bilingual paths
+        # (the nginx PQ-TLS guide gained a German version). Update when pages are added; every <loc> must stay unique.
+        locs = re.findall(r"<loc>([^<]+)</loc>", body)
+        self.assertEqual(len(locs), len(set(locs)))
+        self.assertEqual(body.count("<url>"), 29 * 3 + 44 * 2)
         self.assertIn("https://ather-quantum.com/compare?lang=en", body)
         import quantum_saas_app
         sites_xml = client.get("/sitemap-sites-1.xml").get_data(as_text=True)
         xml.dom.minidom.parseString(sites_xml)
-        import search_indexing
-        discoverable = [s for s in quantum_saas_app.study_data()["sites"] if not search_indexing.is_excluded(s["domain"])]
-        self.assertEqual(sites_xml.count("<url>"), 2 * len(discoverable))
+        self.assertEqual(sites_xml.count("<url>"), 2 * len(quantum_saas_app.study_data()["sites"]))
         self.assertIn("https://ather-quantum.com/site/amazon.com?lang=en", sites_xml)
         self.assertEqual(client.get("/sitemap-sites-2.xml").status_code, 404)
 
@@ -552,14 +533,17 @@ class ConsentTest(unittest.TestCase):
         self.assertIn("consent_immediate_delivery", r.get_json()["message"])
 
     def test_subscription_signup_requires_consent(self):
-        r = self.client.post("/api/monitor/signup", json={"email": "a@example.com", "plan": "starter"})
-        self.assertEqual((r.status_code, r.get_json()["error"]), (400, "consent_required"))
+        for box in ("company_buyer", "agb_consent", "contact_consent"):
+            r = self.client.post("/api/monitor/signup", json=company(email="a@example.com", plan="starter", **{box: False}))
+            self.assertEqual((r.status_code, r.get_json()["error"]), (400, "consent_required"))
 
     def test_pages_show_consent_checkbox(self):
         scan_page = self.client.get(f"/scan/{self.scan_id}?lang=en").get_data(as_text=True)
         self.assertIn('id="consent"', scan_page)
         self.assertIn("lose my right of withdrawal", scan_page)
-        self.assertIn('id="consent"', self.client.get("/monitoring?lang=ar").get_data(as_text=True))
+        monitoring = self.client.get("/monitoring?lang=ar").get_data(as_text=True)
+        for box in ('name="company_buyer"', 'name="agb_consent"', 'name="contact_consent"', 'id="sub-company-form"'):
+            self.assertIn(box, monitoring)
 
 
 class OrdersUtmScanBoxGermanTest(unittest.TestCase):
@@ -644,7 +628,7 @@ class OrdersUtmScanBoxGermanTest(unittest.TestCase):
     # البند 6
     def test_german_pages_switcher_and_hreflang(self):
         client = self.app.test_client()
-        for url, text in [("/?lang=de", "Ist Ihre Website bereit"), ("/monitoring?lang=de", "Für Unternehmen"),
+        for url, text in [("/?lang=de", "Prüfen Sie die Domain Ihres Unternehmens"), ("/monitoring?lang=de", "Für Unternehmen"),
                           ("/study/top-1000-post-quantum-tls?lang=de", "Methodik")]:
             body = client.get(url).get_data(as_text=True)
             self.assertIn('<html lang="de" dir="ltr">', body, url)

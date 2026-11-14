@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}{{ x.index_title }}{% endblock %}
+{% block description %}{{ x.index_lead[:300] }}{% endblock %}
+{% block content %}
+<section class="card">
+  <span class="exp-badge" style="display:inline-block;padding:.2em .7em;border-radius:999px;background:#1f2a44;color:#9fd3ff;font-size:.85em">{{ x.badge }}</span>
+  <h1>{{ x.index_title }}</h1>
+  <p>{{ x.index_lead }}</p>
+  <p class="notice small"><strong>⚠</strong> {{ x.disclaimer }}</p>
+  <p class="muted small" dir="ltr">{{ x.more }}</p>
+  <p class="small"><a href="{{ url_for('site.data_license', lang=lang) }}">{{ x.terms_link }}</a></p>
+</section>
+{% if banks %}<section class="card"><h2>{{ x.index_banks }}</h2>
+  <ul>{% for r in banks %}<li><a href="{{ url_for('site.exposure_page', domain=r.domain, lang=lang) }}" dir="ltr">{{ r.domain }}</a> — {{ x.states.observed_pq if r.pq else x.states.observed_classical }} ({{ r.grade }})</li>{% endfor %}</ul>
+</section>{% endif %}
+{% if examples %}<section class="card"><h2>{{ x.index_examples }}</h2>
+  <ul>{% for r in examples %}<li><a href="{{ url_for('site.exposure_page', domain=r.domain, lang=lang) }}" dir="ltr">{{ r.domain }}</a> — {{ x.states.observed_pq if r.pq else x.states.observed_classical }} ({{ r.grade }})</li>{% endfor %}</ul>
+</section>{% endif %}
+<section class="card" id="anchors"><h2>{{ x.anchors_title }}</h2>
+  <ul>{% for a in anchors %}<li dir="ltr"><strong>{{ a.week }}</strong> · {{ a.rows }} {{ x.rows }} · sha256 <span style="font-family:monospace;font-size:.8em;word-break:break-all">{{ a.manifest_sha256 }}</span><br>
+    <span class="small">{{ x.anchor_complete.format(block=a.bitcoin_block) if a.status == 'complete' else x.anchor_pending }} ·
+    <a href="{{ url_for('site.exposure_anchor_file', name=a.week ~ '.manifest.txt') }}" rel="nofollow">manifest</a> ·
+    <a href="{{ url_for('site.exposure_anchor_file', name=a.week ~ '.manifest.txt.ots') }}" rel="nofollow">.ots</a> ·
+    <a href="{{ url_for('site.exposure_anchor_file', name=a.week ~ '.json') }}" rel="nofollow">JSON</a></span></li>{% endfor %}</ul>
+</section>
+{% endblock %}

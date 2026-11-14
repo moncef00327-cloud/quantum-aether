@@ -1,15 +1,25 @@
 # sales_db.py
 # تخزين الفحوصات والطلبات في SQLite (بدل CSV): آمن مع عدة عمّال gunicorn بفضل WAL والمعاملات.
 import datetime as dt
+import fcntl
 import json
+import os
 import sqlite3
+import zlib
+from contextlib import contextmanager
 from decimal import Decimal
+
+import access_links
+import crypto_pay
 
 import adoption
 import analytics_db
 import free_alerts
 import audit
+import audit_checkout
+import company_billing
 import discovery
+import scan_insights
 import packs
 import assets
 import monitor_db
@@ -52,23 +62,72 @@ CREATE TABLE IF NOT EXISTS owner_clients (
 """
 
 
+_SCHEMA_MODULES = (monitor_db, assets, free_alerts, discovery, scan_insights, audit, audit_checkout, company_billing,
+                   packs, analytics_db, adoption, access_links)
+
+
+def _schema_version():
+    """PRAGMA user_version for this code: a checksum of every module that defines tables or migrations. Any change to
+    those files runs the (idempotent) migrations once more on the next connection; nobody has to remember a bump."""
+    digest = 0
+    for path in (__file__,) + tuple(m.__file__ for m in _SCHEMA_MODULES):
+        with open(path, "rb") as f:
+            digest = zlib.crc32(f.read(), digest)
+    return (digest & 0x7FFFFFFF) or 1
+
+
+SCHEMA_VERSION = _schema_version()
+
+
+@contextmanager
+def _migration_lock(path):
+    """One migrating connection at a time, across threads and gunicorn workers (flock on a file next to the DB)."""
+    if path == ":memory:" or path.startswith("file:"):
+        yield
+        return
+    try:
+        handle = open(path + ".migrate-lock", "a")
+    except OSError:  # read-only location (e.g. a backup opened for inspection): migrate without the lock
+        yield
+        return
+    with handle:
+        fcntl.flock(handle, fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(handle, fcntl.LOCK_UN)
+
+
 def connect(path: str) -> sqlite3.Connection:
     conn = sqlite3.connect(path, timeout=10)
     conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA foreign_keys=ON")
+    if conn.execute("PRAGMA user_version").fetchone()[0] != SCHEMA_VERSION:
+        with _migration_lock(path):
+            if conn.execute("PRAGMA user_version").fetchone()[0] != SCHEMA_VERSION:  # another worker may have done it
+                initialize(conn)
+                conn.execute(f"PRAGMA user_version = {int(SCHEMA_VERSION)}")
+    return conn
+
+
+def initialize(conn):
+    """All tables and migrations. Runs only when user_version differs from SCHEMA_VERSION (see connect)."""
+    conn.execute("PRAGMA journal_mode=WAL")
     conn.executescript(SCHEMA)
     monitor_db.init(conn)
     assets.init(conn)
     free_alerts.init(conn)
     discovery.init(conn)
+    scan_insights.init(conn)
     audit.init(conn)
+    audit_checkout.init(conn)
+    company_billing.init(conn)
     packs.init(conn)
     analytics_db.init(conn)
     analytics_db.init_events(conn)
     adoption.init(conn)
+    access_links.init(conn)
     _migrate(conn)
-    return conn
 
 
 def _migrate(conn):
@@ -148,11 +207,43 @@ def latest_scan_for_domain(conn, domain, since_iso):
     return _scan_from_row(row)
 
 
+def latest_scan(conn, domain):
+    """Most recent scan for this exact hostname. Prefers a non-test row, then any row."""
+    row = conn.execute("SELECT * FROM scans WHERE domain = ? AND is_test = 0 ORDER BY created_at DESC LIMIT 1",
+                       (domain,)).fetchone()
+    if not row:
+        row = conn.execute("SELECT * FROM scans WHERE domain = ? ORDER BY created_at DESC LIMIT 1",
+                           (domain,)).fetchone()
+    return _scan_from_row(row)
+
+
 def record_attempt(conn, client_hash):
     """كل محاولة فحص تُحسب، حتى الفاشلة، كي لا يُستعمل الخادم لإجراء اتصالات بلا حد."""
     with conn:
         conn.execute("INSERT INTO scan_attempts (client_hash) VALUES (?)", (client_hash,))
         conn.execute("DELETE FROM scan_attempts WHERE created_at < strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1 day')")
+
+
+def claim_scan_attempt(conn, client_hash, since_iso, per_client, global_limit):
+    """Checks both hourly limits and records the attempt in one write transaction (BEGIN IMMEDIATE), so parallel
+    requests from the same client cannot all pass the check before any of them is counted. True when allowed."""
+    if conn.in_transaction:
+        conn.commit()
+    conn.execute("BEGIN IMMEDIATE")
+    try:
+        mine = conn.execute("SELECT COUNT(*) FROM scan_attempts WHERE client_hash = ? AND created_at >= ?",
+                            (client_hash, since_iso)).fetchone()[0]
+        total = conn.execute("SELECT COUNT(*) FROM scan_attempts WHERE created_at >= ?", (since_iso,)).fetchone()[0]
+        if mine >= per_client or total >= global_limit:
+            conn.rollback()
+            return False
+        conn.execute("INSERT INTO scan_attempts (client_hash) VALUES (?)", (client_hash,))
+        conn.execute("DELETE FROM scan_attempts WHERE created_at < strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1 day')")
+        conn.commit()
+        return True
+    except BaseException:
+        conn.rollback()
+        raise
 
 
 def count_attempts_since(conn, since_iso, client_hash=None):
@@ -178,12 +269,49 @@ def get_order(conn, order_id):
 
 
 def update_order(conn, order_id, status, capture_id=None):
+    """Changes an order's status. A COMPLETED order is final: it is never downgraded, its capture never replaced,
+    and completing it twice reports False so receipts and notifications go out once. True when the row changed."""
     with conn:
-        conn.execute(
+        return conn.execute(
             "UPDATE orders SET status = ?, capture_id = COALESCE(?, capture_id),"
-            " updated_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now') WHERE order_id = ?",
+            " updated_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now') WHERE order_id = ? AND status != 'COMPLETED'",
             (status, capture_id, order_id),
-        )
+        ).rowcount > 0
+
+
+CRYPTO_AMOUNT_DAYS = 30  # a stablecoin amount identifies one order: not reused for this long, paid or open
+
+
+def _recent_crypto_amounts(conn, currency, exclude_order=None):
+    since = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=CRYPTO_AMOUNT_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    rows = conn.execute("SELECT order_id, amount FROM orders WHERE currency = ? AND status IN ('CREATED', 'COMPLETED')"
+                        " AND created_at >= ?", (currency, since)).fetchall()
+    return [Decimal(r["amount"]) for r in rows if r["order_id"] != exclude_order]
+
+
+def create_crypto_order(conn, order_id, scan_id, price, currency, consent_at=None, is_test=False, email=None):
+    """Picks a unique amount (price + random 0.0001-0.0999) and stores the order in the same write transaction, so
+    two parallel checkouts cannot get the same amount, and an amount already paid is not handed out again."""
+    if conn.in_transaction:
+        conn.commit()
+    conn.execute("BEGIN IMMEDIATE")
+    try:
+        taken = {str(a) for a in _recent_crypto_amounts(conn, currency)}
+        taken |= {str(Decimal(a).normalize()) for a in taken}
+        amount = str(crypto_pay.unique_amount(price, taken))
+        conn.execute("INSERT INTO orders (order_id, scan_id, status, amount, currency, consent_at, is_test, email)"
+                     " VALUES (?, ?, 'CREATED', ?, ?, ?, ?, ?)",
+                     (order_id, scan_id, amount, currency, consent_at, int(is_test), email))
+        conn.commit()
+        return amount
+    except BaseException:
+        conn.rollback()
+        raise
+
+
+def crypto_amount_is_unique(conn, order):
+    """False when another open or paid order has the same amount (legacy orders from before atomic reservation)."""
+    return Decimal(order["amount"]) not in _recent_crypto_amounts(conn, order["currency"], exclude_order=order["order_id"])
 
 
 def open_amounts(conn, currency, days=7):

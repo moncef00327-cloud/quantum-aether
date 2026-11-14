@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}{{ t.access_title }} · {{ t.brand }}{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>{{ t.access_title }}</h1>
+  <p>{{ t.access_text }}</p>
+  <form method="post"><button type="submit">{{ t.access_button }}</button></form>
+</section>
+{% endblock %}

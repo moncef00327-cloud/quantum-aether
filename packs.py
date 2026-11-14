@@ -1,5 +1,5 @@
 # packs.py
-# باقة الوكالات: 10 تقارير كاملة بسعر 199$ (تُدفع مرة واحدة عبر PayPal، بلا انتهاء صلاحية).
+# باقة الوكالات: 10 تقارير كاملة بسعر 199 € (PACK_CURRENCY) (تُدفع مرة واحدة عبر PayPal، بلا انتهاء صلاحية).
 # بعد الدفع يحصل المشتري على رابط سرّي /pack/<token> (يُرسل بالبريد أيضاً): يكتب أي نطاق فيُفحص ويُفتح تقريره
 # الكامل ويُخصم رصيد واحد. كل تقرير مفتوح يُسجَّل كطلب COMPLETED بمبلغ 0 مرتبط بالفحص (فيعمل منطق التقرير القائم
 # كما هو)، والإيراد الحقيقي هو دفعة الباقة نفسها في جدول packs (فلا يُحسب المبلغ مرتين).
@@ -57,16 +57,28 @@ def by_token(conn, token):
 
 
 def mark(conn, pack_id, status, capture_id=None, email=None):
-    """يحدّث الحالة. عند COMPLETED لأول مرة يُنشأ رمز الرابط ويُعاد (وإلا None)."""
+    """يحدّث الحالة. عند COMPLETED لأول مرة يُنشأ رمز الرابط ويُعاد (وإلا None).
+    One write transaction (BEGIN IMMEDIATE): parallel captures issue exactly one token, and a COMPLETED pack is final
+    (never downgraded, so its link keeps working)."""
     token = None
-    with conn:
+    if conn.in_transaction:
+        conn.commit()
+    conn.execute("BEGIN IMMEDIATE")
+    try:
         row = conn.execute("SELECT status, token_hash FROM packs WHERE id = ?", (pack_id,)).fetchone()
+        if row is None or row["status"] == "COMPLETED":
+            conn.rollback()
+            return None
         if status == "COMPLETED" and not row["token_hash"]:
             token = secrets.token_urlsafe(24)
             conn.execute("UPDATE packs SET token_hash = ?, paid_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now') WHERE id = ?",
                          (_hash(token), pack_id))
         conn.execute("UPDATE packs SET status = ?, capture_id = COALESCE(?, capture_id), email = COALESCE(?, email) WHERE id = ?",
                      (status, capture_id, email, pack_id))
+        conn.commit()
+    except BaseException:
+        conn.rollback()
+        raise
     return token
 
 

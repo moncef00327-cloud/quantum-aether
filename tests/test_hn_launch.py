@@ -3,7 +3,10 @@ import tempfile
 import unittest
 
 import quantum_saas_app
-from test_discovery import _result
+try:
+    from tests.test_discovery import _result
+except ImportError:  # run from inside tests/
+    from test_discovery import _result
 
 
 class HnLaunchTests(unittest.TestCase):
