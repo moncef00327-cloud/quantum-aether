@@ -474,3 +474,5 @@ details.buy-more>summary{cursor:pointer;min-height:44px}
 .qa-trial-inline .qa-trial-domain{width:100%;margin-top:8px}
 .qa-hero-examples{margin-top:16px}
 .qa-trial-inline .qa-trial-note{font-size:12px;line-height:1.5;margin:.5rem 0 0;color:#a9a3c4}
+/* email (trial) first, scanner second */
+.qa-trial-inline{margin-top:0;padding-top:0;border-top:0;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #ffffff1f}
