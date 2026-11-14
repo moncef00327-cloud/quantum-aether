@@ -465,3 +465,6 @@ details.buy-more>summary{cursor:pointer;min-height:44px}
 .qa-result-trial h2{font-size:18px;margin:0 0 6px}
 .qa-result-trial > p{margin:0 0 10px;color:#c6bfd8}
 .qa-result-trial .qa-trial-submit{margin-top:10px}
+
+/* sample card on home: the next step is scanning your own domain (no trial form for sample domains) */
+.qa-example-scan{text-decoration:none}
