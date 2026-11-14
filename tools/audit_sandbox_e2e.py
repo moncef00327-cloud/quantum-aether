@@ -6,6 +6,7 @@ a recording mailer stores them under the output directory. Discovery and checks 
 given (default: ather-quantum.com, the owner's own site).
 """
 import json
+import secrets
 import os
 import sys
 import tempfile
@@ -18,6 +19,8 @@ import audit_checkout  # noqa: E402
 import quantum_saas_app  # noqa: E402
 from paypal_client import PayPalClient  # noqa: E402
 from werkzeug.security import generate_password_hash  # noqa: E402
+
+ADMIN_PW = secrets.token_urlsafe(16)  # throwaway admin password for the temporary test app, new on every run
 
 OUT = Path(sys.argv[1] if len(sys.argv) > 1 else "artifacts-sandbox").resolve()
 DOMAIN = sys.argv[2] if len(sys.argv) > 2 else "ather-quantum.com"
@@ -64,7 +67,7 @@ def main():
     app = quantum_saas_app.create_app(
         {"TESTING": True, "DATA_DIR": data_dir, "PUBLIC_URL": "https://ather-quantum.com", "HASH_SALT": "e2e",
          "OWNER_EMAIL": OWNER, "AUDIT_PAYPAL_ENV": "sandbox", "AUDIT_PAYPAL_CLIENT_ID": cid,
-         "PAYPAL_CLIENT_ID": cid, "ADMIN_PASSWORD_HASH": generate_password_hash("e2e-admin")},
+         "PAYPAL_CLIENT_ID": cid, "ADMIN_PASSWORD_HASH": generate_password_hash(ADMIN_PW)},
         paypal=sandbox, mailer=mailer, audit_paypal=sandbox)
     c = app.test_client()
     log = {}
@@ -125,8 +128,8 @@ def main():
         row2 = audit_checkout.by_order(quantum_saas_app.db(), oid2)
     step("10 unreachable domain -> ACCESS_ISSUE, no report", row2["audit_status"] == "ACCESS_ISSUE"
          and not row2["report_path"], f"{oid2} {cap2.get('invoice_number')}")
-    step("10b admin login", c.get("/admin", auth=("admin", "e2e-admin")).status_code == 200)
-    admin_html = c.get("/admin", auth=("admin", "e2e-admin")).get_data(as_text=True)
+    step("10b admin login", c.get("/admin", auth=("admin", ADMIN_PW)).status_code == 200)
+    admin_html = c.get("/admin", auth=("admin", ADMIN_PW)).get_data(as_text=True)
     step("10c refund button shown only for it", admin_html.count("via PayPal</button>") == 1)
     r = c.post(f"/admin/audit/{row2['id']}/refund", data={"confirm": "yes"})
     with app.app_context():
