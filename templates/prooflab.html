@@ -32,7 +32,7 @@
   <form method="post" action="{{ url_for('site.prooflab_join', lang=lang) }}#prooflab-join" class="scan-form prooflab-form">
     {% if state and state.startswith('err_') %}<p class="form-error" role="alert">{{ p[state] }}</p>{% endif %}
     <p><label for="pl-email">{{ p.email }}</label><br>
-      <input id="pl-email" name="email" type="email" autocomplete="email" dir="ltr" required maxlength="254" placeholder="security@company.com" value="{{ form.email or '' }}" style="width:100%;box-sizing:border-box"></p>
+      <input id="pl-email" name="email" type="email" autocomplete="email" dir="ltr" required maxlength="254" placeholder="you@company.com" value="{{ form.email or '' }}" style="width:100%;box-sizing:border-box"></p>
     <p><label for="pl-company">{{ p.company }}</label><br>
       <input id="pl-company" name="company" type="text" autocomplete="organization" required maxlength="200" placeholder="company.com" value="{{ form.company or '' }}" style="width:100%;box-sizing:border-box"></p>
     <p><label for="pl-stack">{{ p.stack }}</label><br>
