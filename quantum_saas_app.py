@@ -3786,6 +3786,21 @@ def feed():
                     "Daily post-quantum TLS monitoring now starts with a free 14-day trial (no card), tests every public IPv4/IPv6 "
                     "address of a domain and alerts when servers disagree, and keeps a dated log of every check with CSV export."))
     entries.append((f"{base}/deadlines", deadlines.UPDATED, deadlines.TEXT["en"]["title"], deadlines.TEXT["en"]["description"]))
+    for b in _bank_summaries():
+        entries.append((f"{base}/banks/{b['id']}", b["measured_on"], b["title"], b["summary"]))
+    dach = _dach_summary()
+    if dach:
+        entries.append((f"{base}/adoption/dach-hosting", dach["updated"], dach["title"], dach["summary"]))
+    entries.append((f"{base}/exposure", _template_day("exposure_index.html"), exposure_web.T["en"]["index_title"],
+                    "Since which week each tracked site negotiates post-quantum key exchange, with weekly "
+                    "OpenTimestamps anchors as tamper-evident proof."))
+    entries.append((f"{base}/tools/pq-tls-config", _template_day("pq_config.html"),
+                    "Post-quantum TLS configuration generator",
+                    "Version-aware X25519MLKEM768 configuration steps for nginx, Apache, Caddy, HAProxy and other servers."))
+    entries.append((f"{base}/audit", _template_day("audit.html"), "Organisation post-quantum TLS audit",
+                    "An estate-wide post-quantum TLS review of an organisation's public hosts, delivered as a PDF report."))
+    entries.append((f"{base}/prooflab", _template_day("prooflab.html"), prooflab.COPY["en"]["title"],
+                    prooflab.COPY["en"]["meta"]))
     board = cached_countries()
     if board and board["entries"]:
         top = board["entries"][0]
@@ -3827,8 +3842,40 @@ def feed():
 @bp.get("/llms.txt")
 def llms_txt():
     return Response(render_template("llms.txt", base=public_base(), **public_price_labels(),
-                                    retry_count=len(study_retry_domains())),
+                                    retry_count=len(study_retry_domains()), **_index_listing()),
                     mimetype="text/plain")
+
+
+def _bank_summaries():
+    out = []
+    for rid in bank_report.ids():
+        rep = bank_report.load(rid)
+        if not rep:
+            continue
+        tot = bank_report.totals(bank_report.ranked(rep, adoption.load_optout(conn=db())))
+        out.append({"id": rid, "measured_on": rep["measured_on"], "title": bank_report.COPY["en"]["title"],
+                    "summary": f"{tot['banks']} banks measured; {tot['pq']} of {tot['responding']} responding public "
+                               f"subdomains ({tot['pct']}%) negotiate post-quantum key exchange."})
+    return out
+
+
+def _dach_summary():
+    if not dach_hosting.load(BASE_DIR):
+        return None
+    return {"title": dach_hosting.T["en"]["title"], "updated": dach_hosting.updated(BASE_DIR),
+            "summary": dach_hosting.T["en"]["meta"]}
+
+
+def _index_listing():
+    """Everything published on the site, for llms.txt and the Atom feed (one source, so new pages are not forgotten)."""
+    return {
+        "all_guides": [{"slug": s, "title": g["en"]["title"], "updated": g["updated"]}
+                       for s, g in sorted(guides.GUIDES.items(), key=lambda kv: kv[1]["updated"], reverse=True)],
+        "monthly_reports": [{"id": rid, "published": reports.load(rid)["published"],
+                             "title": f"State of post-quantum TLS: {_month_name(rid, 'en')}"} for rid in reports.ids()],
+        "bank_reports": _bank_summaries(),
+        "dach_hosting": _dach_summary(),
+    }
 
 
 def html_to_markdown(fragment):
