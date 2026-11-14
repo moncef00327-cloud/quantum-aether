@@ -468,3 +468,9 @@ details.buy-more>summary{cursor:pointer;min-height:44px}
 
 /* sample card on home: the next step is scanning your own domain (no trial form for sample domains) */
 .qa-example-scan{text-decoration:none}
+/* trial right under the scanner, in the same card: one place for "check" and "monitor" */
+.qa-trial-inline{margin-top:14px;padding-top:14px;border-top:1px solid #ffffff1f}
+.qa-trial-inline h2{font-size:.95rem;margin:0 0 .55rem;color:#eef0ff}
+.qa-trial-inline .qa-trial-domain{width:100%;margin-top:8px}
+.qa-hero-examples{margin-top:16px}
+.qa-trial-inline .qa-trial-note{font-size:12px;line-height:1.5;margin:.5rem 0 0;color:#a9a3c4}
