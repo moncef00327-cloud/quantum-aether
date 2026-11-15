@@ -18,15 +18,33 @@ mcp = FastMCP(
 if hasattr(mcp, "_mcp_server"):
     mcp._mcp_server.version = __version__
 
-_READ = ToolAnnotations(readOnlyHint=True, openWorldHint=True)
-_PAID = ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=True)
+# These are client hints only; server-side consent and validation remain authoritative.
+_SCAN = ToolAnnotations(
+    readOnlyHint=False,
+    destructiveHint=False,
+    idempotentHint=False,
+    openWorldHint=True,
+)
+_READ_ONLY = ToolAnnotations(
+    readOnlyHint=True,
+    destructiveHint=False,
+    idempotentHint=True,
+    openWorldHint=True,
+)
+_ACTION = ToolAnnotations(
+    readOnlyHint=False,
+    destructiveHint=False,
+    idempotentHint=False,
+    openWorldHint=True,
+)
 
 
-@mcp.tool(annotations=_READ)
+@mcp.tool(annotations=_SCAN)
 def scan_tls(domain: str) -> str:
     """Check whether a website negotiates post-quantum TLS key exchange (X25519MLKEM768).
     Returns an honest summary: if the site is already protected it says so; if not, it states the
     "harvest now, decrypt later" risk and the available fix (full report) and monitoring options.
+    Starts an external scan and stores a publicly accessible result.
 
     Args:
         domain: the hostname to scan, e.g. "example.com".
@@ -34,11 +52,12 @@ def scan_tls(domain: str) -> str:
     return core.describe(core.scan(domain))
 
 
-@mcp.tool(annotations=_READ)
+@mcp.tool(annotations=_SCAN)
 def scan_tls_raw(domain: str) -> dict:
     """Same scan as scan_tls but returns the structured result (scan_id, grade, key_exchange_group,
     post_quantum_key_exchange, observation_status, certificate_key, scan_url, full_report_price).
-    Use the scan_id with get_scan or buy_full_report.
+    This starts an external scan and stores a publicly accessible result. Use the scan_id with
+    get_scan or buy_full_report.
 
     Args:
         domain: the hostname to scan, e.g. "example.com".
@@ -46,7 +65,7 @@ def scan_tls_raw(domain: str) -> dict:
     return core.scan(domain)
 
 
-@mcp.tool(annotations=_READ)
+@mcp.tool(annotations=_READ_ONLY)
 def get_scan(scan_id: str) -> dict:
     """Fetch the stored result of an earlier scan by its scan_id, without running a new scan.
     Returns the same structured fields as scan_tls_raw, or error "scan_not_found".
@@ -57,7 +76,7 @@ def get_scan(scan_id: str) -> dict:
     return core.get_scan(scan_id)
 
 
-@mcp.tool(annotations=_PAID)
+@mcp.tool(annotations=_ACTION)
 def buy_full_report(scan_id: str, consent_immediate_delivery: bool = False) -> dict:
     """Buy the full post-quantum readiness report ($49) for a prior scan. Returns order_id, a PayPal
     approval link (approve_url) and a status_url. Set consent_immediate_delivery to true ONLY after
@@ -72,7 +91,7 @@ def buy_full_report(scan_id: str, consent_immediate_delivery: bool = False) -> d
     return core.prepare_report_purchase(scan_id, consent_immediate_delivery)
 
 
-@mcp.tool(annotations=_READ)
+@mcp.tool(annotations=_READ_ONLY)
 def get_order_status(order_id: str) -> dict:
     """Check a report order created by buy_full_report. Returns status (e.g. CREATED, COMPLETED),
     amount and currency; once the payment is COMPLETED it also returns report_url.
@@ -83,7 +102,7 @@ def get_order_status(order_id: str) -> dict:
     return core.order_status(order_id)
 
 
-@mcp.tool(annotations=_PAID)
+@mcp.tool(annotations=_ACTION)
 def start_monitoring(email: str, plan: str = "starter", consent: bool = False) -> dict:
     """Start a daily monitoring subscription (plan "starter" = $29/mo up to 10 domains,
     "business" = $99/mo up to 100 domains). Returns the PayPal plan id to complete the subscription.

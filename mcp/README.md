@@ -6,18 +6,24 @@ Let any MCP-compatible AI assistant (Claude Desktop, and others) **check a websi
 post-quantum TLS readiness** — and, with the user's consent, buy the full report or start
 monitoring — by calling Quantum Aether as a native tool.
 
-It wraps the public Quantum Aether API. No API key. No secrets.
+It wraps the public Quantum Aether API. The stdio package does not read server environment files or
+Resend, IBM, PayPal, or database credentials. `QUANTUM_AETHER_BASE` optionally selects the API base
+URL. A scan sends the requested hostname; signup sends the supplied email and consent to the service.
 
 ## Tools
 
 | Tool | What it does |
 |------|--------------|
-| `scan_tls(domain)` | Scans a host and returns an honest summary. If the site already uses post-quantum key exchange it says so; otherwise it states the "harvest now, decrypt later" risk and the fix. |
-| `scan_tls_raw(domain)` | The structured result (grade, key exchange group, post-quantum yes/no, certificate, scan_id, price). |
-| `get_scan(scan_id)` | Fetches the stored result of an earlier scan, without scanning again. |
-| `buy_full_report(scan_id, consent_immediate_delivery)` | Returns a PayPal approval link for the $49 report. Consent required (Austrian FAGG). |
-| `get_order_status(order_id)` | Status of a report order; returns `report_url` once the payment is completed. |
-| `start_monitoring(email, plan, consent)` | Starts a daily monitoring subscription ($29 or $99 / month). |
+| `scan_tls(domain)` | Starts an external scan of a public hostname on port 443 and returns a summary. The result is stored and publicly accessible. |
+| `scan_tls_raw(domain)` | Starts the same scan and returns its structured result (grade, key exchange group, certificate, scan ID and price). |
+| `get_scan(scan_id)` | Reads the stored result for an earlier scan; it does not start a scan. |
+| `buy_full_report(scan_id, consent_immediate_delivery)` | Creates a PayPal approval order; this call does not approve or capture payment. Immediate-delivery consent is required. |
+| `get_order_status(order_id)` | Reads a report order and returns `report_url` once payment is complete. |
+| `start_monitoring(email, plan, consent)` | Sends the supplied email to the service to create a monitoring signup. Explicit consent is required. |
+
+Tools include behavioral annotations for compatible clients. Scans and actions are marked as
+non-read-only; stored-result and order lookups are read-only. These hints do not replace consent or
+server-side validation.
 
 ## Install
 
@@ -73,7 +79,7 @@ execute changes on the scanned system.
 Agent guide: https://ather-quantum.com/agents?lang=en
 Service manifest: https://ather-quantum.com/.well-known/agent-service.json
 
-The MCP registry metadata declares remote server version 1.4.0. The separate
-PyPI stdio wrapper is version 1.1.0 (defaults to ather-quantum.com) and uses the human-assisted checkout
+The MCP registry metadata declares remote server version 1.4.1. The separate
+PyPI stdio wrapper is version 1.4.2 (defaults to ather-quantum.com) and uses the human-assisted checkout
 flow described by its local tools; automatic x402 payment is provided by the
 remote MCP tool. Signed scan receipts are not implemented.
