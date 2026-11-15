@@ -4044,6 +4044,9 @@ def _security_headers(response):
     if request.path.startswith(('/scan/', '/api/')) or (request.endpoint == 'site.compare' and request.args.get('a')):
         response.headers.setdefault('Cache-Control', 'no-store')
         response.headers.setdefault('X-Robots-Tag', 'noindex')
+    if request.endpoint == 'site.site_page':
+        # Result pages carry a visitor-level offer variant; never let a shared cache mix arms.
+        response.headers['Cache-Control'] = 'private, no-store'
     if request.path.startswith(('/scan/', '/api/v1/orders', '/api/paypal/', '/api/crypto/', '/api/v1/crypto/',
                                 '/api/monitor/')):
         response.headers['Referrer-Policy'] = 'no-referrer'

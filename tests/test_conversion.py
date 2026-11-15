@@ -95,7 +95,10 @@ class ConversionTests(unittest.TestCase):
     def test_result_offer_is_grade_contextual_and_excluded_pages_stay_out(self):
         from unittest.mock import patch
         with patch("quantum_saas_app.conversion_variant", return_value="treatment"):
-            body = self.client.get("/site/alpha.test?lang=en").get_data(as_text=True)
+            response = self.client.get("/site/alpha.test?lang=en")
+            body = response.get_data(as_text=True)
+            self.assertIn("private", response.headers.get("Cache-Control", ""))
+            self.assertIn("no-store", response.headers.get("Cache-Control", ""))
             self.assertIn('class="card highlight conversion-offer', body)
             self.assertIn("Are you responsible for alpha.test?", body)
             self.assertIn("monitor its public TLS handshakes daily", body)
