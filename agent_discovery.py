@@ -10,9 +10,9 @@ import badge_evidence
 import quantum_vuln_scanner
 import scan_experience
 
-UPDATED='2026-11-13'
+UPDATED='2026-11-15'
 PROTOCOLS=('2025-11-25','2025-06-18','2025-03-26')  # 2025-03-26 introduced Streamable HTTP; many enterprise clients still speak it
-VERSION='1.4.0'
+VERSION='1.4.2'
 DOMAIN_SCHEMA={'type':'object','properties':{'domain':{'type':'string','minLength':1,'maxLength':253,'description':'Public DNS hostname, for example example.com. HTTPS port 443 only.'}},'required':['domain'],'additionalProperties':False}
 EMPTY_SCHEMA={'type':'object','properties':{},'additionalProperties':False}
 ORDER_SCHEMA={'type':'object','properties':{'scan_id':{'type':'string','minLength':1,'description':'ID returned by scan_tls.'},'consent_immediate_delivery':{'type':'boolean','const':True,'description':'Set true only after the payer explicitly agrees to immediate delivery and the applicable withdrawal-right terms.'}},'required':['scan_id','consent_immediate_delivery'],'additionalProperties':False}
