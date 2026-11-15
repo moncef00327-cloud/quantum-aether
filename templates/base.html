@@ -33,7 +33,7 @@
   <link rel="stylesheet" href="/static/command/pages.css?v=20261114-t4">
   {% block head %}{% endblock %}
 </head>
-<body data-page="{{ request.endpoint }}">
+<body data-page="{{ request.endpoint }}" data-conversion-variant="{{ conversion_variant }}">
 {% set command_title = self.title()|striptags %}
 {% set command_section = 'prooflab' if request.endpoint in ['site.prooflab_page','site.prooflab_join'] else 'llm' if request.endpoint == 'site.agents_page' else 'business' if request.endpoint in ['site.business_page','site.pricing_page','site.agency_page'] else 'monitor' if request.endpoint in ['site.monitoring','site.monitor_dashboard'] else 'tracker' if request.endpoint in ['site.adoption_page','site.countries_page','site.country_page','site.study'] else 'guides' if request.endpoint in ['site.guides_index','site.guide','site.research'] else 'scanner' %}
 <div class="app {{ 'en' if lang != 'ar' else '' }} command-service" dir="{{ t.dir }}">

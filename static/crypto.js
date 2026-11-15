@@ -26,6 +26,7 @@
 
   box.querySelector(".crypto-create").addEventListener("click", function () {
       if (!consent || !consent.checked) { say(box.dataset.msgConsent); showConsent(consent); return; }
+      if (window.qaTrackEvent) window.qaTrackEvent("checkout_started");
       say("");
       fetch("/api/crypto/orders", {
         method: "POST",

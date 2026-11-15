@@ -36,10 +36,12 @@ class TrialTest(unittest.TestCase):
     def conn(self):
         return closing(sales_db.connect(os.path.join(self.tmp, "quantum_saas.db")))
 
-    def start_trial(self, email="ops@acme.org", domain="acme.org", lang="en", consent="1"):
+    def start_trial(self, email="ops@acme.org", domain="acme.org", lang="en", consent="1", variant=None):
         data = {"email": email, "domain": domain}
         if consent:
             data["consent"] = consent
+        if variant:
+            data["variant"] = variant
         return self.client.post(f"/monitoring/trial?lang={lang}", data=data)
 
     def trial_token(self):
@@ -63,11 +65,12 @@ class TrialTest(unittest.TestCase):
             self.assertIn('action="/monitoring/trial', self.client.get(f"/monitoring?lang={lang}").get_data(as_text=True))
 
     def test_trial_signup_emails_dashboard_and_notifies_owner(self):
-        r = self.start_trial()
+        r = self.start_trial(variant="treatment")
         self.assertEqual(r.status_code, 200)
         self.assertIn("ops@acme.org", r.get_data(as_text=True))
         acc = self.account()
         self.assertEqual(acc["status"], "TRIAL")
+        self.assertEqual(acc["acquisition_variant"], "treatment")
         self.assertTrue(acc["trial_ends_at"] > dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
         self.assertIsNotNone(acc["consent_at"])
         recipients = [m[0] for m in self.mailer.sent]
@@ -78,6 +81,10 @@ class TrialTest(unittest.TestCase):
         token = self.trial_token()
         self.assertNotIn(token, owner[2])
         self.assertNotIn(token, r.get_data(as_text=True))  # never shown in the browser
+        with self.conn() as c:
+            milestones = {row["name"]: row["variant"] for row in c.execute(
+                "SELECT name, variant FROM events WHERE name IN ('signup_completed','monitoring_activated')")}
+        self.assertEqual(milestones, {"signup_completed": "treatment", "monitoring_activated": "treatment"})
         dash = self.client.get(f"/monitor/{token}?lang=en").get_data(as_text=True)
         self.assertIn("acme.org", dash)
         self.assertIn("days left", dash)

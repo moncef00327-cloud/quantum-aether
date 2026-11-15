@@ -30,7 +30,7 @@
 </section>
 
 
-<section class="card" id="subscribe" data-domain="{{ domain or '' }}">
+<section class="card" id="subscribe" data-domain="{{ domain or '' }}" data-variant="{{ conversion_variant }}">
   <details{% if request.args.get('subscribe') %} open{% endif %}>
   <summary><h2 style="display:inline">{{ t.trial_or_subscribe }}</h2></summary>
   {% if domain %}<p class="notice"><strong>{{ t.mon_domain_banner.format(domain=domain) }}</strong></p>{% endif %}

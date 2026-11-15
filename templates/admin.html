@@ -19,6 +19,10 @@
     <tr><td>{{ events.agency_start }}</td><td>{{ events.agency_paid }}</td><td colspan="2">Use these to assess demand for client-report packs.</td></tr>
   </table>
   <p class="muted small">Unique visitor-days, bots and admin excluded. Tracking started 2026-11-04.</p>
+  <h3>Result-page offer experiment (last 28 days)</h3>
+  <table class="data"><tr><th>Variant</th><th>Offer views</th><th>Trial CTA</th><th>Trial created</th><th>Paid subscription</th></tr>
+    {% for arm in ("control", "treatment") %}<tr><td>{{ arm }}</td><td>{{ conversion_funnel[arm].offer_impression }}</td><td>{{ conversion_funnel[arm].trial_cta_clicked }}</td><td>{{ conversion_funnel[arm].signup_completed }}</td><td>{{ conversion_funnel[arm].subscription_completed }}</td></tr>{% endfor %}
+  </table>
   {% if scan_errors %}<h3>Scan errors, last 14 days (code:domain)</h3>
   <table class="data"><tr><th>error</th><th>visitor-days</th><th>last</th></tr>
   {% for row in scan_errors %}<tr><td dir="ltr"><code>{{ row[0] }}</code></td><td>{{ row[1] }}</td><td>{{ row[2] }}</td></tr>{% endfor %}

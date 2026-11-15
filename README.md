@@ -79,6 +79,7 @@ non-PQ row as a confirmed classical negotiation. The study page includes a metho
   government, bank and company sites in Germany, Austria and Switzerland every Monday
   (`adoption_job.py`, systemd timer `quantum_adoption.timer`, lists in `data/adoption_watchlists.json`).
   Data: `/adoption.json` and `/adoption.csv` (CC BY 4.0). Network names: IP-to-ASN data from iptoasn.com (PDDL). Scan policy and opt-out: https://ather-quantum.com/scanning
+- Each successful weekly/monthly update is also retained as a dated, integrity-checked JSONL snapshot in `DATA_DIR/repository/adoption/`, outside the live database's pruning window. See [`DATA_REPOSITORY.md`](DATA_REPOSITORY.md) and [`data/source_registry.json`](data/source_registry.json) for archive commands, data lineage, and privacy boundaries.
 
 ## GitHub Action
 

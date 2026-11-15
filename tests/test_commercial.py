@@ -35,6 +35,26 @@ class CommercialPagesTest(unittest.TestCase):
                     self.assertNotIn('paypal.com/sdk', body)
         self.assertIn('dir="rtl"', self.client.get('/business?lang=ar').text)
 
+    def test_checkout_prices_use_the_configured_currency_everywhere(self):
+        monitoring = self.client.get('/monitoring?lang=en').text
+        self.assertIn('29 EUR', monitoring)
+        self.assertIn('99 EUR', monitoring)
+        self.assertNotIn('$29', monitoring)
+        agency = self.client.get('/agency?lang=en').text
+        self.assertIn('234.00 EUR', agency)
+        self.assertNotIn('$199', agency)
+        german_home = self.client.get('/?lang=de').text
+        self.assertIn('57.50 EUR', german_home)
+        self.assertNotIn('$49', german_home)
+        brief = self.client.get('/executive-brief/alpha.test?lang=en').text
+        self.assertIn('29.00 EUR/month', brief)
+        self.assertIn('57.50 EUR', brief)
+        self.assertNotIn('$29', brief)
+        llms = self.client.get('/llms.txt').text
+        self.assertIn('29.00 EUR/month', llms)
+        self.assertIn('99.00 EUR/month', llms)
+        self.assertIn('234.00 EUR', llms)
+
     def test_disabled_payment_has_no_accidental_provider_call(self):
         response = self.client.post('/api/paypal/packs', json={'consent': True})
         self.assertEqual(response.status_code, 503)

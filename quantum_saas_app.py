@@ -210,6 +210,20 @@ def current_lang():
     return request.accept_languages.best_match(["en", "ar"] + (["de"] if german_allowed() else [])) or "en"
 
 
+def analytics_visitor_key(day=None, user_agent=None):
+    day = day or dt.date.today().isoformat()
+    ua = request.headers.get("User-Agent", "") if user_agent is None else user_agent
+    salt = current_app.config["HASH_SALT"].encode()
+    return hmac.new(salt, f"{day}|{request.remote_addr or ''}|{ua}".encode(), hashlib.sha256).hexdigest()[:16]
+
+
+def conversion_variant():
+    visitor = analytics_visitor_key()
+    bucket = hmac.new(current_app.config["HASH_SALT"].encode(),
+                      b"conversion-offer-v1|" + visitor.encode(), hashlib.sha256).digest()[0]
+    return "treatment" if bucket >= 128 else "control"
+
+
 def contact_email_address():
     address = parseaddr(current_app.config.get("MAIL_FROM") or current_app.config.get("REPLY_TO")
                         or current_app.config.get("OWNER_EMAIL") or "")[1]
@@ -262,7 +276,7 @@ def _inject():
             "abs_url": lambda endpoint, **kw: public_base() + url_for(endpoint, **kw),
             "localized_url": localized_url, "metadata_url": metadata_url,
             "sx": scan_experience.COPY[lang],
-            "audit_cta": audit.COPY[lang]["cta"],
+            "audit_cta": audit.COPY[lang]["cta"], "conversion_variant": conversion_variant(),
             "domain_discoverable": lambda domain: not search_indexing.is_excluded(domain)}
 
 
@@ -354,7 +368,7 @@ def client_hash():
     return hmac.new(salt, (request.remote_addr or "").encode(), hashlib.sha256).hexdigest()[:32]
 
 
-def record_conversion_event(name, page="/monitoring", is_test=None, detail=""):
+def record_conversion_event(name, page="/monitoring", is_test=None, detail="", variant=None):
     """Record an aggregate funnel event; no account identifier or email enters analytics."""
     try:
         if is_admin_visitor():
@@ -362,10 +376,11 @@ def record_conversion_event(name, page="/monitoring", is_test=None, detail=""):
         day = dt.date.today().isoformat()
         ua = request.headers.get("User-Agent", "")
         salt = current_app.config["HASH_SALT"].encode()
-        visitor = hmac.new(salt, f"{day}|{request.remote_addr}|{ua}".encode(), hashlib.sha256).hexdigest()[:16]
+        visitor = analytics_visitor_key(day, ua)
         test_event = is_test_request() if is_test is None else bool(is_test)
         analytics_db.record_event(db(), day, name, page, current_lang(), visitor,
-                                  not ua or bool(analytics_db.BOT_RE.search(ua)), test_event, detail)
+                                  not ua or bool(analytics_db.BOT_RE.search(ua)), test_event, detail,
+                                  variant=variant or conversion_variant())
     except Exception:
         log.exception("conversion event tracking failed")
 
@@ -2326,6 +2341,8 @@ def admin():
                            scans_daily=sales_db.scans_per_day(conn, (dt.date.today() - dt.timedelta(days=13)).isoformat()),
                            card=scorecard.build(conn, current_app.config["OWNER_EMAIL"], monitor.PLANS),
                            events=analytics_db.event_funnel(conn, (dt.date.today() - dt.timedelta(days=13)).isoformat()),
+                           conversion_funnel=analytics_db.conversion_funnel_by_variant(
+                               conn, (dt.date.today() - dt.timedelta(days=27)).isoformat()),
                            scan_errors=analytics_db.error_details(conn, (dt.date.today() - dt.timedelta(days=13)).isoformat()),
                            by_source=sales_db.funnel_by_source(conn, (dt.date.today() - dt.timedelta(days=30)).isoformat()),
                            free_alert_counts=dict(conn.execute("SELECT status, COUNT(*) FROM free_alerts GROUP BY status").fetchall()),
@@ -2912,6 +2929,9 @@ def monitor_trial():
     email = (request.form.get("email") or "").strip().lower()[:254]
     raw = (request.form.get("domain") or "").strip()
     src = analytics_db.clean_detail(request.form.get("src") or "")
+    variant = request.form.get("variant")
+    if variant not in ("control", "treatment"):
+        variant = conversion_variant()
     domain, state, status = None, "sent", 200
     if not raw and EMAIL_RE.match(email):
         # Email-only start (home, pricing): a work address names the company domain; free-mail needs the field.
@@ -2943,11 +2963,14 @@ def monitor_trial():
             state, status = "rate_limited", 429
         else:
             ends = (dt.datetime.now(dt.timezone.utc) + dt.timedelta(days=monitor.TRIAL_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
-            account_id, _ = monitor_db.create_trial(conn, email, current_lang(), now_iso(), client_hash(), ends)
+            account_id, _ = monitor_db.create_trial(conn, email, current_lang(), now_iso(), client_hash(), ends,
+                                                    acquisition_variant=variant)
             monitor_db.add_domain(conn, account_id, domain)
             account = monitor_db.get_account(conn, account_id)
             if send_dashboard_link(conn, account):
                 record_conversion_event("trial_created", detail=src)
+                record_conversion_event("signup_completed", "/monitoring", variant=variant)
+                record_conversion_event("monitoring_activated", "/monitoring", variant=variant)
                 # Owner/test requests (admin cookie or remembered owner client) must not email a "new customer" alert.
                 if not is_test_request():
                     monitor.notify_owner(mailer, current_app.config["OWNER_EMAIL"], "New free trial", account,
@@ -3001,7 +3024,11 @@ def monitor_signup():
         return jsonify(error=error), 400
     email = fields["email"]
     conn = db()
-    account_id, _token = monitor_db.create_account(conn, email, plan, current_lang(), consent_at=now_iso())
+    variant = data.get("variant")
+    if variant not in ("control", "treatment"):
+        variant = conversion_variant()
+    account_id, _token = monitor_db.create_account(conn, email, plan, current_lang(), consent_at=now_iso(),
+                                                   acquisition_variant=variant)
     _store_subscription_billing(conn, account_id, plan, fields)
     record_conversion_event("subscription_start", "/monitoring")
     raw_domain = str(data.get("domain", "")).strip()
@@ -3050,7 +3077,13 @@ def monitor_activate():
     if status not in SUBSCRIPTION_LIVE_STATUSES:
         log.warning("Subscription %s for %s not active: %s", subscription_id, account["id"], status)
         return jsonify(error="subscription_not_active", status=status), 402
+    was_pending = account["status"] == "PENDING"
+    variant = account.get("acquisition_variant")
     monitor_db.set_status(conn, account["id"], "ACTIVE", subscription_id)
+    if was_pending:
+        record_conversion_event("signup_completed", "/monitoring", variant=variant)
+    record_conversion_event("monitoring_activated", "/monitoring", variant=variant)
+    record_conversion_event("subscription_completed", "/monitoring", variant=variant)
     record_conversion_event("subscription_active")
     token = monitor_db.rotate_token(conn, account["id"])  # الرمز يُكشف مرة واحدة فقط، هنا
     url = dashboard_url(token, account["lang"])
@@ -3948,12 +3981,14 @@ def track_pageview():
         query = urllib.parse.parse_qs(str(data.get("search", "")).lstrip("?"))
         day = dt.date.today().isoformat()
         ua = request.headers.get("User-Agent", "")
-        salt = current_app.config["HASH_SALT"].encode()
-        visitor = hmac.new(salt, f"{day}|{request.remote_addr}|{ua}".encode(), hashlib.sha256).hexdigest()[:16]
+        visitor = analytics_visitor_key(day, ua)
         own_host = (current_app.config["PUBLIC_URL"].split("://")[-1] or request.host).split("/")[0]
         source = (analytics_db.utm_source((query.get("utm_source") or [None])[0])
                   or analytics_db.referrer_host(str(data.get("ref", "")) or None, own_host))
-        analytics_db.record(db(), day, path, source, visitor, not ua or bool(analytics_db.BOT_RE.search(ua)))
+        bot = not ua or bool(analytics_db.BOT_RE.search(ua))
+        analytics_db.record(db(), day, path, source, visitor, bot)
+        analytics_db.record_event(db(), day, "page_view", path, current_lang(), visitor, bot,
+                                  is_test=is_test_request(), variant=data.get("variant") or conversion_variant())
     except Exception:  # الإحصاءات ثانوية
         log.exception("pageview tracking failed")
     return "", 204
@@ -3973,11 +4008,11 @@ def track_event():
         lang = str(data.get("lang", ""))[:2] if str(data.get("lang", ""))[:2] in ("en", "ar", "de") else "?"
         day = dt.date.today().isoformat()
         ua = request.headers.get("User-Agent", "")
-        salt = current_app.config["HASH_SALT"].encode()
-        visitor = hmac.new(salt, f"{day}|{request.remote_addr}|{ua}".encode(), hashlib.sha256).hexdigest()[:16]
+        visitor = analytics_visitor_key(day, ua)
         detail = analytics_db.clean_detail(data.get("detail", ""))
-        analytics_db.record_event(db(), day, str(data.get("name", ""))[:20], page, lang, visitor,
-                                  not ua or bool(analytics_db.BOT_RE.search(ua)), is_test_request(), detail)
+        analytics_db.record_event(db(), day, str(data.get("name", ""))[:32], page, lang, visitor,
+                                  not ua or bool(analytics_db.BOT_RE.search(ua)), is_test_request(), detail,
+                                  variant=data.get("variant") or conversion_variant())
     except Exception:  # الإحصاءات ثانوية
         log.exception("event tracking failed")
     return "", 204

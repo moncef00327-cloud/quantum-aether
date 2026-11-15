@@ -16,8 +16,17 @@
 </section>
 
 {% set site_urgent = (not summary or not summary.pq or summary.unsure or summary.grade != 'A') %}
+{% if conversion_variant == 'treatment' %}
+{% set offer_grade = 'unknown' if not summary or summary.unsure else summary.grade|lower %}
+{% set offer_title = t['conversion_offer_title_' ~ offer_grade] if offer_grade in ('a','b','c','f','unknown') else t.conversion_offer_title_c %}
+{% set offer_body = t['conversion_offer_body_' ~ offer_grade] if offer_grade in ('a','b','c','f','unknown') else t.conversion_offer_body_c %}
+<p class="small">{{ t.site_offer_title.format(domain=domain) }} {{ t.site_offer_body }}</p>
+{{ trial_cta('site-trial', title=offer_title, sub=offer_body ~ ' ' ~ t.conversion_offer_trial,
+             prefill=domain, editable_domain=true, source='site_result') }}
+{% else %}
 {{ trial_cta('site-trial', domain=domain, title=t.scan_trial_title.format(domain=domain),
              sub=t.scan_trial_sub, source='scan_result', urgent=site_urgent) }}
+{% endif %}
 
 {% if summary %}
 <section class="card">

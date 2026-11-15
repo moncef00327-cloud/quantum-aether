@@ -2244,3 +2244,62 @@ TEXTS["ar"].update({
 
 # ProofLab waitlist (2026-11-14): copy lives in prooflab.COPY
 DE_ENDPOINTS |= {"site.prooflab_page", "site.prooflab_join"}
+
+# Conversion offer experiment: factual, grade-aware copy; no urgency or security guarantees.
+TEXTS["en"].update({
+    "conversion_offer_title_a": "Today's scan looks good. Keep the result current.",
+    "conversion_offer_title_b": "Track your TLS transition over time.",
+    "conversion_offer_title_c": "Follow these findings as you improve TLS.",
+    "conversion_offer_title_f": "Review the reported TLS findings.",
+    "conversion_offer_title_unknown": "This handshake was inconclusive.",
+    "conversion_offer_body_a": "This scan observed post-quantum key exchange today. Server and CDN changes can affect later handshakes; daily checks can alert you when the measured result changes.",
+    "conversion_offer_body_b": "This scan observed a B grade. Review the listed findings and use daily checks to track changes across server updates.",
+    "conversion_offer_body_c": "This scan observed a C grade. Use the findings and setup guides to plan improvements, then track later handshakes over time.",
+    "conversion_offer_body_f": "This scan returned an F grade. Review the listed observations and measurement limits, then use setup guides and later checks to evaluate changes.",
+    "conversion_offer_body_unknown": "The probe could not determine the negotiated key exchange. A new measurement may clarify it; monitoring records future observable changes.",
+    "conversion_offer_trial": "Daily TLS checks · email change alerts · up to 10 domains · 14 days free, no card; ends without a paid plan",
+    "conversion_offer_cta": "Start free monitoring",
+    "conversion_offer_scan": "Scan your own domain",
+    "conversion_offer_manage_domain": "Enter a domain you manage; this public result is not proof of ownership. You can replace it below.",
+    "site_offer_title": "Are you responsible for {domain}?",
+    "site_offer_body": "This public result does not establish who owns or operates the domain. If you manage it, you can monitor its public TLS handshakes daily and receive change alerts.",
+    "site_offer_cta": "Monitor a domain you manage",
+})
+TEXTS["ar"].update({
+    "conversion_offer_title_a": "نتيجة اليوم جيدة؛ تابعها مع الوقت.",
+    "conversion_offer_title_b": "تابع انتقال TLS مع الوقت.",
+    "conversion_offer_title_c": "تابع هذه الملاحظات أثناء تحسين TLS.",
+    "conversion_offer_title_f": "راجع ملاحظات TLS المرصودة.",
+    "conversion_offer_title_unknown": "لم تحسم المصافحة نتيجة تبادل المفاتيح.",
+    "conversion_offer_body_a": "رصد هذا الفحص تبادل مفاتيح مقاومًا للكم اليوم. قد تؤثر تحديثات الخادم أو CDN في المصافحات اللاحقة؛ ويمكن للفحص اليومي تنبيهك عند تغيّر النتيجة المرصودة.",
+    "conversion_offer_body_b": "رصد هذا الفحص الدرجة B. راجع الملاحظات واستخدم الفحوص اليومية لمتابعة التغيّر بعد تحديثات الخادم.",
+    "conversion_offer_body_c": "رصد هذا الفحص الدرجة C. استخدم الملاحظات وأدلة الإعداد لتخطيط التحسين، ثم تابع المصافحات اللاحقة مع الوقت.",
+    "conversion_offer_body_f": "أعطى هذا الفحص الدرجة F. راجع الملاحظات المرصودة وحدود القياس، ثم استخدم أدلة الإعداد والفحوص اللاحقة لتقييم التغييرات.",
+    "conversion_offer_body_unknown": "لم يتمكن الفحص من تحديد تبادل المفاتيح المتفاوض عليه. قد يوضحه قياس جديد؛ وتسجّل المراقبة التغيّرات المستقبلية المرصودة.",
+    "conversion_offer_trial": "فحص TLS يومي · تنبيهات تغيّر بالبريد · حتى 10 نطاقات · 14 يوماً مجاناً بلا بطاقة، وتنتهي دون اشتراك مدفوع",
+    "conversion_offer_cta": "ابدأ المراقبة المجانية",
+    "conversion_offer_scan": "افحص نطاقك أنت",
+    "conversion_offer_manage_domain": "أدخل نطاقاً تديره؛ فالنتيجة العامة لا تثبت الملكية. يمكنك استبداله أدناه.",
+    "site_offer_title": "هل أنت مسؤول عن {domain}؟",
+    "site_offer_body": "هذه النتيجة العامة لا تثبت من يملك النطاق أو يديره. إن كنت تديره، يمكنك متابعة مصافحات TLS العامة يومياً وتلقي تنبيهات عند تغيّرها.",
+    "site_offer_cta": "راقب نطاقاً تديره",
+})
+TEXTS["de"].update({
+    "conversion_offer_title_a": "Der heutige Scan sieht gut aus. Behalten Sie Änderungen im Blick.",
+    "conversion_offer_title_b": "Verfolgen Sie Ihre TLS-Umstellung im Zeitverlauf.",
+    "conversion_offer_title_c": "Nutzen Sie diese Befunde für TLS-Verbesserungen.",
+    "conversion_offer_title_f": "Prüfen Sie die gemeldeten TLS-Befunde.",
+    "conversion_offer_title_unknown": "Dieser Handshake war nicht eindeutig.",
+    "conversion_offer_body_a": "Der Scan hat heute quantenresistenten Schlüsselaustausch beobachtet. Server- und CDN-Änderungen können spätere Handshakes beeinflussen; tägliche Prüfungen melden Änderungen am Messwert.",
+    "conversion_offer_body_b": "Dieser Scan hat Note B ergeben. Prüfen Sie die Befunde und verfolgen Sie Änderungen nach Server-Updates mit täglichen Prüfungen.",
+    "conversion_offer_body_c": "Dieser Scan hat Note C ergeben. Nutzen Sie Befunde und Anleitungen für Verbesserungen und verfolgen Sie spätere Handshakes.",
+    "conversion_offer_body_f": "Dieser Scan hat Note F ergeben. Prüfen Sie die Befunde und Messgrenzen und bewerten Sie Änderungen mit Anleitungen und späteren Prüfungen.",
+    "conversion_offer_body_unknown": "Der Probe konnte den ausgehandelten Schlüsselaustausch nicht bestimmen. Eine neue Messung kann Klarheit schaffen; die Überwachung hält spätere beobachtbare Änderungen fest.",
+    "conversion_offer_trial": "Tägliche TLS-Prüfungen · E-Mail bei Änderungen · bis zu 10 Domains · 14 Tage kostenlos, ohne Karte; endet ohne kostenpflichtigen Tarif",
+    "conversion_offer_cta": "Kostenlose Überwachung starten",
+    "conversion_offer_scan": "Eigene Domain prüfen",
+    "conversion_offer_manage_domain": "Geben Sie eine von Ihnen verwaltete Domain ein; dieses öffentliche Ergebnis ist kein Eigentumsnachweis. Sie können die Domain unten ändern.",
+    "site_offer_title": "Sind Sie für {domain} verantwortlich?",
+    "site_offer_body": "Dieses öffentliche Ergebnis belegt nicht, wem die Domain gehört oder wer sie betreibt. Wenn Sie sie verwalten, können Sie öffentliche TLS-Handshakes täglich prüfen und Änderungen melden lassen.",
+    "site_offer_cta": "Eine von Ihnen verwaltete Domain überwachen",
+})

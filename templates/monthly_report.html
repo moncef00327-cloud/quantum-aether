@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}{{ t.rep_title.format(month=month_name) }} · {{ t.brand }}{% endblock %}
 {% block description %}{{ facts[0] if facts else t.rep_meta }}{% endblock %}
+{% block og_image %}{{ abs_url('site.og_report', report_id=r.id) }}{% endblock %}
 {% block head %}
 <script type="application/ld+json">{{ {"@context": "https://schema.org", "@type": "Report", "name": t.rep_title.format(month=month_name), "datePublished": r.published, "inLanguage": lang, "license": "https://creativecommons.org/licenses/by/4.0/", "publisher": {"@type": "Organization", "name": "Quantum Aether"}, "isBasedOn": abs_url('site.report_json', report_id=r.id)} | tojson }}</script>
 {% endblock %}
@@ -47,6 +48,15 @@
   <p>{{ t.rep_method_body }}</p>
   <h2>{{ t.rep_cite }}</h2>
   <pre id="cite"><code>Quantum Aether, "{{ t.rep_title.format(month=month_name) }}", {{ r.published }}. {{ abs_url('site.monthly_report', report_id=r.id) }} (CC BY 4.0)</code></pre>
+  <p><button type="button" class="copy-btn" data-copy="#cite" data-done="{{ t.rep_copied }}">{{ t.rep_copy }}</button></p>
+  <h2>{{ t.rep_share_title }}</h2>
+  {% set share_url = abs_url('site.monthly_report', report_id=r.id, lang=lang) %}
+  {% set share_text = t.rep_title.format(month=month_name) ~ ' — ' ~ (facts[0] if facts else '') %}
+  <p>
+    <a class="button-link" target="_blank" rel="noopener" href="https://www.linkedin.com/sharing/share-offsite/?url={{ share_url | urlencode }}">LinkedIn</a>
+    <a class="button-link" target="_blank" rel="noopener" href="https://twitter.com/intent/tweet?text={{ share_text | urlencode }}&url={{ share_url | urlencode }}">X</a>
+    <a class="button-link" target="_blank" rel="noopener" href="https://wa.me/?text={{ (share_text ~ ' ' ~ share_url) | urlencode }}">WhatsApp</a>
+  </p>
   <p><a href="{{ url_for('site.report_json', report_id=r.id) }}">{{ t.rep_data }} (JSON)</a> · <a href="/adoption.csv">{{ t.rep_full_data }} (CSV)</a> · <a href="{{ url_for('site.press_page', lang=lang) }}">{{ t.press_title }}</a> · <a href="{{ url_for('site.adoption_page', lang=lang) }}">{{ t.nav_adoption }}</a></p>
 </article>
 {% include "_scan_box.html" %}

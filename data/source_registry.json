@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-11-15",
+  "sources": [
+    {
+      "id": "tranco-gq38k",
+      "name": "Tranco ranking snapshot GQ38K",
+      "use": "Weekly top-10,000 and monthly top-100,000 public hostname sampling",
+      "local_file": "data/tranco_GQ38K_top100k.csv",
+      "source_url": "https://tranco-list.eu/list/GQ38K/1000000",
+      "refresh": "New ranking snapshot must be reviewed, dated, and assigned a new source hash before replacing the tracked file",
+      "license": "Check Tranco's current terms for redistribution of ranking data; this project records its list ID and attribution"
+    },
+    {
+      "id": "curated-watchlists",
+      "name": "Curated public-sector, finance, and company watchlists",
+      "use": "Supplemental weekly monitoring cohorts",
+      "local_file": "data/adoption_watchlists.json",
+      "refresh": "Manual review; each newly added hostname should include a public source URL in change history",
+      "license": "Project-curated list; hostname facts and attribution should be reviewed individually"
+    },
+    {
+      "id": "ip-to-asn",
+      "name": "IP to ASN mapping from iptoasn.com",
+      "use": "Hosting/network aggregation for answered public TLS probes",
+      "local_file": "DATA_DIR/ip2asn-v4.tsv.gz",
+      "source_url": "https://iptoasn.com/",
+      "license": "PDDL (as documented in README.md)",
+      "privacy": "Raw endpoint IPs are operational metadata and are omitted from repository snapshots"
+    },
+    {
+      "id": "google-search-console",
+      "name": "Google Search Console Search Analytics API",
+      "use": "Private search performance metrics by query, page, country, and date",
+      "source_url": "https://developers.google.com/webmaster-tools/v1/searchanalytics/query",
+      "refresh": "Optional authenticated connector; not currently imported into the public adoption archive",
+      "license": "Private first-party property data; retain access controls and Google's applicable terms",
+      "privacy": "Do not publish query-level or account-level exports in public snapshots"
+    },
+    {
+      "id": "google-analytics-4",
+      "name": "Google Analytics Data API",
+      "use": "Private first-party page and event analytics",
+      "source_url": "https://developers.google.com/analytics/devguides/reporting/data/v1",
+      "refresh": "Optional authenticated connector; not currently imported into the public adoption archive",
+      "license": "Private first-party property data; retain access controls and Google's applicable terms",
+      "privacy": "Aggregate only; do not archive visitor identifiers or raw event-level personal data"
+    },
+    {
+      "id": "cloudflare-radar",
+      "name": "Cloudflare Radar domain ranking",
+      "use": "Potential external context for public domain-popularity trends",
+      "source_url": "https://developers.cloudflare.com/radar/investigate/domain-ranking-datasets/",
+      "refresh": "Not integrated; requires an authorized Radar API token and explicit review of dataset terms",
+      "license": "Confirm current API and reuse terms before ingestion or republication"
+    }
+  ]
+}
