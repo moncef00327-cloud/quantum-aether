@@ -6,16 +6,19 @@ Let any MCP-compatible AI assistant (Claude Desktop, and others) **check a websi
 post-quantum TLS readiness** — and, with the user's consent, buy the full report or start
 monitoring — by calling Quantum Aether as a native tool.
 
-It wraps the public Quantum Aether API. No API key. No secrets.
+It wraps the public Quantum Aether API. The stdio package does not read server environment files or Resend, IBM, PayPal, or database credentials. The optional `QUANTUM_AETHER_BASE` environment variable selects the API base URL. A scan sends the requested hostname; signup sends the supplied email and consent to the Quantum Aether service.
 
 ## Tools
 
 | Tool | What it does |
 |------|--------------|
-| `scan_tls(domain)` | Scans a host and returns an honest summary. If the site already uses post-quantum key exchange it says so; otherwise it states the "harvest now, decrypt later" risk and the fix. |
-| `scan_tls_raw(domain)` | The structured result (grade, key exchange group, post-quantum yes/no, certificate, scan_id, price). |
-| `buy_full_report(scan_id, consent_immediate_delivery)` | Returns a PayPal approval link for the $49 report. Consent required (Austrian FAGG). |
-| `start_monitoring(email, plan, consent)` | Starts a daily monitoring subscription ($29 or $99 / month). |
+| `scan_tls(domain)` | Runs a new TLS scan of a public hostname on port 443 and returns a summary. The result is stored and publicly accessible. |
+| `scan_tls_raw(domain)` | Runs the same scan and returns its structured result (grade, key exchange group, certificate, scan ID and price). |
+| `exposure_window(domain)` | Reads the stored exposure timeline and proof data. It does not start a scan. |
+| `buy_full_report(scan_id, consent_immediate_delivery)` | Creates a PayPal checkout order and returns an approval link. It does not approve or capture payment. Immediate-delivery consent is required before the call. |
+| `start_monitoring(email, plan, consent)` | Sends the supplied email to Quantum Aether to create a monitoring signup. Explicit consent is required before the call. |
+
+The tools carry behavioral annotations for compatible clients: scans are non-read-only and may contact public hosts; `exposure_window` is read-only; checkout and signup are additive actions. These annotations are advisory hints, not authorization or access control.
 
 ## Install
 
@@ -53,25 +56,29 @@ Scanner, methodology and open dataset: https://ather-quantum.com
 ## Remote MCP
 
 Connect a Streamable HTTP client to `https://ather-quantum.com/mcp`.
-The stateless remote service exposes `scan_tls`, `get_tls_evidence`,
-`get_methodology`, `get_example_result`, `get_service_info` and
-`get_full_report`. The paid report tool returns a standard x402 v2 payment
+The stateless remote service (version 1.4.1) exposes nine tools: `scan_tls`,
+`get_tls_evidence`, `exposure_window`, `get_methodology`, `get_example_result`,
+`get_service_info`, `get_full_report`, `create_full_report_order` and
+`verify_full_report_payment`. The paid report tool returns a standard x402 v2 payment
 challenge for exact USDC on Base. An x402-capable MCP client can sign and retry
 under the buyer wallet's own spend policy; the service settles before it returns
 the report. Direct-transfer tools for Polygon USDT remain available as a manual
 fallback.
-It returns JSON, does not open an SSE stream, and accepts supported versions
-2025-11-25 and 2025-06-18. Active scans consume the ordinary API scan limits
+It returns JSON, does not open an SSE stream, and accepts protocol versions
+2025-11-25, 2025-06-18 and 2025-03-26. Active scans consume the ordinary API scan limits
 and store public results. Scan results are observations, not authorization to
 execute changes on the scanned system.
 
 Agent guide: https://ather-quantum.com/agents?lang=en
 Service manifest: https://ather-quantum.com/.well-known/agent-service.json
 
-The MCP registry metadata declares remote server version 1.4.0. The separate
-PyPI stdio wrapper is version 1.0.2 (defaults to ather-quantum.com) and uses the human-assisted checkout
+The MCP registry metadata declares remote server version 1.4.1. The separate
+PyPI stdio package is version 1.0.3 (defaults to ather-quantum.com) and uses the human-assisted checkout
 flow described by its local tools; automatic x402 payment is provided by the
 remote MCP tool. Signed scan receipts are not implemented.
+
+The source package requires MCP Python SDK 1.10 or newer in the 1.x series so
+its tool annotations are included in `tools/list`.
 
 
 ## exposure_window(domain)

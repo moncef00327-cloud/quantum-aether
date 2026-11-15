@@ -2,7 +2,7 @@
 (()=>{
  /* Collapsible sidebar groups (same saved state as the home page). */
  (()=>{const key='qa-nav';let saved={};try{saved=JSON.parse(localStorage.getItem(key)||'{}')||{}}catch{}
-  document.querySelectorAll('#command-sidebar .nav-group-toggle').forEach(btn=>{const id=btn.getAttribute('aria-controls'),panel=document.getElementById(id),k=id==='nav-dev'?'dev':'more';if(!panel)return;
+  document.querySelectorAll('#command-sidebar .nav-group-toggle').forEach(btn=>{const id=btn.getAttribute('aria-controls'),panel=document.getElementById(id),k=(id||'').replace(/^nav-/,'');if(!panel)return;
    const set=v=>{btn.setAttribute('aria-expanded',String(v));panel.hidden=!v};
    if(panel.querySelector('[aria-current="page"]'))set(true);else if(typeof saved[k]==='boolean')set(saved[k]);
    btn.addEventListener('click',()=>{const v=btn.getAttribute('aria-expanded')!=='true';set(v);saved[k]=v;try{localStorage.setItem(key,JSON.stringify(saved))}catch{}})});})();

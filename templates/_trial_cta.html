@@ -15,7 +15,7 @@
     {% if error %}<p class="form-error trial-error" role="alert">{{ error }}</p>{% endif %}
     <label for="{{ form_id }}-email">{{ t.trial_email_label }}</label>
     <div class="scan-row">
-      <input id="{{ form_id }}-email" name="email" type="email" autocomplete="email" dir="ltr" required maxlength="254" placeholder="security@{{ domain or prefill or 'company.com' }}"{% if email %} value="{{ email }}"{% endif %}{% if focus == 'email' %} autofocus aria-invalid="true"{% endif %}>
+      <input id="{{ form_id }}-email" name="email" type="email" autocomplete="email" dir="ltr" required maxlength="254" placeholder="you@company.com"{% if email %} value="{{ email }}"{% endif %}{% if focus == 'email' %} autofocus aria-invalid="true"{% endif %}>
     </div>
     {% if not domain %}<p><label for="{{ form_id }}-domain" class="small">{{ t.trial_cta_domain }}</label><br>
       <input id="{{ form_id }}-domain" name="domain" type="text" dir="ltr" maxlength="253" inputmode="url" autocomplete="url" placeholder="company.com"{% if prefill %} value="{{ prefill }}"{% endif %}{% if focus == 'domain' %} autofocus aria-invalid="true"{% endif %} style="width:100%;box-sizing:border-box"></p>{% endif %}

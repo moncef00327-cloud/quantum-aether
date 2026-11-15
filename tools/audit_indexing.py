@@ -4,6 +4,7 @@ import datetime as dt
 import hashlib
 from html.parser import HTMLParser
 import json
+import os
 from pathlib import Path
 import re
 import sqlite3
@@ -36,12 +37,8 @@ def fetch(path):
         data=r.read().decode('utf-8','replace');parser=Metadata();parser.feed(data)
         return {'url':url,'status':r.status,'final_url':r.url,'x_robots_tag':r.headers.get('X-Robots-Tag'),'canonical':parser.canonical,'robots':parser.robots,'content_type':r.headers.get('Content-Type'),'body_sha256':hashlib.sha256(data.encode()).hexdigest(),'body':data,'links':parser.links}
 
-settings={}
-for line in Path('/etc/quantum_saas.env').read_text().splitlines():
-    if '=' in line and not line.lstrip().startswith('#'):
-        key,value=line.split('=',1)
-        if key in ['QS_DATA_DIR','QS_PUBLIC_URL']:settings[key]=value.strip().strip('\"\'')
-p=Path(settings.get('QS_DATA_DIR','/var/www/quantum_saas/instance'))/'quantum_saas.db'
+settings={key:os.environ[key] for key in ("QS_DATA_DIR", "QS_PUBLIC_URL") if key in os.environ}
+p=Path(settings.get("QS_DATA_DIR", "/var/www/quantum_saas/instance"))/"quantum_saas.db"
 conn=sqlite3.connect(p.resolve().as_uri()+'?mode=ro',uri=True);conn.row_factory=sqlite3.Row;conn.execute('PRAGMA query_only=ON')
 study=json.loads((PROD/'data/pq_study_top1000.json').read_text());study_domains={s['domain'] for s in study['sites']}
 weeks=[r[0] for r in conn.execute('SELECT DISTINCT week FROM adoption_results ORDER BY week')]

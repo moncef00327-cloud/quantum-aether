@@ -58,9 +58,28 @@ Full text of every guide plus the live weekly figures in one file: {{ base }}/ll
 
 - {{ base }}/study/top-1000-post-quantum-tls{{ u }} — scan of the Tranco top 1,000 domains (November 2026): share that negotiate X25519MLKEM768, grade distribution, full per-domain table. Raw data: {{ base }}/study/top-1000-post-quantum-tls.json (CC BY 4.0).
 - {{ base }}/adoption{{ u }} — weekly tracker: every Monday the Tranco top 10,000 and watchlists of government, bank and company sites in Germany, Austria and Switzerland are re-scanned (the top 100,000 monthly); shows which sites switched to or lost X25519MLKEM768 that week and the share of sites ready per hosting provider / CDN network. Data: {{ base }}/adoption.json and {{ base }}/adoption.csv (CC BY 4.0).
-- {{ base }}/guides/enable-x25519mlkem768-nginx{{ u }} — enable post-quantum TLS on nginx (OpenSSL 3.5+) and verify it.
-- {{ base }}/guides/post-quantum-tls-apache-caddy-haproxy-cloudflare{{ u }} — the same for Apache, Caddy, HAProxy and Cloudflare.
-- {{ base }}/guides/harvest-now-decrypt-later{{ u }} — why key exchange must be upgraded before certificates.
+{%- for r in monthly_reports %}
+- {{ base }}/reports/{{ r.id }}{{ u }} — {{ r.title }} (published {{ r.published }}; frozen, CC BY 4.0).
+{%- endfor %}
+{%- for b in bank_reports %}
+- {{ base }}/banks/{{ b.id }}{{ u }} — {{ b.title }} (measured {{ b.measured_on }}): {{ b.summary }} One page per bank at {{ base }}/banks/{{ b.id }}/{domain}. Data: {{ base }}/banks/{{ b.id }}.json (CC BY 4.0).
+{%- endfor %}
+{%- if dach_hosting %}
+- {{ base }}/adoption/dach-hosting{{ u }} — {{ dach_hosting.title }} (updated {{ dach_hosting.updated }}): {{ dach_hosting.summary }} Aggregates only, no customer domains.
+{%- endif %}
+- {{ base }}/exposure{{ u }} — Quantum Exposure Registry: since which week each tracked site negotiates post-quantum key exchange, with weekly OpenTimestamps anchors.
+- {{ base }}/press{{ u }} — press page: key figures, charts and citation terms.
+
+## Guides ({{ all_guides|length }}, en/ar, some also de)
+{% for g in all_guides %}
+- {{ base }}/guides/{{ g.slug }}{{ u }} — {{ g.title }} (updated {{ g.updated }}).
+{%- endfor %}
+
+## Tools and services
+
+- {{ base }}/tools/pq-tls-config{{ u }} — configuration generator: version-aware post-quantum TLS steps for nginx, Apache, Caddy, HAProxy and other servers, with copy buttons and a verify command.
+- {{ base }}/audit{{ u }} — organisation audit (estate-wide post-quantum TLS review with PDF report), requested by form and paid by invoice.
+- {{ base }}/prooflab{{ u }} — ProofLab (early access, waitlist): tests a minimal X25519MLKEM768 config change for nginx, Caddy or HAProxy in isolated containers before production. Open-source prototype as a GitHub Action: https://github.com/moncef00327-cloud/prooflab-action
 
 ## Ranking by country
 

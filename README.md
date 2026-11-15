@@ -19,6 +19,8 @@ Quantum Aether measures public TLS connections, reports observed key exchange an
 
 Live agent endpoints and prices: [service discovery](https://ather-quantum.com/.well-known/agent-service.json), [MCP guide](https://ather-quantum.com/agents?lang=en), and [OpenAPI](https://ather-quantum.com/openapi.yaml).
 
+Try the free interactive [Post-Quantum TLS Checker on Hugging Face](https://huggingface.co/spaces/OMERHNN/quantum-aether-pq-tls-checker) (Arabic/English).
+
 ## Research archive: quantum experiments and digital DNA
 
 ### English

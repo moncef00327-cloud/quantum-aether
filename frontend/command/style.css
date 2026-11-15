@@ -386,6 +386,8 @@ a.check:active>span,a.check:focus-visible>span{border-color:var(--qa-cyan)!impor
 .qa-neon .qa-metrics-card{order:4}
 .qa-neon .qa-grade-card{order:5}
 .qa-neon .qa-grade-card:has(.qa-details[open]){grid-column:1/-1}
+/* the grade card carries the trial form: half a phone width squeezed it to one word per line */
+.qa-neon .qa-metrics-card,.qa-neon .qa-grade-card{grid-column:1/-1}
 .qa-holo{width:150px}
 .qa-neon .qa-hero-content p{margin-bottom:.4rem}
 .qa-example-tag{font-size:10px;padding:2px 7px}
@@ -463,3 +465,29 @@ details.buy-more>summary{cursor:pointer;min-height:44px}
 .qa-result-trial h2{font-size:18px;margin:0 0 6px}
 .qa-result-trial > p{margin:0 0 10px;color:#c6bfd8}
 .qa-result-trial .qa-trial-submit{margin-top:10px}
+
+/* sample card on home: the next step is scanning your own domain (no trial form for sample domains) */
+.qa-example-scan{text-decoration:none}
+/* trial right under the scanner, in the same card: one place for "check" and "monitor" */
+.qa-trial-inline{margin-top:14px;padding-top:14px;border-top:1px solid #ffffff1f}
+.qa-trial-inline h2{font-size:.95rem;margin:0 0 .55rem;color:#eef0ff}
+.qa-trial-inline .qa-trial-domain{width:100%;margin-top:8px}
+.qa-hero-examples{margin-top:16px}
+.qa-trial-inline .qa-trial-note{font-size:12px;line-height:1.5;margin:.5rem 0 0;color:#a9a3c4}
+/* email (trial) first, scanner second */
+.qa-trial-inline{margin-top:0;padding-top:0;border-top:0;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #ffffff1f}
+.qa-trial-inline{margin-top:12px;padding-top:14px}
+/* trial form (home, mobile-first): visible labels, 16px text (no iOS zoom), 48px+ targets, one radius/border system */
+.qa-trial-inline{display:flex;flex-direction:column;gap:0;padding:16px;border-radius:14px}
+.qa-trial-inline h2{font-size:1.05rem;line-height:1.4;margin:0 0 12px;text-wrap:balance}
+.qa-trial-inline .qa-field-label{display:block;margin:0 0 6px;font-size:13px;font-weight:600;color:#d9d4ef}
+.qa-trial-inline .qa-field{display:block;width:100%;box-sizing:border-box;height:52px;margin:0 0 12px;padding:0 14px;
+  font-size:16px;line-height:1.2;font-family:inherit;color:#f5f3ff;background:#0f0b1c;border:1.5px solid #6f62a3;border-radius:12px;
+  text-align:left;direction:ltr;transition:border-color .15s,box-shadow .15s}
+.qa-trial-inline .qa-field::placeholder{color:#8f88ad;opacity:1}
+.qa-trial-inline .qa-field:focus{outline:none;border-color:#67e8f9;box-shadow:0 0 0 3px #67e8f940}
+.qa-trial-inline .qa-trial-domain{height:48px;margin-top:0;font-size:16px;padding:0 14px}
+.qa-trial-inline .qa-trial-consent{margin:2px 0 0;align-items:center;min-height:44px;font-size:14px}
+.qa-trial-inline .qa-trial-consent input{width:20px;height:20px;flex:0 0 20px;margin:0}
+.qa-trial-inline .qa-trial-submit{min-height:52px;margin-top:8px;border-radius:12px;font-size:16px}
+.qa-trial-inline .qa-trial-note{text-align:center;margin-top:10px}

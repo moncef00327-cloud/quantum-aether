@@ -16,6 +16,10 @@ for lang in ['ar','en']:
         inner=re.sub(r'<i></i>$','',inner)
         a='<a href="{{ '+url+' }}" class="{% if command_section == \''+id+'\' %}active{% endif %}" {% if command_section == \''+id+'\' %}aria-current="page"{% endif %}>'+inner+"{% if command_section == '"+id+"' %}<i></i>{% endif %}</a>"
         nav=nav.replace(button,a)
+    # ProofLab is a real page (not an in-app tab): give it the same active state as the tabs
+    pro=re.search(r'<a class="nav-prooflab" href="/prooflab\?lang=\w+">(.*?)</a>',nav)
+    assert pro, 'ProofLab link missing from App.tsx nav'
+    nav=nav.replace(pro.group(),'<a href="{{ url_for(\'site.prooflab_page\',lang=lang) }}" class="{% if command_section == \'prooflab\' %}active{% endif %}" {% if command_section == \'prooflab\' %}aria-current="page"{% endif %}>'+pro.group(1)+"{% if command_section == 'prooflab' %}<i></i>{% endif %}</a>")
     aside=re.sub(r'<nav\b.*?</nav>',lambda _:nav,aside)
     header=re.search(r'<header\b.*?</header>',source).group()
     header=re.sub(r'<b>.*?</b>', '<b>{{ command_title }}</b>',header,count=1)
