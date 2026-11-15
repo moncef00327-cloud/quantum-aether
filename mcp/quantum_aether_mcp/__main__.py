@@ -1,3 +1,5 @@
+"""Run the Quantum Aether MCP server over stdio."""
 from .server import main
 
-main()
+if __name__ == "__main__":
+    main()
