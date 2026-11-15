@@ -56,8 +56,14 @@ class DataAccessTests(unittest.TestCase):
         self.assertNotEqual(self.client.get("/robots.txt", environ_base={"REMOTE_ADDR": "203.0.113.9"}).status_code, 429)
 
     def test_rotating_addresses_in_one_subnet_are_capped(self):
-        codes = [self.client.get("/exposure/bank.example", environ_base={"REMOTE_ADDR": f"203.0.113.{i % 50 + 1}"}).status_code
-                 for i in range(245)]
+        real_hit = data_access.hit
+
+        def fixed_window_hit(data_dir, key, bucket, limits):
+            return real_hit(data_dir, key, bucket, limits, now=1_800_000_000)
+
+        with mock.patch.object(data_access, "hit", side_effect=fixed_window_hit):
+            codes = [self.client.get("/exposure/bank.example", environ_base={"REMOTE_ADDR": f"203.0.113.{i % 50 + 1}"}).status_code
+                     for i in range(245)]
         self.assertEqual(codes[:240].count(429), 0)
         self.assertIn(429, codes[240:])
 
