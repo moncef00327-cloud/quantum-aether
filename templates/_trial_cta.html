@@ -6,7 +6,7 @@
    `source` (e.g. scan_result, monitoring, home) is sent with analytics events so we can measure each CTA. #}
 {% macro trial_cta(form_id, domain='', title='', sub='', compact=false, prefill='', email='', error='', focus='', source='', urgent=false, show_title=true, editable_domain=false) %}
 {% set sp = '%g'|format(starter_price|float) %}{% set price_label = (sp ~ ' €') if sub_currency == 'EUR' else (sp ~ ' ' ~ sub_currency) %}
-<section class="card highlight trial-cta{% if urgent %} trial-cta-urgent{% endif %}{% if source in ('scan_result','site_result') %} conversion-offer{% endif %}" id="{{ form_id }}"{% if source in ('scan_result','site_result') %} data-ev-impression="offer_impression"{% endif %}>
+<section class="card highlight{% if source in ('scan_result','site_result') %} conversion-offer{% endif %} trial-cta{% if urgent %} trial-cta-urgent{% endif %}" id="{{ form_id }}"{% if source in ('scan_result','site_result') %} data-ev-impression="offer_impression"{% endif %}>
   {% if show_title %}<h2>{{ title or t.trial_cta_title }}</h2>{% endif %}
   {% if not compact %}<p>{{ sub or t.trial_cta_sub.format(price=price_label) }}</p>{% endif %}
   <form method="post" action="{{ url_for('site.monitor_trial', lang=lang) }}" class="scan-form trial-form"{% if source %} data-trial-source="{{ source }}"{% endif %}>

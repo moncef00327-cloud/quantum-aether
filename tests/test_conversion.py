@@ -96,7 +96,7 @@ class ConversionTests(unittest.TestCase):
         from unittest.mock import patch
         with patch("quantum_saas_app.conversion_variant", return_value="treatment"):
             body = self.client.get("/site/alpha.test?lang=en").get_data(as_text=True)
-            self.assertIn('class="card highlight conversion-offer"', body)
+            self.assertIn('class="card highlight conversion-offer', body)
             self.assertIn("Are you responsible for alpha.test?", body)
             self.assertIn("monitor its public TLS handshakes daily", body)
             self.assertIn("Scan your own domain", body)

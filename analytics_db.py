@@ -110,6 +110,7 @@ def summary(conn, since_day):
 def prune(conn, before_day):
     with conn:
         conn.execute("DELETE FROM pageviews WHERE day < ?", (before_day,))
+        conn.execute("DELETE FROM events WHERE day < ?", (before_day,))
 
 
 # ---------------------------------------------------------------- أحداث داخل الصفحة (بلا كوكيز)

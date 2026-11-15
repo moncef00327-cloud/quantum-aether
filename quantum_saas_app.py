@@ -268,9 +268,11 @@ def _inject():
             "grade_guide_url": url_for("site.study", lang=lang) + "#grade-definitions",
             "report_price": current_app.config["PRICE"], "currency": current_app.config["CURRENCY"],
             "agency_price_dual": dual_price_label(current_app.config["PACK_PRICE"], current_app.config["PACK_CURRENCY"]),
-            "pack_currency": current_app.config["PACK_CURRENCY"], "sub_currency": subscription_currency(),
+            "pack_currency": current_app.config["PACK_CURRENCY"],
+            "sub_currency": subscription_currency() if subscriptions_enabled() else current_app.config["CURRENCY"],
             "agency_credits": current_app.config["PACK_CREDITS"],
             "starter_price": monitor.PLANS["starter"]["price"],
+            "business_price": monitor.PLANS["business"]["price"],
             "usd_per_eur": business_pages.USD_PER_EUR, "fx_rate_date": business_pages.FX_RATE_DATE,
             "page_langs": ["en", "ar", "de"] if request.endpoint in DE_PAGES or guide_has_german() else ["en", "ar"],
             "abs_url": lambda endpoint, **kw: public_base() + url_for(endpoint, **kw),
@@ -2880,7 +2882,7 @@ def monitoring():
         except quantum_vuln_scanner.ScanError:
             domain = ""
     base = public_base()
-    currency = subscription_currency()
+    currency = subscription_currency() if subscriptions_enabled() else cfg["CURRENCY"]
     offer = lambda name, price, desc: {"@type": "Offer", "name": name, "price": price, "priceCurrency": currency,
                                        "description": desc, "url": f"{base}/monitoring?lang={current_lang()}"}
     mon_jsonld = {
@@ -3607,6 +3609,17 @@ def og_default():
     return _og_response("default", og_image.render_default)
 
 
+@bp.get("/og/report/<report_id>.png")
+def og_report(report_id):
+    report = _report_or_404(report_id)
+    top = report.get("top1000") or {}
+    if top.get("pct") is None:
+        abort(404)
+    pct, measured, week = top["pct"], top.get("reachable", 0), report.get("week", "")
+    return _og_response(f"report|{report_id}|{pct}|{measured}|{week}",
+                        lambda: og_image.render_report(pct, measured, week))
+
+
 @bp.get("/og/site/<domain>.png")
 def og_site(domain):
     try:
@@ -3988,7 +4001,8 @@ def track_pageview():
         bot = not ua or bool(analytics_db.BOT_RE.search(ua))
         analytics_db.record(db(), day, path, source, visitor, bot)
         analytics_db.record_event(db(), day, "page_view", path, current_lang(), visitor, bot,
-                                  is_test=is_test_request(), variant=data.get("variant") or conversion_variant())
+                                  is_test=current_app.testing or is_test_request(),
+                                  variant=data.get("variant") or conversion_variant())
     except Exception:  # الإحصاءات ثانوية
         log.exception("pageview tracking failed")
     return "", 204
@@ -4011,7 +4025,8 @@ def track_event():
         visitor = analytics_visitor_key(day, ua)
         detail = analytics_db.clean_detail(data.get("detail", ""))
         analytics_db.record_event(db(), day, str(data.get("name", ""))[:32], page, lang, visitor,
-                                  not ua or bool(analytics_db.BOT_RE.search(ua)), is_test_request(), detail,
+                                  not ua or bool(analytics_db.BOT_RE.search(ua)),
+                                  current_app.testing or is_test_request(), detail,
                                   variant=data.get("variant") or conversion_variant())
     except Exception:  # الإحصاءات ثانوية
         log.exception("event tracking failed")

@@ -37,18 +37,19 @@ class FunnelRound4Test(unittest.TestCase):
         sid = self.client.post("/api/scan", json={"domain": domain}, headers=self.ua).get_json()["scan_id"]
         return sid
 
-    def test_scan_id_and_domain_urls_show_prefilled_urgent_cta(self):
+    def test_scan_id_and_domain_urls_show_prefilled_editable_cta(self):
         sid = self.scan()
         for path in (f"/scan/{sid}?lang=en", "/scan/www.acme.org?lang=en", "/scan/acme.org?lang=en"):
             html = self.client.get(path, headers=self.ua).get_data(as_text=True)
             self.assertIn('id="scan-trial"', html, path)
-            self.assertIn('class="card highlight trial-cta trial-cta-urgent"', html, path)
+            self.assertNotIn('trial-cta-urgent', html.split('id="scan-trial"', 1)[1].split('</section>', 1)[0], path)
             self.assertIn('data-trial-source="scan_result"', html, path)
             self.assertIn('name="src" value="scan_result"', html, path)
-            self.assertIn('name="domain" value="acme.org"', html, path)
+            section = html.split('id="scan-trial"', 1)[1].split('</section>', 1)[0]
+            self.assertIn('id="scan-trial-domain"', section, path)
+            self.assertIn('value="acme.org"', section, path)
             self.assertIn("Start 14-day free monitoring, no card", html, path)
-            # email is the only visible field (domain is hidden)
-            self.assertNotIn('id="scan-trial-domain"', html, path)
+            # Prefilled domain is editable; public scan results do not prove ownership.
             self.assertIn('name="consent"', html, path)
             consent, button = html.find('name="consent"'), html.find('data-ev="trial_start"')
             # compare within the scan-trial section
@@ -59,7 +60,7 @@ class FunnelRound4Test(unittest.TestCase):
         self.outcome = result("A", True, "X25519MLKEM768")
         html = self.client.get(f"/scan/{self.scan()}?lang=en", headers=self.ua).get_data(as_text=True)
         self.assertIn('id="scan-trial"', html)
-        self.assertIn("Keep acme.org at grade A", html)
+        self.assertIn('id="scan-trial-domain"', html)
         self.assertNotIn("trial-cta-urgent", html.split('id="scan-trial"', 1)[1].split("</section>", 1)[0])
 
     def test_scan_domain_page_is_translated(self):
@@ -75,11 +76,13 @@ class FunnelRound4Test(unittest.TestCase):
 
     def test_site_page_leads_with_prefilled_cta(self):
         self.scan("cewe.example")
-        # site_page may use weekly/study data; still offer the trial with a hidden domain when a page renders
+        # Public site pages suggest an editable domain but do not assume ownership.
         html = self.client.get("/site/cewe.example?lang=en", headers=self.ua).get_data(as_text=True)
         self.assertIn('id="site-trial"', html)
         self.assertIn('data-trial-source="scan_result"', html)
-        self.assertIn('name="domain" value="cewe.example"', html)
+        section = html.split('id="site-trial"', 1)[1].split('</section>', 1)[0]
+        self.assertIn('id="site-trial-domain"', section)
+        self.assertIn('value="cewe.example"', section)
         self.assertLess(html.index('id="site-trial"'), html.index('id="alert"'))
         self.assertLess(html.index('id="site-trial"'), html.index('id="badge"') if 'id="badge"' in html else len(html))
 

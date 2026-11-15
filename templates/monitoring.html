@@ -41,7 +41,7 @@
   <div class="grid-2">
     {% for name, p in plans.items() %}
     <div class="price-box{% if name == 'business' %} highlight{% endif %}">
-      <h3>{{ p.name }} <span class="tag"><bdi>{{ p.price }} {{ currency }}</bdi></span> <span class="muted small">{{ t.mon_per_month }}</span></h3>
+      <h3>{{ p.name }} <span class="tag"><bdi>{{ p.price if enabled else (p.price | replace('.00', '')) }} {{ currency }}</bdi></span> <span class="muted small">{{ t.mon_per_month }}</span></h3>
       <p>{{ t.mon_domains.format(n=p.domains) }}</p>
       {% if enabled %}<div class="paypal-sub" data-plan="{{ name }}" hidden></div>{% endif %}
     </div>

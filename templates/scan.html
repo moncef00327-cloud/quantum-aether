@@ -16,7 +16,6 @@
     <p class="muted small">{{ t.scanned_at }}: <span dir="ltr">{{ r.scanned_at }}</span></p>
   </div>
 </section>
-{% set immediate_a_offer = observation == 'observed_pq' and r.grade == 'A' %}
 {% if not paid %}
 {% if conversion_variant == 'treatment' %}
 {% set offer_grade = 'unknown' if observation == 'undetermined' else r.grade|lower %}
@@ -26,11 +25,7 @@
 {{ trial_cta('scan-trial', title=offer_title, sub=offer_body ~ ' ' ~ t.conversion_offer_trial, prefill=dbase, editable_domain=true, source='scan_result', show_title=true) }}
 <p class="small"><a href="{{ url_for('site.index', lang=lang) }}#scan" data-ev="scan_cta">{{ t.conversion_offer_scan }} →</a></p>
 {% else %}
-{% if immediate_a_offer %}
-{{ trial_cta('scan-trial', domain=dbase, title=t.scan_trial_title_a.format(domain=dbase), sub=t.scan_trial_sub_a, source='scan_result') }}
-{% else %}
-{{ trial_cta('scan-trial', domain=dbase, title=t.scan_trial_title.format(domain=dbase), sub=t.scan_trial_sub, source='scan_result', urgent=true) }}
-{% endif %}
+{{ trial_cta('scan-trial', title=t.trial_cta_title, prefill=dbase, editable_domain=true, source='scan_result') }}
 {% endif %}
 {% endif %}
 {% set glang = lang if lang in ("en", "ar") else "en" %}

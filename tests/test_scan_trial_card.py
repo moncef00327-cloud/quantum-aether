@@ -35,20 +35,20 @@ class ScanTrialCardTest(unittest.TestCase):
         html = self.page()
         self.assertIn('id="scan-trial"', html)
         self.assertIn('action="/monitoring/trial', html)
-        self.assertIn('name="domain" value="acme.org"', html)  # base domain, without www
+        self.assertIn('id="scan-trial-domain"', html)
+        self.assertIn('value="acme.org"', html)  # editable suggestion, not an ownership assumption
         self.assertIn('data-ev="trial_start"', html)
         self.assertLess(html.index('id="scan-trial"'), html.index('id="discovery"'))
         self.assertLess(html.index('id="scan-trial"'), html.index('id="buy"'))
         self.assertNotIn('id="consent" name="consent"', html)  # does not clash with the checkout's #consent
         # result pages exist in en/ar (German visitors get English)
-        self.assertIn("مجاناً", self.page(lang="ar").split('id="scan-trial"')[1][:600])
+        self.assertIn("مجان", self.page(lang="ar").split('id="scan-trial"')[1][:600])
 
-    def test_grade_a_pitches_daily_monitoring_first_and_report_last(self):
-        # 2026-11-14: grade A also leads with the trial (silent regressions, subdomains behind/around the CDN)
+    def test_grade_a_offers_monitoring_without_fear_claims(self):
         self.outcome = result("A", True, "X25519MLKEM768")
         html = self.page()
         self.assertIn('id="scan-trial"', html)
-        self.assertIn("api.", html.split('id="scan-trial"')[1][:1500])
+        self.assertNotIn("silently drop", html.split('id="scan-trial"')[1][:1500])
         self.assertLess(html.index('id="scan-trial"'), html.index('id="discovery"'))
         self.assertLess(html.index('id="alert"'), html.index('id="buy"'))  # the paid report comes last for A
 

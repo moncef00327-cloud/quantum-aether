@@ -102,7 +102,7 @@
   {% else %}
   <p>Routine server updates or CDN changes can silently drop post-quantum encryption (Silent TLS Downgrade), and direct subdomains (api, auth, mail, vpn) frequently bypass CDN edge protection.</p>
   <ul class="brief-options">
-    <li><strong>Option 1 — Enterprise Daily Monitoring (from <bdi>{{ starter_price }} {{ sub_currency }}{% if sub_currency == 'USD' %} (≈ €{{ '%.2f'|format(starter_price|float / usd_per_eur) }}){% endif %}</bdi>/month):</strong> Automated daily checks across primary and subdomain hosts, instant silent-downgrade alerts, certificate expiry warnings, and a printable compliance log.</li>
+    <li><strong>Option 1 — Enterprise Daily Monitoring (from <bdi>{{ '%.2f'|format(starter_price|float) }} {{ sub_currency }}/month{% if sub_currency == 'USD' %} (≈ €{{ '%.2f'|format(starter_price|float / usd_per_eur) }}){% endif %}</bdi>):</strong> Automated daily checks across primary and subdomain hosts, instant silent-downgrade alerts, certificate expiry warnings, and a printable compliance log.</li>
     <li><strong>Option 2 — One-Time Full Remediation Report (<bdi>{{ report_price }} {{ currency }}{% if currency == 'USD' %} (≈ €{{ '%.2f'|format(report_price|float / usd_per_eur) }}){% endif %}</bdi>):</strong> Exact step-by-step configuration for Nginx, Apache, Caddy, Cloudflare, and AWS.</li>
   </ul>
   {% endif %}
