@@ -2,6 +2,7 @@
 import os
 import sys
 
+import crawler_log
 import monitor
 import sales_db
 import scorecard
@@ -14,6 +15,10 @@ def main():
     conn = sales_db.connect(db_path)
     card = scorecard.build(conn, owner, monitor.PLANS)
     text = scorecard.as_text(card)
+    try:  # ملخص زيارات الزواحف (قياس أثر IndexNow و llms.txt)
+        text += "\n\n" + crawler_log.as_text(crawler_log.summary(os.path.dirname(db_path)))
+    except Exception as exc:
+        text += f"\n\nCrawler summary unavailable: {exc}"
     print(text)
     mailer = Mailer(os.environ.get("RESEND_API_KEY", ""), os.environ.get("QS_MAIL_FROM", ""),
                     fallback_sender=os.environ.get("QS_MAIL_FROM_FALLBACK", ""),

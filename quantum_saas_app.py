@@ -171,6 +171,8 @@ def create_app(overrides=None, scanner=None, paypal=None, mailer=None, chain=Non
                                                      fallback_sender=app.config["MAIL_FROM_FALLBACK"],
                                                      site_url=app.config["PUBLIC_URL"])
     app.register_blueprint(bp)
+    import crawler_log  # عدّاد زيارات الزواحف (بلا IP)، للملخص الأسبوعي
+    crawler_log.register(app, lambda: app.config["DATA_DIR"])
     return app
 
 
