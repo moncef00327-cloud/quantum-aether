@@ -26,6 +26,12 @@ class PQCNewsTests(unittest.TestCase):
         self.assertEqual(classified["importance"], "high")
         self.assertTrue(all(classified["takeaway"][lang] for lang in ("en", "ar", "de")))
         self.assertIsNone(generate_pqc_news.classify({**article(), "title": "A new gardening tool"}))
+        unrelated_quantum_paper = {**article(), "source": "arXiv quant-ph",
+                                   "title": "Analytic spread complexity in three-level systems",
+                                   "description": "The spread complexity characterizes a quantum state over the Krylov basis."}
+        self.assertIsNone(generate_pqc_news.classify(unrelated_quantum_paper))
+        self.assertIsNotNone(generate_pqc_news.classify({**unrelated_quantum_paper,
+            "description": "Quantum computers threaten RSA encryption; Shor's algorithm."}))
 
     def test_feed_generator_keeps_metadata_and_preserves_old_feed_on_total_failure(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -41,6 +47,31 @@ class PQCNewsTests(unittest.TestCase):
                     patch.object(generate_pqc_news, "fetch_source", side_effect=OSError("offline")):
                 self.assertEqual(generate_pqc_news.main(), 1)
             self.assertEqual(output.read_bytes(), previous)
+
+    def test_generator_drops_old_results_from_refreshed_sources_but_keeps_failed_sources(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "news_feed.json"
+            stale = {**article("https://research.ibm.com/research/news"), "source": "IBM Research",
+                     "title": "Unrelated quantum physics", "category": "research", "importance": "medium",
+                     "takeaway": {lang: "Editorial" for lang in ("en", "ar", "de")}}
+            retained = {**article("https://blog.google/old-pqc"), "source": "Google Blog"}
+            output.write_text(json.dumps({"items": [stale, retained]}))
+            sources = [("IBM Research", "https://research.ibm.com/rss", "ibm.com"),
+                       ("Google Blog", "https://blog.google/rss/", "blog.google")]
+
+            def fetch(source):
+                if source[0] == "Google Blog":
+                    raise OSError("temporarily offline")
+                unrelated = {**article("https://research.ibm.com/research/new"), "source": source[0],
+                             "title": "Quantum state correlations", "description": "A physics result."}
+                return source[0], [unrelated]
+
+            with patch.object(generate_pqc_news, "OUTPUT", output), \
+                    patch.object(generate_pqc_news, "SOURCES", sources), \
+                    patch.object(generate_pqc_news, "fetch_source", side_effect=fetch):
+                self.assertEqual(generate_pqc_news.main(), 0)
+            items = json.loads(output.read_text())["items"]
+            self.assertEqual([item["url"] for item in items], [retained["url"]])
 
     def test_feed_validator_rejects_untrusted_links_and_accepts_official_subdomains(self):
         good = {"schema_version": 1, "items": [{

@@ -36,12 +36,10 @@ SOURCES = [
 ]
 
 PQC_TERMS = (
-    "post-quantum", "post quantum", "postquantum", "pqc", "ml-kem", "mlkem", "kyber",
+    "post-quantum", "post quantum", "postquantum", "ml-kem", "mlkem", "kyber",
     "dilithium", "slh-dsa", "x25519mlkem768", "quantum-safe", "quantum resistant",
     "harvest now, decrypt later", "cryptographic agility", "quantum cryptography",
 )
-TLS_TERMS = ("tls", "transport layer security", "key exchange", "key establishment", "cryptographic")
-QUANTUM_TERMS = ("quantum", "shor", "post-quantum", "pqc", "ml-kem", "mlkem", "kyber")
 VULN_TERMS = ("vulnerability", "vulnerabilities", "vulnerable", "security advisory", "cve-")
 STANDARD_TERMS = ("nist", "fips", "standard", "standards", "transition", "migration", "guidance", "roadmap")
 IMPLEMENTATION_TERMS = ("tls", "openssl", "cloudflare", "nginx", "browser", "deployment", "implementation")
@@ -113,9 +111,12 @@ def fetch_source(source):
 
 def classify(entry):
     text = f"{entry['title']} {entry['description']}".lower()
-    pq_specific = any(term in text for term in PQC_TERMS)
-    quantum_crypto = any(term in text for term in QUANTUM_TERMS) and any(term in text for term in TLS_TERMS + ("cryptography", "cryptographic", "encryption", "rsa", "elliptic curve"))
-    if not (pq_specific or quantum_crypto):
+    pq_specific = (any(term in text for term in PQC_TERMS)
+                   or bool(re.search(r"\bpqc\b", text)))
+    crypto_context = any(term in text for term in ("cryptography", "cryptographic", "encryption", "rsa",
+                                                    "elliptic curve", "public key", "tls"))
+    quantum_threat = ("quantum computer" in text or "quantum computers" in text or "shor" in text)
+    if not (pq_specific or (quantum_threat and crypto_context)):
         return None
     if any(term in text for term in VULN_TERMS):
         category = "vulnerability"
@@ -178,7 +179,11 @@ def main():
         print("All official feeds failed; leaving the existing feed unchanged.", file=sys.stderr)
         return 1
     now = datetime.now(timezone.utc)
-    merged = {item.get("url"): item for item in old.get("items", []) if item.get("url")}
+    healthy_sources = {source["name"] for source in source_status if source["ok"]}
+    # Replace each healthy source's RSS window on refresh so a formerly broad classification
+    # cannot linger in the public feed. Keep prior entries only for sources that failed this run.
+    merged = {item.get("url"): item for item in old.get("items", [])
+              if item.get("url") and item.get("source") not in healthy_sources}
     new_count = 0
     for entry in fetched:
         analyzed = classify(entry)
