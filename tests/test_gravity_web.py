@@ -7,6 +7,24 @@ import sales_db
 
 
 class GravityWebTests(unittest.TestCase):
+    def test_public_dashboard_is_indexable_and_in_sitemap(self):
+        with tempfile.TemporaryDirectory() as directory:
+            app = quantum_saas_app.create_app({
+                'TESTING': True,
+                'DATA_DIR': directory,
+                'PUBLIC_URL': 'https://ather-quantum.com',
+            })
+            client = app.test_client()
+            sitemap = client.get('/sitemap-pages.xml').get_data(as_text=True)
+            for lang in ('en', 'ar'):
+                with self.subTest(lang=lang):
+                    path = f'/gravity?lang={lang}'
+                    response = client.get(path)
+                    self.assertEqual(response.status_code, 200)
+                    self.assertNotIn('noindex', response.headers.get('X-Robots-Tag', ''))
+                    self.assertNotIn('<meta name="robots" content="noindex', response.get_data(as_text=True))
+                    self.assertIn(f'https://ather-quantum.com{path}', sitemap)
+
     def test_empty_dashboard_and_real_evidence(self):
         with tempfile.TemporaryDirectory() as directory:
             app = quantum_saas_app.create_app({'TESTING': True, 'DATA_DIR': directory})

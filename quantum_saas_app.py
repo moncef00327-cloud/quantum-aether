@@ -3633,6 +3633,7 @@ def _sitemap_pages():
     site_langs, de_langs, legal_langs = ("en", "ar"), ("en", "ar", "de"), legal.LANGS
     pages = [("/", _template_day("index.html"), de_langs), ("/monitoring", _template_day("monitoring.html"), de_langs),
              ("/sample-report", sample_result()["scanned_at"][:10], site_langs),
+             ("/gravity", _template_day("gravity.html"), site_langs),
              ("/guides", max(g["updated"] for g in guides.GUIDES.values()), site_langs),
              ("/tools/pq-tls-config", _template_day("pq_config.html"), de_langs),
              ("/press", _template_day("press.html"), de_langs),
@@ -3997,8 +3998,8 @@ def _security_headers(response):
     if request.path.startswith(('/scan/', '/api/v1/orders', '/api/paypal/', '/api/crypto/', '/api/v1/crypto/',
                                 '/api/monitor/')):
         response.headers['Referrer-Policy'] = 'no-referrer'
-    if request.path in ('/gravity', '/research'):
-        # لوحة داخلية لفرص الطلب، ليست صفحة منتج: لا تُفهرس.
+    if request.path == '/research':
+        # صفحة بحث داخلية وليست محتوى عامًا.
         response.headers['X-Robots-Tag'] = 'noindex, nofollow'
     if request.path.startswith(("/report/", "/admin", "/monitor/", "/alerts/", "/pack/", "/discovery/", "/access/")):
         # رابط التقرير يحمل مفتاح الوصول: لا نخزنه ولا نرسله في Referer ولا نسمح بالفهرسة.

@@ -116,7 +116,8 @@ class RemovedSurfaceTests(Base):
             self.assertNotIn(word, llms)
         sitemap = self.client.get("/sitemap-pages.xml").get_data(as_text=True)
         self.assertNotIn("/research", sitemap)
-        self.assertNotIn("/gravity", sitemap)
+        self.assertIn("/gravity?lang=en", sitemap)
+        self.assertIn("/gravity?lang=ar", sitemap)
 
     def test_home_and_pricing_top_without_pack_and_audit(self):
         self.make()
