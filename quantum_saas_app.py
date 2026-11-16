@@ -3875,6 +3875,9 @@ def _index_listing():
                              "title": f"State of post-quantum TLS: {_month_name(rid, 'en')}"} for rid in reports.ids()],
         "bank_reports": _bank_summaries(),
         "dach_hosting": _dach_summary(),
+        # Generated from the sitemap itself: a page added to _sitemap_pages() is listed here with no extra edit.
+        "all_pages": [{"path": path, "updated": day, "langs": list(langs)}
+                      for path, day, langs in sorted(_sitemap_pages(), key=lambda p: p[0])],
     }
 
 

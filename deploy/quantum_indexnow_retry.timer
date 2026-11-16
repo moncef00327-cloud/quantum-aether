@@ -1,0 +1,11 @@
+[Unit]
+Description=Check once daily for pending crawler notifications
+
+[Timer]
+OnCalendar=*-*-* 07:00:00 UTC
+RandomizedDelaySec=20min
+Persistent=true
+Unit=quantum_indexnow_retry.service
+
+[Install]
+WantedBy=timers.target

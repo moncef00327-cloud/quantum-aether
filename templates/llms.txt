@@ -109,3 +109,8 @@ Full text of every guide plus the live weekly figures in one file: {{ base }}/ll
 - {{ base }}/compare?a=<your-domain>&b=<competitor-domain> — scan two sites side by side (replace both placeholders with real hostnames the user asked about).
 - CLI: `npx quantum-aether {domain}` (Node ≥18) prints the grade in your terminal; `--json` for machine output.
 - GitHub Action: `uses: moncef00327-cloud/pq-tls-action@v1` with `domain:` checks post-quantum TLS on every deploy; optional `require-post-quantum: true` fails the job if X25519MLKEM768 is missing. Marketplace: https://github.com/marketplace/actions/post-quantum-tls-check-quantum-aether
+
+## Every public page ({{ all_pages|length }}, generated from the sitemap)
+{% for p in all_pages %}
+- {{ base }}{{ p.path }}{% if p.path != "/" %}?lang={{ p.langs[0] }}{% endif %} — updated {{ p.updated }}; languages: {{ p.langs|join(", ") }}.
+{%- endfor %}
