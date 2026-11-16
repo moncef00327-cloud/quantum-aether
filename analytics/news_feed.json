@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-11-16T22:56:51Z",
+  "updated_at": "2026-11-16T22:58:04Z",
   "classification": "Deterministic keyword rules; impact notes are editorial context, not source quotations or security advisories.",
   "sources": [
     {
       "name": "IBM Research",
-      "ok": false,
-      "error": "URLError"
+      "ok": true,
+      "entries": 20
     },
     {
       "name": "Google Blog",
@@ -42,20 +42,6 @@
   "items": [
     {
       "source": "arXiv cs.CR",
-      "url": "https://arxiv.org/abs/2611.18355",
-      "title": "Information-Theoretic Threshold Designated-Verifier Digital Signatures for Resource-Constrained Devices",
-      "published_at": "2026-11-16T05:00:00Z",
-      "category": "research",
-      "importance": "medium",
-      "takeaway": {
-        "en": "Editorial takeaway: research context, not a production security advisory or evidence of a new cryptographic break; assess before changing policy.",
-        "ar": "قراءة تحريرية: هذا سياق بحثي، وليس تنبيهاً أمنياً للإنتاج أو دليلاً على كسر تشفيري جديد؛ قيّم النتائج قبل تغيير السياسة.",
-        "de": "Redaktionelle Einordnung: Forschungskontext, keine Produktionswarnung und kein Beleg für einen neuen kryptografischen Bruch; vor einer Richtlinienänderung bewerten."
-      },
-      "id": "530e3d58efeca8c5"
-    },
-    {
-      "source": "arXiv cs.CR",
       "url": "https://arxiv.org/abs/2610.36145",
       "title": "They Will See Johnny's Message: A Measurement Study of Post-Quantum Cryptography Across Email Delivery Paths",
       "published_at": "2026-11-16T05:00:00Z",
@@ -67,20 +53,6 @@
         "de": "Redaktionelle Einordnung: Prüfen Sie relevante TLS-Bibliotheken, Proxy- und CDN-Änderungen und testen Sie den öffentlichen Endpunkt anschließend erneut."
       },
       "id": "9a0ea85f412f8940"
-    },
-    {
-      "source": "arXiv cs.CR",
-      "url": "https://arxiv.org/abs/2611.04240",
-      "title": "VerfGraph: Efficient Zero-Knowledge Verifiable Graph Query Evaluation System",
-      "published_at": "2026-11-16T05:00:00Z",
-      "category": "research",
-      "importance": "medium",
-      "takeaway": {
-        "en": "Editorial takeaway: research context, not a production security advisory or evidence of a new cryptographic break; assess before changing policy.",
-        "ar": "قراءة تحريرية: هذا سياق بحثي، وليس تنبيهاً أمنياً للإنتاج أو دليلاً على كسر تشفيري جديد؛ قيّم النتائج قبل تغيير السياسة.",
-        "de": "Redaktionelle Einordnung: Forschungskontext, keine Produktionswarnung und kein Beleg für einen neuen kryptografischen Bruch; vor einer Richtlinienänderung bewerten."
-      },
-      "id": "0188550c0d7cfaf5"
     },
     {
       "source": "arXiv cs.CR",
