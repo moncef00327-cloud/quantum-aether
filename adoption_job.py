@@ -80,6 +80,9 @@ def _site_urls(base, conn):
 
 def notify_indexnow(app, conn, week, post=None):
     """Notify IndexNow once per weekly refresh, for only indexable URLs actually refreshed."""
+    if post is None and app.config.get("TESTING"):
+        log.info("IndexNow skipped: test app (pass post= to exercise the send path)")
+        return 0
     conn.execute("CREATE TABLE IF NOT EXISTS crawler_submissions (period TEXT PRIMARY KEY, submitted_at TEXT NOT NULL, url_count INTEGER NOT NULL)")
     period = f"weekly:{week}"
     if conn.execute("SELECT 1 FROM crawler_submissions WHERE period = ?", (period,)).fetchone():
@@ -128,6 +131,9 @@ def notify_new_urls(app, conn, post=None):
     Weekly refreshes of /site/ pages stay with notify_indexnow; this run only fills the gap between Mondays
     (a new page, an edited page, a domain added to a watch list).
     """
+    if post is None and app.config.get("TESTING"):
+        log.info("IndexNow skipped: test app (pass post= to exercise the send path)")
+        return 0
     target = _indexnow_target(app)
     if target is None:
         return 0
