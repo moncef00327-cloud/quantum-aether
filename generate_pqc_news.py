@@ -111,6 +111,7 @@ def fetch_source(source):
 
 def classify(entry):
     text = f"{entry['title']} {entry['description']}".lower()
+    title = entry["title"].lower()
     pq_specific = (any(term in text for term in PQC_TERMS)
                    or bool(re.search(r"\bpqc\b", text)))
     crypto_context = any(term in text for term in ("cryptography", "cryptographic", "encryption", "rsa",
@@ -118,6 +119,13 @@ def classify(entry):
     quantum_threat = ("quantum computer" in text or "quantum computers" in text or "shor" in text)
     if not (pq_specific or (quantum_threat and crypto_context)):
         return None
+    if entry["source"].lower().startswith("arxiv"):
+        title_topic = (any(term in title for term in PQC_TERMS)
+                       or bool(re.search(r"\bpqc\b", title))
+                       or (("quantum computer" in title or "quantum computers" in title or "shor" in title)
+                           and any(term in title for term in ("cryptography", "cryptographic", "encryption", "rsa", "tls"))))
+        if not title_topic:
+            return None
     if any(term in text for term in VULN_TERMS):
         category = "vulnerability"
         importance = "high"

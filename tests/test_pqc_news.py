@@ -30,12 +30,14 @@ class PQCNewsTests(unittest.TestCase):
                                    "title": "Analytic spread complexity in three-level systems",
                                    "description": "The spread complexity characterizes a quantum state over the Krylov basis."}
         self.assertIsNone(generate_pqc_news.classify(unrelated_quantum_paper))
-        self.assertIsNotNone(generate_pqc_news.classify({**unrelated_quantum_paper,
+        self.assertIsNotNone(generate_pqc_news.classify({**unrelated_quantum_paper, "source": "Cloudflare Blog",
             "description": "Quantum computers threaten RSA encryption; Shor's algorithm."}))
         signature_paper = {**unrelated_quantum_paper,
                            "title": "Information-Theoretic Threshold Designated-Verifier Digital Signatures",
                            "description": "Preparation for quantum adversaries. A comparable post-quantum signature scheme meets the standard security criterion."}
-        self.assertEqual(generate_pqc_news.classify(signature_paper)["category"], "research")
+        self.assertIsNone(generate_pqc_news.classify(signature_paper))
+        titled_pqc_paper = {**signature_paper, "title": "Post-Quantum Threshold Designated-Verifier Digital Signatures"}
+        self.assertEqual(generate_pqc_news.classify(titled_pqc_paper)["category"], "research")
 
     def test_feed_generator_keeps_metadata_and_preserves_old_feed_on_total_failure(self):
         with tempfile.TemporaryDirectory() as directory:
