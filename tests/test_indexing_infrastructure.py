@@ -45,9 +45,11 @@ class InfrastructurePolicyTests(unittest.TestCase):
         self.assertIn('doubleclick.net', targets)
 
     def test_owner_requested_exclusions(self):
-        for host in ['dicrotin.com', 'xnhau.pics', 'cgbum.com', 'uncenz.com']:
+        for host in ['dicrotin.com', 'xnhau.pics', 'uncenz.com']:
             with self.subTest(host=host):
                 self.assertTrue(search_indexing.is_excluded(host))
+        # cgbum.com is an Indonesian comics site (reviewed 2026-11-14); the owner reverted its exclusion on 2026-11-16.
+        self.assertFalse(search_indexing.is_excluded('cgbum.com'))
 
 
 class InfrastructurePageTests(unittest.TestCase):

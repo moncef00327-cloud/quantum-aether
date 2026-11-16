@@ -172,9 +172,9 @@
     },
     "finance-worldwide": {
       "labels": {
-        "en": "Banks and financial services worldwide (replacing excluded content; Tranco ranks 10,008–28,878)",
-        "ar": "البنوك والخدمات المالية حول العالم (بدلاً من المحتوى المستبعد؛ مراتب Tranco ‏10,008–28,878)",
-        "de": "Banken und Finanzdienstleister weltweit (anstelle ausgeschlossener Inhalte; Tranco-Ränge 10,008–28,878)"
+        "en": "Banks and financial services worldwide (replacing excluded content; Tranco ranks 10,008–28,860)",
+        "ar": "البنوك والخدمات المالية حول العالم (بدلاً من المحتوى المستبعد؛ مراتب Tranco ‏10,008–28,860)",
+        "de": "Banken und Finanzdienstleister weltweit (anstelle ausgeschlossener Inhalte; Tranco-Ränge 10,008–28,860)"
       },
       "domains": [
         "icbc.com.cn",
@@ -264,9 +264,9 @@
     },
     "government-worldwide": {
       "labels": {
-        "en": "Government websites worldwide (replacing excluded content; Tranco ranks 10,008–28,878)",
-        "ar": "المواقع الحكومية حول العالم (بدلاً من المحتوى المستبعد؛ مراتب Tranco ‏10,008–28,878)",
-        "de": "Behördenwebsites weltweit (anstelle ausgeschlossener Inhalte; Tranco-Ränge 10,008–28,878)"
+        "en": "Government websites worldwide (replacing excluded content; Tranco ranks 10,008–28,860)",
+        "ar": "المواقع الحكومية حول العالم (بدلاً من المحتوى المستبعد؛ مراتب Tranco ‏10,008–28,860)",
+        "de": "Behördenwebsites weltweit (anstelle ausgeschlossener Inhalte; Tranco-Ränge 10,008–28,860)"
       },
       "domains": [
         "di.gov.eg",
@@ -746,8 +746,7 @@
         "educacao.pe.gov.br",
         "arsip.go.id",
         "mte.gov.br",
-        "odni.gov",
-        "inspireawards-dst.gov.in"
+        "odni.gov"
       ]
     },
     "banks-mena": {
