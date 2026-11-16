@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-11-16T22:58:04Z",
+  "updated_at": "2026-11-16T22:59:25Z",
   "classification": "Deterministic keyword rules; impact notes are editorial context, not source quotations or security advisories.",
   "sources": [
     {
@@ -45,12 +45,12 @@
       "url": "https://arxiv.org/abs/2610.36145",
       "title": "They Will See Johnny's Message: A Measurement Study of Post-Quantum Cryptography Across Email Delivery Paths",
       "published_at": "2026-11-16T05:00:00Z",
-      "category": "implementation",
+      "category": "research",
       "importance": "medium",
       "takeaway": {
-        "en": "Editorial takeaway: check relevant TLS library, proxy and CDN release notes, then retest the public endpoint after changes.",
-        "ar": "قراءة تحريرية: راجع ملاحظات إصدار مكتبات TLS والوكيل وCDN ذات الصلة، ثم أعد فحص نقطة الاتصال العامة بعد التغييرات.",
-        "de": "Redaktionelle Einordnung: Prüfen Sie relevante TLS-Bibliotheken, Proxy- und CDN-Änderungen und testen Sie den öffentlichen Endpunkt anschließend erneut."
+        "en": "Editorial takeaway: research context, not a production security advisory or evidence of a new cryptographic break; assess before changing policy.",
+        "ar": "قراءة تحريرية: هذا سياق بحثي، وليس تنبيهاً أمنياً للإنتاج أو دليلاً على كسر تشفيري جديد؛ قيّم النتائج قبل تغيير السياسة.",
+        "de": "Redaktionelle Einordnung: Forschungskontext, keine Produktionswarnung und kein Beleg für einen neuen kryptografischen Bruch; vor einer Richtlinienänderung bewerten."
       },
       "id": "9a0ea85f412f8940"
     },
@@ -59,12 +59,12 @@
       "url": "https://arxiv.org/abs/2611.08442",
       "title": "SoK: Assessing Post-Quantum Cryptography Adoption in Software Development: Standards, Lifecycle Coverage, Deployment Maturity, and Evidence of Readiness",
       "published_at": "2026-11-16T05:00:00Z",
-      "category": "standards",
-      "importance": "high",
+      "category": "research",
+      "importance": "medium",
       "takeaway": {
-        "en": "Editorial takeaway: compare your cryptographic inventory and migration plan with the linked guidance; scope and deadlines depend on the organization.",
-        "ar": "قراءة تحريرية: قارن جرد التشفير وخطة الانتقال لديك بالإرشادات المرتبطة؛ يختلف النطاق والجدول حسب المؤسسة.",
-        "de": "Redaktionelle Einordnung: Gleichen Sie Kryptoinventar und Migrationsplan mit den verlinkten Leitlinien ab; Umfang und Fristen hängen von der Organisation ab."
+        "en": "Editorial takeaway: research context, not a production security advisory or evidence of a new cryptographic break; assess before changing policy.",
+        "ar": "قراءة تحريرية: هذا سياق بحثي، وليس تنبيهاً أمنياً للإنتاج أو دليلاً على كسر تشفيري جديد؛ قيّم النتائج قبل تغيير السياسة.",
+        "de": "Redaktionelle Einordnung: Forschungskontext, keine Produktionswarnung und kein Beleg für einen neuen kryptografischen Bruch; vor einer Richtlinienänderung bewerten."
       },
       "id": "fa12f74562d3166c"
     },
@@ -87,12 +87,12 @@
       "url": "https://blog.cloudflare.com/post-quantum-geo-key-manager/",
       "title": "Bringing post-quantum cryptography to geographically fenced key management",
       "published_at": "2026-10-23T18:06:56Z",
-      "category": "implementation",
+      "category": "research",
       "importance": "medium",
       "takeaway": {
-        "en": "Editorial takeaway: check relevant TLS library, proxy and CDN release notes, then retest the public endpoint after changes.",
-        "ar": "قراءة تحريرية: راجع ملاحظات إصدار مكتبات TLS والوكيل وCDN ذات الصلة، ثم أعد فحص نقطة الاتصال العامة بعد التغييرات.",
-        "de": "Redaktionelle Einordnung: Prüfen Sie relevante TLS-Bibliotheken, Proxy- und CDN-Änderungen und testen Sie den öffentlichen Endpunkt anschließend erneut."
+        "en": "Editorial takeaway: research context, not a production security advisory or evidence of a new cryptographic break; assess before changing policy.",
+        "ar": "قراءة تحريرية: هذا سياق بحثي، وليس تنبيهاً أمنياً للإنتاج أو دليلاً على كسر تشفيري جديد؛ قيّم النتائج قبل تغيير السياسة.",
+        "de": "Redaktionelle Einordnung: Forschungskontext, keine Produktionswarnung und kein Beleg für einen neuen kryptografischen Bruch; vor einer Richtlinienänderung bewerten."
       },
       "id": "70bdd870b2ac82df"
     }
