@@ -1,13 +1,18 @@
 {% extends "base.html" %}
 {% block title %}{{ t.analytics_title }} · {{ t.brand }}{% endblock %}
 {% block description %}{{ t.analytics_intro }}{% endblock %}
+{% block head %}
+<link rel="alternate" type="application/rss+xml" title="Quantum Aether PQC/TLS Intelligence" href="{{ url_for('site.analytics_feed_rss', lang=lang) }}">
+<script type="application/ld+json">{{ analytics_jsonld | tojson }}</script>
+{% endblock %}
 {% block content %}
 <section class="card analytics-intro">
   <p class="eyebrow">{{ 'LIVE INTELLIGENCE FEED' if lang != 'ar' else 'موجز استخبارات حي' }}</p>
   <h1>{{ t.analytics_title }}</h1>
   <p>{{ t.analytics_intro }}</p>
   <p class="muted small">{{ t.analytics_updated }}: <time datetime="{{ feed.updated_at or '' }}">{{ feed.updated_at or '—' }}</time>
-    · <a href="{{ url_for('site.analytics_feed_json') }}">{{ t.analytics_json_link }}</a></p>
+    · <a href="{{ url_for('site.analytics_feed_json') }}">{{ t.analytics_json_link }}</a>
+    · <a href="{{ url_for('site.analytics_feed_rss', lang=lang) }}">RSS</a></p>
 </section>
 
 <section class="analytics-feed" aria-label="{{ t.analytics_title }}">

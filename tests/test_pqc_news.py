@@ -1,6 +1,8 @@
 import json
+import re
 import tempfile
 import unittest
+import xml.etree.ElementTree as ET
 from pathlib import Path
 from unittest.mock import patch
 
@@ -110,10 +112,24 @@ class PQCNewsTests(unittest.TestCase):
                 arabic = client.get("/analytics?lang=ar")
                 english = client.get("/analytics?lang=en")
                 data = client.get("/analytics/news.json")
+                rss = client.get("/analytics/feed.xml?lang=ar")
             self.assertEqual(arabic.status_code, 200)
             self.assertIn("مستجدات ما بعد الكم وTLS", arabic.get_data(as_text=True))
             self.assertIn("https://www.nist.gov/news-events/news/2026/11/pqc-guidance", english.get_data(as_text=True))
             self.assertEqual(data.get_json()["items"][0]["title"], article()["title"])
+            page = english.get_data(as_text=True)
+            match = re.search(r'<script type="application/ld\+json">(.*?)</script>', page)
+            self.assertIsNotNone(match)
+            structured = json.loads(match.group(1))
+            self.assertEqual(structured["@type"], "CollectionPage")
+            self.assertEqual(structured["mainEntity"]["itemListElement"][0]["url"], article()["url"])
+            self.assertIn('type="application/rss+xml"', page)
+            self.assertEqual(rss.status_code, 200)
+            self.assertIn("application/rss+xml", rss.headers["Content-Type"])
+            rss_root = ET.fromstring(rss.data)
+            self.assertEqual(rss_root.findtext("./channel/language"), "ar")
+            self.assertEqual(rss_root.findtext("./channel/item/title"), article()["title"])
+            self.assertEqual(rss_root.findtext("./channel/item/link"), article()["url"])
 
 
 if __name__ == "__main__":

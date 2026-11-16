@@ -5,6 +5,7 @@
 # التشغيل المحلي:  python quantum_saas_app.py   ثم افتح http://127.0.0.1:5000
 # الإنتاج: gunicorn quantum_saas_app:app خلف nginx (انظر مجلد deploy/)
 import datetime as dt
+from email.utils import format_datetime
 import access_links
 import csv
 import base64
@@ -21,6 +22,7 @@ from pathlib import Path
 import re
 import secrets
 import urllib.parse
+import xml.etree.ElementTree as ET
 
 import requests
 from flask import (Blueprint, Flask, Response, abort, current_app, g, jsonify, make_response, redirect,
@@ -1899,7 +1901,62 @@ def analytics_page():
         "implementation": {"en": "TLS implementation", "ar": "تطبيقات TLS", "de": "TLS-Implementierung"},
         "research": {"en": "Quantum research", "ar": "أبحاث كمومية", "de": "Quantenforschung"},
     }
-    response = make_response(render_template("analytics.html", feed=feed, labels=labels, lang=lang))
+    analytics_jsonld = {
+        "@context": "https://schema.org", "@type": "CollectionPage",
+        "name": i18n.TEXTS[lang]["analytics_title"],
+        "description": i18n.TEXTS[lang]["analytics_intro"],
+        "url": url_for("site.analytics_page", lang=lang, _external=True),
+        "dateModified": feed.get("updated_at"), "inLanguage": lang,
+        "publisher": {"@type": "Organization", "name": "Quantum Aether", "url": public_base()},
+        "mainEntity": {"@type": "ItemList", "itemListElement": [
+            {"@type": "ListItem", "position": index, "name": item["title"], "url": item["url"]}
+            for index, item in enumerate(feed.get("items", [])[:30], start=1)
+        ]},
+    }
+    response = make_response(render_template("analytics.html", feed=feed, labels=labels, lang=lang,
+                                             analytics_jsonld=analytics_jsonld))
+    response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=900"
+    return response
+
+
+@bp.get("/analytics/feed.xml")
+def analytics_feed_rss():
+    """RSS 2.0 view of the same validated feed used by the analytics page."""
+    feed = pqc_news.load_feed(Path(current_app.root_path) / "analytics" / "news_feed.json")
+    lang = current_lang()
+    root = ET.Element("rss", {"version": "2.0"})
+    channel = ET.SubElement(root, "channel")
+    ET.SubElement(channel, "title").text = "Quantum Aether PQC/TLS Intelligence"
+    ET.SubElement(channel, "link").text = f"{public_base()}/analytics?lang={lang}"
+    ET.SubElement(channel, "description").text = (
+        "Source-linked post-quantum cryptography and TLS updates with clearly labeled editorial context."
+        if lang != "ar" else "مستجدات موثقة المصدر حول تشفير ما بعد الكم وTLS مع قراءة تحريرية مميزة بوضوح."
+    )
+    ET.SubElement(channel, "language").text = lang
+    if feed.get("updated_at"):
+        try:
+            updated = dt.datetime.fromisoformat(feed["updated_at"].replace("Z", "+00:00"))
+            ET.SubElement(channel, "lastBuildDate").text = format_datetime(updated)
+        except (TypeError, ValueError, OverflowError):
+            pass
+    for entry in feed.get("items", []):
+        item = ET.SubElement(channel, "item")
+        ET.SubElement(item, "title").text = entry.get("title", "")
+        ET.SubElement(item, "link").text = entry.get("url", "")
+        ET.SubElement(item, "guid", {"isPermaLink": "false"}).text = entry.get("id", entry.get("url", ""))
+        takeaway = entry.get("takeaway", {})
+        if isinstance(takeaway, dict):
+            ET.SubElement(item, "description").text = takeaway.get(lang, takeaway.get("en", ""))
+        ET.SubElement(item, "category").text = entry.get("category", "")
+        if entry.get("published_at"):
+            try:
+                published = dt.datetime.fromisoformat(entry["published_at"].replace("Z", "+00:00"))
+                ET.SubElement(item, "pubDate").text = format_datetime(published)
+            except (TypeError, ValueError, OverflowError):
+                pass
+    body = ET.tostring(root, encoding="utf-8", xml_declaration=True)
+    response = make_response(body)
+    response.headers["Content-Type"] = "application/rss+xml; charset=utf-8"
     response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=900"
     return response
 
