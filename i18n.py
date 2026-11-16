@@ -1044,6 +1044,21 @@ LANG_NAMES = {"en": "English", "ar": "العربية", "de": "Deutsch"}
 
 TEXTS["en"].update({
     "nav_adoption": "Tracker",
+    "nav_analytics": "Intelligence",
+    "analytics_title": "PQC & TLS intelligence",
+    "analytics_intro": "A source-linked digest of official standards, TLS engineering updates and relevant cryptography research.",
+    "analytics_updated": "Feed refreshed",
+    "analytics_json_link": "JSON feed",
+    "analytics_importance_high": "High relevance",
+    "analytics_importance_medium": "Relevant",
+    "analytics_takeaway_label": "Editorial takeaway",
+    "analytics_source_label": "Original source",
+    "analytics_empty": "No matching updates are available yet. The scheduled feed refresh will populate this page when official sources publish relevant items.",
+    "analytics_method_title": "Sources and method",
+    "analytics_method_body": "The feed checks official IBM Research, Google, Cloudflare and NIST feeds, plus arXiv quant-ph and cs.CR. It keeps titles, dates and links, then applies transparent keyword rules; it does not republish article text or use an LLM.",
+    "analytics_note": "Impact notes are editorial prompts, not official advisories or claims that a new quantum break has occurred. Verify important decisions against the linked source and your own inventory.",
+    "analytics_source_ok": "available",
+    "analytics_source_delayed": "temporarily unavailable; prior items retained",
     "adoption_title": "Post-quantum TLS adoption tracker",
     "adoption_lead": "Every Monday we re-scan the Tranco top 10,000 and watchlists for Germany, Austria and Switzerland; "
                      "once a month the top 100,000. Week {week} (from {date}): {pq} of the {reachable} top-1,000 sites that "
@@ -1088,6 +1103,21 @@ TEXTS["en"].update({
 
 TEXTS["ar"].update({
     "nav_adoption": "المتتبّع",
+    "nav_analytics": "التحليلات",
+    "analytics_title": "مستجدات ما بعد الكم وTLS",
+    "analytics_intro": "موجز موثق بروابط المصادر للمعايير الرسمية وتحديثات هندسة TLS وأبحاث التشفير ذات الصلة.",
+    "analytics_updated": "آخر تحديث للموجز",
+    "analytics_json_link": "بيانات JSON",
+    "analytics_importance_high": "أهمية متابعة عالية",
+    "analytics_importance_medium": "جدير بالمتابعة",
+    "analytics_takeaway_label": "قراءة تحريرية",
+    "analytics_source_label": "المصدر الأصلي",
+    "analytics_empty": "لا توجد مستجدات مطابقة حالياً. ستظهر المواد عند نشر المصادر الرسمية تحديثات ذات صلة وتشغيل التحديث المجدول.",
+    "analytics_method_title": "المصادر والمنهجية",
+    "analytics_method_body": "يفحص الموجز خلاصات IBM Research وGoogle وCloudflare وNIST الرسمية، إضافة إلى arXiv في quant-ph وcs.CR. يحتفظ بالعناوين والتواريخ والروابط ويطبق قواعد كلمات مفتاحية معلنة؛ ولا يعيد نشر نص المقالات أو يستخدم نموذجاً لغوياً.",
+    "analytics_note": "ملاحظات الأثر قراءة تحريرية وليست تنبيهات رسمية أو دليلاً على وقوع كسر كمومي جديد. راجع المصدر المرتبط وجردك الداخلي قبل اتخاذ قرار.",
+    "analytics_source_ok": "متاح",
+    "analytics_source_delayed": "متعذر مؤقتاً؛ احتُفظ بالمواد السابقة",
     "adoption_title": "متتبّع تبنّي TLS المقاوم للكم",
     "adoption_lead": "كل يوم اثنين نعيد فحص أكبر 10,000 نطاق في قائمة Tranco وقوائم مراقبة لألمانيا والنمسا وسويسرا، "
                      "وكل شهر أكبر 100,000. الأسبوع {week} (من {date}): {pq} من أصل {reachable} موقعاً من الأكبر 1000 أجاب "
@@ -1130,6 +1160,21 @@ TEXTS["ar"].update({
 
 TEXTS["de"].update({
     "nav_adoption": "Tracker",
+    "nav_analytics": "Lagebild",
+    "analytics_title": "PQC- und TLS-Lagebild",
+    "analytics_intro": "Quellenverknüpfte Übersicht zu offiziellen Standards, TLS-Änderungen und relevanter Kryptografieforschung.",
+    "analytics_updated": "Feed aktualisiert",
+    "analytics_json_link": "JSON-Feed",
+    "analytics_importance_high": "Hohe Relevanz",
+    "analytics_importance_medium": "Relevant",
+    "analytics_takeaway_label": "Redaktionelle Einordnung",
+    "analytics_source_label": "Originalquelle",
+    "analytics_empty": "Derzeit liegen keine passenden Meldungen vor. Der geplante Abruf ergänzt diese Seite, sobald offizielle Quellen relevante Beiträge veröffentlichen.",
+    "analytics_method_title": "Quellen und Methode",
+    "analytics_method_body": "Der Feed prüft offizielle Feeds von IBM Research, Google, Cloudflare und NIST sowie arXiv quant-ph und cs.CR. Gespeichert werden Titel, Datum und Link; ausgewertet wird mit transparenten Schlüsselwortregeln, ohne Artikeltext oder LLM.",
+    "analytics_note": "Einordnungen sind redaktionelle Hinweise, keine offiziellen Warnungen und kein Beleg für einen neuen Quantenbruch. Prüfen Sie wichtige Entscheidungen anhand der Quelle und Ihres eigenen Inventars.",
+    "analytics_source_ok": "verfügbar",
+    "analytics_source_delayed": "vorübergehend nicht verfügbar; frühere Meldungen bleiben erhalten",
     "adoption_title": "Post-Quanten-TLS: Wochen-Tracker",
     "adoption_lead": "Jeden Montag prüfen wir die 10.000 größten Domains der Tranco-Liste sowie Beobachtungslisten für "
                      "Deutschland, Österreich und die Schweiz erneut, einmal im Monat die 100.000 größten. Woche {week} "

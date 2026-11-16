@@ -82,14 +82,18 @@ non-PQ row as a confirmed classical negotiation. The study page includes a metho
 
 ## GitHub Action
 
-Check on every deploy that your site still negotiates post-quantum TLS:
+Run a free TLS/PQC check in any CI pipeline. The default reports the measured result without failing a build; opt into a policy gate with `require-post-quantum: true`. The action can add a live badge block to the checked-out README:
 
 ```yaml
-- uses: moncef00327-cloud/pq-tls-action@v1
+- uses: moncef00327-cloud/quantum-aether@main
   with:
     domain: example.com
-    require-post-quantum: true
+    update-readme: true
+    # Set true only when PQ key exchange is a release requirement.
+    require-post-quantum: false
 ```
+
+The badge points to a public result and shows the latest eligible observation; it is not a security certification. `update-readme` edits only a marked block in the Actions workspace. To persist the change, commit it in your workflow and grant `contents: write` only if you explicitly want the workflow to write to the repository. Do not submit private hostnames.
 
 Details: [`github-action/README.md`](github-action/README.md) · [GitHub Marketplace](https://github.com/marketplace/actions/post-quantum-tls-check-quantum-aether)
 

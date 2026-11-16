@@ -1,5 +1,5 @@
 name: "Post-quantum TLS check (Quantum Aether)"
-description: "Check that a website negotiates post-quantum TLS key exchange (X25519MLKEM768) on every deploy."
+description: "Free post-quantum TLS check for CI, with an optional live README badge."
 author: "Quantum Aether"
 branding:
   icon: "shield"
@@ -21,6 +21,14 @@ inputs:
     description: "Scanner base URL"
     required: false
     default: "https://ather-quantum.com"
+  update-readme:
+    description: "Insert or refresh the marked live badge block in README.md"
+    required: false
+    default: "false"
+  write-report:
+    description: "Write the raw scan summary to qa_report.json"
+    required: false
+    default: "false"
 
 outputs:
   grade:
@@ -35,6 +43,9 @@ outputs:
   scan-url:
     description: "Link to the free result page"
     value: ${{ steps.scan.outputs.scan-url }}
+  badge-url:
+    description: "Dynamic SVG badge URL for the domain"
+    value: ${{ steps.scan.outputs.badge-url }}
 
 runs:
   using: "composite"
@@ -46,4 +57,6 @@ runs:
         INPUT_REQUIRE_PQ: ${{ inputs.require-post-quantum }}
         INPUT_MIN_GRADE: ${{ inputs.min-grade }}
         INPUT_BASE_URL: ${{ inputs.base-url }}
+        INPUT_UPDATE_README: ${{ inputs.update-readme }}
+        INPUT_WRITE_REPORT: ${{ inputs.write-report }}
       run: python3 "$GITHUB_ACTION_PATH/scan.py"

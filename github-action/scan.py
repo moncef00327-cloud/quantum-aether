@@ -12,6 +12,7 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
+from pathlib import Path
 
 GRADES = ["A", "B", "C", "F"]
 GUIDE = "https://ather-quantum.com/guides/enable-x25519mlkem768-nginx"
@@ -74,6 +75,39 @@ def summary_markdown(result):
     return "\n".join(lines) + "\n"
 
 
+def update_readme(path, badge_markdown):
+    """Insert or refresh only the action-owned badge block; leave the rest of README untouched."""
+    begin = "<!-- quantum-aether-pqc-badge:start -->"
+    end = "<!-- quantum-aether-pqc-badge:end -->"
+    block = f"{begin}\n{badge_markdown}\n{end}"
+    readme = Path(path)
+    content = readme.read_text(encoding="utf-8") if readme.exists() else ""
+    has_begin, has_end = begin in content, end in content
+    if has_begin != has_end:
+        raise ValueError("README has an incomplete Quantum Aether badge marker block")
+    if has_begin:
+        if content.count(begin) != 1 or content.count(end) != 1:
+            raise ValueError("README has multiple Quantum Aether badge marker blocks")
+        before, rest = content.split(begin, 1)
+        _, after = rest.split(end, 1)
+        updated = before + block + after
+    elif badge_markdown in content:
+        return False
+    elif badge_markdown.partition("](")[2].partition(")")[0] in content:
+        return False
+    else:
+        lines = content.splitlines()
+        heading = next((i for i, line in enumerate(lines) if line.startswith("# ")), None)
+        if heading is not None:
+            updated = "\n".join([*lines[:heading + 1], "", block, "", *lines[heading + 1:]])
+        else:
+            updated = block + ("\n\n" + content if content else "")
+    if updated != content:
+        readme.write_text(updated.rstrip() + "\n", encoding="utf-8")
+        return True
+    return False
+
+
 def write_env_file(name, text):
     path = os.environ.get(name)
     if path:
@@ -86,6 +120,8 @@ def main(fetcher=fetch):
     require_pq = (os.environ.get("INPUT_REQUIRE_PQ") or "false").strip().lower() == "true"
     min_grade = (os.environ.get("INPUT_MIN_GRADE") or "").strip().upper()
     base = (os.environ.get("INPUT_BASE_URL") or "https://ather-quantum.com").strip()
+    update_badge = (os.environ.get("INPUT_UPDATE_README") or "false").strip().lower() == "true"
+    write_report = (os.environ.get("INPUT_WRITE_REPORT") or "false").strip().lower() == "true"
     if not domain:
         print("::error::input 'domain' is required")
         return 1
@@ -103,15 +139,33 @@ def main(fetcher=fetch):
     if status != 200 or "grade" not in data:
         print(f"::warning::Post-quantum TLS check skipped: scanner returned HTTP {status}")
         return 1
+    measured_domain = data.get("domain") or domain
+    encoded_domain = urllib.parse.quote(measured_domain, safe=".-")
+    badge_url = base.rstrip("/") + "/badge/" + encoded_domain + ".svg"
+    verification_url = base.rstrip("/") + "/verify/" + encoded_domain
+    badge_markdown = f"[![Post-quantum TLS observation]({badge_url})]({verification_url})"
+    scan_url = data.get("scan_url") or data.get("report_hint") or ""
+    if write_report:
+        Path("qa_report.json").write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    if update_badge:
+        try:
+            changed = update_readme("README.md", badge_markdown)
+        except (OSError, ValueError) as exc:
+            print(f"::error::Could not update README badge: {exc}")
+            return 1
+        if changed:
+            print("Updated the Quantum Aether badge block in README.md (commit the workspace change to publish it).")
     write_env_file("GITHUB_OUTPUT", "".join([
         f"grade={data.get('grade')}\n",
-        f"post-quantum={'true' if data.get('post_quantum_key_exchange') else 'false'}\n",
+        f"post-quantum={'undetermined' if _undetermined(data) else ('true' if data.get('post_quantum_key_exchange') else 'false')}\n",
         f"key-exchange={data.get('key_exchange_group') or ''}\n",
-        f"scan-url={data.get('scan_url') or ''}\n",
+        f"scan-url={scan_url.replace(chr(10), '').replace(chr(13), '')}\n",
+        f"badge-url={badge_url}\n",
     ]))
     write_env_file("GITHUB_STEP_SUMMARY", summary_markdown(data))
     ok, message = evaluate(data, require_pq, min_grade)
     print(message if ok else f"::error::{message}")
+    print(f"Badge Markdown: {badge_markdown}")
     return 0 if ok else 1
 
 

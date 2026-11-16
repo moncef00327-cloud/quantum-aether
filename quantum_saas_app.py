@@ -63,6 +63,7 @@ import evidence
 import search_indexing
 import badge_evidence
 import public_stats
+import pqc_news
 from mailer import Mailer
 from paypal_client import SUBSCRIPTION_LIVE_STATUSES, PayPalClient, PayPalError, verify_capture, verify_subscription
 
@@ -253,7 +254,7 @@ def public_price_labels():
 
 
 # الصفحات التي لها نسخة ألمانية فعلية (لمبدّل اللغة وhreflang وخريطة الموقع).
-DE_PAGES = {"site.monthly_report", "site.press_page", "site.pq_config", "site.pq_config_server", "site.index", "site.study", "site.monitoring", "site.adoption_page", "site.scanning_page", "site.deadlines_page",
+DE_PAGES = {"site.monthly_report", "site.press_page", "site.pq_config", "site.pq_config_server", "site.index", "site.study", "site.monitoring", "site.adoption_page", "site.analytics_page", "site.scanning_page", "site.deadlines_page",
             "site.business_page", "site.pricing_page", "site.agency_page", "site.audit_page", "site.audit_request", "site.countries_page", "site.country_page",
             "site.scan_page", "site.site_page", "site.prooflab_page", "site.prooflab_join"}
 
@@ -1886,6 +1887,29 @@ def adoption_page():
     # في العربية نعزل اتجاه رمز الأسبوع (Unicode isolate) حتى لا ينقلب «2026-W46» إلى «W46-2026»
     iso = (lambda value: f"\u2066{value}\u2069") if current_lang() == "ar" else str
     return render_template("adoption.html", s=adoption_snapshot(), iso=iso)
+
+
+@bp.get("/analytics")
+def analytics_page():
+    feed = pqc_news.load_feed(Path(current_app.root_path) / "analytics" / "news_feed.json")
+    lang = current_lang()
+    labels = {
+        "standards": {"en": "Standards & migration", "ar": "المعايير والانتقال", "de": "Standards und Migration"},
+        "vulnerability": {"en": "Security research", "ar": "أبحاث أمنية", "de": "Sicherheitsforschung"},
+        "implementation": {"en": "TLS implementation", "ar": "تطبيقات TLS", "de": "TLS-Implementierung"},
+        "research": {"en": "Quantum research", "ar": "أبحاث كمومية", "de": "Quantenforschung"},
+    }
+    response = make_response(render_template("analytics.html", feed=feed, labels=labels, lang=lang))
+    response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=900"
+    return response
+
+
+@bp.get("/analytics/news.json")
+def analytics_feed_json():
+    response = jsonify(pqc_news.load_feed(Path(current_app.root_path) / "analytics" / "news_feed.json"))
+    response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=900"
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    return response
 
 
 def hosting_board():
@@ -3728,6 +3752,7 @@ def _sitemap_pages():
     adoption_weeks = adoption.weeks(db())
     pages.append(("/adoption", adoption.week_monday(adoption_weeks[-1]).isoformat() if adoption_weeks
                   else study_data()["scanned_on"], de_langs))
+    pages.append(("/analytics", _template_day("analytics.html"), de_langs))
     pages.append(("/scanning", _template_day("scanning.html"), de_langs))
     pages.append(("/deadlines", deadlines.UPDATED, de_langs))
     pages.append(("/business", _template_day("commercial.html"), de_langs))
