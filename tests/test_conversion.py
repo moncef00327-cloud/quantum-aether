@@ -30,10 +30,16 @@ class ConversionTests(unittest.TestCase):
         raise quantum_vuln_scanner.ScanError("unreachable", "unreachable")
 
     def tearDown(self):
+        # Close every connection first: in WAL mode the last close deletes -wal/-shm, and a connection left to the
+        # garbage collector could do that in the middle of rmtree (FileNotFoundError, only in the full suite).
+        for conn in getattr(self, "_conns", []):
+            conn.close()
         shutil.rmtree(self.tmp)
 
     def conn(self):
-        return sales_db.connect(f"{self.tmp}/quantum_saas.db")
+        conn = sales_db.connect(f"{self.tmp}/quantum_saas.db")
+        self.__dict__.setdefault("_conns", []).append(conn)
+        return conn
 
     def ev(self, name, ua="Mozilla/5.0 (iPhone)", **headers):
         return self.client.post("/api/ev", data=json.dumps({"name": name, "page": "/", "lang": "ar"}),
