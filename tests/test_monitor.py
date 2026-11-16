@@ -493,7 +493,11 @@ class AdminExclusionAndSeoTest(unittest.TestCase):
         import quantum_saas_app
         sites_xml = client.get("/sitemap-sites-1.xml").get_data(as_text=True)
         xml.dom.minidom.parseString(sites_xml)
-        self.assertEqual(sites_xml.count("<url>"), 2 * len(quantum_saas_app.study_data()["sites"]))
+        import search_indexing
+        indexable = [s for s in quantum_saas_app.study_data()["sites"]
+                     if search_indexing.is_indexable(s["domain"], s.get("rank"))]  # infrastructure hosts left out
+        self.assertLess(len(indexable), len(quantum_saas_app.study_data()["sites"]))
+        self.assertEqual(sites_xml.count("<url>"), 2 * len(indexable))
         self.assertIn("https://ather-quantum.com/site/amazon.com?lang=en", sites_xml)
         self.assertEqual(client.get("/sitemap-sites-2.xml").status_code, 404)
 
