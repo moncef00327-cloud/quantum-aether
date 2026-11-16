@@ -6,7 +6,7 @@
 {% block og_image %}{{ abs_url('site.og_scan', scan_id=scan.id) }}{% endblock %}
 {% block head %}<meta name="robots" content="noindex">{% endblock %}
 {% block content %}
-<section class="card result-head" data-ev-load="result">
+<section class="card result-head" data-ev-load="result" data-ev-load-alt="scan_completed">
   <div class="grade grade-{{ r.grade }}" aria-label="{{ sx.undetermined if observation == 'undetermined' else t.grade ~ ' ' ~ r.grade }}">{{ '?' if observation == 'undetermined' else r.grade }}</div>
   <div>
     <p class="muted">{{ t.result_title }}</p>
@@ -16,12 +16,16 @@
     <p class="muted small">{{ t.scanned_at }}: <span dir="ltr">{{ r.scanned_at }}</span></p>
   </div>
 </section>
-{% set immediate_a_offer = observation == 'observed_pq' and r.grade == 'A' %}
 {% if not paid %}
-{% if immediate_a_offer %}
-{{ trial_cta('scan-trial', domain=dbase, title=t.scan_trial_title_a.format(domain=dbase), sub=t.scan_trial_sub_a, source='scan_result') }}
+{% if conversion_variant == 'treatment' %}
+{% set offer_grade = 'unknown' if observation == 'undetermined' else r.grade|lower %}
+{% set offer_title = t['conversion_offer_title_' ~ offer_grade] if offer_grade in ('a','b','c','f','unknown') else t.conversion_offer_title_c %}
+{% set offer_body = t['conversion_offer_body_' ~ offer_grade] if offer_grade in ('a','b','c','f','unknown') else t.conversion_offer_body_c %}
+<p class="small">{{ t.conversion_offer_manage_domain }}</p>
+{{ trial_cta('scan-trial', title=offer_title, sub=offer_body ~ ' ' ~ t.conversion_offer_trial, prefill=dbase, editable_domain=true, source='scan_result', show_title=true) }}
+<p class="small"><a href="{{ url_for('site.index', lang=lang) }}#scan" data-ev="scan_cta">{{ t.conversion_offer_scan }} →</a></p>
 {% else %}
-{{ trial_cta('scan-trial', domain=dbase, title=t.scan_trial_title.format(domain=dbase), sub=t.scan_trial_sub, source='scan_result', urgent=true) }}
+{{ trial_cta('scan-trial', title=t.trial_cta_title, prefill=dbase, editable_domain=true, source='scan_result') }}
 {% endif %}
 {% endif %}
 {% set glang = lang if lang in ("en", "ar") else "en" %}

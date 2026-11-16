@@ -3,6 +3,8 @@
 {% block description %}{{ t.study_lead.format(date=d.scanned_on, reachable=d.reachable, pq=d.pq, pct=pct) }}{% endblock %}
 {% block head %}
 <script type="application/ld+json">{{ {"@context": "https://schema.org", "@type": "Dataset", "name": t.study_title, "description": t.study_lead.format(date=d.scanned_on, reachable=d.reachable, pq=d.pq, pct=pct), "datePublished": d.scanned_on, "license": "https://creativecommons.org/licenses/by/4.0/", "creator": {"@type": "Organization", "name": "Quantum Aether"}, "distribution": {"@type": "DataDownload", "encodingFormat": "application/json", "contentUrl": url_for('site.study_json', _external=True)}} | tojson }}</script>
+<script id="qa-home-snapshot" type="application/json">{{ home_snapshot | tojson }}</script>
+<script src="/static/command/home-metrics.js?v=20261116-home-metrics5" defer></script>
 {% endblock %}
 {% block content %}
 <section class="card">
@@ -12,6 +14,20 @@
   <p><a href="{{ url_for('site.adoption_page', lang=lang) }}">{{ t.adoption_link }}</a></p>
 </section>
 
+{% if current_top1000 %}
+<section class="card study-current-context">
+  <h2>{{ t.study_current_title }}</h2>
+  <div class="stats study-current-stats">
+    <div class="card stat"><h3>{{ 'حجم العينة الأسبوعية' if lang == 'ar' else ('Wöchentliche Stichprobe' if lang == 'de' else 'Weekly sample size') }}</h3><p class="value" dir="ltr" data-live-total>1,000</p></div>
+    <div class="card stat"><h3>{{ 'نطاقات أجابت' if lang == 'ar' else ('Antwortende Domains' if lang == 'de' else 'Domains responding') }}</h3><p class="value" dir="ltr" data-live-reachable>{{ current_top1000.reachable }}</p></div>
+    <div class="card stat"><h3>{{ 'تبادل هجين مرصود' if lang == 'ar' else ('Hybrider Schlüsselaustausch' if lang == 'de' else 'Hybrid exchange observed') }}</h3><p class="value" dir="ltr"><span data-live-pq>{{ current_top1000.pq }}</span> · <span data-live-pct>{{ current_top1000.pct }}%</span></p></div>
+  </div>
+  <p class="study-current-live" data-weekly-current>{{ t.study_current_compare.format(week=current_top1000.week, current_pq=current_top1000.pq, current_reachable=current_top1000.reachable, current_pct=current_top1000.pct, old_date=d.scanned_on, old_pct=pct, old_reachable=d.reachable) }}</p>
+  <p><a href="{{ url_for('site.adoption_page', lang=lang) }}">{{ t.adoption_link }}</a></p>
+</section>
+{% endif %}
+
+<h2 class="study-archive-title">{{ 'أرقام الدراسة المنشورة · ' if lang == 'ar' else ('Veröffentlichte Studienwerte · ' if lang == 'de' else 'Published study figures · ') }}{{ d.scanned_on }}</h2>
 <section class="stats">
   <div class="card stat"><h3>{{ t.study_reachable }}</h3><p class="value" dir="ltr">{{ d.reachable }} / {{ d.total }}</p></div>
   <div class="card stat"><h3>{{ t.study_pq }}</h3><p class="value">{{ pct }}%</p></div>

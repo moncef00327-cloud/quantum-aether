@@ -150,5 +150,6 @@ class PublicInputAndBadgeTests(AppTestCase):
         self.app.config['PUBLIC_URL'] = 'https://trusted.example'
         response = self.client.get('/?lang=en&utm_source=test', base_url='https://untrusted.example')
         body = response.get_data(as_text=True)
-        self.assertIn('rel="canonical" href="https://trusted.example/?lang=en"', body)
+        # English home is the bare origin, as in the sitemap (<loc>/</loc>); the configured origin wins over the request.
+        self.assertIn('rel="canonical" href="https://trusted.example/"', body)
         self.assertNotIn('property="og:url" content="https://untrusted.example', body)

@@ -29,11 +29,11 @@
   <link rel="service-desc" type="application/json" href="{{ abs_url('site.agent_service_manifest') }}">
 <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-  <link rel="stylesheet" href="/static/command/app.css?v=20261114-t4">
-  <link rel="stylesheet" href="/static/command/pages.css?v=20261114-t4">
+  <link rel="stylesheet" href="/static/command/app.css?v=20261115-sidebar-scroll3">
+  <link rel="stylesheet" href="/static/command/pages.css?v=20261116-admin-font-scale1">
   {% block head %}{% endblock %}
 </head>
-<body data-page="{{ request.endpoint }}">
+<body data-page="{{ request.endpoint }}" data-conversion-variant="{{ conversion_variant }}">
 {% set command_title = self.title()|striptags %}
 {% set command_section = 'prooflab' if request.endpoint in ['site.prooflab_page','site.prooflab_join'] else 'llm' if request.endpoint == 'site.agents_page' else 'business' if request.endpoint in ['site.business_page','site.pricing_page','site.agency_page'] else 'monitor' if request.endpoint in ['site.monitoring','site.monitor_dashboard'] else 'tracker' if request.endpoint in ['site.adoption_page','site.countries_page','site.country_page','site.study'] else 'guides' if request.endpoint in ['site.guides_index','site.guide','site.research'] else 'scanner' %}
 <div class="app {{ 'en' if lang != 'ar' else '' }} command-service" dir="{{ t.dir }}">
@@ -49,8 +49,8 @@
 <div class="command-footer-links"><a href="{{ url_for('site.business_page',lang=lang) }}">{{ 'الشركات' if lang == 'ar' else ('Für Unternehmen' if lang == 'de' else 'For business') }}</a> · <a href="{{ url_for('site.pricing_page',lang=lang) }}">{{ 'الأسعار' if lang == 'ar' else 'Pricing' }}</a> · <a href="{{ url_for('site.agents_page',lang=lang) }}">LLM / API</a> · <a href="{{ url_for('site.prooflab_page',lang=lang) }}">ProofLab</a> · <a href="{{ url_for('site.transparency',lang=lang) }}">{{ 'شفافية الأرقام' if lang == 'ar' else 'Transparency' }}</a> · <a href="{{ url_for('site.press_page',lang=lang) }}">{{ t.press_title }}</a> · <a href="{{ url_for('site.data_license',lang=lang) }}">{{ 'ترخيص البيانات' if lang == 'ar' else ('Datenlizenz' if lang == 'de' else 'Data licence') }}</a> · <a href="mailto:{{ contact_email }}">{{ 'تواصل معنا' if lang == 'ar' else ('Kontakt' if lang == 'de' else 'Contact') }}</a> · <a href="{{ url_for('site.legal_page',slug='impressum',lang=legal_lang) }}">{{ t.legal_imprint }}</a> · <a href="{{ url_for('site.legal_page',slug='datenschutz',lang=legal_lang) }}">{{ t.legal_privacy }}</a> · <a href="{{ url_for('site.legal_page',slug='agb',lang=legal_lang) }}">{{ t.legal_terms }}</a>
 <div class="command-language-links">{% for l in page_langs %}<a href="{{ localized_url(l) }}" hreflang="{{ l }}" lang="{{ l }}">{{ lang_names[l] }}</a> {% endfor %}</div></div></footer>
 </div></main></div>
-<script src="/static/command/shell.js?v=20261114-b2" defer></script>
-<script src="{{ url_for('static',filename='app.js') }}" defer></script>
+<script src="/static/command/shell.js?v=20261115-sidebar-scroll2" defer></script>
+<script src="{{ url_for('static',filename='app.js',v='20261115-report-feedback1') }}" defer></script>
 <script src="/static/trial-form.js?v=20261114-t4" defer></script>
 <script src="{{ url_for('static',filename='scanner-ui.js') }}" defer></script>
 {% block scripts %}{% endblock %}

@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS monitor_accounts (
     trial_ends_at    TEXT,                        -- نهاية التجربة المجانية (حسابات TRIAL فقط)
     trial_notice     INTEGER NOT NULL DEFAULT 0,  -- 1 = أُرسل تذكير اقتراب النهاية
     client_hash      TEXT,                        -- بصمة الاتصال الذي طلب التجربة (حد الطلبات)
+    acquisition_variant TEXT,                     -- A/B offer arm; no visitor identity
     created_at       TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
     updated_at       TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
@@ -69,7 +70,8 @@ CREATE INDEX IF NOT EXISTS monitor_checks_account ON monitor_checks (account_id,
 """
 
 
-TRIAL_COLUMNS = (("trial_ends_at", "TEXT"), ("trial_notice", "INTEGER NOT NULL DEFAULT 0"), ("client_hash", "TEXT"))
+TRIAL_COLUMNS = (("trial_ends_at", "TEXT"), ("trial_notice", "INTEGER NOT NULL DEFAULT 0"),
+                 ("client_hash", "TEXT"), ("acquisition_variant", "TEXT"))
 
 
 def init(conn):
@@ -87,23 +89,24 @@ def hash_token(token):
     return hashlib.sha256(token.encode()).hexdigest()
 
 
-def create_account(conn, email, plan, lang, consent_at=None):
+def create_account(conn, email, plan, lang, consent_at=None, acquisition_variant=None):
     """ينشئ حساباً معلقاً حتى يؤكد PayPal الاشتراك. يعيد (المعرّف، الرمز السري).
     consent_at: وقت طلب المشترك الصريح لبدء الخدمة فوراً (§ 16 FAGG)."""
     account_id, token = "acc_" + secrets.token_urlsafe(12), secrets.token_urlsafe(32)
     with conn:
-        conn.execute("INSERT INTO monitor_accounts (id, email, plan, status, token_hash, lang, consent_at)"
-                     " VALUES (?, ?, ?, 'PENDING', ?, ?, ?)", (account_id, email, plan, hash_token(token), lang, consent_at))
+        conn.execute("INSERT INTO monitor_accounts (id, email, plan, status, token_hash, lang, consent_at, acquisition_variant)"
+                     " VALUES (?, ?, ?, 'PENDING', ?, ?, ?, ?)",
+                     (account_id, email, plan, hash_token(token), lang, consent_at, acquisition_variant))
     return account_id, token
 
 
-def create_trial(conn, email, lang, consent_at, client_hash, trial_ends_at, plan="starter"):
+def create_trial(conn, email, lang, consent_at, client_hash, trial_ends_at, plan="starter", acquisition_variant=None):
     """حساب تجربة مجانية بلا دفع. الرمز السري يُرسل بالبريد فقط (إثبات أن البريد لصاحبه)."""
     account_id, token = "acc_" + secrets.token_urlsafe(12), secrets.token_urlsafe(32)
     with conn:
-        conn.execute("INSERT INTO monitor_accounts (id, email, plan, status, token_hash, lang, consent_at, client_hash, trial_ends_at)"
-                     " VALUES (?, ?, ?, 'TRIAL', ?, ?, ?, ?, ?)",
-                     (account_id, email, plan, hash_token(token), lang, consent_at, client_hash, trial_ends_at))
+        conn.execute("INSERT INTO monitor_accounts (id, email, plan, status, token_hash, lang, consent_at, client_hash, trial_ends_at, acquisition_variant)"
+                     " VALUES (?, ?, ?, 'TRIAL', ?, ?, ?, ?, ?, ?)",
+                     (account_id, email, plan, hash_token(token), lang, consent_at, client_hash, trial_ends_at, acquisition_variant))
     return account_id, token
 
 

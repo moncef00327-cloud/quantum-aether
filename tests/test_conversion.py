@@ -9,6 +9,7 @@ import analytics_db
 import og_image
 import quantum_saas_app
 import sales_db
+from tests.test_app import RESULT
 from tests.test_crawlers import seed
 
 
@@ -53,11 +54,77 @@ class ConversionTests(unittest.TestCase):
         self.ev("focus", ua="Googlebot/2.1")                       # روبوت
         self.ev("type", **{"Sec-Fetch-Site": "cross-site"})        # من موقع آخر
         funnel = analytics_db.event_funnel(self.conn(), "2000-01-01")
-        self.assertEqual(funnel["focus"], 1)
-        self.assertEqual(funnel["submit"], 1)
+        self.assertEqual(funnel["focus"], 0)                           # local test traffic is tagged and excluded
+        self.assertEqual(funnel["submit"], 0)
         self.assertEqual(funnel["type"], 0)
         rows = self.conn().execute("SELECT COUNT(*) FROM events").fetchone()[0]
         self.assertEqual(rows, 3)                                  # focus + submit + focus(bot)
+        self.assertEqual(self.conn().execute("SELECT COUNT(*) FROM events WHERE is_test = 1").fetchone()[0], 3)
+
+    def test_conversion_events_keep_exact_names_and_variant_aggregate(self):
+        conn = self.conn()
+        for name in ("offer_impression", "trial_cta_clicked", "signup_completed", "monitoring_activated",
+                     "checkout_started", "subscription_completed", "scan_started", "scan_completed"):
+            analytics_db.record_event(conn, "2026-11-15", name, "/scan/*", "en", name, False,
+                                      variant="treatment", is_test=False)
+        funnel = analytics_db.conversion_funnel_by_variant(conn, "2026-11-01")
+        self.assertEqual(funnel["treatment"]["subscription_completed"], 1)
+        self.assertEqual(funnel["treatment"]["monitoring_activated"], 1)
+        self.assertEqual(funnel["control"]["subscription_completed"], 0)
+        row = conn.execute("SELECT name, variant FROM events WHERE name = 'subscription_completed'").fetchone()
+        self.assertEqual(tuple(row), ("subscription_completed", "treatment"))
+
+    def test_variant_assignment_is_stable_for_a_day_and_balanced(self):
+        variants = []
+        for octet in range(1, 101):
+            with self.app.test_request_context("/", environ_overrides={"REMOTE_ADDR": f"198.51.100.{octet}"},
+                                               headers={"User-Agent": "Conversion test"}):
+                first = quantum_saas_app.conversion_variant()
+                self.assertEqual(first, quantum_saas_app.conversion_variant())
+                variants.append(first)
+        treatment = variants.count("treatment")
+        self.assertGreaterEqual(treatment, 35)
+        self.assertLessEqual(treatment, 65)
+
+    def test_analytics_retention_prunes_events_and_pageviews(self):
+        conn = self.conn()
+        analytics_db.record(conn, "2026-01-01", "/", "(direct)", "oldvisitor", False)
+        analytics_db.record_event(conn, "2026-01-01", "page_view", "/", "en", "oldvisitor", False,
+                                  variant="control", is_test=False)
+        analytics_db.record_event(conn, "2026-11-15", "page_view", "/", "en", "newvisitor", False,
+                                  variant="treatment", is_test=False)
+        analytics_db.prune(conn, "2026-05-19")
+        self.assertEqual(conn.execute("SELECT COUNT(*) FROM pageviews WHERE day < '2026-05-19'").fetchone()[0], 0)
+        self.assertEqual(conn.execute("SELECT COUNT(*) FROM events WHERE day < '2026-05-19'").fetchone()[0], 0)
+        self.assertEqual(conn.execute("SELECT COUNT(*) FROM events WHERE day = '2026-11-15'").fetchone()[0], 1)
+
+    def test_result_offer_is_grade_contextual_and_excluded_pages_stay_out(self):
+        from unittest.mock import patch
+        with patch("quantum_saas_app.conversion_variant", return_value="treatment"):
+            response = self.client.get("/site/alpha.test?lang=en")
+            body = response.get_data(as_text=True)
+            self.assertIn("private", response.headers.get("Cache-Control", ""))
+            self.assertIn("no-store", response.headers.get("Cache-Control", ""))
+            self.assertIn('class="card highlight conversion-offer', body)
+            self.assertIn("Are you responsible for alpha.test?", body)
+            self.assertIn("monitor its public TLS handshakes daily", body)
+            self.assertIn("Scan your own domain", body)
+            excluded = self.client.get("/site/pornhub.com?lang=en")
+            self.assertEqual(excluded.status_code, 410)
+            self.assertNotIn("conversion-offer", excluded.get_data(as_text=True))
+
+    def test_scanned_result_offer_is_editable_and_neutral(self):
+        import copy
+        result = copy.deepcopy(RESULT)
+        sales_db.create_scan(self.conn(), "conversion-scan", "conversion-report", result,
+                             "local-test", is_test=True, source="home")
+        from unittest.mock import patch
+        with patch("quantum_saas_app.conversion_variant", return_value="treatment"):
+            body = self.client.get("/scan/conversion-scan?lang=en").get_data(as_text=True)
+        self.assertIn("Track your TLS transition over time.", body)
+        self.assertIn('id="scan-trial-domain" name="domain"', body)
+        self.assertIn("Enter a domain you manage", body)
+        self.assertIn("trial_cta_clicked", body)
 
     def test_admin_visitor_events_ignored(self):
         with self.app.test_request_context():

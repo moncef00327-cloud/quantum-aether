@@ -163,6 +163,28 @@ def render_default():
     return image
 
 
+def render_report(pct, measured, week):
+    """Branded, report-specific preview for sharing monthly research."""
+    image = Image.new("RGB", (W, H), BG)
+    draw = ImageDraw.Draw(image)
+    _frame(draw)
+    draw.text((60, 170), "Post-quantum TLS adoption", font=_font(FONT_REGULAR, 36), fill=MUTED)
+    headline = f"{pct}% of responding top-1,000 sites are ready"
+    draw.text((60, 235), headline, font=_fit(draw, headline, FONT_BOLD, 52, 790), fill=TEXT)
+    draw.text((60, 315), f"Sites responding on HTTPS: {measured:,}", font=_font(FONT_REGULAR, 30), fill=MUTED)
+    draw.text((60, 365), f"Weekly research · {week}", font=_font(FONT_REGULAR, 30), fill=MUTED)
+    draw.ellipse([900, 170, 1140, 410], fill=CARD, outline=ACCENT, width=12)
+    big = f"{pct}%"
+    font = _font(FONT_BOLD, 78)
+    box = draw.textbbox((0, 0), big, font=font)
+    draw.text((1020 - (box[2] - box[0]) / 2 - box[0], 290 - (box[3] - box[1]) / 2 - box[1]),
+              big, font=font, fill=ACCENT)
+    cta = "Read the open report →"
+    draw.text((W - 60 - draw.textlength(cta, font=_font(FONT_BOLD, 30)), H - 70),
+              cta, font=_font(FONT_BOLD, 30), fill=ACCENT)
+    return image
+
+
 def cached_png(cache_dir, key, build):
     """يعيد مسار PNG مخزّناً (يبنيه مرة واحدة). key يجب أن يتغير حين يتغير المحتوى."""
     os.makedirs(cache_dir, exist_ok=True)

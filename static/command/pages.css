@@ -95,8 +95,55 @@ html{background:#0b1324}
 .service-content .trial-cta-urgent{border:2px solid #c68efa;box-shadow:0 0 0 4px #c68efa33,0 12px 32px #c68efa22}
 .service-content .trial-cta-urgent h2{font-size:clamp(20px,3.2vw,28px);margin-top:0}
 .service-content .trial-cta-urgent .trial-submit button,.service-content .trial-fold .trial-submit button{font-weight:700;font-size:16px;padding:14px 16px}
+.service-content .conversion-offer{border:1px solid #8f70c9;background:linear-gradient(135deg,#201b31,#171625);box-shadow:0 10px 28px #09081244}
+.service-content .conversion-offer h2{margin-top:0}
+.service-content .conversion-offer .trial-submit button{font-weight:700}
 @media(max-width:600px){
   .service-content .trial-fold{padding-top:0}
   .service-content .trial-fold h1{font-size:26px;line-height:1.25}
   .service-content .hero.trial-fold{padding:0 0 12px;margin-bottom:16px}
+}
+
+.service-content :is(button,.button-link){border-radius:999px!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 8px 20px rgba(0,0,0,.16);transition:transform .18s ease,filter .18s ease,box-shadow .18s ease}
+.service-content :is(button,.button-link):hover{transform:translateY(-1px);filter:brightness(1.06)}
+.service-content input:not([type=checkbox]):not([type=hidden]),.service-content select,.service-content textarea{border-radius:16px!important;background:rgba(12,18,34,.62)!important;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.service-content .report-share-actions{display:flex;align-items:center;justify-content:flex-start;gap:12px;flex-wrap:nowrap;margin:18px 0 24px;direction:ltr}
+.service-content .report-share-circle{appearance:none;-webkit-appearance:none;display:inline-grid;place-items:center;flex:0 0 58px;width:58px;height:58px;min-width:58px;min-height:58px;padding:0;border:1px solid rgba(255,255,255,.24)!important;border-radius:50%!important;background:linear-gradient(145deg,rgba(255,255,255,.16),rgba(255,255,255,.045))!important;color:#f5f8ff!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 8px 20px rgba(0,0,0,.2);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);cursor:pointer;text-decoration:none!important}
+.service-content .report-share-actions [hidden]{display:none!important}
+.service-content .report-share-circle:hover{transform:translateY(-2px) scale(1.04)!important;filter:brightness(1.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.24),0 12px 24px rgba(0,0,0,.28)}
+.service-content .report-share-circle:focus-visible{outline:3px solid var(--qa-text);outline-offset:4px}
+.service-content .report-share-icon{display:block;width:23px;height:23px;flex:none;fill:currentColor}
+.service-content .report-share-link--linkedin{background:linear-gradient(145deg,rgba(10,102,194,.36),rgba(255,255,255,.055))!important;border-color:rgba(112,181,244,.52)!important;color:#a8d7ff!important}
+.service-content .report-share-link--x{background:linear-gradient(145deg,rgba(135,145,166,.22),rgba(255,255,255,.045))!important;border-color:rgba(190,198,214,.38)!important;color:#fff!important}
+.service-content .report-share-link--whatsapp{background:linear-gradient(145deg,rgba(37,211,102,.26),rgba(255,255,255,.045))!important;border-color:rgba(88,221,139,.48)!important;color:#83f0ab!important}
+.service-content .report-share-status:not(.is-visible),.service-content .report-share-sr{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+@media(max-width:420px){.service-content .report-share-actions{gap:8px}.service-content .report-share-circle{flex-basis:50px;width:50px;height:50px;min-width:50px;min-height:50px}}
+@media(max-width:360px){.service-content .report-share-actions{gap:6px}.service-content .report-share-circle{flex-basis:44px;width:44px;height:44px;min-width:44px;min-height:44px}}
+
+/* Rounded glass controls shared by service pages. */
+.service-content :is(input:not([type=checkbox]):not([type=hidden]),select){border-radius:999px!important;background:rgba(12,18,34,.62)!important;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.service-content textarea{border-radius:18px!important;background:rgba(12,18,34,.62)!important;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.service-content :is(button,.button-link){border-radius:999px!important}
+.service-content :is(.card,.price-box,.gravity-metric,.empty-state,.scanner-panel,.notice,.consent){border-radius:24px}
+
+.service-content .report-share-status.is-visible{position:static;display:table;width:auto;height:auto;padding:7px 14px;margin:-10px 0 18px auto;overflow:visible;clip:auto;white-space:normal;border:1px solid rgba(120,230,245,.38);border-radius:999px;background:rgba(83,213,229,.11);color:var(--qa-text);font-size:13px;line-height:1.5;box-shadow:0 5px 18px rgba(0,0,0,.14);animation:report-share-feedback-in .18s ease-out both}
+.service-content .report-share-copy.is-copied{color:#8cf0c3!important;border-color:rgba(114,238,183,.7)!important;background:linear-gradient(145deg,rgba(37,211,130,.28),rgba(255,255,255,.07))!important}
+@keyframes report-share-feedback-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+.service-content .admin-dashboard{min-width:0}
+.service-content .admin-table-scroll{width:100%;max-width:100%;margin:8px 0 16px;overflow-x:auto;overflow-y:hidden;overscroll-behavior-inline:contain;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:rgba(138,229,247,.42) transparent}
+.service-content .admin-table-scroll>table.data{display:table!important;width:max-content;min-width:100%;max-width:none;overflow:visible!important;table-layout:auto}
+.service-content .admin-dashboard .admin-table-scroll th,.service-content .admin-dashboard .admin-table-scroll td{white-space:normal;overflow-wrap:normal;word-break:normal;hyphens:none}
+.service-content .admin-dashboard .admin-table-scroll>table.data{min-width:max(100%,720px)}
+
+/* .admin-mobile-type1 */
+
+@media(max-width:850px){
+  .service-content .admin-dashboard{font-size:13px;line-height:1.45}
+  .service-content .admin-dashboard h1{font-size:20px;line-height:1.25}
+  .service-content .admin-dashboard h2{font-size:17px;line-height:1.3}
+  .service-content .admin-dashboard h3{font-size:14px;line-height:1.35}
+  .service-content .admin-dashboard .value{font-size:26px!important}
+  .service-content .admin-dashboard .admin-table-scroll>table.data th,
+  .service-content .admin-dashboard .admin-table-scroll>table.data td{font-size:11px!important;line-height:1.4;padding:7px 9px!important}
 }

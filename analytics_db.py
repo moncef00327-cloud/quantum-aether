@@ -110,6 +110,7 @@ def summary(conn, since_day):
 def prune(conn, before_day):
     with conn:
         conn.execute("DELETE FROM pageviews WHERE day < ?", (before_day,))
+        conn.execute("DELETE FROM events WHERE day < ?", (before_day,))
 
 
 # ---------------------------------------------------------------- أحداث داخل الصفحة (بلا كوكيز)
@@ -120,7 +121,9 @@ EVENT_NAMES = ("focus", "type", "example", "submit", "result", "lang", "monitori
                "tab_scanner", "tab_tracker", "tab_monitor", "tab_guides", "tab_business", "tab_llm",
                "business_cta", "agents_cta", "explore",
                "disc_start", "disc_email", "cfg_copy",
-               "trial_start",  # زر «ابدأ التجربة المجانية» في /monitoring
+               "trial_start", "page_view", "scan_started", "scan_completed", "offer_impression",
+               "trial_cta_clicked", "signup_completed", "monitoring_activated", "checkout_started",
+               "subscription_completed",  # مسار التحويل وقياس تجربة العرض
                "trial_created", "subscription_start", "subscription_active",
                "checkout_start", "purchase_complete",  # أحداث الخادم بعد إنشاء الطلب أو تأكيد الدفع
                "agency_start", "agency_paid",  # تحويلات باقة تقارير العملاء لمقدمي الخدمات
@@ -141,7 +144,8 @@ CREATE TABLE IF NOT EXISTS events (
     visitor  TEXT NOT NULL,
     is_bot   INTEGER NOT NULL,
     is_test  INTEGER NOT NULL DEFAULT 0,
-    detail   TEXT NOT NULL DEFAULT ''
+    detail   TEXT NOT NULL DEFAULT '',
+    variant  TEXT
 );
 CREATE INDEX IF NOT EXISTS events_day ON events (day, name);
 """
@@ -153,6 +157,9 @@ def init_events(conn):
     if "detail" not in {row[1] for row in conn.execute("PRAGMA table_info(events)")}:
         with conn:
             conn.execute("ALTER TABLE events ADD COLUMN detail TEXT NOT NULL DEFAULT ''")
+    if "variant" not in {row[1] for row in conn.execute("PRAGMA table_info(events)")}:
+        with conn:
+            conn.execute("ALTER TABLE events ADD COLUMN variant TEXT")
 
 
 DETAIL_RE = re.compile(r"[^a-z0-9_.:\-]")
@@ -163,17 +170,20 @@ def clean_detail(value):
     return DETAIL_RE.sub("", str(value or "").lower())[:120]
 
 
-def record_event(conn, day, name, page, lang, visitor, is_bot, is_test=False, detail=""):
+def record_event(conn, day, name, page, lang, visitor, is_bot, is_test=False, detail="", variant=None):
     """حدث واحد لكل (زائر، يوم، اسم، صفحة، تفصيل): التكرار لا يضخّم الأرقام."""
     if name not in EVENT_NAMES:
         return False
     detail = clean_detail(detail)
+    if variant not in ("control", "treatment"):
+        variant = None
     with conn:
         exists = conn.execute("SELECT 1 FROM events WHERE day = ? AND name = ? AND page = ? AND visitor = ? "
                               "AND (detail = ? OR ? = '') LIMIT 1", (day, name, page, visitor, detail, detail)).fetchone()
         if not exists:
-            conn.execute("INSERT INTO events (day, name, page, lang, visitor, is_bot, is_test, detail) "
-                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (day, name, page, lang, visitor, int(is_bot), int(is_test), detail))
+            conn.execute("INSERT INTO events (day, name, page, lang, visitor, is_bot, is_test, detail, variant) "
+                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                         (day, name, page, lang, visitor, int(is_bot), int(is_test), detail, variant))
     return True
 
 
@@ -191,3 +201,16 @@ def event_funnel(conn, since_day, until_day="9999-12-31"):
     counts = {name: 0 for name in EVENT_NAMES}
     counts.update({name: n for name, n in rows})
     return counts
+
+
+def conversion_funnel_by_variant(conn, since_day, until_day="9999-12-31"):
+    names = ("page_view", "offer_impression", "trial_cta_clicked", "signup_completed",
+             "monitoring_activated", "checkout_started", "subscription_completed", "scan_started", "scan_completed")
+    out = {arm: {name: 0 for name in names} for arm in ("control", "treatment")}
+    rows = conn.execute("SELECT variant, name, COUNT(DISTINCT visitor || day) FROM events "
+                        "WHERE is_bot = 0 AND is_test = 0 AND variant IN ('control','treatment') "
+                        "AND day >= ? AND day < ? GROUP BY variant, name", (since_day, until_day)).fetchall()
+    for arm, name, count in rows:
+        if arm in out and name in out[arm]:
+            out[arm][name] = count
+    return out

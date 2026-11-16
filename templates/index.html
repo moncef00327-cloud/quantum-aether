@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% from "_trial_cta.html" import trial_cta with context %}
-{% block title %}{{ 'فحص TLS لما بعد الكم مجانًا' if lang == 'ar' else ('Kostenloser Post-Quantum-TLS-Check' if lang == 'de' else 'Free Post-Quantum TLS Checker') }} · Quantum Aether{% endblock %}
+{% block title %}{{ 'فحص TLS لما بعد الكم مجانًا' if lang == 'ar' else ('Kostenloser Post-Quantum-TLS-Check' if lang == 'de' else 'Post-quantum TLS checker') }} · Quantum Aether{% endblock %}
 {% block head %}{% for obj in jsonld %}
 <script type="application/ld+json">{{ obj | tojson }}</script>{% endfor %}{% endblock %}
 {% block content %}
@@ -46,14 +46,13 @@
 </section>
 {{ trial_cta('trial', source='home') }}
 
-{% if study_snapshot %}
-<section class="stats platform-metrics" aria-label="{{ 'الدراسة المنشورة' if lang == 'ar' else 'Published study snapshot' }}">
-  <div class="card stat"><h2>{{ 'نطاق في عينة الدراسة' if lang == 'ar' else ('Domains in der Stichprobe' if lang == 'de' else 'Domains in the published sample') }}</h2><p class="value">{{ '{:,}'.format(study_snapshot.total) }}</p></div>
-  <div class="card stat"><h2>{{ 'استجابت عبر HTTPS' if lang == 'ar' else ('Über HTTPS erreichbar' if lang == 'de' else 'Responded over HTTPS') }}</h2><p class="value">{{ study_snapshot.reachable }}</p></div>
-  <div class="card stat"><h2>{{ 'رُصد دعمها ضمن المستجيبة' if lang == 'ar' else ('PQ-Anteil der erreichbaren Domains' if lang == 'de' else 'PQ share of responding domains') }}</h2><p class="value">{{ (study_snapshot.pq / study_snapshot.reachable * 100)|round(1) }}%</p></div>
+{% if home_snapshot %}
+<section class="stats platform-metrics" aria-label="Latest weekly adoption measurement">
+  <div class="card stat"><h2>Tracked top 1,000 domains</h2><p class="value">{{ '{:,}'.format(home_snapshot.total) }}</p></div>
+  <div class="card stat"><h2>Responded over HTTPS</h2><p class="value">{{ home_snapshot.reachable }}</p></div>
+  <div class="card stat"><h2>Hybrid key exchange observed</h2><p class="value">{{ home_snapshot.pct }}%</p></div>
 </section>
-<p class="dataset-caption">{{ 'من ' if lang == 'ar' else ('Von ' if lang == 'de' else 'Of ') }}{{ study_snapshot.pq }}{{ ' نطاقاً تفاوضت على التبادل الهجين، نالت ' if lang == 'ar' else (' Domains handelten den hybriden Austausch aus; ' if lang == 'de' else ' domains negotiated hybrid exchange; ') }}{{ study_snapshot.grades.get('A', 0) }}{{ ' نالت A، و' if lang == 'ar' else (' erhielten Note A, und ' if lang == 'de' else ' received A, and ') }}{{ study_snapshot.pq_critical }}{{ ' خُفّضت بسبب نتيجة حرجة أخرى.' if lang == 'ar' else (' wurden wegen eines weiteren kritischen Befunds herabgestuft.' if lang == 'de' else ' were downgraded for another critical finding.') }}</p>
-<p class="dataset-caption">Tranco · <time datetime="{{ study_snapshot.scanned_on }}">{{ study_snapshot.scanned_on }}</time> · {{ 'عينة منشورة وليست إحصاءً عالميًا مباشرًا' if lang == 'ar' else ('Veröffentlichte Stichprobe, keine globale Live-Statistik' if lang == 'de' else 'Published sample, not a global live statistic') }} · <a href="{{ url_for('site.study', lang=lang) }}">{{ t.nav_study }}</a></p>
+<p class="dataset-caption">Weekly tracker · {{ home_snapshot.week }} · {{ home_snapshot.pq }} of {{ home_snapshot.reachable }} responding domains negotiated hybrid exchange · <time datetime="{{ home_snapshot.date }}">{{ home_snapshot.date }}</time> · <a href="{{ url_for('site.adoption_page', lang=lang) }}">{{ t.nav_adoption }}</a></p>
 {% endif %}
 
 <section class="discovery-strip" aria-label="{{ 'استكشف المنصة' if lang == 'ar' else 'Explore the platform' }}">

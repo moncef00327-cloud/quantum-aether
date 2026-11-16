@@ -74,7 +74,7 @@ if __name__ == '__main__':
 
 
 class SiteSnippetTests(SiteFixGuidesTests):
-    """The search snippet shows the measured answer and date; breadcrumbs give a readable SERP path."""
+    """The search snippet shows the measured answer; the page shows the date; breadcrumbs give a readable SERP path."""
 
     def test_meta_description_carries_result_and_date(self):
         import re
@@ -84,8 +84,9 @@ class SiteSnippetTests(SiteFixGuidesTests):
         self.assertIn('TLS 1.3', meta)
         self.assertIn('X25519', meta)
         self.assertIn('grade B', meta)
-        self.assertIn('2026-11-02', meta)
-        self.assertLessEqual(len(meta), 170)
+        # 2026-11-16: the date left the description so it fits the 160-character snippet; it stays on the page.
+        self.assertIn('2026-11-02', html)
+        self.assertLessEqual(len(meta), 160)
         pq = re.search(r'<meta name="description" content="([^"]*)"', self.page('already-pq.example', 'ar')).group(1)
         self.assertIn('نعم', pq)
 

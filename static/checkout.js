@@ -24,6 +24,7 @@
     onClick: function (_data, actions) {
       // الموافقة الصريحة على التسليم الفوري شرط قبل فتح نافذة الدفع.
       if (!consent || !consent.checked) { fail(container.dataset.msgConsent); showConsent(consent); return actions.reject(); }
+      if (window.qaTrackEvent) window.qaTrackEvent("checkout_started");
       message.textContent = "";
       return actions.resolve();
     },

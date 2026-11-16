@@ -6,6 +6,7 @@
   var message = document.getElementById("sub-message");
   var subSection = document.getElementById("subscribe");
   var token = subSection ? (subSection.dataset.token || "") : "";
+  var variant = subSection ? (subSection.dataset.variant || "") : "";
   if (!window.paypal || !message || !form || !window.CompanyForm) return;
   var lang = form.dataset.lang || document.documentElement.lang || "en";
   var mounted = false, company;
@@ -33,11 +34,13 @@
         onClick: function (_data, actions) {
           message.textContent = "";
           if (company.problem()) { company.touch(); return actions.reject(); }
+          if (window.qaTrackEvent) window.qaTrackEvent("checkout_started");
           return actions.resolve();
         },
         createSubscription: function (_data, actions) {
           var body = company.payload();
           body.plan = box.dataset.plan;
+          body.variant = variant;
           var start = token ? post("/api/monitor/upgrade", Object.assign(body, { token: token }))
                             : post("/api/monitor/signup", body);
           return start.then(function (d) {

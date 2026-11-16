@@ -70,15 +70,18 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 log = logging.getLogger("quantum_saas")
 bp = Blueprint("site", __name__)
 
-# زواحف الذكاء الاصطناعي مذكورة صراحة؛ كلها في مجموعة واحدة مع "*" لتنطبق عليها قواعد الحجب نفسها.
-AI_CRAWLERS = [  # زواحف بحث وذكاء اصطناعي نسمح لها صراحةً لتفهرسنا وتستشهد بنا
+# زواحف البحث التي تبني فهارس ويب فعلية، منفصلة عن زواحف تدريب نماذج الذكاء الاصطناعي.
+SEARCH_CRAWLERS = ["Googlebot", "Googlebot-Image", "Bingbot", "DuckDuckBot", "Applebot"]
+
+# هذه الأسماء متاحة مع قواعد المجموعة العامة نفسها، لا تمنحها وصولاً إلى بيانات خاصة.
+AI_CRAWLERS = [
     "GPTBot", "ChatGPT-User", "OAI-SearchBot",            # OpenAI
     "ClaudeBot", "Claude-User", "Claude-SearchBot", "anthropic-ai",  # Anthropic
     "PerplexityBot", "Perplexity-User",                  # Perplexity
     "Google-Extended", "GoogleOther", "Google-CloudVertexBot",  # Google AI
-    "Applebot", "Applebot-Extended",                     # Apple
+    "Applebot-Extended",                                   # Apple AI features
     "Amazonbot", "Meta-ExternalAgent", "FacebookBot",    # Amazon / Meta
-    "Bingbot", "cohere-ai", "CCBot",                     # Bing / Cohere / Common Crawl (يغذّي معظم النماذج)
+    "cohere-ai", "CCBot",                                 # Cohere / Common Crawl
     "Bytespider", "TikTokSpider",                        # ByteDance
     "DuckAssistBot", "YouBot", "Diffbot", "Ai2Bot", "Timpibot", "PetalBot",
 ]
@@ -212,6 +215,20 @@ def current_lang():
     return request.accept_languages.best_match(["en", "ar"] + (["de"] if german_allowed() else [])) or "en"
 
 
+def analytics_visitor_key(day=None, user_agent=None):
+    day = day or dt.date.today().isoformat()
+    ua = request.headers.get("User-Agent", "") if user_agent is None else user_agent
+    salt = current_app.config["HASH_SALT"].encode()
+    return hmac.new(salt, f"{day}|{request.remote_addr or ''}|{ua}".encode(), hashlib.sha256).hexdigest()[:16]
+
+
+def conversion_variant():
+    visitor = analytics_visitor_key()
+    bucket = hmac.new(current_app.config["HASH_SALT"].encode(),
+                      b"conversion-offer-v1|" + visitor.encode(), hashlib.sha256).digest()[0]
+    return "treatment" if bucket >= 128 else "control"
+
+
 def contact_email_address():
     address = parseaddr(current_app.config.get("MAIL_FROM") or current_app.config.get("REPLY_TO")
                         or current_app.config.get("OWNER_EMAIL") or "")[1]
@@ -256,15 +273,17 @@ def _inject():
             "grade_guide_url": url_for("site.study", lang=lang) + "#grade-definitions",
             "report_price": current_app.config["PRICE"], "currency": current_app.config["CURRENCY"],
             "agency_price_dual": dual_price_label(current_app.config["PACK_PRICE"], current_app.config["PACK_CURRENCY"]),
-            "pack_currency": current_app.config["PACK_CURRENCY"], "sub_currency": subscription_currency(),
+            "pack_currency": current_app.config["PACK_CURRENCY"],
+            "sub_currency": subscription_currency() if subscriptions_enabled() else current_app.config["CURRENCY"],
             "agency_credits": current_app.config["PACK_CREDITS"],
             "starter_price": monitor.PLANS["starter"]["price"],
+            "business_price": monitor.PLANS["business"]["price"],
             "usd_per_eur": business_pages.USD_PER_EUR, "fx_rate_date": business_pages.FX_RATE_DATE,
             "page_langs": ["en", "ar", "de"] if request.endpoint in DE_PAGES or guide_has_german() else ["en", "ar"],
             "abs_url": lambda endpoint, **kw: public_base() + url_for(endpoint, **kw),
             "localized_url": localized_url, "metadata_url": metadata_url,
             "sx": scan_experience.COPY[lang],
-            "audit_cta": audit.COPY[lang]["cta"],
+            "audit_cta": audit.COPY[lang]["cta"], "conversion_variant": conversion_variant(),
             "domain_discoverable": lambda domain: not search_indexing.is_excluded(domain)}
 
 
@@ -293,6 +312,9 @@ def localized_url(lang, canonical=False):
     if request.endpoint == 'site.compare' and not canonical:
         values.update({k: request.args[k][:4096] for k in ('a', 'b') if request.args.get(k)})
     if request.endpoint:
+        # Google selected the language-neutral root as the homepage canonical.
+        if canonical and request.endpoint == "site.index" and lang == "en":
+            return public_base() + url_for(request.endpoint, **values)
         return public_base() + url_for(request.endpoint, **values, lang=lang)
     return public_base() + urllib.parse.quote(request.path, safe='/') + '?lang=' + lang
 
@@ -356,7 +378,7 @@ def client_hash():
     return hmac.new(salt, (request.remote_addr or "").encode(), hashlib.sha256).hexdigest()[:32]
 
 
-def record_conversion_event(name, page="/monitoring", is_test=None, detail=""):
+def record_conversion_event(name, page="/monitoring", is_test=None, detail="", variant=None):
     """Record an aggregate funnel event; no account identifier or email enters analytics."""
     try:
         if is_admin_visitor():
@@ -364,10 +386,11 @@ def record_conversion_event(name, page="/monitoring", is_test=None, detail=""):
         day = dt.date.today().isoformat()
         ua = request.headers.get("User-Agent", "")
         salt = current_app.config["HASH_SALT"].encode()
-        visitor = hmac.new(salt, f"{day}|{request.remote_addr}|{ua}".encode(), hashlib.sha256).hexdigest()[:16]
+        visitor = analytics_visitor_key(day, ua)
         test_event = is_test_request() if is_test is None else bool(is_test)
         analytics_db.record_event(db(), day, name, page, current_lang(), visitor,
-                                  not ua or bool(analytics_db.BOT_RE.search(ua)), test_event, detail)
+                                  not ua or bool(analytics_db.BOT_RE.search(ua)), test_event, detail,
+                                  variant=variant or conversion_variant())
     except Exception:
         log.exception("conversion event tracking failed")
 
@@ -552,10 +575,34 @@ def home_examples():
     return examples
 
 
+def home_adoption_metrics():
+    """Latest weekly top-1,000 metrics and grade distribution from the same snapshot."""
+    snap = adoption_snapshot()
+    point = snap["timeline"][-1] if snap and snap.get("timeline") else None
+    if not point:
+        return None
+    top1000 = [row for row in snap["rows"]
+               if row.get("rank") is not None and row["rank"] <= 1000 and adoption.measured(row)]
+    grades = {grade: sum(1 for row in top1000 if row.get("grade") == grade)
+              for grade in ("A", "B", "C", "F")}
+    return {"week": point["week"], "date": point["date"], "total": 1000,
+            "reachable": point["reachable"], "pq": point["pq"], "pct": point["pct"],
+            "grades": grades}
+
+
+@bp.get("/adoption/summary.json")
+def adoption_summary_json():
+    response = jsonify(home_adoption_metrics() or {})
+    response.headers["Cache-Control"] = "public, max-age=60"
+    return response
+
+
 @bp.get("/")
 def index():
-    return render_template("index.html" if current_lang() == "de" else "command_home.html", error=None, domain=request.args.get("domain", "")[:253],
-                           jsonld=home_jsonld(), examples=home_examples(), study_snapshot=study_data())
+    return render_template("index.html" if current_lang() == "de" else "command_home.html", error=None,
+                           domain=request.args.get("domain", "")[:253], jsonld=home_jsonld(),
+                           examples=home_examples(), study_snapshot=study_data(),
+                           home_snapshot=home_adoption_metrics())
 
 
 @bp.post("/scan")
@@ -566,7 +613,8 @@ def scan_form():
     except quantum_vuln_scanner.ScanError as exc:
         note_scan_error(exc, raw, request.form.get("src") or "home", "/scan")
         return render_template("index.html", error=texts()["errors"].get(exc.code, str(exc)), domain=raw,
-                               jsonld=home_jsonld(), examples=home_examples(), study_snapshot=study_data()), 400
+                               jsonld=home_jsonld(), examples=home_examples(), study_snapshot=study_data(),
+                               home_snapshot=home_adoption_metrics()), 400
     return redirect(url_for(".scan_page", scan_id=scan_id, lang=current_lang()), code=303)
 
 
@@ -1767,10 +1815,14 @@ def guide(slug):
 def study():
     d = study_data()
     pct = round(100 * d["pq"] / d["reachable"], 1) if d["reachable"] else 0
+    current = adoption_snapshot()
+    current_top1000 = current["timeline"][-1] if current and current.get("timeline") else None
     by_domain = {s["domain"]: s for s in d["sites"]}
     notable = [by_domain[n] for n in STUDY_NOTABLE if n in by_domain and not by_domain[n]["pq"]]
     notable.sort(key=lambda s: s["rank"])
-    return render_template("study.html", d=d, pct=pct, notable=notable, retry_domains=study_retry_domains())
+    return render_template("study.html", d=d, pct=pct, current_top1000=current_top1000,
+                           home_snapshot=home_adoption_metrics(), notable=notable,
+                           retry_domains=study_retry_domains())
 
 
 @bp.get("/study/top-1000-post-quantum-tls.json")
@@ -2195,18 +2247,21 @@ def site_page(domain):
         if entry:
             country = dict(entry, name=countries.name(code, current_lang()), total=board["countries"])
     indexing_excluded = not (summary and site_is_indexable(domain))
+    t = i18n.TEXTS[current_lang()]
+    title_domain = domain if len(domain) <= 35 else domain[:34].rstrip(".-") + "…"
+    site_seo_title = t["site_seo_title"].format(domain=title_domain)
     meta_description = None
     if summary:
-        # The search snippet carries the actual answer and its date, so the searcher sees fresh data before clicking.
-        t = i18n.TEXTS[current_lang()]
         answer = t["site_meta_unsure"] if summary.get("unsure") else t["site_meta_yes" if summary["pq"] else "site_meta_no"]
         meta_description = t["site_meta_result"].format(
             domain=domain, answer=answer, tls=(summary.get("tls") or "TLS").replace("TLSv", "TLS "),
             group=summary.get("group") or t["site_meta_unknown_group"], grade=summary["grade"],
             date=str(summary["scanned_at"])[:10])
+        if len(meta_description) > 155:
+            meta_description = meta_description[:152].rsplit(" ", 1)[0].rstrip(" ،,؛;.") + "…"
     subs = known_subdomains_for(domain)
     response = make_response(render_template(
-        "site_page.html", domain=domain, meta_description=meta_description, summary=summary, source=source, verdict=verdict, history=history,
+        "site_page.html", domain=domain, site_seo_title=site_seo_title, meta_description=meta_description, summary=summary, source=source, verdict=verdict, history=history,
         related=related, network=network, snippets=badge_snippets(domain) if summary else None, jsonld=jsonld,
         country=country, indexing_excluded=indexing_excluded, subs=subs,
         fix_guides=site_fix_guides(network, summary["pq"], current_lang()) if summary else []),
@@ -2328,6 +2383,8 @@ def admin():
                            scans_daily=sales_db.scans_per_day(conn, (dt.date.today() - dt.timedelta(days=13)).isoformat()),
                            card=scorecard.build(conn, current_app.config["OWNER_EMAIL"], monitor.PLANS),
                            events=analytics_db.event_funnel(conn, (dt.date.today() - dt.timedelta(days=13)).isoformat()),
+                           conversion_funnel=analytics_db.conversion_funnel_by_variant(
+                               conn, (dt.date.today() - dt.timedelta(days=27)).isoformat()),
                            scan_errors=analytics_db.error_details(conn, (dt.date.today() - dt.timedelta(days=13)).isoformat()),
                            by_source=sales_db.funnel_by_source(conn, (dt.date.today() - dt.timedelta(days=30)).isoformat()),
                            free_alert_counts=dict(conn.execute("SELECT status, COUNT(*) FROM free_alerts GROUP BY status").fetchall()),
@@ -2865,7 +2922,7 @@ def monitoring():
         except quantum_vuln_scanner.ScanError:
             domain = ""
     base = public_base()
-    currency = subscription_currency()
+    currency = subscription_currency() if subscriptions_enabled() else cfg["CURRENCY"]
     offer = lambda name, price, desc: {"@type": "Offer", "name": name, "price": price, "priceCurrency": currency,
                                        "description": desc, "url": f"{base}/monitoring?lang={current_lang()}"}
     mon_jsonld = {
@@ -2914,6 +2971,9 @@ def monitor_trial():
     email = (request.form.get("email") or "").strip().lower()[:254]
     raw = (request.form.get("domain") or "").strip()
     src = analytics_db.clean_detail(request.form.get("src") or "")
+    variant = request.form.get("variant")
+    if variant not in ("control", "treatment"):
+        variant = conversion_variant()
     domain, state, status = None, "sent", 200
     if not raw and EMAIL_RE.match(email):
         # Email-only start (home, pricing): a work address names the company domain; free-mail needs the field.
@@ -2945,11 +3005,14 @@ def monitor_trial():
             state, status = "rate_limited", 429
         else:
             ends = (dt.datetime.now(dt.timezone.utc) + dt.timedelta(days=monitor.TRIAL_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
-            account_id, _ = monitor_db.create_trial(conn, email, current_lang(), now_iso(), client_hash(), ends)
+            account_id, _ = monitor_db.create_trial(conn, email, current_lang(), now_iso(), client_hash(), ends,
+                                                    acquisition_variant=variant)
             monitor_db.add_domain(conn, account_id, domain)
             account = monitor_db.get_account(conn, account_id)
             if send_dashboard_link(conn, account):
                 record_conversion_event("trial_created", detail=src)
+                record_conversion_event("signup_completed", "/monitoring", variant=variant)
+                record_conversion_event("monitoring_activated", "/monitoring", variant=variant)
                 # Owner/test requests (admin cookie or remembered owner client) must not email a "new customer" alert.
                 if not is_test_request():
                     monitor.notify_owner(mailer, current_app.config["OWNER_EMAIL"], "New free trial", account,
@@ -3003,7 +3066,11 @@ def monitor_signup():
         return jsonify(error=error), 400
     email = fields["email"]
     conn = db()
-    account_id, _token = monitor_db.create_account(conn, email, plan, current_lang(), consent_at=now_iso())
+    variant = data.get("variant")
+    if variant not in ("control", "treatment"):
+        variant = conversion_variant()
+    account_id, _token = monitor_db.create_account(conn, email, plan, current_lang(), consent_at=now_iso(),
+                                                   acquisition_variant=variant)
     _store_subscription_billing(conn, account_id, plan, fields)
     record_conversion_event("subscription_start", "/monitoring")
     raw_domain = str(data.get("domain", "")).strip()
@@ -3052,7 +3119,13 @@ def monitor_activate():
     if status not in SUBSCRIPTION_LIVE_STATUSES:
         log.warning("Subscription %s for %s not active: %s", subscription_id, account["id"], status)
         return jsonify(error="subscription_not_active", status=status), 402
+    was_pending = account["status"] == "PENDING"
+    variant = account.get("acquisition_variant")
     monitor_db.set_status(conn, account["id"], "ACTIVE", subscription_id)
+    if was_pending:
+        record_conversion_event("signup_completed", "/monitoring", variant=variant)
+    record_conversion_event("monitoring_activated", "/monitoring", variant=variant)
+    record_conversion_event("subscription_completed", "/monitoring", variant=variant)
     record_conversion_event("subscription_active")
     token = monitor_db.rotate_token(conn, account["id"])  # الرمز يُكشف مرة واحدة فقط، هنا
     url = dashboard_url(token, account["lang"])
@@ -3576,6 +3649,17 @@ def og_default():
     return _og_response("default", og_image.render_default)
 
 
+@bp.get("/og/report/<report_id>.png")
+def og_report(report_id):
+    report = _report_or_404(report_id)
+    top = report.get("top1000") or {}
+    if top.get("pct") is None:
+        abort(404)
+    pct, measured, week = top["pct"], top.get("reachable", 0), report.get("week", "")
+    return _og_response(f"report|{report_id}|{pct}|{measured}|{week}",
+                        lambda: og_image.render_report(pct, measured, week))
+
+
 @bp.get("/og/site/<domain>.png")
 def og_site(domain):
     try:
@@ -3614,8 +3698,8 @@ def og_scan(scan_id):
 
 @bp.get("/robots.txt")
 def robots():
-    agents = "".join(f"User-agent: {name}\n" for name in [*AI_CRAWLERS, "*"])
-    body = (agents + "Allow: /\nDisallow: /admin\nDisallow: /report/\nDisallow: /api/paypal/\nDisallow: /monitor/\nDisallow: /api/monitor/\n\n"
+    agents = "".join(f"User-agent: {name}\n" for name in [*SEARCH_CRAWLERS, *AI_CRAWLERS, "*"])
+    body = (agents + "Disallow: /admin\nDisallow: /report/\nDisallow: /api/paypal/\nDisallow: /monitor/\nDisallow: /api/monitor/\n\n"
             f"Sitemap: {public_base()}/sitemap.xml\n"
             f"# AI agents: machine-readable summary and API at {public_base()}/llms.txt\n"
             f"# Full text for AI agents (guides + live figures in one file): {public_base()}/llms-full.txt\n"
@@ -3639,7 +3723,8 @@ def _sitemap_pages():
              ("/guides", max(g["updated"] for g in guides.GUIDES.values()), site_langs),
              ("/tools/pq-tls-config", _template_day("pq_config.html"), de_langs),
              ("/press", _template_day("press.html"), de_langs),
-             ("/study/top-1000-post-quantum-tls", study_data()["scanned_on"], de_langs)]
+             ("/study/top-1000-post-quantum-tls",
+              max(study_data()["scanned_on"], (adoption_snapshot() or {}).get("scanned_at", "")[:10]), de_langs)]
     adoption_weeks = adoption.weeks(db())
     pages.append(("/adoption", adoption.week_monday(adoption_weeks[-1]).isoformat() if adoption_weeks
                   else study_data()["scanned_on"], de_langs))
@@ -3694,14 +3779,19 @@ def _urlset(pages):
     def esc(u):
         return u.replace("&", "&amp;")
 
+    def localized(path, lang):
+        if path == "/" and lang == "en":
+            return base + "/"
+        return f"{base}{path}?lang={lang}"
+
     parts = []
     for path, day, langs in pages:
         default = "de" if langs == legal.LANGS else "en"
-        alternates = "".join(f'<xhtml:link rel="alternate" hreflang="{alt}" href="{esc(f"{base}{path}?lang={alt}")}"/>'
+        alternates = "".join(f'<xhtml:link rel="alternate" hreflang="{alt}" href="{esc(localized(path, alt))}"/>'
                              for alt in langs)
-        alternates += f'<xhtml:link rel="alternate" hreflang="x-default" href="{esc(f"{base}{path}?lang={default}")}"/>'
+        alternates += f'<xhtml:link rel="alternate" hreflang="x-default" href="{esc(localized(path, default))}"/>'
         for lang in langs:
-            parts.append(f"  <url><loc>{esc(f'{base}{path}?lang={lang}')}</loc><lastmod>{day}</lastmod>{alternates}</url>\n")
+            parts.append(f"  <url><loc>{esc(localized(path, lang))}</loc><lastmod>{day}</lastmod>{alternates}</url>\n")
     body = ('<?xml version="1.0" encoding="UTF-8"?>\n'
             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n'
             + "".join(parts) + "</urlset>\n")
@@ -4001,12 +4091,15 @@ def track_pageview():
         query = urllib.parse.parse_qs(str(data.get("search", "")).lstrip("?"))
         day = dt.date.today().isoformat()
         ua = request.headers.get("User-Agent", "")
-        salt = current_app.config["HASH_SALT"].encode()
-        visitor = hmac.new(salt, f"{day}|{request.remote_addr}|{ua}".encode(), hashlib.sha256).hexdigest()[:16]
+        visitor = analytics_visitor_key(day, ua)
         own_host = (current_app.config["PUBLIC_URL"].split("://")[-1] or request.host).split("/")[0]
         source = (analytics_db.utm_source((query.get("utm_source") or [None])[0])
                   or analytics_db.referrer_host(str(data.get("ref", "")) or None, own_host))
-        analytics_db.record(db(), day, path, source, visitor, not ua or bool(analytics_db.BOT_RE.search(ua)))
+        bot = not ua or bool(analytics_db.BOT_RE.search(ua))
+        analytics_db.record(db(), day, path, source, visitor, bot)
+        analytics_db.record_event(db(), day, "page_view", path, current_lang(), visitor, bot,
+                                  is_test=current_app.testing or is_test_request(),
+                                  variant=data.get("variant") or conversion_variant())
     except Exception:  # الإحصاءات ثانوية
         log.exception("pageview tracking failed")
     return "", 204
@@ -4026,11 +4119,12 @@ def track_event():
         lang = str(data.get("lang", ""))[:2] if str(data.get("lang", ""))[:2] in ("en", "ar", "de") else "?"
         day = dt.date.today().isoformat()
         ua = request.headers.get("User-Agent", "")
-        salt = current_app.config["HASH_SALT"].encode()
-        visitor = hmac.new(salt, f"{day}|{request.remote_addr}|{ua}".encode(), hashlib.sha256).hexdigest()[:16]
+        visitor = analytics_visitor_key(day, ua)
         detail = analytics_db.clean_detail(data.get("detail", ""))
-        analytics_db.record_event(db(), day, str(data.get("name", ""))[:20], page, lang, visitor,
-                                  not ua or bool(analytics_db.BOT_RE.search(ua)), is_test_request(), detail)
+        analytics_db.record_event(db(), day, str(data.get("name", ""))[:32], page, lang, visitor,
+                                  not ua or bool(analytics_db.BOT_RE.search(ua)),
+                                  current_app.testing or is_test_request(), detail,
+                                  variant=data.get("variant") or conversion_variant())
     except Exception:  # الإحصاءات ثانوية
         log.exception("event tracking failed")
     return "", 204
@@ -4047,6 +4141,9 @@ def _security_headers(response):
     if request.path.startswith(('/scan/', '/api/')) or (request.endpoint == 'site.compare' and request.args.get('a')):
         response.headers.setdefault('Cache-Control', 'no-store')
         response.headers.setdefault('X-Robots-Tag', 'noindex')
+    if request.endpoint == 'site.site_page':
+        # Result pages carry a visitor-level offer variant; never let a shared cache mix arms.
+        response.headers['Cache-Control'] = 'private, no-store'
     if request.path.startswith(('/scan/', '/api/v1/orders', '/api/paypal/', '/api/crypto/', '/api/v1/crypto/',
                                 '/api/monitor/')):
         response.headers['Referrer-Policy'] = 'no-referrer'

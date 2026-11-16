@@ -2,9 +2,10 @@
 {% block title %}{{ t.admin_title }} · {{ t.brand }}{% endblock %}
 {% block head %}<meta name="robots" content="noindex">{% endblock %}
 {% block content %}
+<div class="admin-dashboard">
 <section class="card" dir="ltr">
   <h2>On-page funnel, last 14 days (visitors who…)</h2>
-  <table class="data">
+  <div class="admin-table-scroll"><table class="data">
     <tr><th>focused the domain box</th><th>typed</th><th>clicked an example</th><th>submitted a scan</th><th>saw a result</th><th>error</th></tr>
     <tr><td>{{ events.focus }}</td><td>{{ events.type }}</td><td>{{ events.example }}</td><td>{{ events.submit }}</td><td>{{ events.result }}</td><td>{{ events.error }}</td></tr>
     <tr><th>switched language</th><th>monitoring CTA</th><th>sample report</th><th title="Consent checkbox ticked or crypto button pressed. Not a payment; paid orders are listed under sales.">buy clicks (not payments)</th><th>share</th><th>badge copy</th></tr>
@@ -17,20 +18,24 @@
     <tr><td>{{ events.checkout_start }}</td><td>{{ events.purchase_complete }}</td><td colspan="2">Counts start after deployment; no email addresses or account IDs are stored here.</td></tr>
     <tr><th>agency pack checkout</th><th>agency pack paid</th><th colspan="2">MSP / consultant offer</th></tr>
     <tr><td>{{ events.agency_start }}</td><td>{{ events.agency_paid }}</td><td colspan="2">Use these to assess demand for client-report packs.</td></tr>
-  </table>
+  </table></div>
   <p class="muted small">Unique visitor-days, bots and admin excluded. Tracking started 2026-11-04.</p>
+  <h3>Result-page offer experiment (last 28 days)</h3>
+  <div class="admin-table-scroll"><table class="data"><tr><th>Variant</th><th>Offer views</th><th>Trial CTA</th><th>Trial created</th><th>Paid subscription</th></tr>
+    {% for arm in ("control", "treatment") %}<tr><td>{{ arm }}</td><td>{{ conversion_funnel[arm].offer_impression }}</td><td>{{ conversion_funnel[arm].trial_cta_clicked }}</td><td>{{ conversion_funnel[arm].signup_completed }}</td><td>{{ conversion_funnel[arm].subscription_completed }}</td></tr>{% endfor %}
+  </table></div>
   {% if scan_errors %}<h3>Scan errors, last 14 days (code:domain)</h3>
-  <table class="data"><tr><th>error</th><th>visitor-days</th><th>last</th></tr>
+  <div class="admin-table-scroll"><table class="data"><tr><th>error</th><th>visitor-days</th><th>last</th></tr>
   {% for row in scan_errors %}<tr><td dir="ltr"><code>{{ row[0] }}</code></td><td>{{ row[1] }}</td><td>{{ row[2] }}</td></tr>{% endfor %}
-  </table>{% endif %}
+  </table></div>{% endif %}
   <h3>Real scans and sales by where the scan started (30 days)</h3>
-  <table class="data"><tr><th>Source</th><th>Scans</th><th>Sales</th></tr>
+  <div class="admin-table-scroll"><table class="data"><tr><th>Source</th><th>Scans</th><th>Sales</th></tr>
     {% for row in by_source %}<tr><td>{{ row.source }}</td><td>{{ row.scans }}</td><td>{{ row.sales }}</td></tr>{% else %}<tr><td colspan="3">No real scans yet.</td></tr>{% endfor %}
-  </table>
+  </table></div>
   <h3>ProofLab waitlist</h3>
   <p>Real signups: <strong>{{ prooflab_stats.total }}</strong>{% for k, v in prooflab_stats.by_stack.items() %} · {{ k }}: {{ v }}{% endfor %} · page views (14 days): {{ events.prooflab_view }} · signups tracked (14 days): {{ events.prooflab_submit }} · test rows: {{ prooflab_stats.tests }}</p>
-  {% if prooflab_stats.recent %}<table class="data"><tr><th>email</th><th>company</th><th>stack</th><th>lang</th><th>at (UTC)</th></tr>
-  {% for r in prooflab_stats.recent %}<tr><td>{{ r.email }}</td><td>{{ r.company }}</td><td>{{ r.stack }}</td><td>{{ r.lang }}</td><td>{{ r.created_at }}</td></tr>{% endfor %}</table>{% endif %}
+  {% if prooflab_stats.recent %}<div class="admin-table-scroll"><table class="data"><tr><th>email</th><th>company</th><th>stack</th><th>lang</th><th>at (UTC)</th></tr>
+  {% for r in prooflab_stats.recent %}<tr><td>{{ r.email }}</td><td>{{ r.company }}</td><td>{{ r.stack }}</td><td>{{ r.lang }}</td><td>{{ r.created_at }}</td></tr>{% endfor %}</table></div>{% endif %}
   <p>Free change alerts: {{ free_alert_counts.get("ACTIVE", 0) }} active · {{ free_alert_counts.get("PENDING", 0) }} awaiting confirmation</p>
 </section>
 
@@ -39,14 +44,14 @@
   {% if card.verdict %}<p><strong>Closest scenario: {{ card.scenarios[card.verdict].label }} ({{ card.scenarios[card.verdict].label_ar }})</strong>
     · 12-month median net in that scenario: ${{ card.scenarios[card.verdict].net_12m }}</p>{% endif %}
   {% if card.conversion_warning %}<p class="error">⚠ {{ card.conversion_warning }}</p>{% endif %}
-  <table class="data">
+  <div class="admin-table-scroll"><table class="data">
     <tr><th>Week from</th><th>Visitors</th><th>Expected (pess / real / opt)</th><th>Scans</th><th>Exp. scans (real)</th><th>Reports</th><th>New subs</th><th>Closest</th></tr>
     {% for w in card.weeks|reverse %}<tr><td>{{ w.start }}{% if w.partial_days < 7 %} ({{ w.partial_days }}d){% endif %}</td>
       <td>{{ w.visitors }}</td>
       <td>{{ "%.0f"|format(w.expected.pessimistic.visitors) }} / {{ "%.0f"|format(w.expected.realistic.visitors) }} / {{ "%.0f"|format(w.expected.optimistic.visitors) }}</td>
       <td>{{ w.scans }}</td><td>{{ "%.1f"|format(w.expected.realistic.scans) }}</td><td>{{ w.reports }}</td><td>{{ w.subs }}</td>
       <td>{{ card.scenarios[w.closest].label }}</td></tr>{% endfor %}
-  </table>
+  </table></div>
   <p class="muted small">Since launch: {{ card.totals.visitors }} visitors · {{ card.totals.scans }} scans · {{ card.totals.reports }} reports (${{ "%.2f"|format(card.totals.revenue) }}{% for cur, amt in (card.totals.revenue_by_currency or {}).items()|sort if cur != 'USD' %} + {{ "%.2f"|format(amt) }} {{ cur }}{% endfor %})
     · MRR ${{ "%.2f"|format(card.mrr) }} · cash cost ${{ card.cost_so_far }} (credit until {{ card.credit_until }}, then ~${{ card.cost_per_month|int }}/mo) · break-even = {{ card.breakeven_subs }} Starter subscriptions.
     Excludes bots, admin-cookie visits and test orders.</p>
@@ -65,24 +70,24 @@
 <section class="grid-2">
   <div class="card">
     <h2>{{ t.adm_daily }}</h2>
-    <table class="data" dir="ltr">
+    <div class="admin-table-scroll"><table class="data" dir="ltr">
       <thead><tr><th>{{ t.date }}</th><th>{{ t.adm_visitors }}</th><th>{{ t.adm_views }}</th><th>{{ t.total_scans }}</th></tr></thead>
       <tbody>{% for d in traffic.daily %}<tr><td>{{ d.day }}</td><td>{{ d.visitors }}</td><td>{{ d.views }}</td><td>{{ scans_daily.get(d.day, 0) }}</td></tr>
       {% else %}<tr><td colspan="4">—</td></tr>{% endfor %}</tbody>
-    </table>
+    </table></div>
   </div>
   <div class="card">
     <h2>{{ t.adm_sources }}</h2>
-    <table class="data" dir="ltr">
+    <div class="admin-table-scroll"><table class="data" dir="ltr">
       <thead><tr><th>{{ t.adm_source }}</th><th>{{ t.adm_visitors }}</th></tr></thead>
       <tbody>{% for r in traffic.referrers %}<tr><td>{{ r.referrer }}</td><td>{{ r.visitors }}</td></tr>
       {% else %}<tr><td colspan="2">—</td></tr>{% endfor %}</tbody>
-    </table>
+    </table></div>
     <h2>{{ t.adm_pages }}</h2>
-    <table class="data" dir="ltr">
+    <div class="admin-table-scroll"><table class="data" dir="ltr">
       <tbody>{% for p in traffic.pages %}<tr><td>{{ p.path }}</td><td>{{ p.views }}</td></tr>
       {% else %}<tr><td>—</td></tr>{% endfor %}</tbody>
-    </table>
+    </table></div>
   </div>
 </section>
 <section class="stats">
@@ -105,7 +110,7 @@
 <section class="card">
   <h2>{{ t.admin_subs_title }}</h2>
   {% if accounts %}
-  <table class="data">
+  <div class="admin-table-scroll"><table class="data">
     <thead><tr><th>{{ t.date }}</th><th>Email</th><th>{{ t.dash_plan }}</th><th>{{ t.dash_status }}</th><th>{{ t.dash_domains_title }}</th></tr></thead>
     <tbody>
     {% for a in accounts %}
@@ -113,13 +118,13 @@
           <td class="{{ 'ok' if a.status == 'ACTIVE' else 'warn' }}">{{ a.status }}</td><td>{{ a.domains }}</td></tr>
     {% endfor %}
     </tbody>
-  </table>
+  </table></div>
   {% else %}<p class="muted">—</p>{% endif %}
 </section>
 
 <section class="card">
   <h2>{{ t.orders_title }}</h2>
-  <table class="data">
+  <div class="admin-table-scroll"><table class="data">
     <thead><tr><th>{{ t.date }}</th><th>{{ t.domain }}</th><th>PayPal order</th><th>{{ t.amount }}</th><th>{{ t.status }}</th></tr></thead>
     <tbody>
     {% for o in orders %}
@@ -128,14 +133,14 @@
           <td class="{{ 'ok' if o.status == 'COMPLETED' else 'warn' }}">{{ t.adm_order_status.get(o.display_status, o.display_status) }}{% if o.is_test %} <span class="muted small">{{ t.adm_test }}</span>{% endif %}</td></tr>
     {% endfor %}
     </tbody>
-  </table>
+  </table></div>
 </section>
 
 <section class="card" dir="ltr" id="audit-orders">
   <h2>Organization audit payments</h2>
   {% if audit_msg %}<p class="notice" role="status">Audit action: {{ audit_msg }}</p>{% endif %}
   {% if audit_orders %}
-  <table class="data">
+  <div class="admin-table-scroll"><table class="data">
     <thead><tr><th>Invoice / date</th><th>Organization</th><th>Buyer</th><th>Domain</th><th>Payment</th><th>Audit</th><th>Action</th></tr></thead>
     <tbody>{% for o in audit_orders %}
       <tr>
@@ -158,14 +163,14 @@
           </form>{% endif %}</td>
       </tr>
     {% endfor %}</tbody>
-  </table>
+  </table></div>
   {% else %}<p class="muted">No audit purchases yet.</p>{% endif %}
 </section>
 
 <section class="card" dir="ltr" id="billing-records">
   <h2>Company billing: agency packs and monitoring subscriptions</h2>
   {% if billing_records %}
-  <table class="data">
+  <div class="admin-table-scroll"><table class="data">
     <thead><tr><th>Kind / date</th><th>Company</th><th>Buyer</th><th>Domain</th><th>Amount</th><th>Invoice</th></tr></thead>
     <tbody>{% for r in billing_records %}
       <tr>
@@ -177,13 +182,13 @@
         <td>{% if r.invoice_number and r.invoice_path %}<a href="{{ url_for('site.admin_billing_invoice', record_id=r.id) }}">{{ r.invoice_number }}</a>{% elif r.kind == 'pack' %}not paid{% else %}PayPal receipt{% endif %}</td>
       </tr>
     {% endfor %}</tbody>
-  </table>
+  </table></div>
   {% else %}<p class="muted">No company orders yet.</p>{% endif %}
 </section>
 
 <section class="card">
   <h2>{{ t.scans_title }}</h2>
-  <table class="data">
+  <div class="admin-table-scroll"><table class="data">
     <thead><tr><th>{{ t.date }}</th><th>{{ t.domain }}</th><th>{{ t.grade }}</th></tr></thead>
     <tbody>
     {% for s in scans %}
@@ -192,6 +197,7 @@
           <td><span class="grade-chip grade-{{ s.grade }}">{{ s.grade }}</span>{% if s.is_test %} <span class="muted small">{{ t.adm_test }}</span>{% endif %}</td></tr>
     {% endfor %}
     </tbody>
-  </table>
+  </table></div>
 </section>
+</div>
 {% endblock %}

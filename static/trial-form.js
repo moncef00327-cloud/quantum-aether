@@ -16,19 +16,23 @@
           consent: "بقيت خطوة: ضع علامة الموافقة على الشروط وسياسة الخصوصية، ثم اضغط الزر مرة أخرى." }
   };
   var MSG = ALL[lang] || ALL.en;
+  var REASON = { email: "bad_email", domain: "need_domain", consent: "consent_missing" };
   var FREE = ("gmail.com googlemail.com outlook.com hotmail.com hotmail.de live.com live.de msn.com yahoo.com yahoo.de " +
     "ymail.com icloud.com me.com mac.com aol.com gmx.at gmx.de gmx.net gmx.ch web.de t-online.de freenet.de aon.at " +
     "chello.at a1.net bluewin.ch proton.me protonmail.com pm.me mail.com mail.ru yandex.com yandex.ru zoho.com " +
     "tutanota.com tuta.io posteo.de mailbox.org outlook.de qq.com 163.com").split(" ");
   var EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
   var sent = {};
-  function ev(name, form) {
-    if (sent[name]) return;
-    sent[name] = true;
+  function ev(name, form, reason) {
+    var key = name + ":" + (reason || "");
+    if (sent[key]) return;
+    sent[key] = true;
     try {
       var src = "";
       if (form) src = form.getAttribute("data-trial-source") || ((form.querySelector('[name="src"]') || {}).value) || "";
-      var body = JSON.stringify({ name: name, page: location.pathname, lang: document.documentElement.lang, detail: src });
+      var detail = src || "";
+      if (reason) detail = src ? (src + "|" + reason) : reason;
+      var body = JSON.stringify({ name: name, page: location.pathname, lang: document.documentElement.lang, detail: detail });
       if (navigator.sendBeacon) navigator.sendBeacon("/api/ev", body);
       else fetch("/api/ev", { method: "POST", body: body, keepalive: true });
     } catch (e) { /* analytics are optional */ }
@@ -78,7 +82,7 @@
           label.style.outline = "2px solid #ff6b6b"; label.style.outlineOffset = "4px"; label.style.borderRadius = "4px";
         }
       }
-      ev("trial_invalid", f);
+      ev("trial_invalid", f, REASON[problem] || problem);
       return;
     }
     var old = f.querySelector(".trial-error");

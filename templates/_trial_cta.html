@@ -4,24 +4,25 @@
    Company billing details are asked only at the upgrade step in the trial dashboard.
    static/trial-form.js checks the fields before sending and shows a clear inline message (ar/de/en).
    `source` (e.g. scan_result, monitoring, home) is sent with analytics events so we can measure each CTA. #}
-{% macro trial_cta(form_id, domain='', title='', sub='', compact=false, prefill='', email='', error='', focus='', source='', urgent=false, show_title=true) %}
+{% macro trial_cta(form_id, domain='', title='', sub='', compact=false, prefill='', email='', error='', focus='', source='', urgent=false, show_title=true, editable_domain=false) %}
 {% set sp = '%g'|format(starter_price|float) %}{% set price_label = (sp ~ ' €') if sub_currency == 'EUR' else (sp ~ ' ' ~ sub_currency) %}
-<section class="card highlight trial-cta{% if urgent %} trial-cta-urgent{% endif %}" id="{{ form_id }}">
+<section class="card highlight{% if source in ('scan_result','site_result') %} conversion-offer{% endif %} trial-cta{% if urgent %} trial-cta-urgent{% endif %}" id="{{ form_id }}"{% if source in ('scan_result','site_result') %} data-ev-impression="offer_impression"{% endif %}>
   {% if show_title %}<h2>{{ title or t.trial_cta_title }}</h2>{% endif %}
   {% if not compact %}<p>{{ sub or t.trial_cta_sub.format(price=price_label) }}</p>{% endif %}
   <form method="post" action="{{ url_for('site.monitor_trial', lang=lang) }}" class="scan-form trial-form"{% if source %} data-trial-source="{{ source }}"{% endif %}>
-    {% if domain %}<input type="hidden" name="domain" value="{{ domain }}">{% endif %}
+    {% if domain and not editable_domain %}<input type="hidden" name="domain" value="{{ domain }}">{% endif %}
+    <input type="hidden" name="variant" value="{{ conversion_variant }}">
     {% if source %}<input type="hidden" name="src" value="{{ source }}">{% endif %}
     {% if error %}<p class="form-error trial-error" role="alert">{{ error }}</p>{% endif %}
     <label for="{{ form_id }}-email">{{ t.trial_email_label }}</label>
     <div class="scan-row">
       <input id="{{ form_id }}-email" name="email" type="email" autocomplete="email" dir="ltr" required maxlength="254" placeholder="security@{{ domain or prefill or 'company.com' }}"{% if email %} value="{{ email }}"{% endif %}{% if focus == 'email' %} autofocus aria-invalid="true"{% endif %}>
     </div>
-    {% if not domain %}<p><label for="{{ form_id }}-domain" class="small">{{ t.trial_cta_domain }}</label><br>
+    {% if not domain or editable_domain %}<p><label for="{{ form_id }}-domain" class="small">{{ t.trial_cta_domain }}</label><br>
       <input id="{{ form_id }}-domain" name="domain" type="text" dir="ltr" maxlength="253" inputmode="url" autocomplete="url" placeholder="company.com"{% if prefill %} value="{{ prefill }}"{% endif %}{% if focus == 'domain' %} autofocus aria-invalid="true"{% endif %} style="width:100%;box-sizing:border-box"></p>{% endif %}
     <p class="consent"><label><input type="checkbox" name="consent" value="1" required{% if focus == 'consent' %} autofocus aria-invalid="true"{% endif %}>
       <span>{{ t.trial_consent }} (<a href="{{ url_for('site.legal_page', slug='agb', lang=legal_lang) }}" target="_blank">{{ t.legal_terms }}</a> · <a href="{{ url_for('site.legal_page', slug='datenschutz', lang=legal_lang) }}" target="_blank">{{ t.legal_privacy }}</a>)</span></label></p>
-    <div class="scan-row trial-submit"><button type="submit" data-ev="trial_start" style="width:100%">{{ t.trial_button_nocard }}</button></div>
+    <div class="scan-row trial-submit"><button type="submit" data-ev="trial_start" data-ev-alt="trial_cta_clicked" style="width:100%">{{ t.trial_button_nocard }}</button></div>
     <p class="muted small">{{ t.trial_cta_fine }} {{ t.trial_after }} <bdi dir="ltr">{{ price_label }}</bdi> {{ t.mon_per_month }}.</p>
   </form>
 </section>

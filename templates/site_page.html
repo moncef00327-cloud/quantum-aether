@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% from "_trial_cta.html" import trial_cta with context %}
-{% block title %}{{ t.site_question.format(domain=domain) }}{% if summary %} {{ t.site_title_grade.format(grade=summary.grade) }}{% endif %}{% endblock %}
+{% block title %}{{ site_seo_title }}{% endblock %}
 {% block og_image %}{% if summary %}{{ abs_url('site.og_site', domain=domain) }}{% else %}{{ super() }}{% endif %}{% endblock %}
 {% block description %}{{ meta_description or t.site_meta.format(domain=domain) }}{% endblock %}
 {% block head %}{% if not summary or indexing_excluded %}<meta name="robots" content="noindex, follow">{% endif %}{% if jsonld %}{% for obj in jsonld %}
@@ -15,9 +15,17 @@
   </div>
 </section>
 
-{% set site_urgent = (not summary or not summary.pq or summary.unsure or summary.grade != 'A') %}
-{{ trial_cta('site-trial', domain=domain, title=t.scan_trial_title.format(domain=domain),
-             sub=t.scan_trial_sub, source='scan_result', urgent=site_urgent) }}
+{% if conversion_variant == 'treatment' %}
+{% set offer_grade = 'unknown' if not summary or summary.unsure else summary.grade|lower %}
+{% set offer_title = t['conversion_offer_title_' ~ offer_grade] if offer_grade in ('a','b','c','f','unknown') else t.conversion_offer_title_c %}
+{% set offer_body = t['conversion_offer_body_' ~ offer_grade] if offer_grade in ('a','b','c','f','unknown') else t.conversion_offer_body_c %}
+<p class="small">{{ t.site_offer_title.format(domain=domain) }} {{ t.site_offer_body }}</p>
+{{ trial_cta('site-trial', title=offer_title, sub=offer_body ~ ' ' ~ t.conversion_offer_trial,
+             prefill=domain, editable_domain=true, source='scan_result') }}
+<p class="small"><a href="{{ url_for('site.index', lang=lang) }}#scan" data-ev="scan_cta">{{ t.conversion_offer_scan }} →</a></p>
+{% else %}
+{{ trial_cta('site-trial', title=t.trial_cta_title, prefill=domain, editable_domain=true, source='scan_result') }}
+{% endif %}
 
 {% if summary %}
 <section class="card">
