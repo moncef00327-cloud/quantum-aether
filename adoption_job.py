@@ -24,8 +24,14 @@ SENT_SCHEMA = ("CREATE TABLE IF NOT EXISTS indexnow_sent (url TEXT PRIMARY KEY, 
 CATCH_UP_LIMIT = 1000  # أقصى عدد نطاقات قوائم مراقبة جديدة يفحصها التشغيل اليومي
 
 
-def _indexnow_target(app):
-    """(host, key, base) or None when IndexNow is not configured; the sitemap stays the discovery path then."""
+def _indexnow_target(app, post=None):
+    """(host, key, base) or None when IndexNow is not configured; the sitemap stays the discovery path then.
+
+    Under TESTING nothing is ever sent to the real service: a test that wants the payload passes `post`.
+    """
+    if post is None and app.config.get("TESTING"):
+        log.info("IndexNow skipped in tests")
+        return None
     key_path = os.path.join(app.root_path, "data", "indexnow.key")
     try:
         with open(key_path, encoding="utf-8") as key_file:
@@ -85,7 +91,7 @@ def notify_indexnow(app, conn, week, post=None):
     if conn.execute("SELECT 1 FROM crawler_submissions WHERE period = ?", (period,)).fetchone():
         log.info("IndexNow already notified for %s", week)
         return 0
-    target = _indexnow_target(app)
+    target = _indexnow_target(app, post)
     if target is None:
         return 0
     host, key, base = target
@@ -128,7 +134,7 @@ def notify_new_urls(app, conn, post=None):
     Weekly refreshes of /site/ pages stay with notify_indexnow; this run only fills the gap between Mondays
     (a new page, an edited page, a domain added to a watch list).
     """
-    target = _indexnow_target(app)
+    target = _indexnow_target(app, post)
     if target is None:
         return 0
     host, key, base = target

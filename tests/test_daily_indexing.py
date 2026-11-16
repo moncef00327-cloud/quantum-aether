@@ -77,6 +77,14 @@ class DailyIndexingTest(unittest.TestCase):
         adoption_job.notify_new_urls(self.app, self.conn, post=self.post)
         self.assertFalse([u for u in self.sent() if "/site/" in u])
 
+    def test_tests_never_reach_the_real_indexnow_service(self):
+        self.add_row("example.org", rank=5)
+        with mock.patch("urllib.request.urlopen", side_effect=AssertionError("network call in a test")), \
+                mock.patch.object(adoption, "load_targets", return_value=[]):  # no catch-up scan either
+            self.assertEqual(adoption_job.notify_indexnow(self.app, self.conn, WEEK), 0)
+            self.assertEqual(adoption_job.notify_new_urls(self.app, self.conn), 0)
+            self.assertEqual(adoption_job.run_daily(self.app), 0)
+
     def test_failed_send_is_retried_next_day(self):
         def broken(payload):
             raise OSError("network down")
