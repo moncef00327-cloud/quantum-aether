@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-11-16T22:51:05Z",
+  "updated_at": "2026-11-16T22:55:14Z",
   "classification": "Deterministic keyword rules; impact notes are editorial context, not source quotations or security advisories.",
   "sources": [
     {
@@ -40,76 +40,6 @@
     }
   ],
   "items": [
-    {
-      "source": "arXiv quant-ph",
-      "url": "https://arxiv.org/abs/2611.17417",
-      "title": "Analytic spread complexity in three-level systems and the spacing-ratio distribution",
-      "published_at": "2026-11-16T05:00:00Z",
-      "category": "research",
-      "importance": "medium",
-      "takeaway": {
-        "en": "Editorial takeaway: research context, not a production security advisory or evidence of a new cryptographic break; assess before changing policy.",
-        "ar": "قراءة تحريرية: هذا سياق بحثي، وليس تنبيهاً أمنياً للإنتاج أو دليلاً على كسر تشفيري جديد؛ قيّم النتائج قبل تغيير السياسة.",
-        "de": "Redaktionelle Einordnung: Forschungskontext, keine Produktionswarnung und kein Beleg für einen neuen kryptografischen Bruch; vor einer Richtlinienänderung bewerten."
-      },
-      "id": "77934772c3d1a11a"
-    },
-    {
-      "source": "arXiv quant-ph",
-      "url": "https://arxiv.org/abs/2611.17454",
-      "title": "Efficient quantum-circuit simulation of classical control of computational order",
-      "published_at": "2026-11-16T05:00:00Z",
-      "category": "research",
-      "importance": "medium",
-      "takeaway": {
-        "en": "Editorial takeaway: research context, not a production security advisory or evidence of a new cryptographic break; assess before changing policy.",
-        "ar": "قراءة تحريرية: هذا سياق بحثي، وليس تنبيهاً أمنياً للإنتاج أو دليلاً على كسر تشفيري جديد؛ قيّم النتائج قبل تغيير السياسة.",
-        "de": "Redaktionelle Einordnung: Forschungskontext, keine Produktionswarnung und kein Beleg für einen neuen kryptografischen Bruch; vor einer Richtlinienänderung bewerten."
-      },
-      "id": "a9822ab90eafb706"
-    },
-    {
-      "source": "arXiv quant-ph",
-      "url": "https://arxiv.org/abs/2603.10119",
-      "title": "Digital dissipative state preparation for frustration-free gapless quantum systems",
-      "published_at": "2026-11-16T05:00:00Z",
-      "category": "research",
-      "importance": "medium",
-      "takeaway": {
-        "en": "Editorial takeaway: research context, not a production security advisory or evidence of a new cryptographic break; assess before changing policy.",
-        "ar": "قراءة تحريرية: هذا سياق بحثي، وليس تنبيهاً أمنياً للإنتاج أو دليلاً على كسر تشفيري جديد؛ قيّم النتائج قبل تغيير السياسة.",
-        "de": "Redaktionelle Einordnung: Forschungskontext, keine Produktionswarnung und kein Beleg für einen neuen kryptografischen Bruch; vor einer Richtlinienänderung bewerten."
-      },
-      "id": "ec884e9a44b4ce72"
-    },
-    {
-      "source": "arXiv quant-ph",
-      "url": "https://arxiv.org/abs/2606.18756",
-      "title": "Universal photon blockade via two-photon light-matter interaction at chiral exceptional points",
-      "published_at": "2026-11-16T05:00:00Z",
-      "category": "research",
-      "importance": "medium",
-      "takeaway": {
-        "en": "Editorial takeaway: research context, not a production security advisory or evidence of a new cryptographic break; assess before changing policy.",
-        "ar": "قراءة تحريرية: هذا سياق بحثي، وليس تنبيهاً أمنياً للإنتاج أو دليلاً على كسر تشفيري جديد؛ قيّم النتائج قبل تغيير السياسة.",
-        "de": "Redaktionelle Einordnung: Forschungskontext, keine Produktionswarnung und kein Beleg für einen neuen kryptografischen Bruch; vor einer Richtlinienänderung bewerten."
-      },
-      "id": "073f4dbfb1ced895"
-    },
-    {
-      "source": "arXiv quant-ph",
-      "url": "https://arxiv.org/abs/2607.01035",
-      "title": "Susceptibility-kinetic uncertainty relations for quantum systems",
-      "published_at": "2026-11-16T05:00:00Z",
-      "category": "research",
-      "importance": "medium",
-      "takeaway": {
-        "en": "Editorial takeaway: research context, not a production security advisory or evidence of a new cryptographic break; assess before changing policy.",
-        "ar": "قراءة تحريرية: هذا سياق بحثي، وليس تنبيهاً أمنياً للإنتاج أو دليلاً على كسر تشفيري جديد؛ قيّم النتائج قبل تغيير السياسة.",
-        "de": "Redaktionelle Einordnung: Forschungskontext, keine Produktionswarnung und kein Beleg für einen neuen kryptografischen Bruch; vor einer Richtlinienänderung bewerten."
-      },
-      "id": "cc775a3f9615d1e5"
-    },
     {
       "source": "arXiv cs.CR",
       "url": "https://arxiv.org/abs/2611.18355",
@@ -179,20 +109,6 @@
         "de": "Redaktionelle Einordnung: Forschungskontext, keine Produktionswarnung und kein Beleg für einen neuen kryptografischen Bruch; vor einer Richtlinienänderung bewerten."
       },
       "id": "a4dbacf967e62059"
-    },
-    {
-      "id": "nist-ir-8547-2026",
-      "source": "NIST Standards",
-      "url": "https://www.nist.gov/news-events/news/2026/10/nist-report-provides-guidelines-transition-post-quantum-cryptography",
-      "title": "NIST report provides guidelines for transition to post-quantum cryptography",
-      "published_at": "2026-10-27T00:00:00Z",
-      "category": "standards",
-      "importance": "high",
-      "takeaway": {
-        "en": "Editorial takeaway: compare your cryptographic inventory and migration plan with the linked guidance; scope and deadlines depend on the organization.",
-        "ar": "قراءة تحريرية: قارن جرد التشفير وخطة الانتقال لديك بالإرشادات المرتبطة؛ يختلف النطاق والجدول حسب المؤسسة.",
-        "de": "Redaktionelle Einordnung: Gleichen Sie Kryptoinventar und Migrationsplan mit den verlinkten Leitlinien ab; Umfang und Fristen hängen von der Organisation ab."
-      }
     },
     {
       "source": "Cloudflare Blog",
