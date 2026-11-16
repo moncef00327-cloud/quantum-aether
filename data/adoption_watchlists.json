@@ -807,6 +807,200 @@
         "www.okta.com",
         "www.datadoghq.com"
       ]
+    },
+    "pqc-security-vendors": {
+      "labels": {
+        "en": "Post-quantum, PKI and encryption vendors",
+        "ar": "مزوّدو التشفير ما بعد الكمّي والشهادات الرقمية",
+        "de": "Anbieter für Post-Quanten-Kryptografie, PKI und Verschlüsselung"
+      },
+      "domains": [
+        "pqshield.com",
+        "www.sandboxaq.com",
+        "www.quantinuum.com",
+        "www.idquantique.com",
+        "utimaco.com",
+        "www.entrust.com",
+        "www.digicert.com",
+        "www.sectigo.com",
+        "www.keyfactor.com",
+        "www.globalsign.com",
+        "letsencrypt.org",
+        "www.thalesgroup.com",
+        "www.infineon.com",
+        "www.yubico.com",
+        "www.securosys.com",
+        "www.genua.de",
+        "www.secunet.com",
+        "www.rohde-schwarz.com",
+        "www.wolfssl.com",
+        "openssl-library.org",
+        "www.ibm.com"
+      ]
+    },
+    "payments-fintech": {
+      "labels": {
+        "en": "Payments and fintech",
+        "ar": "الدفع الإلكتروني والتقنية المالية",
+        "de": "Zahlungsdienste und Fintech"
+      },
+      "domains": [
+        "www.paypal.com",
+        "stripe.com",
+        "www.adyen.com",
+        "wise.com",
+        "www.klarna.com",
+        "www.visa.com",
+        "www.mastercard.com",
+        "www.americanexpress.com",
+        "squareup.com",
+        "worldline.com",
+        "www.nexigroup.com",
+        "www.mollie.com",
+        "www.checkout.com",
+        "www.sumup.com",
+        "traderepublic.com",
+        "www.bitpanda.com",
+        "www.twint.ch",
+        "www.payone.com",
+        "www.unzer.com",
+        "tabby.ai",
+        "tamara.co",
+        "stcpay.com.sa"
+      ]
+    },
+    "crypto-exchanges": {
+      "labels": {
+        "en": "Crypto exchanges and wallets",
+        "ar": "منصات تداول العملات الرقمية والمحافظ",
+        "de": "Krypto-Börsen und Wallets"
+      },
+      "domains": [
+        "www.coinbase.com",
+        "www.kraken.com",
+        "www.binance.com",
+        "www.bitstamp.net",
+        "www.gemini.com",
+        "www.okx.com",
+        "www.bybit.com",
+        "www.kucoin.com",
+        "www.bitget.com",
+        "bitvavo.com",
+        "www.bitfinex.com",
+        "crypto.com",
+        "www.rain.com",
+        "www.bitoasis.net",
+        "www.ledger.com",
+        "trezor.io"
+      ]
+    },
+    "telecom": {
+      "labels": {
+        "en": "Telecom operators",
+        "ar": "شركات الاتصالات",
+        "de": "Telekommunikationsanbieter"
+      },
+      "domains": [
+        "www.vodafone.de",
+        "www.o2online.de",
+        "www.1und1.de",
+        "www.magenta.at",
+        "www.drei.at",
+        "www.sunrise.ch",
+        "www.salt.ch",
+        "www.stc.com.sa",
+        "www.mobily.com.sa",
+        "www.zain.com",
+        "www.etisalat.ae",
+        "www.du.ae",
+        "www.ooredoo.qa",
+        "www.orange.fr",
+        "www.vodafone.com",
+        "www.telefonica.com",
+        "www.bt.com",
+        "www.verizon.com",
+        "www.att.com"
+      ]
+    },
+    "health-insurance-dach": {
+      "labels": {
+        "en": "Health and insurance (DACH)",
+        "ar": "الصحة والتأمين (ألمانيا والنمسا وسويسرا)",
+        "de": "Gesundheit und Versicherungen (DACH)"
+      },
+      "domains": [
+        "www.tk.de",
+        "www.aok.de",
+        "www.barmer.de",
+        "www.dak.de",
+        "www.ikk-classic.de",
+        "www.gematik.de",
+        "www.kbv.de",
+        "www.sozialversicherung.at",
+        "www.gesundheit.gv.at",
+        "www.gesundheitskasse.at",
+        "www.helsana.ch",
+        "www.css.ch",
+        "www.swica.ch",
+        "www.uniqa.at",
+        "www.generali.at",
+        "www.axa.ch",
+        "www.ergo.de",
+        "www.huk.de",
+        "www.zurich.ch",
+        "www.swissre.com",
+        "www.munichre.com"
+      ]
+    },
+    "secure-communication": {
+      "labels": {
+        "en": "Secure messaging, email and VPN",
+        "ar": "المراسلة والبريد الآمن وشبكات VPN",
+        "de": "Sichere Messenger, E-Mail und VPN"
+      },
+      "domains": [
+        "signal.org",
+        "proton.me",
+        "tuta.com",
+        "threema.com",
+        "wire.com",
+        "mullvad.net",
+        "nordvpn.com",
+        "www.expressvpn.com",
+        "surfshark.com",
+        "mailbox.org",
+        "posteo.de",
+        "www.gmx.net",
+        "web.de",
+        "www.t-online.de",
+        "www.whatsapp.com",
+        "telegram.org",
+        "element.io",
+        "tresorit.com",
+        "nextcloud.com"
+      ]
+    },
+    "government-gcc": {
+      "labels": {
+        "en": "Government and cyber-security agencies (Gulf)",
+        "ar": "الجهات الحكومية وهيئات الأمن السيبراني (الخليج)",
+        "de": "Behörden und Cybersicherheitsagenturen (Golfstaaten)"
+      },
+      "domains": [
+        "www.my.gov.sa",
+        "www.absher.sa",
+        "www.moi.gov.sa",
+        "nca.gov.sa",
+        "www.cst.gov.sa",
+        "zatca.gov.sa",
+        "sdaia.gov.sa",
+        "u.ae",
+        "tdra.gov.ae",
+        "csc.gov.ae",
+        "hukoomi.gov.qa",
+        "www.ncsa.gov.qa",
+        "www.bahrain.bh"
+      ]
     }
   }
 }
