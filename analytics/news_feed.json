@@ -1,11 +1,185 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-11-16T00:00:00Z",
+  "updated_at": "2026-11-16T22:51:05Z",
   "classification": "Deterministic keyword rules; impact notes are editorial context, not source quotations or security advisories.",
   "sources": [
-    {"name": "NIST Cybersecurity", "ok": true, "entries": 1}
+    {
+      "name": "IBM Research",
+      "ok": true,
+      "entries": 20
+    },
+    {
+      "name": "Google Blog",
+      "ok": true,
+      "entries": 20
+    },
+    {
+      "name": "Cloudflare Blog",
+      "ok": true,
+      "entries": 20
+    },
+    {
+      "name": "NIST Cybersecurity",
+      "ok": true,
+      "entries": 0
+    },
+    {
+      "name": "NIST Standards",
+      "ok": true,
+      "entries": 40
+    },
+    {
+      "name": "arXiv quant-ph",
+      "ok": true,
+      "entries": 131
+    },
+    {
+      "name": "arXiv cs.CR",
+      "ok": true,
+      "entries": 44
+    }
   ],
   "items": [
+    {
+      "source": "arXiv quant-ph",
+      "url": "https://arxiv.org/abs/2611.17417",
+      "title": "Analytic spread complexity in three-level systems and the spacing-ratio distribution",
+      "published_at": "2026-11-16T05:00:00Z",
+      "category": "research",
+      "importance": "medium",
+      "takeaway": {
+        "en": "Editorial takeaway: research context, not a production security advisory or evidence of a new cryptographic break; assess before changing policy.",
+        "ar": "قراءة تحريرية: هذا سياق بحثي، وليس تنبيهاً أمنياً للإنتاج أو دليلاً على كسر تشفيري جديد؛ قيّم النتائج قبل تغيير السياسة.",
+        "de": "Redaktionelle Einordnung: Forschungskontext, keine Produktionswarnung und kein Beleg für einen neuen kryptografischen Bruch; vor einer Richtlinienänderung bewerten."
+      },
+      "id": "77934772c3d1a11a"
+    },
+    {
+      "source": "arXiv quant-ph",
+      "url": "https://arxiv.org/abs/2611.17454",
+      "title": "Efficient quantum-circuit simulation of classical control of computational order",
+      "published_at": "2026-11-16T05:00:00Z",
+      "category": "research",
+      "importance": "medium",
+      "takeaway": {
+        "en": "Editorial takeaway: research context, not a production security advisory or evidence of a new cryptographic break; assess before changing policy.",
+        "ar": "قراءة تحريرية: هذا سياق بحثي، وليس تنبيهاً أمنياً للإنتاج أو دليلاً على كسر تشفيري جديد؛ قيّم النتائج قبل تغيير السياسة.",
+        "de": "Redaktionelle Einordnung: Forschungskontext, keine Produktionswarnung und kein Beleg für einen neuen kryptografischen Bruch; vor einer Richtlinienänderung bewerten."
+      },
+      "id": "a9822ab90eafb706"
+    },
+    {
+      "source": "arXiv quant-ph",
+      "url": "https://arxiv.org/abs/2603.10119",
+      "title": "Digital dissipative state preparation for frustration-free gapless quantum systems",
+      "published_at": "2026-11-16T05:00:00Z",
+      "category": "research",
+      "importance": "medium",
+      "takeaway": {
+        "en": "Editorial takeaway: research context, not a production security advisory or evidence of a new cryptographic break; assess before changing policy.",
+        "ar": "قراءة تحريرية: هذا سياق بحثي، وليس تنبيهاً أمنياً للإنتاج أو دليلاً على كسر تشفيري جديد؛ قيّم النتائج قبل تغيير السياسة.",
+        "de": "Redaktionelle Einordnung: Forschungskontext, keine Produktionswarnung und kein Beleg für einen neuen kryptografischen Bruch; vor einer Richtlinienänderung bewerten."
+      },
+      "id": "ec884e9a44b4ce72"
+    },
+    {
+      "source": "arXiv quant-ph",
+      "url": "https://arxiv.org/abs/2606.18756",
+      "title": "Universal photon blockade via two-photon light-matter interaction at chiral exceptional points",
+      "published_at": "2026-11-16T05:00:00Z",
+      "category": "research",
+      "importance": "medium",
+      "takeaway": {
+        "en": "Editorial takeaway: research context, not a production security advisory or evidence of a new cryptographic break; assess before changing policy.",
+        "ar": "قراءة تحريرية: هذا سياق بحثي، وليس تنبيهاً أمنياً للإنتاج أو دليلاً على كسر تشفيري جديد؛ قيّم النتائج قبل تغيير السياسة.",
+        "de": "Redaktionelle Einordnung: Forschungskontext, keine Produktionswarnung und kein Beleg für einen neuen kryptografischen Bruch; vor einer Richtlinienänderung bewerten."
+      },
+      "id": "073f4dbfb1ced895"
+    },
+    {
+      "source": "arXiv quant-ph",
+      "url": "https://arxiv.org/abs/2607.01035",
+      "title": "Susceptibility-kinetic uncertainty relations for quantum systems",
+      "published_at": "2026-11-16T05:00:00Z",
+      "category": "research",
+      "importance": "medium",
+      "takeaway": {
+        "en": "Editorial takeaway: research context, not a production security advisory or evidence of a new cryptographic break; assess before changing policy.",
+        "ar": "قراءة تحريرية: هذا سياق بحثي، وليس تنبيهاً أمنياً للإنتاج أو دليلاً على كسر تشفيري جديد؛ قيّم النتائج قبل تغيير السياسة.",
+        "de": "Redaktionelle Einordnung: Forschungskontext, keine Produktionswarnung und kein Beleg für einen neuen kryptografischen Bruch; vor einer Richtlinienänderung bewerten."
+      },
+      "id": "cc775a3f9615d1e5"
+    },
+    {
+      "source": "arXiv cs.CR",
+      "url": "https://arxiv.org/abs/2611.18355",
+      "title": "Information-Theoretic Threshold Designated-Verifier Digital Signatures for Resource-Constrained Devices",
+      "published_at": "2026-11-16T05:00:00Z",
+      "category": "standards",
+      "importance": "high",
+      "takeaway": {
+        "en": "Editorial takeaway: compare your cryptographic inventory and migration plan with the linked guidance; scope and deadlines depend on the organization.",
+        "ar": "قراءة تحريرية: قارن جرد التشفير وخطة الانتقال لديك بالإرشادات المرتبطة؛ يختلف النطاق والجدول حسب المؤسسة.",
+        "de": "Redaktionelle Einordnung: Gleichen Sie Kryptoinventar und Migrationsplan mit den verlinkten Leitlinien ab; Umfang und Fristen hängen von der Organisation ab."
+      },
+      "id": "530e3d58efeca8c5"
+    },
+    {
+      "source": "arXiv cs.CR",
+      "url": "https://arxiv.org/abs/2610.36145",
+      "title": "They Will See Johnny's Message: A Measurement Study of Post-Quantum Cryptography Across Email Delivery Paths",
+      "published_at": "2026-11-16T05:00:00Z",
+      "category": "standards",
+      "importance": "high",
+      "takeaway": {
+        "en": "Editorial takeaway: compare your cryptographic inventory and migration plan with the linked guidance; scope and deadlines depend on the organization.",
+        "ar": "قراءة تحريرية: قارن جرد التشفير وخطة الانتقال لديك بالإرشادات المرتبطة؛ يختلف النطاق والجدول حسب المؤسسة.",
+        "de": "Redaktionelle Einordnung: Gleichen Sie Kryptoinventar und Migrationsplan mit den verlinkten Leitlinien ab; Umfang und Fristen hängen von der Organisation ab."
+      },
+      "id": "9a0ea85f412f8940"
+    },
+    {
+      "source": "arXiv cs.CR",
+      "url": "https://arxiv.org/abs/2611.04240",
+      "title": "VerfGraph: Efficient Zero-Knowledge Verifiable Graph Query Evaluation System",
+      "published_at": "2026-11-16T05:00:00Z",
+      "category": "research",
+      "importance": "medium",
+      "takeaway": {
+        "en": "Editorial takeaway: research context, not a production security advisory or evidence of a new cryptographic break; assess before changing policy.",
+        "ar": "قراءة تحريرية: هذا سياق بحثي، وليس تنبيهاً أمنياً للإنتاج أو دليلاً على كسر تشفيري جديد؛ قيّم النتائج قبل تغيير السياسة.",
+        "de": "Redaktionelle Einordnung: Forschungskontext, keine Produktionswarnung und kein Beleg für einen neuen kryptografischen Bruch; vor einer Richtlinienänderung bewerten."
+      },
+      "id": "0188550c0d7cfaf5"
+    },
+    {
+      "source": "arXiv cs.CR",
+      "url": "https://arxiv.org/abs/2611.08442",
+      "title": "SoK: Assessing Post-Quantum Cryptography Adoption in Software Development: Standards, Lifecycle Coverage, Deployment Maturity, and Evidence of Readiness",
+      "published_at": "2026-11-16T05:00:00Z",
+      "category": "standards",
+      "importance": "high",
+      "takeaway": {
+        "en": "Editorial takeaway: compare your cryptographic inventory and migration plan with the linked guidance; scope and deadlines depend on the organization.",
+        "ar": "قراءة تحريرية: قارن جرد التشفير وخطة الانتقال لديك بالإرشادات المرتبطة؛ يختلف النطاق والجدول حسب المؤسسة.",
+        "de": "Redaktionelle Einordnung: Gleichen Sie Kryptoinventar und Migrationsplan mit den verlinkten Leitlinien ab; Umfang und Fristen hängen von der Organisation ab."
+      },
+      "id": "fa12f74562d3166c"
+    },
+    {
+      "source": "Cloudflare Blog",
+      "url": "https://blog.cloudflare.com/vole-mole/",
+      "title": "The post-quantum future of web privacy",
+      "published_at": "2026-11-06T14:00:00Z",
+      "category": "research",
+      "importance": "medium",
+      "takeaway": {
+        "en": "Editorial takeaway: research context, not a production security advisory or evidence of a new cryptographic break; assess before changing policy.",
+        "ar": "قراءة تحريرية: هذا سياق بحثي، وليس تنبيهاً أمنياً للإنتاج أو دليلاً على كسر تشفيري جديد؛ قيّم النتائج قبل تغيير السياسة.",
+        "de": "Redaktionelle Einordnung: Forschungskontext, keine Produktionswarnung und kein Beleg für einen neuen kryptografischen Bruch; vor einer Richtlinienänderung bewerten."
+      },
+      "id": "a4dbacf967e62059"
+    },
     {
       "id": "nist-ir-8547-2026",
       "source": "NIST",
@@ -19,6 +193,20 @@
         "ar": "قراءة تحريرية: قارن جرد التشفير وخطة الانتقال لديك بالإرشادات المرتبطة؛ يختلف النطاق والجدول حسب المؤسسة.",
         "de": "Redaktionelle Einordnung: Gleichen Sie Kryptoinventar und Migrationsplan mit den verlinkten Leitlinien ab; Umfang und Fristen hängen von der Organisation ab."
       }
+    },
+    {
+      "source": "Cloudflare Blog",
+      "url": "https://blog.cloudflare.com/post-quantum-geo-key-manager/",
+      "title": "Bringing post-quantum cryptography to geographically fenced key management",
+      "published_at": "2026-10-23T18:06:56Z",
+      "category": "implementation",
+      "importance": "medium",
+      "takeaway": {
+        "en": "Editorial takeaway: check relevant TLS library, proxy and CDN release notes, then retest the public endpoint after changes.",
+        "ar": "قراءة تحريرية: راجع ملاحظات إصدار مكتبات TLS والوكيل وCDN ذات الصلة، ثم أعد فحص نقطة الاتصال العامة بعد التغييرات.",
+        "de": "Redaktionelle Einordnung: Prüfen Sie relevante TLS-Bibliotheken, Proxy- und CDN-Änderungen und testen Sie den öffentlichen Endpunkt anschließend erneut."
+      },
+      "id": "70bdd870b2ac82df"
     }
   ]
 }
