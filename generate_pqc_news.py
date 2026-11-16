@@ -41,7 +41,7 @@ PQC_TERMS = (
     "harvest now, decrypt later", "cryptographic agility", "quantum cryptography",
 )
 VULN_TERMS = ("vulnerability", "vulnerabilities", "vulnerable", "security advisory", "cve-")
-STANDARD_TERMS = ("nist", "fips", "standard", "standards", "transition", "migration", "guidance", "roadmap")
+STANDARD_TERMS = ("nist", "fips", "standards", "standardization", "transition", "migration", "guidance", "roadmap")
 IMPLEMENTATION_TERMS = ("tls", "openssl", "cloudflare", "nginx", "browser", "deployment", "implementation")
 
 
@@ -121,7 +121,9 @@ def classify(entry):
     if any(term in text for term in VULN_TERMS):
         category = "vulnerability"
         importance = "high"
-    elif any(term in text for term in STANDARD_TERMS) and ("nist" in entry["source"].lower() or pq_specific):
+    elif ("nist" in entry["source"].lower()
+          or (any(term in text for term in STANDARD_TERMS)
+              and any(term in entry["title"].lower() for term in ("standard", "transition", "migration", "guidance", "roadmap")))):
         category = "standards"
         importance = "high"
     elif any(term in text for term in IMPLEMENTATION_TERMS):

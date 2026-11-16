@@ -32,6 +32,10 @@ class PQCNewsTests(unittest.TestCase):
         self.assertIsNone(generate_pqc_news.classify(unrelated_quantum_paper))
         self.assertIsNotNone(generate_pqc_news.classify({**unrelated_quantum_paper,
             "description": "Quantum computers threaten RSA encryption; Shor's algorithm."}))
+        signature_paper = {**unrelated_quantum_paper,
+                           "title": "Information-Theoretic Threshold Designated-Verifier Digital Signatures",
+                           "description": "Preparation for quantum adversaries. A comparable post-quantum signature scheme meets the standard security criterion."}
+        self.assertEqual(generate_pqc_news.classify(signature_paper)["category"], "research")
 
     def test_feed_generator_keeps_metadata_and_preserves_old_feed_on_total_failure(self):
         with tempfile.TemporaryDirectory() as directory:
