@@ -114,6 +114,14 @@ class DailyIndexingTest(unittest.TestCase):
                                                  asn_lookup=None)
         self.assertEqual(n, 0)
 
+    def test_test_apps_never_reach_the_real_indexnow_api(self):
+        self.add_row("example.org", rank=5)
+        with mock.patch("urllib.request.urlopen", side_effect=AssertionError("real IndexNow request")) as urlopen:
+            self.assertEqual(adoption_job.notify_indexnow(self.app, self.conn, WEEK), 0)
+            self.assertEqual(adoption_job.notify_new_urls(self.app, self.conn), 0)
+        urlopen.assert_not_called()
+        self.assertGreater(adoption_job.notify_new_urls(self.app, self.conn, post=self.post), 0)  # injected sender still works
+
 
 if __name__ == "__main__":
     unittest.main()
