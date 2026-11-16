@@ -6,6 +6,16 @@
 @media(max-width:850px){aside{transform:translateX(110%);width:240px;transition:transform .25s}.en aside{transform:translateX(-110%)}aside.open{transform:none}.close{display:block;position:absolute;top:80px;inset-inline-end:15px;color:#aba3c4;background:none;border:0}.scrim{display:block;position:fixed;inset:0;background:#0009;z-index:19}main{width:100%;margin:0}.hamb{display:flex;border:0;background:none;color:#bab3ce;padding:0}header{height:62px}.intro{align-items:start}.metrics article>div{font-size:9px}.metrics svg{display:none}.gauge{width:142px;height:153px}.resultbody{flex-direction:column;gap:0;padding-top:5px}.details{display:flex;flex-wrap:wrap;width:100%;gap:8px;justify-content:space-between;padding:0 12px}.details>div{border:0;padding:4px 0}.details .domain{width:100%;padding-bottom:3px}.details>div:last-child{display:none}.details b{font-size:9px}.input{flex-wrap:wrap;gap:5px}.input input{width:calc(100% - 45px)}.input button{width:100%;justify-content:center;font-size:12px}.examples>span{width:100%}.result>.note{padding:12px;font-size:8px}.scanner>p{font-size:10px}}
 @media(max-width:600px){.content{padding:24px 17px 15px}header{padding:0 18px}.tools{gap:11px}.crumb{font-size:10px;gap:8px}.intro{margin-bottom:21px}.intro h1{font-size:25px;letter-spacing:-.6px;margin:9px 0}.intro p{font-size:11px;line-height:1.9;max-width:340px}.eyebrow{font-size:8px;letter-spacing:.7px}.method{display:none}.metrics{grid-template-columns:1fr 1fr;margin-bottom:17px}.metrics article{padding:16px 17px}.metrics article:nth-child(2){border-inline-end:0}.metrics article:nth-child(-n+2){border-bottom:1px solid #2c2340}.metrics article:nth-child(3){border-inline-end:1px solid #2c2340}.metrics article>div{font-size:9px}.metrics svg{display:block;width:14px}.metrics strong{font-size:30px;margin-top:10px}.metrics p{font-size:8px;margin-top:9px}.scan-grid{display:flex;flex-direction:column;gap:17px;margin-bottom:17px}.scanner{padding:19px}.scanner h2{font-size:25px;margin:15px 0 4px}.scanner>p{font-size:11px}.scanner form{margin-top:20px}.input{flex-wrap:nowrap;padding:5px}.input input{width:auto;font-size:12px}.input button{width:auto;flex-shrink:0;font-size:10px;padding:11px 9px;gap:5px}.input>svg{width:15px;margin-left:5px}.input button svg{width:14px}.examples button{padding:7px 8px}.note{margin-top:18px}.resultbody{flex-direction:row;padding:12px;gap:12px}.gauge{width:160px;height:170px}.details{display:block;padding:0}.details>div{padding:8px 0;border-bottom:1px solid #2c2242}.details>div:last-child{display:block;border:0}.details b{font-size:9px}.result>.note{padding:12px 18px}.paneltitle{padding:17px 19px}.paneltitle h3{font-size:13px}.bottom-grid{grid-template-columns:1fr;gap:17px}.map .paneltitle{padding:18px 17px 0}.paneltitle p{font-size:8px;line-height:1.8}.maptag{display:none}.world{padding:10px 0 4px}.mapfoot{font-size:8px;padding-inline:15px}.check{padding:15px 0}.check h4{font-size:12px}.check p{font-size:10px}footer{flex-direction:column;font-size:8px;line-height:1.8;gap:5px;padding-top:20px}.resources{grid-template-columns:1fr}.resource{padding:24px}.badge{font-size:7px}.app:not(.en) .details{direction:rtl}.app:not(.en) .details b{direction:ltr;text-align:right}}
 
+/* Shared rounded glass controls across the command homepage and its sections. */
+.app :is(button:not(.scrim),.cta){border-radius:999px}
+.app .scrim{border-radius:0!important;min-width:0!important;min-height:0!important;padding:0!important;border:0!important}
+.app :is(.qa-glass-card,.panel,.metrics,.resource){border-radius:24px}
+.app :is(.input,input:not([type=hidden]):not([type=checkbox]),select){border-radius:999px}
+.app :is(.hamb,.close){width:44px;height:44px;display:inline-grid;place-items:center;border:1px solid #ffffff24;border-radius:50%;background:#ffffff0d;color:#e8e3f3}
+.app .input{padding:6px 7px}
+.app .input input{border-radius:999px}
+.app .input button{min-height:44px;padding-inline:18px}
+
 /* Readable observatory: larger type, softer surfaces and deliberate motion. */
 :root{--ink:#efeef4;--muted:#ada6c3;--lime:#c68efa}
 body{background:#191426;color:var(--ink);font-size:16px;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
@@ -425,41 +435,18 @@ main footer{padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))!importan
 nav#workspace-nav :is(button,a){white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media(min-width:851px) and (max-width:1150px){nav#workspace-nav :is(button,a){font-size:13px;gap:8px;padding-inline:10px}}
 
-/* 2026-11-14 trial-first hero form */
-.qa-trial{margin:1.1rem 0 1rem;max-width:540px;padding:14px;border:1px solid rgba(192,132,252,.45);border-radius:12px;background:rgba(16,11,28,.55)}
-.qa-trial h2{font-size:1rem;margin:0 0 .6rem;color:#eef0ff}
-.qa-trial .input input{font-size:14px}
-.qa-trial .input button{width:auto}
-.qa-trial-domain{display:block;width:100%;box-sizing:border-box;margin-top:8px;padding:10px 12px;background:#100b1c;border:1px solid #494064;border-radius:6px;color:#dfdce8;font:13px Manrope}
-.qa-trial-consent{display:flex;gap:8px;align-items:flex-start;margin-top:10px;font-size:13px;color:#d4d6ee}
-.qa-trial-consent a{color:#67e8f9}
-.qa-trial-consent input{margin-top:3px}
-.qa-hero-content p.qa-trial-note{font-size:12px;margin:8px 0 0;color:#9d94b8}
-.qa-hero-content p.qa-target{font-size:.95rem;color:#c9c3e6}
-/* result page extras (2026-11-14) */
-.fix-tabs details.fix-tab{border:1px solid rgba(148,130,200,.35);border-radius:8px;padding:0 12px;margin:6px 0;background:rgba(16,11,28,.35)}
-.fix-tabs details.fix-tab[open]{border-color:rgba(103,232,249,.55)}
-.fix-tabs details.fix-tab summary{font-weight:600}
-.ins-detected{font-weight:600;color:#67e8f9}
-.ins-hosts{list-style:none;padding:0;margin:8px 0;text-align:left}
-.ins-hosts li{padding:6px 0;border-bottom:1px solid rgba(148,130,200,.18)}
-.ins-hosts li.host-pq span{color:#4ade80}
-.ins-hosts li.host-not_pq span{color:#fbbf24;font-weight:600}
-.ins-hosts li.host-none span,.ins-hosts li.host-unknown span{color:#9d94b8}
-.ins-alert.warn{font-weight:700;color:#fbbf24}
-details.buy-more>summary{cursor:pointer;min-height:44px}
-.more-offers ul{padding-inline-start:20px}
-.more-offers .small-h{font-size:1rem}
+/* Touch browsers can keep :hover stuck after tapping a non-interactive metric. */
+@media(hover:none){.app .metrics article:hover{background:transparent!important}}
+@media(max-width:600px){.app .content{padding-top:32px!important}.app .qa-hero-modular-glass{border-radius:24px!important}}
+@media(max-width:850px){.app aside{inset-block-start:calc(env(safe-area-inset-top,0px) + 8px)!important;inset-block-end:calc(env(safe-area-inset-bottom,0px) + 8px)!important;height:auto!important;max-height:none!important}}
+@media(max-width:850px){.app.en aside{inset-inline-start:8px!important;inset-inline-end:auto!important}.app.en aside nav :is(button,a){direction:ltr;text-align:left}}
 
-/* 2026-11-14 trial form: consent sits directly above the submit button (button no longer inside the email box). */
-.qa-trial .input input{width:100%}
-.qa-trial-submit{display:flex;width:100%;justify-content:center;align-items:center;gap:6px;margin-top:10px;background:#bb79f9;border:0;border-radius:6px;color:#180f2d;padding:12px 14px;font-size:14px;font-weight:700;cursor:pointer}
-.qa-trial-submit:hover{background:#d6affb}
-.qa-trial-submit:focus-visible{outline:2px solid #67e8f9;outline-offset:2px}
+/* Keep the scan row compact; apply the capsule shape to its field and button, not the wrapper. */
+.app .input{border-radius:22px!important}
+@media(max-width:850px){.app aside{inset-inline-start:8px;inset-block-start:8px;height:calc(100vh - 16px);height:calc(100dvh - 16px);max-height:calc(100dvh - 16px);overflow-y:auto;overscroll-behavior:contain;border-radius:24px}.app aside .drawer-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.app aside .brand{min-width:0;max-width:calc(100% - 54px)}.app aside .close{position:static;display:grid;place-items:center;flex:0 0 44px;width:44px;height:44px;min-width:44px;min-height:44px;border-radius:50%;z-index:3}.app aside .label{margin-top:28px}.app aside.open{box-shadow:0 18px 60px #0008}}
 
-/* Funnel round 4: trial CTA on home/scanner result views */
-.trial-cta-urgent,.qa-result-trial.trial-cta-urgent{border:2px solid #c68efa;box-shadow:0 0 0 4px #c68efa33,0 12px 32px #c68efa22;border-radius:10px;padding:14px 16px;margin-top:14px}
-.qa-result-trial{margin-top:14px;padding:14px 16px;border:1px solid #3a3158;border-radius:10px;background:#1a1528}
-.qa-result-trial h2{font-size:18px;margin:0 0 6px}
-.qa-result-trial > p{margin:0 0 10px;color:#c6bfd8}
-.qa-result-trial .qa-trial-submit{margin-top:10px}
+@media(max-width:850px){.app aside{inset-block-start:calc(env(safe-area-inset-top,0px) + 8px)!important;inset-block-end:calc(env(safe-area-inset-bottom,0px) + 8px)!important;height:auto!important;max-height:none!important;display:flex;flex-direction:column;overflow:hidden!important}.app aside .drawer-head{position:sticky;top:0;z-index:5;flex:0 0 auto;padding:8px 0;background:rgba(25,39,63,.98)}.app aside .label{flex:0 0 auto;margin:14px 10px 10px!important}.app aside nav#workspace-nav{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;align-content:start;scrollbar-width:thin;scrollbar-color:rgba(138,229,247,.35) transparent}.app aside .sidefoot{flex:0 0 auto;margin-top:10px!important;background:rgba(25,39,63,.98)}.app.en aside .label,.app.en aside .sidefoot{text-align:left}.app.en aside nav#workspace-nav :is(button,a){direction:ltr;text-align:left;justify-content:flex-start}}
+
+@media(max-width:850px){.app aside{overflow-y:auto!important;overflow-x:hidden!important;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}.app aside .drawer-head{position:static;top:auto;z-index:auto;padding:0;background:transparent}.app aside nav#workspace-nav{flex:0 0 auto;min-height:auto;overflow:visible;overscroll-behavior:auto;scrollbar-width:auto}.app aside .sidefoot{flex:0 0 auto}}
+
+@media(max-width:850px){.app aside{padding-bottom:calc(44px + env(safe-area-inset-bottom,0px))!important;scroll-padding-bottom:calc(44px + env(safe-area-inset-bottom,0px))}}
