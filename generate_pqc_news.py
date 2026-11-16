@@ -41,8 +41,8 @@ PQC_TERMS = (
     "harvest now, decrypt later", "cryptographic agility", "quantum cryptography",
 )
 VULN_TERMS = ("vulnerability", "vulnerabilities", "vulnerable", "security advisory", "cve-")
-STANDARD_TERMS = ("nist", "fips", "standards", "standardization", "transition", "migration", "guidance", "roadmap")
-IMPLEMENTATION_TERMS = ("tls", "openssl", "cloudflare", "nginx", "browser", "deployment", "implementation")
+STANDARD_TITLE_TERMS = ("nist", "fips", "standardization", "transition to", "migration guidance", "roadmap")
+IMPLEMENTATION_TITLE_TERMS = ("tls", "openssl", "cloudflare", "nginx", "browser")
 
 
 class _Text(HTMLParser):
@@ -130,11 +130,10 @@ def classify(entry):
         category = "vulnerability"
         importance = "high"
     elif ("nist" in entry["source"].lower()
-          or (any(term in text for term in STANDARD_TERMS)
-              and any(term in entry["title"].lower() for term in ("standard", "transition", "migration", "guidance", "roadmap")))):
+          or any(term in title for term in STANDARD_TITLE_TERMS)):
         category = "standards"
         importance = "high"
-    elif any(term in text for term in IMPLEMENTATION_TERMS):
+    elif any(term in title for term in IMPLEMENTATION_TITLE_TERMS):
         category = "implementation"
         importance = "medium"
     else:

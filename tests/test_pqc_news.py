@@ -38,6 +38,13 @@ class PQCNewsTests(unittest.TestCase):
         self.assertIsNone(generate_pqc_news.classify(signature_paper))
         titled_pqc_paper = {**signature_paper, "title": "Post-Quantum Threshold Designated-Verifier Digital Signatures"}
         self.assertEqual(generate_pqc_news.classify(titled_pqc_paper)["category"], "research")
+        adoption_sok = {**unrelated_quantum_paper,
+                        "title": "SoK: Assessing Post-Quantum Cryptography Adoption in Software Development: Standards, Lifecycle Coverage, Deployment Maturity",
+                        "description": "A survey of industry practices and standards."}
+        self.assertEqual(generate_pqc_news.classify(adoption_sok)["category"], "research")
+        tls_paper = {**unrelated_quantum_paper,
+                     "title": "Post-Quantum TLS Deployment Measurement Study"}
+        self.assertEqual(generate_pqc_news.classify(tls_paper)["category"], "implementation")
 
     def test_feed_generator_keeps_metadata_and_preserves_old_feed_on_total_failure(self):
         with tempfile.TemporaryDirectory() as directory:
