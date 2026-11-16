@@ -5,6 +5,7 @@ from pathlib import Path
 
 CLASSIFICATIONS = frozenset({'confirmed_pornographic', 'confirmed_gambling'})
 POLICY_FILE = Path(__file__).resolve().parent / 'data' / 'indexing_exclusions.json'
+INFRASTRUCTURE_FILE = Path(__file__).resolve().parent / 'data' / 'indexing_infrastructure.json'
 
 
 @lru_cache(maxsize=1)
@@ -16,19 +17,39 @@ def reviewed_hosts():
                      and entry['sources'])
 
 
+@lru_cache(maxsize=1)
+def infrastructure_hosts():
+    """Reviewed CDN/DNS/ad/telemetry/API hosts: scanned and counted like any other, but never indexed. Exact hosts."""
+    if not INFRASTRUCTURE_FILE.exists():
+        return frozenset()
+    policy = json.loads(INFRASTRUCTURE_FILE.read_text(encoding='utf-8'))
+    return frozenset(host.lower() for host in policy['hosts'])
+
+
+def _normal(domain):
+    return domain.lower().rstrip('.') if isinstance(domain, str) else None
+
+
 def is_excluded(domain):
-    if not isinstance(domain, str):
-        return False
-    return domain.lower().rstrip('.') in reviewed_hosts()
+    host = _normal(domain)
+    return host is not None and host in reviewed_hosts()
+
+
+def is_infrastructure(domain):
+    host = _normal(domain)
+    return host is not None and host in infrastructure_hosts()
 
 
 INDEX_MAX_RANK = 1000  # same scope as the study; long-tail /site/ pages only attracted unrelated navigational queries
 
 
 def is_indexable(domain, rank=None, sector=None):
-    """Should /site/<domain> appear in search results? Reviewed exclusions never; else top ranks or watchlists."""
+    """Should /site/<domain> appear in search results? Reviewed exclusions never; watch-list (sector) domains always;
+    else top ranks, minus infrastructure endpoints nobody looks up (they only drew unrelated queries)."""
     if is_excluded(domain):
         return False
     if sector:
         return True
+    if is_infrastructure(domain):
+        return False
     return rank is not None and rank <= INDEX_MAX_RANK

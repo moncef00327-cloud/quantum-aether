@@ -172,9 +172,9 @@
     },
     "finance-worldwide": {
       "labels": {
-        "en": "Banks and financial services worldwide (replacing excluded content; Tranco ranks 10,008–28,718)",
-        "ar": "البنوك والخدمات المالية حول العالم (بدلاً من المحتوى المستبعد؛ مراتب Tranco ‏10,008–28,718)",
-        "de": "Banken und Finanzdienstleister weltweit (anstelle ausgeschlossener Inhalte; Tranco-Ränge 10,008–28,718)"
+        "en": "Banks and financial services worldwide (replacing excluded content; Tranco ranks 10,008–28,878)",
+        "ar": "البنوك والخدمات المالية حول العالم (بدلاً من المحتوى المستبعد؛ مراتب Tranco ‏10,008–28,878)",
+        "de": "Banken und Finanzdienstleister weltweit (anstelle ausgeschlossener Inhalte; Tranco-Ränge 10,008–28,878)"
       },
       "domains": [
         "icbc.com.cn",
@@ -258,14 +258,15 @@
         "ing.nl",
         "isbank.com.tr",
         "thrivent.com",
-        "vakifbank.com.tr"
+        "vakifbank.com.tr",
+        "halykbank.kz"
       ]
     },
     "government-worldwide": {
       "labels": {
-        "en": "Government websites worldwide (replacing excluded content; Tranco ranks 10,008–28,718)",
-        "ar": "المواقع الحكومية حول العالم (بدلاً من المحتوى المستبعد؛ مراتب Tranco ‏10,008–28,718)",
-        "de": "Behördenwebsites weltweit (anstelle ausgeschlossener Inhalte; Tranco-Ränge 10,008–28,718)"
+        "en": "Government websites worldwide (replacing excluded content; Tranco ranks 10,008–28,878)",
+        "ar": "المواقع الحكومية حول العالم (بدلاً من المحتوى المستبعد؛ مراتب Tranco ‏10,008–28,878)",
+        "de": "Behördenwebsites weltweit (anstelle ausgeschlossener Inhalte; Tranco-Ränge 10,008–28,878)"
       },
       "domains": [
         "di.gov.eg",
@@ -743,7 +744,10 @@
         "mea.gov.in",
         "onpe.gob.pe",
         "educacao.pe.gov.br",
-        "arsip.go.id"
+        "arsip.go.id",
+        "mte.gov.br",
+        "odni.gov",
+        "inspireawards-dst.gov.in"
       ]
     },
     "banks-mena": {

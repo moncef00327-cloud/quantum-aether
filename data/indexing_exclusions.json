@@ -36891,6 +36891,62 @@
           "locator": "Homepage title: Indian sex reels - 3sex.com - Kama Reels"
         }
       ]
+    },
+    {
+      "domain": "dicrotin.com",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-16",
+      "review_method": "manual review after appearing in Search Console queries; classification by the owner; exact host only; requested by owner",
+      "sources": [
+        {
+          "url": "https://dicrotin.com/",
+          "publisher": "Quantum Aether manual review (owner)",
+          "published_on": "2026-11-16",
+          "locator": "Search Console listed this hostname among adult navigational queries for /site/ pages (next to besthindiporn.com, feedtofap.com, w4nkr.com); the owner submitted a Search Console removal for /site/dicrotin.com and asked for exclusion. Homepage not fetched."
+        }
+      ]
+    },
+    {
+      "domain": "xnhau.pics",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-16",
+      "review_method": "manual review after appearing in Search Console queries; classification by the owner; exact host only; requested by owner",
+      "sources": [
+        {
+          "url": "https://xnhau.pics/",
+          "publisher": "Quantum Aether manual review (owner)",
+          "published_on": "2026-11-16",
+          "locator": "Search Console listed this hostname among adult navigational queries for /site/ pages (next to besthindiporn.com, feedtofap.com, w4nkr.com); the owner submitted a Search Console removal for /site/xnhau.pics and asked for exclusion. Homepage not fetched."
+        }
+      ]
+    },
+    {
+      "domain": "cgbum.com",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-16",
+      "review_method": "manual review after appearing in Search Console queries; classification by the owner; exact host only; requested by owner",
+      "sources": [
+        {
+          "url": "https://cgbum.com/",
+          "publisher": "Quantum Aether manual review (owner)",
+          "published_on": "2026-11-16",
+          "locator": "Search Console listed this hostname among adult navigational queries for /site/ pages (next to besthindiporn.com, feedtofap.com, w4nkr.com); the owner submitted a Search Console removal for /site/cgbum.com and asked for exclusion. Homepage not fetched."
+        }
+      ]
+    },
+    {
+      "domain": "uncenz.com",
+      "classification": "confirmed_pornographic",
+      "reviewed_on": "2026-11-16",
+      "review_method": "manual review after appearing in Search Console queries; classification by the owner; exact host only; requested by owner",
+      "sources": [
+        {
+          "url": "https://uncenz.com/",
+          "publisher": "Quantum Aether manual review (owner)",
+          "published_on": "2026-11-16",
+          "locator": "Search Console listed this hostname among adult navigational queries for /site/ pages (next to besthindiporn.com, feedtofap.com, w4nkr.com); the owner submitted a Search Console removal for /site/uncenz.com and asked for exclusion. Homepage not fetched."
+        }
+      ]
     }
   ]
 }
