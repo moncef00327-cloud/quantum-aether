@@ -7,14 +7,19 @@ import datetime as dt
 import html
 import json
 import re
+import time
 import urllib.parse
 import urllib.request
 
 USER_AGENT = "QuantumAetherRadar/1.0 (+https://ather-quantum.com)"
 BASE = "https://ather-quantum.com"
 
+# HN وStack Exchange: البحث يطلب كل كلمات الاستعلام، فـ "post-quantum" وحدها تلتقط نقاشات TLS التي لا تذكر الكلمة.
 QUERIES = ["X25519MLKEM768", "MLKEM768", "ML-KEM TLS", "post-quantum TLS", "post quantum nginx",
-           "hybrid key exchange TLS"]
+           "hybrid key exchange TLS", "post-quantum"]
+# GitHub بلا تسجيل دخول: 10 طلبات بحث بالدقيقة، فنترك GITHUB_PAUSE ثوانٍ بين الطلبات.
+GITHUB_QUERIES = ["X25519MLKEM768", "MLKEM768", "post-quantum TLS", "ClientHello ML-KEM"]
+GITHUB_PAUSE = 7
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS radar_seen (
@@ -27,17 +32,35 @@ CREATE TABLE IF NOT EXISTS radar_seen (
 """
 
 CORE = re.compile(r"x25519mlkem768|mlkem|ml-kem|kyber|post[- ]?quantum|pqc|harvest now", re.I)
-CONTEXT = re.compile(r"\btls\b|https|ssl|nginx|apache|caddy|haproxy|cloudflare|openssl|certificate|key exchange|web ?server", re.I)
+CONTEXT = re.compile(r"\btls\b|https|ssl|nginx|apache|caddy|haproxy|cloudflare|openssl|certificate|key exchange|web ?server"
+                     r"|let'?s encrypt|clienthello|client hello|handshake|key share|middlebox|load balancer|firewall", re.I)
 NOISE = re.compile(r"^(bump|build\(deps|chore|update dependency|\[snyk\]|release v?\d)", re.I)
+# خارج نطاقنا: أدوات تجاوز الحجب (أصحابها ليسوا مشغّلي مواقع)، وتقارير آلية، وبلوك تشين.
+OFF_TOPIC = re.compile(r"vless|\breality\b|xray|v2ray|mihomo|clash|sing-box|hiddify|shadowsocks|trojan|订阅|节点"
+                       r"|rustsec-|security advisor|security report|отчёт|briefing|digest|technology radar|findings detected"
+                       r"|\bchwg-|\[ioc\]|\[new-research\]|arxiv|blockchain|wallet|testnet|ledger|layer-1|\bl1\b|new release v", re.I)
+# عطل توافق حقيقي يسبّبه ML-KEM عند من يشغّل خدمة أو عميلاً، حتى لو لم يذكر اسم خادم ويب.
+# يجب أن يجتمع في العنوان نفسه فعل عطل وسبب له، وإلا كثرت نقاشات مطوّري المكتبات الداخلية.
+FAILURE = re.compile(r"\bfail|\bhangs?\b|\bdrops?\b|\breset\b|refused|\bclosed?\b|timeout|bypass|\berror\b|schließt"
+                     r"|validate|excludes?|broken|not work|does not support", re.I)
+CAUSE = re.compile(r"clienthello|client hello|middlebox|firewall|load balancer|prox(?:y|ies)|fragment|oversized|decode_error"
+                   r"|alert \d+|handshake|connect|negotiat|interop|compatib|post-quantum|pqc|ml-kem|x25519mlkem768", re.I)
+
+
+def _breakage(title):
+    return bool(FAILURE.search(title) and CAUSE.search(title))
 QUESTION = re.compile(r"\?|\bhow\b|\benable\b|\bsupport\b|\berror\b|\bfail|\bnot work|\bwhy\b|\bconfigure", re.I)
 # في GitHub نريد من يشغّل خادماً ويسأل عن تفعيله، لا نقاشات داخلية لمطوّري المكتبات
 WEBSERVER = re.compile(r"nginx|apache|httpd|caddy|haproxy|cloudflare|traefik|envoy|web ?server|reverse proxy|ingress", re.I)
 
-TOPICS = [("nginx", re.compile(r"nginx", re.I)), ("apache", re.compile(r"apache|httpd", re.I)),
+TOPICS = [("clienthello", re.compile(r"clienthello|client hello|middlebox|firewall|load balancer|fragment|oversized"
+                                     r"|decode_error", re.I)),
+          ("nginx", re.compile(r"nginx", re.I)), ("apache", re.compile(r"apache|httpd", re.I)),
           ("caddy", re.compile(r"caddy", re.I)), ("haproxy", re.compile(r"haproxy", re.I)),
           ("cloudflare", re.compile(r"cloudflare", re.I)), ("openssl", re.compile(r"openssl", re.I))]
 
 GUIDES = {
+    "clienthello": f"{BASE}/guides/enable-x25519mlkem768-nginx",  # قسم "Large ClientHello"
     "nginx": f"{BASE}/guides/enable-x25519mlkem768-nginx",
     "openssl": f"{BASE}/guides/enable-x25519mlkem768-nginx",
     "apache": f"{BASE}/guides/post-quantum-tls-apache-caddy-haproxy-cloudflare",
@@ -48,6 +71,9 @@ GUIDES = {
 }
 
 HINTS = {
+    "clienthello": "The X25519MLKEM768 key share makes the ClientHello about 1.2 KB larger, so it often spans two TCP "
+                   "segments or TLS records. Middleboxes, firewalls or parsers that expect it in one packet drop or reset "
+                   "the connection; updating that device, or temporarily offering X25519 alone, confirms the cause.",
     "nginx": "nginx needs to be built against OpenSSL 3.5 or newer; then `ssl_ecdh_curve X25519MLKEM768:X25519:prime256v1;` "
              "in the server block enables the hybrid group with a classical fallback.",
     "openssl": "OpenSSL 3.5 ships ML-KEM natively, so X25519MLKEM768 is available as a group without the oqs-provider; "
@@ -108,20 +134,25 @@ def fetch_github(query, since, get=_get_json):
             for i in data.get("items", [])]
 
 
-def collect(since, get=_get_json):
+def collect(since, get=_get_json, sleep=None):
     """يجمع من كل المصادر. فشل مصدر واحد لا يوقف الباقي."""
-    items, errors = [], []
-    for n, query in enumerate(QUERIES):
-        sources = [("hn", lambda q: fetch_hn(q, since, get)),
-                   ("serverfault", lambda q: fetch_stackexchange(q, since, "serverfault", get)),
-                   ("stackoverflow", lambda q: fetch_stackexchange(q, since, "stackoverflow", get))]
-        if n < 2:  # GitHub: استعلامان يومياً فقط، حدّه بلا تسجيل دخول 10 طلبات بالدقيقة
-            sources.append(("github", lambda q: fetch_github(q, since, get)))
-        for name, fn in sources:
-            try:
-                items.extend(fn(query))
-            except Exception as exc:  # الشبكة/الحدّ: نكمل بالباقي
-                errors.append(f"{name}:{query}: {exc}")
+    if sleep is None:  # ننتظر فقط مع الشبكة الحقيقية، لا في الاختبارات
+        sleep = time.sleep if get is _get_json else (lambda seconds: None)
+    jobs = [(name, query, fn) for query in QUERIES
+            for name, fn in (("hn", lambda q: fetch_hn(q, since, get)),
+                             ("serverfault", lambda q: fetch_stackexchange(q, since, "serverfault", get)),
+                             ("stackoverflow", lambda q: fetch_stackexchange(q, since, "stackoverflow", get)))]
+    jobs += [("github", query, lambda q: fetch_github(q, since, get)) for query in GITHUB_QUERIES]
+    items, errors, github_calls = [], [], 0
+    for name, query, fn in jobs:
+        if name == "github":
+            if github_calls:
+                sleep(GITHUB_PAUSE)
+            github_calls += 1
+        try:
+            items.extend(fn(query))
+        except Exception as exc:  # الشبكة/الحدّ: نكمل بالباقي
+            errors.append(f"{name}:{query}: {exc}")
     return items, errors
 
 
@@ -129,16 +160,20 @@ def collect(since, get=_get_json):
 
 def relevant(item):
     """نقاش عن TLS المقاوم للكم فعلاً، وليس تحديث مكتبة آلياً."""
-    blob = f"{item['title']} {item['text']}"
-    if NOISE.search(item["title"]):
+    text = re.sub(r"https?://\S+", " ", item["text"])  # "https" داخل رابط ليس نقاشاً عن HTTPS
+    blob = f"{item['title']} {text}"
+    if NOISE.search(item["title"]) or OFF_TOPIC.search(item["title"]):
         return False
     if not (CORE.search(blob) and CONTEXT.search(blob)):
         return False
-    if item["source"] == "GitHub" and not (QUESTION.search(blob) and WEBSERVER.search(blob)):
+    # GitHub: من يشغّل خادماً ويسأل عن تفعيله، أو بلاغ عطل توافق سببه ML-KEM (ClientHello كبير، جدار ناري...)
+    if item["source"] == "GitHub" and not ((QUESTION.search(blob) and WEBSERVER.search(blob))
+                                           or _breakage(item["title"])):
         return False
     # في HN: الموضوع في العنوان، أو تعليق يسأل عنه صراحةً (لا ذكراً عابراً في نقاش آخر)
     if item["source"] == "Hacker News" and not (CORE.search(item["title"]) or
-                                                (CORE.search(item["text"]) and QUESTION.search(item["text"]))):
+                                                (CORE.search(text) and CONTEXT.search(text)
+                                                 and QUESTION.search(text))):
         return False
     return True
 

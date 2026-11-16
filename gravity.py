@@ -43,21 +43,25 @@ def evidence_url(value, source):
     return urlunsplit(("https", url.hostname, path, query, ""))
 
 
-def opportunities(items):
-    """Group independent discussion URLs; scores are heuristics, not search volume."""
+def opportunities(items, prefiltered=False):
+    """Group independent discussion URLs; scores are heuristics, not search volume.
+
+    prefiltered=True: the items are radar_seen rows the radar already judged relevant on their full text,
+    which it does not store; re-judging them on the title alone would silently drop most of them.
+    """
     groups, seen = {}, set()
     for raw in items:
         if not isinstance(raw, dict):
             continue
-        item = {k: str(raw.get(k) or "") for k in ("title", "text", "source", "url", "created")}
+        item = {k: str(raw.get(k) or "") for k in ("title", "text", "source", "url", "created", "topic")}
         canonical = evidence_url(item["url"], item["source"])
         if canonical is None:
             continue
         item["url"] = canonical
-        if item["url"] in seen or not radar.relevant(item):
+        if item["url"] in seen or not (prefiltered or radar.relevant(item)):
             continue
         seen.add(item["url"])
-        topic = radar.topic_of(item)
+        topic = item["topic"] if prefiltered and item["topic"] in radar.GUIDES else radar.topic_of(item)
         evidence = groups.setdefault(topic, [])
         evidence.append({k: item[k] for k in ("url", "source", "title", "created")})
     rows = []

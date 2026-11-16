@@ -60,6 +60,17 @@ class GravityTests(unittest.TestCase):
             dict(discussion("https://github.com/a/b/issues/2"), title="How to configure nginx?", text="TLS"),
         ]), [])
 
+    def test_prefiltered_radar_rows_keep_their_stored_topic(self):
+        # radar_seen keeps no text: a row accepted on its body must not vanish when only the title is left.
+        row = dict(url="https://github.com/a/b/issues/3", source="GitHub", topic="clienthello",
+                   title="TLS handshake fails with OpenSSL 3.5+ (TLS alert 50 decode_error)", text="")
+        self.assertEqual(gravity.opportunities([row]), [])
+        unknown_topic = dict(row, topic="not-a-topic", url="https://github.com/a/b/issues/4",
+                             title="OpenSSL 3.5 groups question")  # موضوع غير معروف ← يُستنتج من العنوان
+        rows = gravity.opportunities([row, unknown_topic], prefiltered=True)
+        self.assertEqual({r["topic"] for r in rows}, {"clienthello", "openssl"})
+        self.assertEqual(gravity.opportunities([dict(row, url="https://evil.example/x")], prefiltered=True), [])
+
     def test_ranking_is_bounded_and_hn_ids_remain_distinct(self):
         rows = gravity.opportunities([
             discussion(f"https://news.ycombinator.com/item?id={i}", "Hacker News") for i in range(1, 21)

@@ -15,10 +15,10 @@ def register(bp, get_db):
         items = []
         if available:
             rows = conn.execute(
-                "SELECT url, source, title, found_at FROM radar_seen WHERE julianday(found_at) >= julianday(?) ORDER BY julianday(found_at) DESC LIMIT 500",
+                "SELECT url, source, title, topic, found_at FROM radar_seen WHERE julianday(found_at) >= julianday(?) ORDER BY julianday(found_at) DESC LIMIT 500",
                 (since,)).fetchall()
-            items = [dict(url=r[0], source=r[1], title=r[2], text='', created='', found_at=r[3]) for r in rows]
-        ranked = gravity.opportunities(items)
+            items = [dict(url=r[0], source=r[1], title=r[2], topic=r[3], text='', created='', found_at=r[4]) for r in rows]
+        ranked = gravity.opportunities(items, prefiltered=True)
         return render_template('gravity.html', opportunities=ranked,
                                evidence_count=sum(r['discussion_count'] for r in ranked),
                                collected_count=len(items),
