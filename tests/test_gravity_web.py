@@ -35,7 +35,7 @@ class GravityWebTests(unittest.TestCase):
             conn = sales_db.connect(directory + '/quantum_saas.db')
             try:
                 radar.init(conn)
-                conn.execute("INSERT INTO radar_seen VALUES (?, ?, ?, ?, datetime('now'))",
+                conn.execute("INSERT INTO radar_seen (url, source, title, topic, found_at) VALUES (?, ?, ?, ?, datetime('now'))",
                              ('https://github.com/a/b/issues/1', 'GitHub',
                               'How to enable X25519MLKEM768 on nginx TLS?', 'nginx'))
                 conn.commit()
