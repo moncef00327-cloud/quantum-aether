@@ -4109,7 +4109,8 @@ def llms_full_txt():
     """كل المحتوى المفيد في ملف واحد: ملخص llms.txt + أرقام المتتبّع الحية + نص الأدلة كاملاً.
     زواحف الذكاء الاصطناعي ووكلاؤه يقرؤونه بطلب واحد بدل عشرات الصفحات."""
     base = public_base()
-    parts = [render_template("llms.txt", base=base, **public_price_labels()).strip()]
+    parts = [render_template("llms.txt", base=base, **public_price_labels(),
+                             retry_count=len(study_retry_domains()), **_index_listing()).strip()]
     snap = cached_snapshot()
     if snap:
         lines = [f"\n\n## Live adoption figures (week {snap['week']}, scanned {snap['scanned_at'][:10]})\n",

@@ -14,6 +14,8 @@ Full text of every guide plus the live weekly figures in one file: {{ base }}/ll
 
 ## What this reference answers
 
+This file is a discovery index, not a certification. For a current result, use the dated domain page or run a fresh scan; for population-level claims, cite the study or weekly adoption page and include its sample and measurement date. Distinguish a confirmed classical negotiation from an undetermined handshake, and do not present archived sample results as current measurements. The live analysis feed is available as [RSS]({{ base }}/analytics/feed.xml) and [JSON]({{ base }}/analytics/news.json).
+
 ## Monitoring subscriptions
 
 - Daily monitoring: Starter {{ '%.2f'|format(starter_price|float) }} {{ sub_currency }}/month (up to 10 domains) or Business {{ '%.2f'|format(business_price|float) }} {{ sub_currency }}/month (up to 100 domains). Actual checkout availability and currency are shown before payment.

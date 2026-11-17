@@ -87,9 +87,20 @@ class CrawlerTests(unittest.TestCase):
         self.assertIn("## 1. Check your OpenSSL version", body)
         self.assertIn("```", body)
         self.assertIn("https://ather-quantum.com/guides/harvest-now-decrypt-later", body)
+        self.assertIn("## Every public page", body)
+        self.assertIn("/analytics/feed.xml", body)
+        self.assertIn("/analytics/news.json", body)
         self.assertNotIn("<p>", body)
         self.assertIn("llms-full.txt", self.client.get("/robots.txt").get_data(as_text=True))
         self.assertIn("llms-full.txt", self.client.get("/llms.txt").get_data(as_text=True))
+
+    def test_llms_reference_gives_citation_and_freshness_guidance(self):
+        body = self.client.get("/llms.txt").get_data(as_text=True)
+        section = body.split("## What this reference answers", 1)[1].split("## Monitoring subscriptions", 1)[0]
+        self.assertIn("not a certification", section)
+        self.assertIn("measurement date", section)
+        self.assertIn("/analytics/feed.xml", section)
+        self.assertIn("/analytics/news.json", section)
 
     def test_security_txt_and_touch_icon(self):
         for path in ("/.well-known/security.txt", "/security.txt"):
