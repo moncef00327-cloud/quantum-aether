@@ -3784,9 +3784,10 @@ def robots():
     # otherwise consume it before core guides and product pages are reached. Keep
     # this exclusion scoped to that audit crawler, preserving discovery by search
     # engines and AI crawlers. Specific user-agent groups must repeat private paths.
+    bank_detail_rules = "".join(f"Disallow: /banks/{report_id}/\n" for report_id in bank_report.ids())
     audit_agent = ("User-agent: OpenSEO-Audit\nDisallow: /admin\nDisallow: /report/\n"
                    "Disallow: /api/paypal/\nDisallow: /monitor/\nDisallow: /api/monitor/\n"
-                   "Disallow: /site/\n\n")
+                   "Disallow: /site/\nDisallow: /exposure/\n" + bank_detail_rules + "\n")
     body = (agents + "Disallow: /admin\nDisallow: /report/\nDisallow: /api/paypal/\nDisallow: /monitor/\nDisallow: /api/monitor/\n\n"
             + audit_agent
             + f"Sitemap: {public_base()}/sitemap.xml\n"

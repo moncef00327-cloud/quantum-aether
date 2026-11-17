@@ -6,6 +6,7 @@ import xml.dom.minidom
 from urllib.robotparser import RobotFileParser
 
 import adoption
+import bank_report
 import quantum_saas_app
 import sales_db
 
@@ -108,9 +109,16 @@ class CrawlerTests(unittest.TestCase):
         robots.parse(self.client.get("/robots.txt").get_data(as_text=True).splitlines())
         self.assertFalse(robots.can_fetch("OpenSEO-Audit", "/site/example.com"))
         self.assertFalse(robots.can_fetch("OpenSEO-Audit", "/admin"))
+        self.assertFalse(robots.can_fetch("OpenSEO-Audit", "/exposure/example.com"))
+        report_id = bank_report.ids()[0]
+        self.assertFalse(robots.can_fetch("OpenSEO-Audit", f"/banks/{report_id}/adcb.com"))
         self.assertTrue(robots.can_fetch("OpenSEO-Audit", "/guides"))
+        self.assertTrue(robots.can_fetch("OpenSEO-Audit", "/exposure"))
+        self.assertTrue(robots.can_fetch("OpenSEO-Audit", f"/banks/{report_id}"))
         self.assertTrue(robots.can_fetch("Googlebot", "/site/example.com"))
         self.assertTrue(robots.can_fetch("GPTBot", "/site/example.com"))
+        self.assertTrue(robots.can_fetch("Googlebot", "/exposure/example.com"))
+        self.assertTrue(robots.can_fetch("GPTBot", f"/banks/{report_id}/adcb.com"))
 
     def test_security_txt_and_touch_icon(self):
         for path in ("/.well-known/security.txt", "/security.txt"):
