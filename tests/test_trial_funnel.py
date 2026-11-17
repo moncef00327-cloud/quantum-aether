@@ -125,6 +125,17 @@ class ScanErrorTrackingTests(unittest.TestCase):
 
     def test_scan_page_is_a_tracked_path(self):
         self.assertEqual(analytics_db.normalize_path("/scan"), "/scan")
+        for p in ("/prooflab", "/banks/arab-banks-2026-11", "/reports/2026-11", "/analytics", "/exposure",
+                  "/gravity", "/tools/pq-tls-config", "/agents", "/press", "/transparency"):
+            self.assertEqual(analytics_db.normalize_path(p), p)
+        self.assertIsNone(analytics_db.normalize_path("/exposure/claim/secret-token"))
+
+    def test_homepage_scan_box_comes_before_trial_form(self):
+        for lang in ("ar", "en"):
+            body = self.client.get(f"/?lang={lang}").get_data(as_text=True)
+            self.assertIn(f'action="/scan?lang={lang}"', body)
+            self.assertIn('id="domain-hero" name="domain"', body)
+            self.assertLess(body.index('id="domain-hero"'), body.index('id="trial"'))
 
     def test_invisible_characters_from_copy_paste_do_not_reject_a_valid_domain(self):
         import quantum_vuln_scanner as qs

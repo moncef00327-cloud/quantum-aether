@@ -17,7 +17,9 @@ CREATE INDEX IF NOT EXISTS pageviews_day ON pageviews (day);
 BOT_RE = re.compile(r"bot|crawl|spider|slurp|curl|wget|python|httpclient|go-http|java/|headless|scan|censys|"
                     r"preview|monitor|verification|facebookexternalhit|embedly|whatsapp|telegram", re.I)
 TRACKED_PREFIXES = ("/", "/monitoring", "/guides", "/study", "/research", "/scan/", "/deadlines", "/site/", "/adoption", "/compare",
-                    "/pricing", "/business", "/agency", "/sample-report", "/audit")
+                    "/pricing", "/business", "/agency", "/sample-report", "/audit", "/prooflab", "/banks", "/reports", "/analytics",
+                    "/exposure", "/gravity", "/tools", "/agents", "/press", "/transparency", "/scanning", "/data-license",
+                    "/executive-brief/", "/verify/")
 
 
 def init(conn):
@@ -26,7 +28,7 @@ def init(conn):
 
 def normalize_path(path):
     """يجمع صفحات النتائج في مسار واحد ولا يتتبع الصفحات الخاصة."""
-    if path.startswith(("/report/", "/monitor/", "/admin", "/api/", "/static/", "/badge/")):
+    if path.startswith(("/report/", "/monitor/", "/admin", "/api/", "/static/", "/badge/", "/exposure/claim/")):
         return None
     if path.startswith("/scan/"):
         return "/scan/*"
