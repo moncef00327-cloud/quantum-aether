@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-11-16T22:59:25Z",
+  "updated_at": "2026-11-17T15:24:34Z",
   "classification": "Deterministic keyword rules; impact notes are editorial context, not source quotations or security advisories.",
   "sources": [
     {
@@ -31,34 +31,34 @@
     {
       "name": "arXiv quant-ph",
       "ok": true,
-      "entries": 131
+      "entries": 263
     },
     {
       "name": "arXiv cs.CR",
       "ok": true,
-      "entries": 44
+      "entries": 116
     }
   ],
   "items": [
     {
       "source": "arXiv cs.CR",
-      "url": "https://arxiv.org/abs/2610.36145",
-      "title": "They Will See Johnny's Message: A Measurement Study of Post-Quantum Cryptography Across Email Delivery Paths",
-      "published_at": "2026-11-16T05:00:00Z",
-      "category": "research",
+      "url": "https://arxiv.org/abs/2611.21206",
+      "title": "PQC Migration: End-to-End Performance Profiling of Post Quantum Cryptographic Algorithms in mTLS",
+      "published_at": "2026-11-17T05:00:00Z",
+      "category": "implementation",
       "importance": "medium",
       "takeaway": {
-        "en": "Editorial takeaway: research context, not a production security advisory or evidence of a new cryptographic break; assess before changing policy.",
-        "ar": "قراءة تحريرية: هذا سياق بحثي، وليس تنبيهاً أمنياً للإنتاج أو دليلاً على كسر تشفيري جديد؛ قيّم النتائج قبل تغيير السياسة.",
-        "de": "Redaktionelle Einordnung: Forschungskontext, keine Produktionswarnung und kein Beleg für einen neuen kryptografischen Bruch; vor einer Richtlinienänderung bewerten."
+        "en": "Editorial takeaway: check relevant TLS library, proxy and CDN release notes, then retest the public endpoint after changes.",
+        "ar": "قراءة تحريرية: راجع ملاحظات إصدار مكتبات TLS والوكيل وCDN ذات الصلة، ثم أعد فحص نقطة الاتصال العامة بعد التغييرات.",
+        "de": "Redaktionelle Einordnung: Prüfen Sie relevante TLS-Bibliotheken, Proxy- und CDN-Änderungen und testen Sie den öffentlichen Endpunkt anschließend erneut."
       },
-      "id": "9a0ea85f412f8940"
+      "id": "f61caab95a82c278"
     },
     {
       "source": "arXiv cs.CR",
-      "url": "https://arxiv.org/abs/2611.08442",
-      "title": "SoK: Assessing Post-Quantum Cryptography Adoption in Software Development: Standards, Lifecycle Coverage, Deployment Maturity, and Evidence of Readiness",
-      "published_at": "2026-11-16T05:00:00Z",
+      "url": "https://arxiv.org/abs/2611.21528",
+      "title": "Post-Quantum Migration of Wi-Fi Key Establishment: A Hybrid ML-KEM Design for OWE and FILS, Validated on OWE with hostapd",
+      "published_at": "2026-11-17T05:00:00Z",
       "category": "research",
       "importance": "medium",
       "takeaway": {
@@ -66,7 +66,7 @@
         "ar": "قراءة تحريرية: هذا سياق بحثي، وليس تنبيهاً أمنياً للإنتاج أو دليلاً على كسر تشفيري جديد؛ قيّم النتائج قبل تغيير السياسة.",
         "de": "Redaktionelle Einordnung: Forschungskontext, keine Produktionswarnung und kein Beleg für einen neuen kryptografischen Bruch; vor einer Richtlinienänderung bewerten."
       },
-      "id": "fa12f74562d3166c"
+      "id": "efcf2ec8fed45d04"
     },
     {
       "source": "Cloudflare Blog",
