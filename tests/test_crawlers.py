@@ -3,6 +3,7 @@ import shutil
 import tempfile
 import unittest
 import xml.dom.minidom
+from urllib.robotparser import RobotFileParser
 
 import adoption
 import quantum_saas_app
@@ -101,6 +102,15 @@ class CrawlerTests(unittest.TestCase):
         self.assertIn("measurement date", section)
         self.assertIn("/analytics/feed.xml", section)
         self.assertIn("/analytics/news.json", section)
+
+    def test_openseo_audit_skips_high_volume_domain_pages_only(self):
+        robots = RobotFileParser()
+        robots.parse(self.client.get("/robots.txt").get_data(as_text=True).splitlines())
+        self.assertFalse(robots.can_fetch("OpenSEO-Audit", "/site/example.com"))
+        self.assertFalse(robots.can_fetch("OpenSEO-Audit", "/admin"))
+        self.assertTrue(robots.can_fetch("OpenSEO-Audit", "/guides"))
+        self.assertTrue(robots.can_fetch("Googlebot", "/site/example.com"))
+        self.assertTrue(robots.can_fetch("GPTBot", "/site/example.com"))
 
     def test_security_txt_and_touch_icon(self):
         for path in ("/.well-known/security.txt", "/security.txt"):

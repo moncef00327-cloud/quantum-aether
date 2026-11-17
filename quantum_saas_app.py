@@ -3780,8 +3780,16 @@ def og_scan(scan_id):
 @bp.get("/robots.txt")
 def robots():
     agents = "".join(f"User-agent: {name}\n" for name in [*SEARCH_CRAWLERS, *AI_CRAWLERS, "*"])
+    # OpenSEO's audit has a small crawl budget; high-volume per-domain result pages
+    # otherwise consume it before core guides and product pages are reached. Keep
+    # this exclusion scoped to that audit crawler, preserving discovery by search
+    # engines and AI crawlers. Specific user-agent groups must repeat private paths.
+    audit_agent = ("User-agent: OpenSEO-Audit\nDisallow: /admin\nDisallow: /report/\n"
+                   "Disallow: /api/paypal/\nDisallow: /monitor/\nDisallow: /api/monitor/\n"
+                   "Disallow: /site/\n\n")
     body = (agents + "Disallow: /admin\nDisallow: /report/\nDisallow: /api/paypal/\nDisallow: /monitor/\nDisallow: /api/monitor/\n\n"
-            f"Sitemap: {public_base()}/sitemap.xml\n"
+            + audit_agent
+            + f"Sitemap: {public_base()}/sitemap.xml\n"
             f"# AI agents: machine-readable summary and API at {public_base()}/llms.txt\n"
             f"# Full text for AI agents (guides + live figures in one file): {public_base()}/llms-full.txt\n"
             f"# Content feed (Atom): {public_base()}/feed.xml\n")
