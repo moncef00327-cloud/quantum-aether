@@ -133,7 +133,8 @@ def fetch_stackexchange(query, since, site, get=_get_json):
     params = urllib.parse.urlencode({"order": "desc", "sort": "creation", "q": query, "site": site,
                                      "fromdate": int(since.timestamp()), "pagesize": 30})
     data = get("https://api.stackexchange.com/2.3/search/advanced?" + params)
-    names = {"serverfault": "Server Fault", "stackoverflow": "Stack Overflow", "security": "Security SE"}
+    names = {"serverfault": "Server Fault", "stackoverflow": "Stack Overflow", "security": "Security SE",
+             "superuser": "Super User", "devops": "DevOps SE"}
     return [{"source": names.get(site, site), "url": i["link"], "title": _clean(i.get("title")),
              "text": " ".join(i.get("tags", [])), "created": dt.datetime.fromtimestamp(i["creation_date"], dt.timezone.utc).isoformat()}
             for i in data.get("items", [])]
@@ -151,10 +152,10 @@ def collect(since, get=_get_json, sleep=None):
     """يجمع من كل المصادر. فشل مصدر واحد لا يوقف الباقي."""
     if sleep is None:  # ننتظر فقط مع الشبكة الحقيقية، لا في الاختبارات
         sleep = time.sleep if get is _get_json else (lambda seconds: None)
+    se_sites = ("serverfault", "stackoverflow", "security")  # Security SE كان معرّفاً وغير مُستعلَم؛ أُضيف الآن
     jobs = [(name, query, fn) for query in QUERIES
-            for name, fn in (("hn", lambda q: fetch_hn(q, since, get)),
-                             ("serverfault", lambda q: fetch_stackexchange(q, since, "serverfault", get)),
-                             ("stackoverflow", lambda q: fetch_stackexchange(q, since, "stackoverflow", get)))]
+            for name, fn in ([("hn", lambda q: fetch_hn(q, since, get))]
+                             + [(s, (lambda q, s=s: fetch_stackexchange(q, since, s, get))) for s in se_sites])]
     jobs += [("github", query, lambda q: fetch_github(q, since, get)) for query in GITHUB_QUERIES]
     items, errors, github_calls = [], [], 0
     for name, query, fn in jobs:
