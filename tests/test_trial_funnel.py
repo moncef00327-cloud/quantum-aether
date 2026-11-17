@@ -72,6 +72,18 @@ class TrialFunnelTests(unittest.TestCase):
         self.assertEqual(self.accounts(), 1)
         self.assertEqual(self.mailer.sent[0][0], "someone@gmail.com")
 
+    def test_plan_selection_updates_price_and_creates_matching_trial_plan(self):
+        ar_starter = self.client.get("/pricing?lang=ar&plan=starter").get_data(as_text=True)
+        self.assertIn('data-trial-price>29 ', ar_starter)
+        self.assertIn('name="plan" value="starter"', ar_starter)
+        ar_biz = self.client.get("/pricing?lang=ar&plan=business").get_data(as_text=True)
+        self.assertIn('data-trial-price>99 ', ar_biz)
+        self.assertIn('name="plan" value="business"', ar_biz)
+        r = self.post(email="cto@firma-test.example", domain="firma-test.example", consent="1", plan="business")
+        self.assertEqual(r.status_code, 200)
+        plan = self.conn().execute("SELECT plan FROM monitor_accounts WHERE email = 'cto@firma-test.example'").fetchone()[0]
+        self.assertEqual(plan, "business")
+
     def test_mail_failure_is_logged_and_leaves_no_account(self):
         self.mailer.ok = False
         with self.assertLogs("quantum_saas", "WARNING") as logs:

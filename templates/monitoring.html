@@ -40,7 +40,8 @@
   <p class="muted">{{ t.mon_choose }}</p>
   <div class="grid-2">
     {% for name, p in plans.items() %}
-    <div class="price-box{% if name == 'business' %} highlight{% endif %}">
+    {% set p_label = ('%g'|format(p.price|float)) ~ ' ' ~ ('€' if currency == 'EUR' else currency) %}
+    <div class="price-box{% if name == 'business' %} highlight{% endif %}" data-select-plan="{{ name }}" data-price="{{ p_label }}">
       <h3>{{ p.name }} <span class="tag"><bdi>{{ p.price if enabled else (p.price | replace('.00', '')) }} {{ currency }}</bdi></span> <span class="muted small">{{ t.mon_per_month }}</span></h3>
       <p>{{ t.mon_domains.format(n=p.domains) }}</p>
       {% if enabled %}<div class="paypal-sub" data-plan="{{ name }}" hidden></div>{% endif %}

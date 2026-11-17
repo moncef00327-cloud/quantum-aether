@@ -5,12 +5,22 @@
    static/trial-form.js checks the fields before sending and shows a clear inline message (ar/de/en).
    `source` (e.g. scan_result, monitoring, home) is sent with analytics events so we can measure each CTA. #}
 {% macro trial_cta(form_id, domain='', title='', sub='', compact=false, prefill='', email='', error='', focus='', source='', urgent=false, show_title=true, editable_domain=false) %}
-{% set sp = '%g'|format(starter_price|float) %}{% set price_label = (sp ~ ' €') if sub_currency == 'EUR' else (sp ~ ' ' ~ sub_currency) %}
-<section class="card highlight{% if source in ('scan_result','site_result') %} conversion-offer{% endif %} trial-cta{% if urgent %} trial-cta-urgent{% endif %}" id="{{ form_id }}"{% if source in ('scan_result','site_result') %} data-ev-impression="offer_impression"{% endif %}>
+{% set sel_plan = 'business' if request.args.get('plan') == 'business' else 'starter' %}
+{% set cur_sym = '€' if sub_currency == 'EUR' else sub_currency %}
+{% set sp_label = ('%g'|format(starter_price|float)) ~ ' ' ~ cur_sym %}
+{% set bp_label = ('%g'|format(business_price|float)) ~ ' ' ~ cur_sym %}
+{% set price_label = bp_label if sel_plan == 'business' else sp_label %}
+{% set price_tag = ('<bdi dir="ltr" data-trial-price>' ~ price_label ~ '</bdi>')|safe %}
+<section class="card highlight{% if source in ('scan_result','site_result') %} conversion-offer{% endif %} trial-cta{% if urgent %} trial-cta-urgent{% endif %}" id="{{ form_id }}" data-starter-price="{{ sp_label }}" data-business-price="{{ bp_label }}"{% if source in ('scan_result','site_result') %} data-ev-impression="offer_impression"{% endif %}>
   {% if show_title %}<h2>{{ title or t.trial_cta_title }}</h2>{% endif %}
-  {% if not compact %}<p>{{ sub or t.trial_cta_sub.format(price=price_label) }}</p>{% endif %}
+  {% if not compact %}<p>{{ sub or t.trial_cta_sub.format(price=price_tag)|safe }}</p>{% endif %}
+  <div class="trial-plan-switch" role="group" aria-label="{{ 'الباقة بعد التجربة' if lang == 'ar' else ('Tarif nach dem Test' if lang == 'de' else 'Plan after trial') }}">
+    <button type="button" class="trial-plan-pill{% if sel_plan == 'starter' %} is-active{% endif %}" data-select-plan="starter" data-price="{{ sp_label }}" aria-pressed="{{ 'true' if sel_plan == 'starter' else 'false' }}">Starter · <bdi dir="ltr">{{ sp_label }}</bdi> <small>({{ '10 نطاقات' if lang == 'ar' else ('10 Domains' if lang == 'de' else '10 domains') }})</small></button>
+    <button type="button" class="trial-plan-pill{% if sel_plan == 'business' %} is-active{% endif %}" data-select-plan="business" data-price="{{ bp_label }}" aria-pressed="{{ 'true' if sel_plan == 'business' else 'false' }}">Business · <bdi dir="ltr">{{ bp_label }}</bdi> <small>({{ '100 نطاق' if lang == 'ar' else ('100 Domains' if lang == 'de' else '100 domains') }})</small></button>
+  </div>
   <form method="post" action="{{ url_for('site.monitor_trial', lang=lang) }}" class="scan-form trial-form"{% if source %} data-trial-source="{{ source }}"{% endif %}>
     {% if domain and not editable_domain %}<input type="hidden" name="domain" value="{{ domain }}">{% endif %}
+    <input type="hidden" name="plan" value="{{ sel_plan }}">
     <input type="hidden" name="variant" value="{{ conversion_variant }}">
     {% if source %}<input type="hidden" name="src" value="{{ source }}">{% endif %}
     {% if error %}<p class="form-error trial-error" role="alert">{{ error }}</p>{% endif %}
@@ -23,7 +33,7 @@
     <p class="consent"><label><input type="checkbox" name="consent" value="1" required{% if focus == 'consent' %} autofocus aria-invalid="true"{% endif %}>
       <span>{{ t.trial_consent }} (<a href="{{ url_for('site.legal_page', slug='agb', lang=legal_lang) }}" target="_blank">{{ t.legal_terms }}</a> · <a href="{{ url_for('site.legal_page', slug='datenschutz', lang=legal_lang) }}" target="_blank">{{ t.legal_privacy }}</a>)</span></label></p>
     <div class="scan-row trial-submit"><button type="submit" data-ev="trial_start" data-ev-alt="trial_cta_clicked" style="width:100%">{{ t.trial_button_nocard }}</button></div>
-    <p class="muted small">{{ t.trial_cta_fine }} {{ t.trial_after }} <bdi dir="ltr">{{ price_label }}</bdi> {{ t.mon_per_month }}.</p>
+    <p class="muted small">{{ t.trial_cta_fine }} {{ t.trial_after }} <bdi dir="ltr" data-trial-price>{{ price_label }}</bdi> {{ t.mon_per_month }}.</p>
   </form>
 </section>
 {% endmacro %}

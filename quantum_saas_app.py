@@ -3085,9 +3085,12 @@ def monitor_trial():
         if monitor_db.trials_by_client_since(conn, client_hash(), day_ago) >= TRIALS_PER_CLIENT_PER_DAY:
             state, status = "rate_limited", 429
         else:
+            plan = request.form.get("plan")
+            if plan not in monitor.PLANS:
+                plan = "starter"
             ends = (dt.datetime.now(dt.timezone.utc) + dt.timedelta(days=monitor.TRIAL_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
             account_id, _ = monitor_db.create_trial(conn, email, current_lang(), now_iso(), client_hash(), ends,
-                                                    acquisition_variant=variant)
+                                                    plan=plan, acquisition_variant=variant)
             monitor_db.add_domain(conn, account_id, domain)
             account = monitor_db.get_account(conn, account_id)
             if send_dashboard_link(conn, account):
