@@ -1,0 +1,9 @@
+[Unit]
+Description=Quantum Aether daily owner report at 06:00 Europe (CET/CEST)
+
+[Timer]
+OnCalendar=*-*-* 06:00:00 Europe/Berlin
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target
