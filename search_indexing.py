@@ -6,6 +6,10 @@ from pathlib import Path
 CLASSIFICATIONS = frozenset({'confirmed_pornographic', 'confirmed_gambling'})
 POLICY_FILE = Path(__file__).resolve().parent / 'data' / 'indexing_exclusions.json'
 INFRASTRUCTURE_FILE = Path(__file__).resolve().parent / 'data' / 'indexing_infrastructure.json'
+# Automated backstop: hosts that Cloudflare family DNS (1.1.1.3) resolves to 0.0.0.0
+# (adult/malware). Populated by tools/family_dns_scan.py; never indexed, so new
+# adult/malicious domains are de-indexed without waiting for manual review.
+FAMILY_DNS_FILE = Path(__file__).resolve().parent / 'data' / 'family_dns_blocked.json'
 
 
 @lru_cache(maxsize=1)
@@ -30,6 +34,19 @@ def _normal(domain):
     return domain.lower().rstrip('.') if isinstance(domain, str) else None
 
 
+@lru_cache(maxsize=1)
+def family_dns_blocked_hosts():
+    if not FAMILY_DNS_FILE.exists():
+        return frozenset()
+    data = json.loads(FAMILY_DNS_FILE.read_text(encoding='utf-8'))
+    return frozenset(h.lower() for h in data.get('hosts', []))
+
+
+def family_dns_blocked(domain):
+    host = _normal(domain)
+    return host is not None and host in family_dns_blocked_hosts()
+
+
 def is_excluded(domain):
     host = _normal(domain)
     return host is not None and host in reviewed_hosts()
@@ -46,7 +63,7 @@ INDEX_MAX_RANK = 1000  # same scope as the study; long-tail /site/ pages only at
 def is_indexable(domain, rank=None, sector=None):
     """Should /site/<domain> appear in search results? Reviewed exclusions never; watch-list (sector) domains always;
     else top ranks, minus infrastructure endpoints nobody looks up (they only drew unrelated queries)."""
-    if is_excluded(domain):
+    if is_excluded(domain) or family_dns_blocked(domain):
         return False
     if sector:
         return True
