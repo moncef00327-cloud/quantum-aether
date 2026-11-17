@@ -27,9 +27,17 @@ CREATE TABLE IF NOT EXISTS radar_seen (
     source    TEXT NOT NULL,
     title     TEXT,
     topic     TEXT,
-    found_at  TEXT NOT NULL
+    found_at  TEXT NOT NULL,
+    intent    TEXT,
+    stack     TEXT,
+    snippet   TEXT,
+    score     INTEGER,
+    status    TEXT DEFAULT 'new'
 );
 """
+# أعمدة التحليل المضافة (intent/stack/snippet/score/status): تُضاف لقواعد قديمة عبر ALTER.
+ANALYSIS_COLUMNS = (("intent", "TEXT"), ("stack", "TEXT"), ("snippet", "TEXT"),
+                    ("score", "INTEGER"), ("status", "TEXT DEFAULT 'new'"))
 
 CORE = re.compile(r"x25519mlkem768|mlkem|ml-kem|kyber|post[- ]?quantum|pqc|harvest now", re.I)
 CONTEXT = re.compile(r"\btls\b|https|ssl|nginx|apache|caddy|haproxy|cloudflare|openssl|certificate|key exchange|web ?server"
@@ -89,6 +97,11 @@ HINTS = {
 
 def init(conn):
     conn.executescript(SCHEMA)
+    have = {r[1] for r in conn.execute("PRAGMA table_info(radar_seen)")}
+    with conn:
+        for col, ddl in ANALYSIS_COLUMNS:
+            if col not in have:
+                conn.execute(f"ALTER TABLE radar_seen ADD COLUMN {col} {ddl}")
 
 
 # ---------------------------------------------------------------- الجلب (واجهات رسمية فقط)
@@ -186,6 +199,34 @@ def topic_of(item):
     return "general"
 
 
+ANNOUNCE = re.compile(r"announc|releas|now support|now enabled|is now|ships?\b|adds? support|available now|rolled out|we added", re.I)
+
+
+def intent_of(item):
+    """نوع النيّة: عطل توافق، سؤال تفعيل، إعلان، أو نقاش عام."""
+    if _breakage(item["title"] or ""):
+        return "breakage"
+    blob = f"{item['title']} {item['text']}"
+    if QUESTION.search(blob):
+        return "question"
+    if ANNOUNCE.search(blob):
+        return "announcement"
+    return "discussion"
+
+
+def score_of(item, intent):
+    """درجة قابلية التواصل 0–100: الأعلى = شخص يشغّل خادماً ويسأل/يبلّغ عطلاً (عميل محتمل)."""
+    blob = f"{item['title']} {item['text']}"
+    s = {"breakage": 80, "question": 65, "discussion": 40, "announcement": 25}.get(intent, 40)
+    if WEBSERVER.search(blob):  # يشغّل خادماً فعلاً → عميل قابل للتواصل
+        s += 15
+    if item["source"] in ("Server Fault", "Stack Overflow", "Security SE"):
+        s += 5  # ممارسو تشغيل يطلبون حلّاً
+    if CORE.search(item["title"] or ""):
+        s += 5  # الموضوع في العنوان لا عابراً
+    return max(0, min(100, s))
+
+
 def draft_reply(item, topic):
     """مسودة تبدأ بالإجابة، والرابط مرجع لا إعلان، مع الإفصاح عن صاحب الأداة."""
     return (f"{HINTS[topic]}\n\n"
@@ -202,21 +243,33 @@ def find_new(conn, items, now=None):
         if item["url"] in seen or item["url"] in picked or not relevant(item):
             continue
         topic = topic_of(item)
+        intent = intent_of(item)
         picked.add(item["url"])
-        fresh.append(dict(item, topic=topic, draft=draft_reply(item, topic)))
+        fresh.append(dict(item, topic=topic, intent=intent, stack=topic,
+                          snippet=(item.get("text") or "")[:240], score=score_of(item, intent),
+                          status="new", draft=draft_reply(item, topic)))
+    fresh.sort(key=lambda i: -i["score"])  # الأولوية أولاً
     with conn:
-        conn.executemany("INSERT OR IGNORE INTO radar_seen (url, source, title, topic, found_at) VALUES (?, ?, ?, ?, ?)",
-                         [(i["url"], i["source"], i["title"], i["topic"], now.isoformat(timespec="seconds")) for i in fresh])
+        conn.executemany(
+            "INSERT OR IGNORE INTO radar_seen (url, source, title, topic, found_at, intent, stack, snippet, score, status) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            [(i["url"], i["source"], i["title"], i["topic"], now.isoformat(timespec="seconds"),
+              i["intent"], i["stack"], i["snippet"], i["score"], i["status"]) for i in fresh])
     return fresh
 
 
 def digest(fresh):
-    lines = [f"رادار الاهتمام: {len(fresh)} نقاش جديد عن TLS المقاوم للكم", "",
-             "راجع كل نقاش، وانشر الرد بنفسك فقط إن كان يفيد السائل فعلاً. أجب عن سؤاله أولاً.", ""]
+    top = fresh[0]["score"] if fresh else 0
+    lines = [f"رادار العملاء: {len(fresh)} سؤال/نقاش جديد عن TLS المقاوم للكم — مرتّبة بالأولوية (أعلى درجة {top}/100).", "",
+             "لكل بند ردّ علني جاهز: انشره بنفسك تحت السؤال (ثوانٍ). يجيب أولاً، والرابط مرجع لا إعلان.", ""]
     for n, i in enumerate(fresh, 1):
-        lines += [f"{n}. [{i['source']}] {i['title'] or '(comment)'}", f"   {i['url']}",
-                  f"   الموضوع: {i['topic']}", "   مسودة رد:", *["      " + l for l in i["draft"].splitlines()], ""]
-    return f"Quantum Aether radar: {len(fresh)} new discussion(s)", "\n".join(lines)
+        lines += [f"{n}. [{i['score']}/100 · {i['intent']} · {i['source']}] {i['title'] or '(comment)'}",
+                  f"   {i['url']}",
+                  f"   الموضوع: {i['topic']}"]
+        if i.get("snippet"):
+            lines.append(f"   مقتطف: {i['snippet']}")
+        lines += ["   ردّ علني جاهز:", *["      " + l for l in i["draft"].splitlines()], ""]
+    return f"Quantum Aether radar: {len(fresh)} lead(s), top {top}/100", "\n".join(lines)
 
 
 def run(conn, mailer, owner, since, get=_get_json, now=None):

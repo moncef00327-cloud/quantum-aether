@@ -2,7 +2,7 @@
 Description=Run the Quantum Aether interest radar every morning
 
 [Timer]
-OnCalendar=*-*-* 06:00:00 UTC
+OnCalendar=*-*-* 00/3:00:00 UTC
 RandomizedDelaySec=10min
 Persistent=true
 

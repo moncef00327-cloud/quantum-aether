@@ -65,7 +65,11 @@ class RadarTest(unittest.TestCase):
         self.assertEqual(second["new"], 0)
         self.assertEqual(len(self.mailer.sent), 1)       # لا بريد إن لم يوجد جديد
         cols = [r[1] for r in self.conn.execute("PRAGMA table_info(radar_seen)")]
-        self.assertEqual(cols, ["url", "source", "title", "topic", "found_at"])
+        # تحليل: نخزّن حقول النيّة/الدرجة، لكن لا أي عمود يخصّ شخصاً (اسم/حساب/بريد/مؤلّف)
+        self.assertEqual(cols, ["url", "source", "title", "topic", "found_at",
+                                "intent", "stack", "snippet", "score", "status"])
+        self.assertFalse(any(bad in c.lower() for c in cols
+                             for bad in ("author", "user", "account", "name", "email", "handle")))
 
     def test_github_breakage_reports_count_and_off_topic_does_not(self):
         def gh(title, body=""):
