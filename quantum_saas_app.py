@@ -3307,8 +3307,11 @@ def monitor_dashboard(token):
     cfg = current_app.config
     trial = account["status"] in ("TRIAL", "TRIAL_ENDED")
     g.paypal_csp = trial and subscriptions_enabled()
+    domains = monitor_db.list_domains(conn, account["id"])
+    domain_checks = monitor_db.recent_domain_checks(conn, account["id"])
     return render_template("monitor_dashboard.html", account=account, token=token,
-                           domains=monitor_db.list_domains(conn, account["id"]), alerts=alerts,
+                           domains=domains, alerts=alerts, priorities=monitor.migration_priorities(domains),
+                           domain_checks=domain_checks, resolved=monitor.verified_remediations(domain_checks),
                            plan=monitor.PLANS[account["plan"]], notice=request.args.get("n"),
                            live=monitor.is_live(account), limit=monitor.domain_limit(account), trial=trial,
                            trial_left=monitor.trial_days_left(account, dt.datetime.now(dt.timezone.utc)) if trial else None,

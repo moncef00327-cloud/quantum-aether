@@ -82,6 +82,28 @@ class FakeMailer:
         return True
 
 
+class MigrationPrioritiesTest(unittest.TestCase):
+    def test_latest_observation_and_action_order(self):
+        uncertain = result_for("uncertain.example", pq=False, group=None)
+        uncertain["key_exchange"]["version"] = "TLSv1.3"
+        mixed = result_for("mixed.example", days=0)
+        mixed["endpoint_summary"] = {"mixed": True}
+        rows = [
+            {"domain": "classical.example", "result": result_for("classical.example", pq=False, group="X25519")},
+            {"domain": "healthy.example", "result": result_for("healthy.example")},
+            {"domain": "uncertain.example", "pq": 1, "result": uncertain},
+            {"domain": "mixed.example", "result": mixed},
+            {"domain": "unreachable.example", "error": "timeout", "result": mixed},
+        ]
+        self.assertEqual(monitor.migration_priorities(rows), [
+            ("renew", "mixed.example", 0),
+            ("align", "mixed.example", None),
+            ("verify", "uncertain.example", None),
+            ("verify", "unreachable.example", None),
+            ("migrate", "classical.example", None),
+        ])
+
+
 class MonitoringTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.mkdtemp()
@@ -113,6 +135,32 @@ class MonitoringTest(unittest.TestCase):
         return url.split("/monitor/")[1].split("?")[0]
 
     # ------------------------------------------------------------ الاشتراك
+
+    def test_dashboard_shows_measurement_and_verified_recheck(self):
+        account_id, response = self.subscribe()
+        token = self.token_from(response)
+        domain = "tls.example.com"
+        with self.conn() as conn:
+            monitor_db.add_domain(conn, account_id, domain)
+            row = next(row for row in monitor_db.list_domains(conn, account_id) if row["domain"] == domain)
+            before = result_for(domain, pq=False, group="X25519", days=5)
+            monitor_db.save_check(conn, row["id"], result=before)
+
+        url = f"/monitor/{token}?lang=en"
+        body = self.client.get(url).get_data(as_text=True)
+        self.assertIn("Check certificate renewal now", body)
+        self.assertIn("X25519", body)
+        self.assertNotIn("Improvements verified on the latest recheck", body)
+
+        after = result_for(domain)
+        after["endpoint_summary"] = {"total": 2, "pq": 2, "mixed": False}
+        self.scanner.results[domain] = after
+        response = self.client.post(f"/monitor/{token}/scan?lang=en", follow_redirects=True)
+        body = response.get_data(as_text=True)
+        self.assertIn("Improvements verified on the latest recheck", body)
+        self.assertIn("Post-quantum key exchange was observed across the measured endpoints", body)
+        self.assertIn("2/2", body)
+        self.assertNotIn("Check certificate renewal now", body)
 
     def test_pricing_page_shows_both_plans(self):
         body = self.client.get("/monitoring?lang=en").get_data(as_text=True)

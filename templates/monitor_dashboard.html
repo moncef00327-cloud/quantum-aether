@@ -42,6 +42,55 @@
 </section>
 {% endif %}
 
+{% macro measurement(c) %}
+  <time datetime="{{ c.checked_at }}"><bdi>{{ c.checked_at }}</bdi></time>
+  {% if c.error %} · <bdi>{{ c.error }}</bdi>
+  {% else %}
+    {% if c.pq is none %} · {{ sx.undetermined }}{% endif %}
+    {% if c.grp %} · <code dir="ltr">{{ c.grp }}</code>{% endif %}
+    {% if c.endpoints_total and c.endpoints_pq is not none %}
+      · {{ t.hist_addresses }} <bdi>{{ c.endpoints_pq }}/{{ c.endpoints_total }}</bdi>
+    {% endif %}
+    {% if c.days_left is not none %} · {{ t.dash_days_left }} <bdi>{{ c.days_left }}</bdi>{% endif %}
+  {% endif %}
+{% endmacro %}
+
+<section class="card" id="migration-priorities">
+  <h2>{{ t.migration_title }}</h2>
+  <p class="muted small">{{ t.migration_scope }}</p>
+  {% if priorities %}
+  <ul>
+    {% for action, domain, days in priorities %}
+    <li><strong><bdi>{{ domain }}</bdi></strong> · {{ t.migration_actions[action].format(days=days) }}
+      {% if domain_checks.get(domain) %}
+      <div class="muted small">{{ measurement(domain_checks[domain][0]) }}</div>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% elif domains %}
+  <p>{{ t.migration_clear }}</p>
+  {% else %}
+  <p>{{ t.migration_empty }}</p>
+  {% endif %}
+  {% if resolved %}
+  <h3>{{ t.migration_verified }}</h3>
+  <ul>
+    {% for action, domain in resolved %}
+    <li><strong><bdi>{{ domain }}</bdi></strong> · {{ t.migration_outcomes[action] }}
+      <div class="muted small">{{ t.migration_before }} · {{ measurement(domain_checks[domain][1]) }}</div>
+      <div class="muted small">{{ t.migration_after }} · {{ measurement(domain_checks[domain][0]) }}</div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  {% if domains %}
+  <p class="no-print"><a href="#history">{{ t.hist_title }}</a>
+    {% if live %} · <a href="#monitor-recheck">{{ t.dash_scan_now }}</a>{% endif %}
+  </p>
+  {% endif %}
+</section>
+
 <section class="card highlight no-print" id="evidence">
   <h2>{{ t.evid_title }}</h2>
   <p>{{ t.evid_sub }}</p>
@@ -117,7 +166,7 @@
     {% endfor %}
   </table>
   {% if live %}
-  <form method="post" action="{{ url_for('site.monitor_scan_now', token=token, lang=lang) }}" class="no-print">
+  <form id="monitor-recheck" method="post" action="{{ url_for('site.monitor_scan_now', token=token, lang=lang) }}" class="no-print">
     <p><button type="submit">{{ t.dash_scan_now }}</button></p>
   </form>
   {% endif %}

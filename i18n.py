@@ -2371,3 +2371,71 @@ TEXTS["de"].update({
     "site_offer_body": "Dieses öffentliche Ergebnis belegt nicht, wem die Domain gehört oder wer sie betreibt. Wenn Sie sie verwalten, können Sie öffentliche TLS-Handshakes täglich prüfen und Änderungen melden lassen.",
     "site_offer_cta": "Eine von Ihnen verwaltete Domain überwachen",
 })
+
+TEXTS["en"].update({
+    "migration_title": "TLS remediation priorities",
+    "migration_scope": "Based on the latest external TLS checks for your monitored domains.",
+    "migration_clear": "The latest checks found no actions in this list.",
+    "migration_empty": "Add a domain to see its remediation priorities after the first check.",
+    "migration_actions": {
+        "renew": "Check certificate renewal now. Days remaining at last check: {days}.",
+        "align": "Review TLS settings across endpoints and verify consistent post-quantum key exchange.",
+        "verify": "Obtain a conclusive TLS measurement before choosing a migration action.",
+        "migrate": "Check whether the TLS terminator supports hybrid post-quantum key exchange and test it before rollout.",
+    },
+})
+TEXTS["ar"].update({
+    "migration_title": "أولويات معالجة TLS",
+    "migration_scope": "تستند إلى أحدث قياسات TLS الخارجية لنطاقاتك المراقَبة.",
+    "migration_clear": "لم ترصد أحدث القياسات أي حالة تستدعي إجراءً ضمن هذه القائمة.",
+    "migration_empty": "أضف نطاقًا لتظهر أولويات معالجته بعد الفحص الأول.",
+    "migration_actions": {
+        "renew": "راجع تجديد الشهادة الآن. الأيام المتبقية وقت آخر فحص: {days}.",
+        "align": "راجع إعدادات TLS عبر نقاط الاتصال وتحقّق من اتساق تبادل المفاتيح ما بعد الكم.",
+        "verify": "احصل على قياس TLS حاسم قبل اختيار إجراء للهجرة.",
+        "migrate": "تحقّق من دعم نقطة إنهاء TLS لتبادل المفاتيح الهجين ما بعد الكم واختبره قبل التعميم.",
+    },
+})
+TEXTS["de"].update({
+    "migration_title": "Prioritäten für TLS-Maßnahmen",
+    "migration_scope": "Grundlage sind die jüngsten externen TLS-Messungen Ihrer überwachten Domains.",
+    "migration_clear": "Die jüngsten Messungen ergaben keine Maßnahmen in dieser Liste.",
+    "migration_empty": "Fügen Sie eine Domain hinzu, um nach der ersten Prüfung Maßnahmen zu sehen.",
+    "migration_actions": {
+        "renew": "Prüfen Sie jetzt die Zertifikatserneuerung. Verbleibende Tage bei der letzten Prüfung: {days}.",
+        "align": "Prüfen Sie die TLS-Einstellungen aller Endpunkte auf einheitlichen Post-Quanten-Schlüsselaustausch.",
+        "verify": "Ermitteln Sie vor der Wahl einer Migrationsmaßnahme ein eindeutiges TLS-Messergebnis.",
+        "migrate": "Prüfen Sie, ob der TLS-Endpunkt hybriden Post-Quanten-Schlüsselaustausch unterstützt, und testen Sie ihn vor der Einführung.",
+    },
+})
+
+TEXTS["en"].update({
+    "migration_verified": "Improvements verified on the latest recheck",
+    "migration_before": "Previous check",
+    "migration_after": "Latest check",
+    "migration_outcomes": {
+        "renew": "Measured certificate validity is now above the renewal warning threshold.",
+        "align": "All measured endpoints now negotiate post-quantum key exchange.",
+        "migrate": "Post-quantum key exchange was observed across the measured endpoints.",
+    },
+})
+TEXTS["ar"].update({
+    "migration_verified": "تحسّن مؤكّد في أحدث إعادة فحص",
+    "migration_before": "الفحص السابق",
+    "migration_after": "أحدث فحص",
+    "migration_outcomes": {
+        "renew": "أصبحت مدة صلاحية الشهادة المقاسة تتجاوز حد تنبيه التجديد.",
+        "align": "تفاوضت جميع نقاط الاتصال المقاسة على تبادل مفاتيح ما بعد الكم.",
+        "migrate": "رُصد تبادل مفاتيح ما بعد الكم عبر نقاط الاتصال المقاسة.",
+    },
+})
+TEXTS["de"].update({
+    "migration_verified": "Bei der letzten Nachprüfung bestätigte Verbesserungen",
+    "migration_before": "Vorherige Prüfung",
+    "migration_after": "Letzte Prüfung",
+    "migration_outcomes": {
+        "renew": "Die gemessene Zertifikatsgültigkeit liegt nun über der Warnschwelle.",
+        "align": "Alle gemessenen Endpunkte handeln nun Post-Quanten-Schlüsselaustausch aus.",
+        "migrate": "Post-Quanten-Schlüsselaustausch wurde an allen gemessenen Endpunkten beobachtet.",
+    },
+})

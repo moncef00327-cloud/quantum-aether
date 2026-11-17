@@ -147,6 +147,54 @@ def diff(previous, result):
     return alerts
 
 
+def migration_priorities(domains):
+    """Rank actions using each monitored domain's latest external TLS observation."""
+    actions = []
+    for row in domains:
+        result = row.get("result")
+        if row.get("error") or not result:
+            actions.append(("verify", row["domain"], None))
+            continue
+
+        cert = result.get("certificate") or {}
+        days = cert.get("days_left")
+        if days is not None and days <= CERT_WARN_DAYS[0]:
+            actions.append(("renew", row["domain"], days))
+
+        kx = result.get("key_exchange") or {}
+        tls = kx.get("version") or cert.get("negotiated_version")
+        if (result.get("endpoint_summary") or {}).get("mixed"):
+            actions.append(("align", row["domain"], None))
+        elif adoption.is_unsure(kx, tls):
+            actions.append(("verify", row["domain"], None))
+        elif not kx.get("pq"):
+            actions.append(("migrate", row["domain"], None))
+
+    order = {"renew": 0, "align": 1, "verify": 2, "migrate": 3}
+    return sorted(actions, key=lambda action: (order[action[0]], action[2] or 0, action[1]))
+
+
+def verified_remediations(checks_by_domain):
+    """Report improvements only when the new measurement substantiates them."""
+    resolved = []
+    for domain, checks in checks_by_domain.items():
+        if len(checks) < 2:
+            continue
+        latest, previous = checks
+        if latest["error"] or previous["error"]:
+            continue
+        if (previous["days_left"] is not None and latest["days_left"] is not None
+                and previous["days_left"] <= CERT_WARN_DAYS[0] < latest["days_left"]):
+            resolved.append(("renew", domain))
+        if (latest["pq"] == 1 and latest["endpoints_total"]
+                and latest["endpoints_pq"] == latest["endpoints_total"]):
+            if previous["mixed"]:
+                resolved.append(("align", domain))
+            elif previous["pq"] == 0:
+                resolved.append(("migrate", domain))
+    return resolved
+
+
 def record_outcome(conn, account_id, row, result=None, error=None):
     """يحفظ نتيجة فحص نطاق (أو خطأه) ويسجل التنبيهات الناتجة عن المقارنة بالحالة السابقة."""
     if result is None:

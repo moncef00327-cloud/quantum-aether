@@ -264,6 +264,24 @@ def check_history(conn, account_id, limit=None):
     return [dict(r) for r in rows]
 
 
+def recent_domain_checks(conn, account_id):
+    """Return the two latest measurements for each currently monitored domain."""
+    rows = conn.execute("""
+        SELECT * FROM (
+            SELECT c.*, ROW_NUMBER() OVER (
+                PARTITION BY c.domain ORDER BY c.checked_at DESC, c.id DESC
+            ) AS position
+            FROM monitor_checks c JOIN monitor_domains d
+              ON d.account_id = c.account_id AND d.domain = c.domain
+            WHERE c.account_id = ? AND d.checked_at IS NOT NULL AND c.checked_at >= d.created_at
+        ) WHERE position <= 2 ORDER BY domain, position
+    """, (account_id,))
+    checks = {}
+    for row in rows:
+        checks.setdefault(row["domain"], []).append(dict(row))
+    return checks
+
+
 def prune_checks(conn, before_iso):
     with conn:
         return conn.execute("DELETE FROM monitor_checks WHERE checked_at < ?", (before_iso,)).rowcount
