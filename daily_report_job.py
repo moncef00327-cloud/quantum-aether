@@ -20,9 +20,59 @@ def one(c, sql, a=()):
     return (r[0] if r else 0) or 0
 
 
+SITE = "https://ather-quantum.com"
+PAY_SECTORS = ("banks-europe", "banks-mena", "banks-dach", "finance-worldwide",
+               "payments-fintech", "crypto-exchanges", "health-insurance-dach", "telecom")
+
+
+def prospects_today(c, day):
+    """عملاء محتملون: مؤسسة في قطاع يدفع، درجة C/F، زارت صفحتها عندنا أمس، ولم نراسلها."""
+    try:
+        wk = c.execute("SELECT MAX(week) FROM adoption_results").fetchone()[0]
+        contacted = {r[0] for r in c.execute("SELECT domain FROM contacted_orgs")}
+    except Exception:
+        return []
+
+    def grade_sector(dom):
+        for dd in (dom, "www." + dom):
+            r = c.execute("SELECT grade,sector FROM adoption_results WHERE week=? AND domain=?", (wk, dd)).fetchone()
+            if r:
+                return r[0], r[1]
+        return None, None
+
+    views = {}
+    for path, n in c.execute("SELECT path,COUNT(*) FROM pageviews WHERE day=? AND is_bot=0 AND is_test=0 "
+                             "AND path LIKE '/site/%' GROUP BY path", (day,)):
+        dom = path.split("/site/", 1)[1].split("?")[0].strip("/").lower()
+        if dom.startswith("www."):
+            dom = dom[4:]
+        if dom and "." in dom:
+            views[dom] = views.get(dom, 0) + n
+    out = []
+    for dom, v in views.items():
+        if dom in contacted or ".gov" in dom:
+            continue
+        g, sec = grade_sector(dom)
+        if g in ("C", "F") and sec in PAY_SECTORS:
+            out.append((v, g, dom, sec))
+    out.sort(key=lambda x: -x[0])
+    return out
+
+
 def build(c, day):
     y = day
     L = [f"Quantum Aether — التقرير اليومي ليوم {y} (UTC)", "=" * 48, ""]
+
+    # 0) عملاء محتملون اليوم (الأهم)
+    prospects = prospects_today(c, y)
+    L.append("🎯 عملاء محتملون اليوم (مؤسسة تدفع · C/F · أظهرت اهتماماً · لم نراسلها):")
+    if prospects:
+        for v, g, dom, sec in prospects:
+            L.append(f"    [{g} · {sec} · {v} زيارة] {dom}  →  security@{dom}  ·  {SITE}/site/{dom}")
+        L.append("    العرض: ابدأ المراقبة الدائمة (14 يوماً مجاناً). راسِل security@ أو أرفق رابط النتيجة.")
+    else:
+        L.append("    لا عميل محتمل جديد ضمن المعايير أمس.")
+    L.append("")
 
     # 1) الزيارات والفحوصات
     pv = one(c, "SELECT COUNT(*) FROM pageviews WHERE day=? AND is_bot=0 AND is_test=0", (y,))
