@@ -23,12 +23,19 @@
     "tutanota.com tuta.io posteo.de mailbox.org outlook.de qq.com 163.com").split(" ");
   var EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
   var sent = {};
-  var PLAN_CSS = ".trial-plan-switch{display:flex;gap:.5rem;flex-wrap:wrap;margin:.25rem 0 1rem}" +
-    ".trial-plan-pill{flex:1 1 140px;display:inline-flex;align-items:center;justify-content:center;gap:.35rem;" +
-    "padding:.6rem .9rem;border-radius:999px;border:1px solid rgba(148,130,200,.4);background:rgba(16,11,28,.55);" +
-    "color:#d8d4e8;font-size:.95rem;font-weight:600;cursor:pointer;transition:border-color .15s,background .15s,color .15s,box-shadow .15s}" +
-    ".trial-plan-pill small{font-weight:400;opacity:.82;font-size:.82em}" +
-    ".trial-plan-pill.is-active,.trial-plan-pill[aria-pressed='true']{border-color:#67e8f9;background:rgba(103,232,249,.16);color:#fff;box-shadow:0 0 0 1px rgba(103,232,249,.4)}" +
+  var PLAN_CSS = ".trial-plan-switch{display:grid!important;grid-template-columns:1fr 1fr;gap:10px;margin:.5rem 0 1rem}" +
+    ".service-content button.trial-plan-pill,.qa-trial button.trial-plan-pill,button.trial-plan-pill{" +
+    "display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:3px!important;" +
+    "padding:10px 12px!important;min-height:58px!important;border-radius:16px!important;" +
+    "border:1px solid rgba(148,163,184,.32)!important;background:rgba(15,12,28,.78)!important;" +
+    "color:#cbd5e1!important;box-shadow:none!important;cursor:pointer;text-align:center!important;line-height:1.3!important;" +
+    "transition:border-color .15s,background .15s,color .15s,box-shadow .15s}" +
+    "button.trial-plan-pill .trial-plan-main{display:block;font-size:15px;font-weight:700;white-space:nowrap;letter-spacing:.01em;color:inherit}" +
+    "button.trial-plan-pill .trial-plan-sub{display:block;font-size:12px;font-weight:500;white-space:nowrap;opacity:.85;color:inherit}" +
+    ".service-content button.trial-plan-pill.is-active,.qa-trial button.trial-plan-pill.is-active,button.trial-plan-pill[aria-pressed='true']{" +
+    "border:1.5px solid #67e8f9!important;background:rgba(103,232,249,.16)!important;color:#ffffff!important;" +
+    "box-shadow:0 0 16px rgba(103,232,249,.22),inset 0 1px 0 rgba(255,255,255,.15)!important}" +
+    "button.trial-plan-pill[aria-pressed='true'] .trial-plan-main::before{content:'✓ ';color:#67e8f9}" +
     "article.card[data-select-plan],.price-box[data-select-plan]{cursor:pointer}" +
     "article.card.is-plan-selected,.price-box.is-plan-selected{border-color:#67e8f9!important;box-shadow:0 0 0 1px rgba(103,232,249,.35)}";
   if (typeof document !== "undefined" && !document.getElementById("trial-plan-style")) {
