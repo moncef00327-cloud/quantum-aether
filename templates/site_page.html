@@ -15,16 +15,17 @@
   </div>
 </section>
 
+{% set cf_urgent = summary and not summary.unsure and summary.grade in ('C', 'F') %}
+{% set domain_cta_title = ('ابدأ مراقبة ' ~ domain ~ ' مجاناً') if lang == 'ar' else (('Überwachung von ' ~ domain ~ ' kostenlos starten') if lang == 'de' else ('Start monitoring ' ~ domain ~ ' free')) %}
 {% if conversion_variant == 'treatment' %}
 {% set offer_grade = 'unknown' if not summary or summary.unsure else summary.grade|lower %}
-{% set offer_title = t['conversion_offer_title_' ~ offer_grade] if offer_grade in ('a','b','c','f','unknown') else t.conversion_offer_title_c %}
 {% set offer_body = t['conversion_offer_body_' ~ offer_grade] if offer_grade in ('a','b','c','f','unknown') else t.conversion_offer_body_c %}
 <p class="small">{{ t.site_offer_title.format(domain=domain) }} {{ t.site_offer_body }}</p>
-{{ trial_cta('site-trial', title=offer_title, sub=offer_body ~ ' ' ~ t.conversion_offer_trial,
-             prefill=domain, editable_domain=true, source='scan_result') }}
+{{ trial_cta('site-trial', title=domain_cta_title, sub=offer_body ~ ' ' ~ t.conversion_offer_trial,
+             prefill=domain, editable_domain=true, source='scan_result', urgent=cf_urgent) }}
 <p class="small"><a href="{{ url_for('site.index', lang=lang) }}#scan" data-ev="scan_cta">{{ t.conversion_offer_scan }} →</a></p>
 {% else %}
-{{ trial_cta('site-trial', title=t.trial_cta_title, prefill=domain, editable_domain=true, source='scan_result') }}
+{{ trial_cta('site-trial', title=domain_cta_title, prefill=domain, editable_domain=true, source='scan_result', urgent=cf_urgent) }}
 {% endif %}
 
 {% if summary %}
