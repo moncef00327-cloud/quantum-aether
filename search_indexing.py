@@ -34,12 +34,22 @@ def _normal(domain):
     return domain.lower().rstrip('.') if isinstance(domain, str) else None
 
 
-@lru_cache(maxsize=1)
+_family_cache = {'mtime': None, 'hosts': frozenset()}
+
+
 def family_dns_blocked_hosts():
-    if not FAMILY_DNS_FILE.exists():
+    """mtime-aware so the weekly refresh (tools/family_dns_scan.py) applies without an app restart."""
+    try:
+        mtime = FAMILY_DNS_FILE.stat().st_mtime
+    except OSError:
         return frozenset()
-    data = json.loads(FAMILY_DNS_FILE.read_text(encoding='utf-8'))
-    return frozenset(h.lower() for h in data.get('hosts', []))
+    if _family_cache['mtime'] != mtime:
+        try:
+            data = json.loads(FAMILY_DNS_FILE.read_text(encoding='utf-8'))
+            _family_cache.update(mtime=mtime, hosts=frozenset(h.lower() for h in data.get('hosts', [])))
+        except (ValueError, OSError):
+            return _family_cache['hosts']
+    return _family_cache['hosts']
 
 
 def family_dns_blocked(domain):

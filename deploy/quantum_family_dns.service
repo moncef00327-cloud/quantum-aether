@@ -1,0 +1,10 @@
+[Unit]
+Description=Quantum Aether weekly family-DNS adult/malware de-index refresh
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/var/www/quantum_saas
+EnvironmentFile=/etc/quantum_saas.env
+ExecStart=/var/www/quantum_saas/.venv312/bin/python3 tools/family_dns_scan.py
