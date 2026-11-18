@@ -180,6 +180,10 @@ class AgentDiscoveryTests(unittest.TestCase):
   self.assertEqual(response.json['result']['structuredContent']['error'],'tls_failure')
 
  def test_registry_metadata_describes_real_remote_transport(self):
-  data=self.client.get('/api/v1/agent/mcp-server.json').json
-  self.assertEqual(data['remotes'],[{'type':'streamable-http','url':'https://ather-quantum.com/mcp'}])
-  self.assertEqual(data['name'],'io.github.moncef00327-cloud/quantum-aether')
+  for path in ['/api/v1/agent/mcp-server.json','/.well-known/mcp.json']:
+   data=self.client.get(path).json
+   self.assertEqual(data['remotes'],[{'type':'streamable-http','url':'https://ather-quantum.com/mcp'}])
+   self.assertEqual(data['name'],'io.github.moncef00327-cloud/quantum-aether')
+  plugin=self.client.get('/.well-known/ai-plugin.json').json
+  self.assertEqual(plugin['api']['url'],'https://ather-quantum.com/openapi.yaml')
+  self.assertEqual(plugin['mcp']['url'],'https://ather-quantum.com/mcp')

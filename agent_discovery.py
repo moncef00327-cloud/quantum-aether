@@ -124,6 +124,7 @@ def register(bp, services):
   return jsonify(example())
 
  @bp.get('/api/v1/agent/mcp-server.json')
+ @bp.get('/.well-known/mcp.json')
  def agent_registry_metadata():
   # Honest remote registration metadata: this endpoint does not claim catalog acceptance.
   return jsonify({'$schema':'https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json',
@@ -131,6 +132,16 @@ def register(bp, services):
    'description':'Measure public TLS and post-quantum key exchange; read timestamped evidence and measurement limits.',
    'repository':{'url':'https://github.com/moncef00327-cloud/quantum-aether','source':'github','subfolder':'mcp'},
    'remotes':[{'type':'streamable-http','url':base()+'/mcp'}]})
+
+ @bp.get('/.well-known/ai-plugin.json')
+ def ai_plugin_manifest():
+  b=base()
+  return jsonify({'schema_version':'v1','name_for_human':'Quantum Aether','name_for_model':'quantum_aether',
+   'description_for_human':'Check whether a public domain negotiates post-quantum TLS key exchange (X25519MLKEM768) and read timestamped evidence.',
+   'description_for_model':'Use get_tls_evidence or /api/v1/badge/{domain} to read stored TLS evidence without scanning. Use scan_tls or /api/v1/scan?domain={domain} only when the user requests a new public HTTPS probe on port 443. Inspect observation_status and methodology before making security claims.',
+   'auth':{'type':'none'},'api':{'type':'openapi','url':b+'/openapi.yaml','is_user_authenticated':False},
+   'mcp':{'type':'streamable-http','url':b+'/mcp'},
+   'logo_url':b+'/static/favicon.svg','contact_email':'alerts@ather-quantum.com','legal_info_url':b+'/agb?lang=en'})
 
  def rpc_error(code,message,request_id=None,status=400):
   return jsonify(jsonrpc='2.0',id=request_id,error={'code':code,'message':message}),status
