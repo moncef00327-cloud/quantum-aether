@@ -3,12 +3,14 @@
 
 GUIDES = {
     "enable-x25519mlkem768-nginx": {
-        "updated": "2026-11-14",
+        "updated": "2026-11-18",
         "en": {
             "title": "How to enable post-quantum TLS (X25519MLKEM768) on nginx",
             "description": "Turn on the hybrid ML-KEM key exchange that Chrome and Firefox already use, on nginx with OpenSSL 3.5, and verify it.",
             "body": """
 <p>Chrome (since version 131) and Firefox already offer the hybrid key exchange <code>X25519MLKEM768</code> in every HTTPS connection. If your server accepts it, the session keys are protected against a future quantum computer. If it does not, the browser falls back to plain X25519 and the traffic can be recorded today and decrypted later (<a href="/guides/harvest-now-decrypt-later?lang=en">harvest now, decrypt later</a>).</p>
+
+<div class="card"><p><strong>Security release, 18 November 2026:</strong> nginx 1.30.7 (stable) and 1.31.9 (mainline) fix ten vulnerabilities, including memory corruption in HTTP/2 flow control (CVE-2026-123007) and use-after-free in HTTP/2 (CVE-2026-123633) (<a href="https://nginx.org/news.html" rel="noopener">nginx.org</a>). Update first, and check the version you actually run with <code>nginx -v</code>: distribution packages and container images can lag behind. Updating nginx does <strong>not</strong> by itself enable post-quantum TLS, because that depends on the OpenSSL version nginx is built against (step 1). Use the same maintenance window for both.</p></div>
 
 <h2>1. Check your OpenSSL version</h2>
 <p>nginx gets its TLS from the OpenSSL library it was built against. ML-KEM arrived in <strong>OpenSSL 3.5</strong>.</p>
@@ -56,6 +58,8 @@ openssl version</pre>
             "description": "فعّل تبادل المفاتيح الهجين ML-KEM الذي تستخدمه Chrome وFirefox فعلاً، على nginx مع OpenSSL 3.5، ثم تحقق منه.",
             "body": """
 <p>متصفح Chrome (منذ الإصدار 131) وFirefox يعرضان تبادل المفاتيح الهجين <code>X25519MLKEM768</code> في كل اتصال HTTPS. إذا قبله خادمك فمفاتيح الجلسة محمية من أي حاسوب كمومي مستقبلي. وإذا لم يقبله يرجع المتصفح إلى X25519 العادي، ويمكن تسجيل حركة المرور اليوم وفك تشفيرها لاحقاً (<a href="/guides/harvest-now-decrypt-later?lang=ar">احفظ الآن، فُكّ لاحقاً</a>).</p>
+
+<div class="card"><p><strong>تحديث أمني، 18 نوفمبر 2026:</strong> يصلح nginx 1.30.7 (المستقر) و1.31.9 (الرئيسي) عشر ثغرات، منها إفساد الذاكرة في التحكم بتدفق HTTP/2 (CVE-2026-123007) واستخدام الذاكرة بعد تحريرها في HTTP/2 (CVE-2026-123633) (<a href="https://nginx.org/news.html" rel="noopener">nginx.org</a>). حدّث أولاً، وتحقق من الإصدار الذي يعمل فعلاً بالأمر <code>nginx -v</code>، فحزم التوزيعات وصور الحاويات قد تتأخر. تحديث nginx <strong>لا</strong> يفعّل وحده TLS المقاوم للكم، لأن ذلك يعتمد على إصدار OpenSSL الذي بُني عليه nginx (الخطوة 1). استغل نافذة الصيانة نفسها للأمرين.</p></div>
 
 <h2>1. تحقق من إصدار OpenSSL</h2>
 <p>يأخذ nginx تشفير TLS من مكتبة OpenSSL التي بُني عليها. دعم ML-KEM وصل في <strong>OpenSSL 3.5</strong>.</p>
