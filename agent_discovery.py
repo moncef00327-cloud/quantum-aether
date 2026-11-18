@@ -131,6 +131,8 @@ def register(bp, services):
    'name':'io.github.moncef00327-cloud/quantum-aether','title':'Quantum Aether','version':VERSION,
    'description':'Measure public TLS and post-quantum key exchange; read timestamped evidence and measurement limits.',
    'repository':{'url':'https://github.com/moncef00327-cloud/quantum-aether','source':'github','subfolder':'mcp'},
+   'packages':[{'registryType':'pypi','identifier':'quantum-aether-mcp','version':VERSION,'transport':{'type':'stdio'}},
+    {'registryType':'npm','identifier':'quantum-aether','version':VERSION}],
    'remotes':[{'type':'streamable-http','url':base()+'/mcp'}]})
 
  @bp.get('/.well-known/ai-plugin.json')
