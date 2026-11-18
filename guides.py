@@ -1078,4 +1078,143 @@ Environment=OPENSSL_CONF=/etc/nginx/openssl-oqs.cnf</pre>
 """,
         },
     },
+    "gulf-banks-post-quantum-cryptography-requirements": {
+        "updated": "2026-11-18",
+        "en": {
+            "title": "Post-quantum cryptography rules for Gulf banks: SAMA, Saudi NCS and the UAE (2026)",
+            "description": "What SAMA's quantum circular, Saudi Arabia's National Cryptographic Standards and the UAE National Encryption Policy actually require, with dates and clause numbers, and how far Gulf banks' public TLS already is.",
+            "body": """
+<p>As of November 2026, Saudi Arabia is the only Gulf state with a binding post-quantum requirement aimed at banks: a SAMA circular that sets deadlines for a cryptographic inventory and a quantum risk assessment. The UAE requires migration plans from government entities. We found no published post-quantum requirement for banks from the central banks of Qatar, Bahrain, Oman or Kuwait.</p>
+
+<h2>Saudi Arabia: SAMA circular 482021280</h2>
+<p>On 27 August 2026 (14/03/1448 AH) the Saudi Central Bank issued circular No. 482021280, <em>Enhancement of Operational Resilience to Address Quantum Computing Risks</em>, to the financial institutions it supervises. The SAMA Rulebook lists it as in force. It requires:</p>
+<ol>
+<li><strong>By the end of Q4 2026 (31 December 2026):</strong> accurate and comprehensive procedures to identify and classify all cryptographic assets, classify the related data, systems and services by sensitivity and migration priority, and assess the cryptographic resilience of priority assets, including constraints and third-party dependencies.</li>
+<li><strong>By the end of Q1 2027 (31 March 2027):</strong> an enterprise-level assessment of quantum computing risks within enterprise risk management, with action plans.</li>
+<li><strong>No date set:</strong> plans to reach the required cryptographic resilience, or appropriate alternatives, for all priority assets.</li>
+<li><strong>No date set:</strong> quantum risk as a standing item for the Information Security Supervisory Committee and the Risk Committee, with reporting to the board.</li>
+</ol>
+<p>The circular does not name algorithms and does not set a date for completing the migration. The signed text is in Arabic; the English version in the rulebook has no legal effect.</p>
+
+<h2>Saudi Arabia: National Cryptographic Standards (NCA)</h2>
+<p>The version published on the NCA website today is still <strong>NCS-1:2020</strong>, which only says that post-quantum cryptography "will be considered" in later versions. The updated <strong>NCS-2:2025</strong> was published for public consultation (closed 25 December 2025). It applies to "national entities" and contains a section on post-quantum algorithms:</p>
+<ul>
+<li><strong>2-5-1:</strong> ML-KEM (FIPS 203): ML-KEM-512 and ML-KEM-768 for the MODERATE level, ML-KEM-1024 for ADVANCED.</li>
+<li><strong>2-5-3 and 2-5-4:</strong> ML-DSA (FIPS 204) and SLH-DSA (FIPS 205) for signatures; 2-5-2 also accepts Classic McEliece.</li>
+<li><strong>2-5-5-1:</strong> "A post-quantum cryptosystem must be used in hybrid with approved classical cryptosystems."</li>
+<li><strong>2-5-5-2:</strong> "All cryptographic systems or solutions must support PQC algorithms."</li>
+</ul>
+<p>The hybrid group that browsers use today, <code>X25519MLKEM768</code>, combines Curve25519 (accepted for MODERATE in 2-4-3-1) with ML-KEM-768, so it matches both clauses. Check the NCA website for the final status before citing NCS-2 in an audit.</p>
+
+<h2>United Arab Emirates</h2>
+<ul>
+<li><strong>National Encryption Policy</strong> (UAE Cyber Security Council, approval announced 27 November 2025): government entities must prepare officially approved plans to move from classical public-key cryptography (RSA, ECC) to post-quantum cryptography, keep an automated inventory of cryptographic assets and design new systems to be crypto-agile. No submission deadline has been published.</li>
+<li><strong>National post-quantum transition programme</strong> (Cyber Security Council and ATRC, announced 11 May 2026): a cryptographic discovery tool, TII cryptographic libraries with post-quantum algorithms, and a quantum key distribution pilot. It names "critical sectors", not banks specifically, and sets no deadline.</li>
+<li><strong>Central Bank of the UAE:</strong> its 2026 operational risk regulation covers ICT and cyber risk; we found no post-quantum requirement in public reporting about it.</li>
+</ul>
+
+<h2>Qatar, Bahrain, Oman and Kuwait</h2>
+<p>We found no published post-quantum requirement for banks from the Qatar Central Bank, the Central Bank of Bahrain, the Central Bank of Oman or the Central Bank of Kuwait as of November 2026. Banks there that are listed abroad or serve EU customers may still face <a href="/guides/nis2-dora-post-quantum-cryptography?lang=en">DORA</a> or partner requirements, and the global timelines are on <a href="/deadlines?lang=en">post-quantum deadlines</a>.</p>
+
+<h2>Where Gulf banks stand today</h2>
+<p>Our <a href="/banks/arab-banks-2026-11?lang=en">Arab banks report</a> (measured 12 November 2026) counted the public subdomains of each bank that negotiate a post-quantum key exchange:</p>
+<ul>
+<li><strong>Qatar:</strong> 74 of 108 responding subdomains (3 banks).</li>
+<li><strong>UAE:</strong> 51 of 234 (5 banks).</li>
+<li><strong>Kuwait:</strong> 11 of 81 (3 banks).</li>
+<li><strong>Saudi Arabia:</strong> 18 of 219 (7 banks), and none of the 6 measured main websites.</li>
+</ul>
+<p>So the country with the strictest written rules has the lowest share on its public endpoints. Often the cause is not the bank's own servers but a load balancer, WAF or CDN that has not enabled the hybrid group yet.</p>
+
+<h2>What a bank can do before 31 December 2026</h2>
+<ol>
+<li><strong>Start the inventory with public TLS endpoints.</strong> They are the easiest assets to enumerate and the most exposed to "<a href="/guides/harvest-now-decrypt-later?lang=en">harvest now, decrypt later</a>". For each hostname record the date, TLS version, negotiated group and who terminates TLS (CDN, load balancer or origin).</li>
+<li><strong>Mark third-party dependencies.</strong> The SAMA circular asks for them explicitly. A CDN or WAF vendor that does not offer X25519MLKEM768 is a constraint to document, with the vendor's roadmap.</li>
+<li><strong>Enable the hybrid key exchange where you control the server.</strong> See the guides for <a href="/guides/enable-x25519mlkem768-nginx?lang=en">nginx</a>, <a href="/guides/post-quantum-tls-apache-caddy-haproxy-cloudflare?lang=en">Apache, Caddy, HAProxy and Cloudflare</a> and <a href="/guides/aws-alb-cloudfront-post-quantum-tls?lang=en">AWS</a>, or the <a href="/tools/pq-tls-config?lang=en">configuration generator</a>.</li>
+<li><strong>Keep evidence over time.</strong> One scan shows one day; regular checks show the board committee progress and catch regressions after vendor changes.</li>
+</ol>
+<p>A free check of one host is on the <a href="/?lang=en">home page</a>; an <a href="/audit?lang=en">estate audit</a> covers all of an organisation's public subdomains.</p>
+
+<h2>What a TLS check does not prove</h2>
+<p>A public scan sees one endpoint on port 443 at one moment. It does not cover internal systems, HSMs, card and payment protocols, stored data, certificates or key management, which the SAMA inventory also has to include. It is evidence for one part of the inventory, not a compliance certificate.</p>
+
+<h2>Sources</h2>
+<ul>
+<li><a href="https://rulebook.sama.gov.sa/en/enhancement-operational-resilience-address-quantum-computing-risks" rel="noopener">SAMA Rulebook: Enhancement of Operational Resilience to Address Quantum Computing Risks</a> (circular 482021280, 27/08/2026)</li>
+<li><a href="https://nca.gov.sa/ncs_en.pdf" rel="noopener">NCA: National Cryptographic Standards NCS-1:2020</a> (current version on the NCA site)</li>
+<li><a href="https://istitlaa.ncc.gov.sa/en/security/nca/ncs/Documents/NCS-2-en.pdf" rel="noopener">NCA: NCS-2:2025, consultation version</a>, sections 2-4-3, 2-5</li>
+<li><a href="https://u.ae/en/about-the-uae/strategies-initiatives-and-awards/policies/cyber-activities/National-Encryption-Policy" rel="noopener">UAE government portal: National Encryption Policy</a></li>
+<li><a href="https://www.atrc.gov.ae/news/uae-cyber-security-council-partners-atrc-advance-national-post-quantum-security-transition" rel="noopener">ATRC: Cyber Security Council partners with ATRC on the post-quantum transition</a> (11 May 2026)</li>
+</ul>
+""",
+        },
+        "ar": {
+            "title": "متطلبات التشفير ما بعد الكمومي للبنوك في الخليج: ساما والمعايير الوطنية السعودية والإمارات (2026)",
+            "description": "ما يشترطه فعلاً تعميم ساما عن مخاطر الحوسبة الكمومية، والمعايير الوطنية للتشفير في السعودية، وسياسة التشفير الوطنية في الإمارات، مع التواريخ وأرقام البنود، وأين تقف البنوك الخليجية اليوم.",
+            "body": """
+<p>حتى نوفمبر 2026، السعودية هي الدولة الخليجية الوحيدة التي لديها متطلب مُلزِم للبنوك بشأن التشفير ما بعد الكمومي: تعميم من البنك المركزي السعودي (ساما) يحدد مواعيد لحصر أصول التشفير وتقييم المخاطر الكمومية. أما الإمارات فتشترط خطط انتقال على الجهات الحكومية. ولم نجد متطلباً منشوراً للبنوك من البنوك المركزية في قطر والبحرين وعُمان والكويت.</p>
+
+<h2>السعودية: تعميم ساما رقم 482021280</h2>
+<p>أصدر البنك المركزي السعودي في 14/03/1448هـ (27 أغسطس 2026) التعميم رقم 482021280 بعنوان <em>تعزيز المرونة التشغيلية لمواجهة مخاطر الحوسبة الكمومية</em>، موجّهاً إلى المؤسسات المالية الخاضعة لإشرافه، وهو مُدرج في دليل الأنظمة (Rulebook) على أنه ساري المفعول. ويشترط:</p>
+<ol>
+<li><strong>بنهاية الربع الرابع 2026 (31 ديسمبر 2026):</strong> التأكد من دقة وشمول إجراءات تحديد جميع أصول التشفير وتصنيفها، وتصنيف البيانات والأنظمة والخدمات المرتبطة بها حسب الحساسية وأولوية الانتقال، وتقييم المرونة التشفيرية للأصول ذات الأولوية بما في ذلك القيود والاعتماد على أطراف خارجية.</li>
+<li><strong>بنهاية الربع الأول 2027 (31 مارس 2027):</strong> تقييم مخاطر الحوسبة الكمومية على مستوى المؤسسة ضمن إدارة المخاطر، مع خطط عمل لمعالجتها.</li>
+<li><strong>دون موعد محدد:</strong> خطط ومبادرات لبلوغ المرونة التشفيرية المطلوبة، أو حلول بديلة مناسبة، لكل الأصول ذات الأولوية.</li>
+<li><strong>دون موعد محدد:</strong> إدراج المخاطر الكمومية بنداً دائماً لدى اللجنة الإشرافية لأمن المعلومات ولجنة المخاطر، ورفع التحديات والتوصيات إلى مجلس الإدارة.</li>
+</ol>
+<p>لا يسمّي التعميم خوارزميات، ولا يحدد موعداً لإكمال الانتقال. والنص المُلزِم هو النص العربي الموقّع.</p>
+
+<h2>السعودية: المعايير الوطنية للتشفير (الهيئة الوطنية للأمن السيبراني)</h2>
+<p>الإصدار المنشور اليوم على موقع الهيئة ما زال <strong>NCS-1:2020</strong>، وهو يذكر فقط أن التشفير ما بعد الكمومي "سيؤخذ في الاعتبار" في الإصدارات القادمة. أما الإصدار المحدَّث <strong>NCS-2:2025</strong> فنُشر لاستطلاع الرأي العام (انتهى في 25 ديسمبر 2025)، وينطبق على "الجهات الوطنية"، ويتضمن قسماً لخوارزميات ما بعد الكم:</p>
+<ul>
+<li><strong>2-5-1:</strong> ML-KEM (FIPS 203): ML-KEM-512 وML-KEM-768 للمستوى المتوسط (MODERATE)، وML-KEM-1024 للمستوى المتقدم (ADVANCED).</li>
+<li><strong>2-5-3 و2-5-4:</strong> ML-DSA (FIPS 204) وSLH-DSA (FIPS 205) للتوقيع الرقمي؛ ويقبل البند 2-5-2 أيضاً Classic McEliece.</li>
+<li><strong>2-5-5-1:</strong> يجب استخدام نظام التشفير ما بعد الكمومي بشكل هجين مع نظام تقليدي معتمد.</li>
+<li><strong>2-5-5-2:</strong> يجب أن تدعم جميع أنظمة وحلول التشفير خوارزميات ما بعد الكم.</li>
+</ul>
+<p>المجموعة الهجينة التي تستخدمها المتصفحات اليوم، <code dir="ltr">X25519MLKEM768</code>، تجمع Curve25519 (المقبول للمستوى المتوسط في البند 2-4-3-1) مع ML-KEM-768، فهي تحقق البندين معاً. تحقّق من الحالة النهائية على موقع الهيئة قبل الاستناد إلى NCS-2 في أي تدقيق.</p>
+
+<h2>الإمارات العربية المتحدة</h2>
+<ul>
+<li><strong>سياسة التشفير الوطنية</strong> (مجلس الأمن السيبراني، أُعلن اعتمادها في 27 نوفمبر 2025): على الجهات الحكومية إعداد خطط معتمدة رسمياً للانتقال من التشفير التقليدي بالمفتاح العام (RSA وECC) إلى التشفير ما بعد الكمومي، والاحتفاظ بحصر آلي لأصول التشفير، وتصميم الأنظمة الجديدة بمرونة تسمح بتبديل الخوارزميات. لم يُنشر موعد لتقديم الخطط.</li>
+<li><strong>البرنامج الوطني للانتقال إلى أمن ما بعد الكم</strong> (مجلس الأمن السيبراني ومجلس أبحاث التكنولوجيا المتطورة ATRC، أُعلن في 11 مايو 2026): أداة لاكتشاف أصول التشفير، ومكتبات تشفير من معهد الابتكار التكنولوجي TII تشمل خوارزميات ما بعد الكم، وتجربة لتوزيع المفاتيح الكمومي. يذكر "القطاعات الحيوية" دون تسمية البنوك، ودون مواعيد.</li>
+<li><strong>مصرف الإمارات المركزي:</strong> لائحته لعام 2026 لإدارة المخاطر التشغيلية تغطي مخاطر تقنية المعلومات والأمن السيبراني، ولم نجد فيما نُشر عنها متطلباً خاصاً بما بعد الكم.</li>
+</ul>
+
+<h2>قطر والبحرين وعُمان والكويت</h2>
+<p>لم نجد حتى نوفمبر 2026 متطلباً منشوراً للبنوك بشأن التشفير ما بعد الكمومي من مصرف قطر المركزي أو مصرف البحرين المركزي أو البنك المركزي العُماني أو بنك الكويت المركزي. لكن البنوك المدرجة في الخارج أو التي تخدم عملاء في الاتحاد الأوروبي قد تخضع لـ <a href="/guides/nis2-dora-post-quantum-cryptography?lang=ar">DORA</a> أو لاشتراطات الشركاء، والمواعيد العالمية في صفحة <a href="/deadlines?lang=ar">مواعيد الانتقال إلى ما بعد الكم</a>.</p>
+
+<h2>أين تقف البنوك الخليجية اليوم</h2>
+<p>أحصى <a href="/banks/arab-banks-2026-11?lang=ar">تقرير البنوك العربية</a> (قياس 12 نوفمبر 2026) النطاقات الفرعية العامة لكل بنك التي تتفاوض على تبادل مفاتيح مقاوم للكم:</p>
+<ul>
+<li><strong>قطر:</strong> 74 من 108 نطاقات فرعية مستجيبة (3 بنوك).</li>
+<li><strong>الإمارات:</strong> 51 من 234 (5 بنوك).</li>
+<li><strong>الكويت:</strong> 11 من 81 (3 بنوك).</li>
+<li><strong>السعودية:</strong> 18 من 219 (7 بنوك)، ولا شيء من المواقع الرئيسية الستة التي قيست.</li>
+</ul>
+<p>أي أن الدولة صاحبة أشد المتطلبات المكتوبة هي الأقل نسبة على نقاطها العامة. والسبب غالباً ليس خوادم البنك نفسه، بل موازن تحميل أو جدار حماية تطبيقات (WAF) أو شبكة CDN لم تفعّل المجموعة الهجينة بعد.</p>
+
+<h2>ما يمكن للبنك فعله قبل 31 ديسمبر 2026</h2>
+<ol>
+<li><strong>ابدأ الحصر بنقاط TLS العامة.</strong> هي أسهل الأصول حصراً وأكثرها تعرضاً لهجوم "<a href="/guides/harvest-now-decrypt-later?lang=ar">اجمع الآن وفُكّ لاحقاً</a>". سجّل لكل نطاق: التاريخ، وإصدار TLS، والمجموعة المتفق عليها، والجهة التي تنهي اتصال TLS (CDN أو موازن التحميل أو الخادم الأصلي).</li>
+<li><strong>حدّد الاعتماد على أطراف خارجية.</strong> يطلبه تعميم ساما صراحةً. مزوّد CDN أو WAF لا يدعم X25519MLKEM768 قيدٌ يجب توثيقه مع خارطة طريق المزوّد.</li>
+<li><strong>فعّل التبادل الهجين حيث تتحكم بالخادم.</strong> راجع أدلة <a href="/guides/enable-x25519mlkem768-nginx?lang=ar">nginx</a> و<a href="/guides/post-quantum-tls-apache-caddy-haproxy-cloudflare?lang=ar">Apache وCaddy وHAProxy وCloudflare</a> و<a href="/guides/aws-alb-cloudfront-post-quantum-tls?lang=ar">AWS</a>، أو <a href="/tools/pq-tls-config?lang=ar">مولّد الإعدادات</a>.</li>
+<li><strong>احتفظ بالأدلة عبر الزمن.</strong> الفحص الواحد يُظهر يوماً واحداً؛ أما الفحص المنتظم فيُظهر للجنة المجلس التقدّم، ويكشف التراجع بعد تغييرات المزوّدين.</li>
+</ol>
+<p>الفحص المجاني لنطاق واحد في <a href="/?lang=ar">الصفحة الرئيسية</a>، و<a href="/audit?lang=ar">تدقيق النطاقات</a> يغطي كل النطاقات الفرعية العامة للمؤسسة.</p>
+
+<h2>ما لا يثبته فحص TLS</h2>
+<p>الفحص العام يرى نقطة واحدة على المنفذ 443 في لحظة واحدة. لا يغطي الأنظمة الداخلية، ولا وحدات HSM، ولا بروتوكولات البطاقات والمدفوعات، ولا البيانات المخزّنة أو الشهادات أو إدارة المفاتيح، وهذه كلها يجب أن يشملها حصر ساما أيضاً. هو دليل لجزء من الحصر، لا شهادة امتثال.</p>
+
+<h2>المصادر</h2>
+<ul>
+<li><a href="https://rulebook.sama.gov.sa/en/enhancement-operational-resilience-address-quantum-computing-risks" rel="noopener">دليل أنظمة ساما: تعزيز المرونة التشغيلية لمواجهة مخاطر الحوسبة الكمومية</a> (التعميم 482021280، 27/08/2026)</li>
+<li><a href="https://nca.gov.sa/ncs_en.pdf" rel="noopener">الهيئة الوطنية للأمن السيبراني: المعايير الوطنية للتشفير NCS-1:2020</a> (الإصدار الحالي على موقع الهيئة)</li>
+<li><a href="https://istitlaa.ncc.gov.sa/en/security/nca/ncs/Documents/NCS-2-en.pdf" rel="noopener">الهيئة الوطنية للأمن السيبراني: NCS-2:2025، نسخة استطلاع الرأي</a>، البندان 2-4-3 و2-5</li>
+<li><a href="https://u.ae/en/about-the-uae/strategies-initiatives-and-awards/policies/cyber-activities/National-Encryption-Policy" rel="noopener">البوابة الرسمية لحكومة الإمارات: سياسة التشفير الوطنية</a></li>
+<li><a href="https://www.atrc.gov.ae/news/uae-cyber-security-council-partners-atrc-advance-national-post-quantum-security-transition" rel="noopener">ATRC: شراكة مجلس الأمن السيبراني لدعم الانتقال إلى أمن ما بعد الكم</a> (11 مايو 2026)</li>
+</ul>
+""",
+        },
+    },
 }
