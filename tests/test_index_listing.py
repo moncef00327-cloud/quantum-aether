@@ -33,7 +33,7 @@ class IndexListingTest(unittest.TestCase):
         links = [e.find(ATOM + "link").get("href") for e in root.findall(ATOM + "entry")]
         for path in ("/banks/arab-banks-2026-11", "/adoption/dach-hosting", "/exposure", "/tools/pq-tls-config",
                      "/audit", "/prooflab"):
-            self.assertIn("https://ather-quantum.com" + path, links)
+            self.assertIn("https://ather-quantum.com" + path + "?lang=en", links)
         self.assertEqual(len(links), len(set(links)))
         for e in root.findall(ATOM + "entry"):
             self.assertRegex(e.find(ATOM + "updated").text, r"^\d{4}-\d{2}-\d{2}T00:00:00Z$")
