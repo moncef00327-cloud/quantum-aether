@@ -50,7 +50,7 @@
   <p class="muted small">
     {% if source == "scan" %}{{ t.site_source_scan }} <span dir="ltr">{{ summary.scanned_at }}</span>
     {% elif source == "weekly" %}{{ t.site_source_weekly }} <span dir="ltr">{{ summary.scanned_at[:10] }}</span>
-      · <a href="{{ url_for('site.adoption_page') }}">/adoption</a>
+      · <a href="{{ url_for('site.adoption_page', lang=lang) }}">/adoption</a>
     {% else %}{{ t.site_source_study.format(date=summary.scanned_at) }}{% endif %}
   </p>
 </section>

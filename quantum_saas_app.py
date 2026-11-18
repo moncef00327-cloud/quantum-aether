@@ -4007,10 +4007,15 @@ def feed():
     updated = day_to_iso(max(e[1] for e in entries))
     items = []
     for url, day, title, summary in entries:
+        # English entries link to the same localized URL as the sitemap.
+        # Keep Atom IDs stable so existing readers don't see duplicate entries.
+        page_url = url.partition("#")[0]
+        if "?" not in page_url:
+            page_url += "?lang=en"
         items.append(
             "  <entry>\n"
             f"    <title>{esc(title)}</title>\n"
-            f'    <link href="{esc(url)}"/>\n'
+            f'    <link href="{esc(page_url)}"/>\n'
             f"    <id>{esc(url)}</id>\n"
             f"    <updated>{day_to_iso(day)}</updated>\n"
             f"    <summary>{esc(summary)}</summary>\n"
