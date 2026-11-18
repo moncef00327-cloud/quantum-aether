@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% set ar = lang == 'ar' %}
-{% block title %}AETHER GRAVITY ENGINE · Quantum Aether{% endblock %}
+{% block title %}{{ 'محرك اكتشاف الطلب التقني (Aether Gravity)' if ar else 'Aether Gravity: technical demand discovery' }} · {{ t.brand }}{% endblock %}
 {% block description %}{{ 'محرك اكتشاف الطلب التقني: فرص مرتبطة بأدلة عامة وأدوات TLS مفيدة.' if ar else 'Technical demand discovery: evidence-backed opportunities and practical TLS tools.' }}{% endblock %}
 {% block content %}
 <section class="hero gravity-hero">

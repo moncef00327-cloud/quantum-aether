@@ -259,6 +259,9 @@ def public_price_labels():
 DE_PAGES = {"site.monthly_report", "site.press_page", "site.pq_config", "site.pq_config_server", "site.index", "site.study", "site.monitoring", "site.adoption_page", "site.analytics_page", "site.scanning_page", "site.deadlines_page",
             "site.business_page", "site.pricing_page", "site.agency_page", "site.audit_page", "site.audit_request", "site.countries_page", "site.country_page",
             "site.scan_page", "site.site_page", "site.prooflab_page", "site.prooflab_join"}
+# /analytics has full German texts and is advertised as de in hreflang + sitemap; serve it in German too
+# (before 2026-11-18 ?lang=de silently fell back to English with an en canonical).
+i18n.DE_ENDPOINTS.add("site.analytics_page")
 
 
 def texts():

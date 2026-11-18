@@ -1,3 +1,4 @@
+import html
 import unittest
 
 import guides
@@ -15,7 +16,7 @@ class ContentPagesTest(unittest.TestCase):
             for lang in ("en", "ar"):
                 r = self.client.get(f"/guides/{slug}?lang={lang}")
                 self.assertEqual(r.status_code, 200, (slug, lang))
-                self.assertIn(g[lang]["title"], r.get_data(as_text=True))
+                self.assertIn(html.escape(g[lang]["title"], quote=False), r.get_data(as_text=True))
 
     def test_unknown_guide_is_404(self):
         self.assertEqual(self.client.get("/guides/missing").status_code, 404)
