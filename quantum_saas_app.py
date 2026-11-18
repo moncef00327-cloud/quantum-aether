@@ -3866,7 +3866,10 @@ def _sitemap_domains():
     rows = [(d, day) for d, day, rank, sector in weekly if search_indexing.is_indexable(d, rank, sector)]
     study_day = study_data()["scanned_on"]
     rows += [(site["domain"], study_day) for site in study_data()["sites"]
-             if site["domain"] not in known and search_indexing.is_indexable(site["domain"], site.get("rank"))]
+             # The page prefers its latest successful tracker measurement over
+             # the study. Use that same policy when this week's probe is absent
+             # or failed, so the sitemap cannot advertise a noindex URL.
+             if site["domain"] not in known and site_is_indexable(site["domain"])]
     return rows
 
 

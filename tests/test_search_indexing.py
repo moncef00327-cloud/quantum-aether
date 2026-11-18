@@ -139,6 +139,25 @@ class SearchIndexingTests(unittest.TestCase):
         response=self.client.get('/site/no-record.example')
         self.assertEqual(response.status_code,404);self.assertTrue(any('noindex' in tag for tag in metadata(response).robots))
 
+    def test_sitemap_omits_owner_optout_that_returns_gone(self):
+        adoption.record_optout(self.conn, 'alpha.test', method='dns_txt')
+        self.assertEqual(self.client.get('/site/alpha.test?lang=en').status_code, 410)
+        sitemap = self.client.get('/sitemap-sites-1.xml').text
+        self.assertNotIn('/site/alpha.test?', sitemap)
+        self.assertIn('/site/beta.test?lang=en', sitemap)
+
+    def test_study_fallback_respects_newer_tracker_noindex(self):
+        # An old study rank must not reintroduce a URL whose newer evidence
+        # puts it outside the indexing policy, even when this week's probe failed.
+        with self.conn:
+            self.conn.execute("UPDATE adoption_results SET rank=1500, sector=NULL WHERE domain='alpha.test'")
+            self.conn.execute("UPDATE adoption_results SET ok=0 WHERE domain='alpha.test' AND week='2026-W45'")
+        study = dict(quantum_saas_app.study_data())
+        study['sites'] = [dict(study['sites'][0], domain='alpha.test', rank=500)]
+        self.assertIn('noindex', self.client.get('/site/alpha.test?lang=en').headers['X-Robots-Tag'])
+        with patch.object(quantum_saas_app, 'study_data', return_value=study):
+            self.assertNotIn('/site/alpha.test?', self.client.get('/sitemap-sites-1.xml').text)
+
     def test_country_discovery_keeps_row_but_omits_reviewed_link(self):
         from tests.test_countries import seed as country_seed
         country_seed(self.conn)
