@@ -47,6 +47,7 @@ import audit
 import audit_checkout
 import company_billing
 import bank_report
+import weekly_banks
 import discovery
 import config_gen
 import reports
@@ -258,10 +259,12 @@ def public_price_labels():
 # الصفحات التي لها نسخة ألمانية فعلية (لمبدّل اللغة وhreflang وخريطة الموقع).
 DE_PAGES = {"site.monthly_report", "site.press_page", "site.pq_config", "site.pq_config_server", "site.index", "site.study", "site.monitoring", "site.adoption_page", "site.analytics_page", "site.scanning_page", "site.deadlines_page",
             "site.business_page", "site.pricing_page", "site.agency_page", "site.audit_page", "site.audit_request", "site.countries_page", "site.country_page",
-            "site.scan_page", "site.site_page", "site.prooflab_page", "site.prooflab_join"}
+            "site.scan_page", "site.site_page", "site.prooflab_page", "site.prooflab_join",
+            "site.weekly_banks_latest", "site.weekly_banks_page"}
 # /analytics has full German texts and is advertised as de in hreflang + sitemap; serve it in German too
 # (before 2026-11-18 ?lang=de silently fell back to English with an en canonical).
 i18n.DE_ENDPOINTS.add("site.analytics_page")
+i18n.DE_ENDPOINTS.update({"site.weekly_banks_latest", "site.weekly_banks_page"})  # weekly_banks.COPY has de
 
 
 def texts():
@@ -933,6 +936,31 @@ def bank_award_badge(report_id, domain):
     response.headers["Cache-Control"] = "public, max-age=86400"
     response.headers["Access-Control-Allow-Origin"] = "*"
     response.headers["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'"
+    return response
+
+
+def _weekly_banks_or_404(week=None):
+    return weekly_banks.build(db(), week) or abort(404)
+
+
+@bp.get("/banks/weekly")
+def weekly_banks_latest():
+    rep = _weekly_banks_or_404()
+    return render_template("weekly_banks.html", rep=rep, c=weekly_banks.COPY[current_lang()])
+
+
+@bp.get("/banks/weekly/<week>")
+def weekly_banks_page(week):
+    rep = _weekly_banks_or_404(week)
+    return render_template("weekly_banks.html", rep=rep, c=weekly_banks.COPY[current_lang()])
+
+
+@bp.get("/banks/weekly/<week>.json")
+def weekly_banks_json(week):
+    rep = _weekly_banks_or_404(week)
+    response = jsonify(dict(rep, license="CC BY 4.0",
+                            source=public_base() + url_for(".weekly_banks_page", week=rep["week"])))
+    response.headers["Access-Control-Allow-Origin"] = "*"
     return response
 
 
@@ -3840,6 +3868,10 @@ def _sitemap_pages():
         rep = bank_report.load(rid)
         pages += [(f"/banks/{rid}/{row['domain']}", rep["measured_on"], site_langs)
                   for row in bank_report.ranked(rep, adoption.load_optout(conn=db()))]
+    bank_weeks = weekly_banks.weeks(db())
+    if bank_weeks:
+        pages.append(("/banks/weekly", adoption.week_monday(bank_weeks[-1]).isoformat(), de_langs))
+        pages += [(f"/banks/weekly/{w}", adoption.week_monday(w).isoformat(), de_langs) for w in bank_weeks]
     board = countries.leaderboard(db())
     if board:
         week_day = adoption.week_monday(board["week"]).isoformat()

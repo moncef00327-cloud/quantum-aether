@@ -6,6 +6,7 @@ import crawler_log
 import monitor
 import sales_db
 import scorecard
+import weekly_banks
 from mailer import Mailer
 
 
@@ -19,6 +20,10 @@ def main():
         text += "\n\n" + crawler_log.as_text(crawler_log.summary(os.path.dirname(db_path)))
     except Exception as exc:
         text += f"\n\nCrawler summary unavailable: {exc}"
+    try:  # weekly bank tracker + ready-to-post LinkedIn texts (the bank sectors are scanned ~03:45 UTC Monday)
+        text += "\n\n" + weekly_banks.as_text(weekly_banks.build(conn))
+    except Exception as exc:
+        text += f"\n\nWeekly bank tracker unavailable: {exc}"
     print(text)
     mailer = Mailer(os.environ.get("RESEND_API_KEY", ""), os.environ.get("QS_MAIL_FROM", ""),
                     fallback_sender=os.environ.get("QS_MAIL_FROM_FALLBACK", ""),

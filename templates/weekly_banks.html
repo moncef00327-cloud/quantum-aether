@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% set tl = lang if lang in ("ar", "en", "de") else "en" %}
+{% block title %}{{ c.title }} · {{ rep.week }} · {{ t.brand }}{% endblock %}
+{% block description %}{{ c.meta.format(week=rep.week, pq=rep.pq, n=rep.n, pct=rep.pct) }}{% endblock %}
+{% block head %}
+<script type="application/ld+json">{{ {"@context": "https://schema.org", "@type": "Dataset", "name": c.title ~ " " ~ rep.week, "description": c.meta.format(week=rep.week, pq=rep.pq, n=rep.n, pct=rep.pct), "temporalCoverage": rep.week_start, "dateModified": rep.week_start, "inLanguage": tl, "isAccessibleForFree": true, "license": "https://creativecommons.org/licenses/by/4.0/", "creator": {"@type": "Organization", "name": "Quantum Aether"}, "keywords": ["post-quantum cryptography", "banks", "X25519MLKEM768", "NIS2", "DORA", "SAMA"], "distribution": [{"@type": "DataDownload", "encodingFormat": "application/json", "contentUrl": abs_url('site.weekly_banks_json', week=rep.week)}]} | tojson }}</script>
+{% endblock %}
+{% block content %}
+<article class="card prose">
+  <p class="muted small">{{ c.kicker }} · <time datetime="{{ rep.week_start }}">{{ rep.week }}</time></p>
+  <h1>{{ c.title }}</h1>
+  <p class="lead">{{ c.lead.format(banks=rep.banks) }}</p>
+  <ul>
+    {% for r in rep.regions %}<li><a href="#{{ r.key }}">{{ r.labels.get(tl) or r.labels.get('en') or r.key }}</a>: <strong>{{ c.share.format(pq=r.pq, n=r.n, pct=r.pct) }}</strong></li>{% endfor %}
+  </ul>
+  <h2>{{ c.changes }}</h2>
+  {% if not rep.previous %}<p class="muted">{{ c.first_week }}</p>
+  {% elif not rep.adopted and not rep.dropped %}<p>{{ c.no_changes }}</p>
+  {% else %}
+    {% if rep.adopted %}<p>✅ {{ c.adopted }}: {% for d in rep.adopted %}<a href="/site/{{ d }}?lang={{ tl }}" dir="ltr">{{ d }}</a>{% if not loop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+    {% if rep.dropped %}<p>⚠️ {{ c.dropped }}: {% for d in rep.dropped %}<a href="/site/{{ d }}?lang={{ tl }}" dir="ltr">{{ d }}</a>{% if not loop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+  {% endif %}
+  <h2>{{ c.why_title }}</h2>
+  <p>{{ c.why }}</p>
+  <p><a class="button-link" href="/?lang={{ tl }}">{{ c.cta_scan }}</a> <a class="button-link" href="/audit?lang={{ tl }}">{{ c.cta_audit }}</a></p>
+</article>
+
+{% for r in rep.regions %}
+<section class="card" id="{{ r.key }}">
+  <h2>{{ r.labels.get(tl) or r.labels.get('en') or r.key }} · {{ c.share.format(pq=r.pq, n=r.n, pct=r.pct) }}</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>{{ c.col_bank }}</th><th>{{ c.col_status }}</th><th>{{ c.col_since }}</th></tr></thead>
+    <tbody>
+    {% for row in r.rows %}<tr><td dir="ltr"><a href="/site/{{ row.domain }}?lang={{ tl }}">{{ row.domain }}</a></td><td>{{ c[row.status] }}</td><td dir="ltr">{{ row.pq_since or "–" }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</section>
+{% endfor %}
+
+<section class="card">
+  <p class="muted small">{{ c.limits }}</p>
+  <p class="small"><a href="{{ url_for('site.weekly_banks_json', week=rep.week) }}">{{ c.data }}</a></p>
+  {% if rep.weeks|length > 1 %}<p class="small">{{ c.archive }}: {% for w in rep.weeks|reverse %}{% if w != rep.week %}<a href="{{ url_for('site.weekly_banks_page', week=w, lang=tl) }}" dir="ltr">{{ w }}</a> {% endif %}{% endfor %}</p>{% endif %}
+</section>
+{% endblock %}
