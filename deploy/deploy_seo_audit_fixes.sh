@@ -11,9 +11,10 @@ restore() { for f in "${FILES[@]}"; do install -m 644 -o root -g root "$1/$(base
 
 if [ "${1:-}" = rollback ]; then B=$(cat "$LAST"); restore "$B"; echo "rolled back to $B"; exit 0; fi
 
-# Refuse to overwrite live files that changed since the commit this deploy is based on.
+# Refuse to overwrite live files that changed since 3ed0527, the commit this deploy is based on.
+BASE=3ed0527
 for f in "${FILES[@]}"; do
-  git -C "$SRC" show "HEAD~1:$f" | cmp -s - "$LIVE/$f" || { echo "live $f differs from HEAD~1 - aborting, nothing changed"; exit 1; }
+  git -C "$SRC" show "$BASE:$f" | cmp -s - "$LIVE/$f" || { echo "live $f differs from $BASE - aborting, nothing changed"; exit 1; }
 done
 
 B=/root/backups/pre-seo-audit-fixes-$(date -u +%Y%m%d%H%M%S); mkdir -p "$B"
