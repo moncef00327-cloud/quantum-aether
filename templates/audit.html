@@ -52,7 +52,7 @@
       <p><label>{{ c.checkout.company }}<br><input name="org" required maxlength="200" autocomplete="organization"></label></p>
       <p><label>{{ c.checkout.name }}<br><input name="name" required maxlength="120" autocomplete="name"></label></p>
       <p><label>{{ c.checkout.email }}<br><input name="email" type="email" required maxlength="254" dir="ltr" autocomplete="email"></label></p>
-      <p><label>{{ c.checkout.domain }}<br><input name="domain" required maxlength="253" dir="ltr" inputmode="url" autocomplete="url"></label></p>
+      <p><label>{{ c.checkout.domain }}<br><input name="domain" required maxlength="253" dir="ltr" inputmode="url" autocomplete="url" value="{{ request.args.get('domain', '') }}"></label></p>
       <p><label>{{ c.checkout.street }}<br><input name="street" required maxlength="200" autocomplete="address-line1"></label></p>
       <p><label>{{ c.checkout.postal_code }}<br><input name="postal_code" required maxlength="30" autocomplete="postal-code"></label></p>
       <p><label>{{ c.checkout.city }}<br><input name="city" required maxlength="100" autocomplete="address-level2"></label></p>
@@ -87,7 +87,7 @@
     {% if state %}<p class="form-error" role="alert">{{ c[state] }}</p>{% endif %}
     <form method="post" action="{{ url_for('site.audit_request', lang=lang) }}#enterprise-quote" class="audit-form">
       <p><label>{{ c.org }}<br><input name="org" required maxlength="200" autocomplete="organization" value="{{ form.org or '' }}"></label></p>
-      <p><label>{{ c.domain }}<br><input name="domain" required maxlength="253" dir="ltr" inputmode="url" value="{{ form.domain or '' }}"></label></p>
+      <p><label>{{ c.domain }}<br><input name="domain" required maxlength="253" dir="ltr" inputmode="url" value="{{ form.domain or request.args.get('domain', '') }}"></label></p>
       <p><label>{{ c.email }}<br><input name="email" type="email" required maxlength="254" dir="ltr" autocomplete="email" value="{{ form.email or '' }}"></label></p>
       <p><label>{{ c.name }}<br><input name="name" maxlength="120" autocomplete="name" value="{{ form.name or '' }}"></label></p>
       <p><label>{{ c.message }}<br><textarea name="message" rows="4" maxlength="2000">{{ form.message or '' }}</textarea></label></p>

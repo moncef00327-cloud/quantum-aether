@@ -51,7 +51,7 @@
 <section class="card buy">
   <h2>{{ c.cta_title }}</h2>
   <p>{{ c.cta }}</p>
-  <p><a class="button-link" href="{{ url_for('site.audit_page', lang=tl) }}" data-ev="bank_report_cta">{{ c.cta_button }}</a></p>
+  <p><a class="button-link" href="{{ url_for('site.audit_page', lang=tl) }}#buy-audit" data-ev="bank_report_cta">{{ c.cta_button }} · 490 €</a> · <a href="{{ url_for('site.guide', slug='gulf-banks-post-quantum-cryptography-requirements', lang=tl) }}">{{ 'دليل متطلبات تعميم ساما 482021280 وبنوك الخليج' if tl == 'ar' else 'SAMA circular 482021280 & Gulf banks PQC guide' }} ↗</a></p>
 </section>
 
 <section class="card">

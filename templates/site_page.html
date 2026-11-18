@@ -117,6 +117,14 @@
 {% endif %}
 
 
+<section class="card highlight" id="estate-audit-cta">
+  <h2>{{ 'فحص النطاقات الفرعية وتقرير الامتثال (SAMA / DORA / NIS2)' if lang == 'ar' else ('Subdomain Inventory & Compliance Audit (DORA / NIS2 / SAMA)' if lang != 'de' else 'Subdomain-Inventar & Compliance-Audit (DORA / NIS2)') }}</h2>
+  <p>{{ ('هذا الفحص يقيس مضيفاً واحداً فقط (' ~ domain ~ '). متطلبات تعميم البنك المركزي السعودي (ساما 482021280 — الموعد النهائي: 31 ديسمبر 2026) وDORA/NIS2 تشترط حصر جميع نقاط TLS العامة والنطاقات الفرعية للمؤسسة وتبعيات الأطراف الثالثة (CDN/WAF) في تقرير رسمي موثق.') if lang == 'ar' else (('Dieser Test prüft nur einen einzelnen Host (' ~ domain ~ '). NIS2 und DORA verlangen ein vollständiges Inventar aller öffentlichen TLS-Endpunkte, Subdomains und CDN-/Drittanbieter-Abhängigkeiten.') if lang == 'de' else ('This scan measures a single host (' ~ domain ~ '). SAMA circular 482021280 (deadline: 31 December 2026), EU DORA and NIS2 require a complete inventory of all public TLS endpoints, subdomains and third-party CDN/WAF dependencies.')) }}</p>
+  <p>
+    <a class="button-link" href="{{ url_for('site.audit_page', domain=domain, lang=lang) }}#buy-audit" data-ev="audit_cta">{{ audit_cta }} · 490 € →</a>
+    · <a href="{{ url_for('site.guide', slug='gulf-banks-post-quantum-cryptography-requirements', lang='ar' if lang == 'ar' else 'en') }}">{{ 'دليل متطلبات ساما وبنوك الخليج' if lang == 'ar' else 'SAMA & Gulf banks PQC guide' }} ↗</a>
+  </p>
+</section>
 <section class="card" id="alert">
   <h2>{{ t.alert_card_title }}</h2>
   <p>{{ t.alert_card_sub.format(domain=domain) }}</p>

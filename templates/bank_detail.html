@@ -49,7 +49,7 @@
 <section class="card buy">
   <h2>{{ c.d_staff_title.format(name=name) }}</h2>
   <p>{{ c.d_staff }}</p>
-  <p><a class="button-link" href="{{ url_for('site.audit_page', domain=b.domain, lang=tl) }}" data-ev="bank_detail_cta">{{ c.d_staff_button.format(name=name) }}</a></p>
+  <p><a class="button-link" href="{{ url_for('site.audit_page', domain=b.domain, lang=tl) }}#buy-audit" data-ev="bank_detail_cta">{{ c.d_staff_button.format(name=name) }} · 490 €</a> · <a href="{{ url_for('site.guide', slug='gulf-banks-post-quantum-cryptography-requirements', lang=tl) }}">{{ 'متطلبات تعميم ساما 482021280 (31 ديسمبر 2026)' if tl == 'ar' else 'SAMA circular 482021280 deadline (31 Dec 2026)' }} ↗</a></p>
 </section>
 
 {% if d.peers %}
