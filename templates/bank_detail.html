@@ -6,6 +6,12 @@
 {% block title %}{{ name }} · {{ c.title }} {{ r.measured_on[:4] }}{% endblock %}
 {% block description %}{% if b.share is not none %}{{ c.detail_meta.format(name=name, pq=b.subs.pq, responding=b.subs.responding, rank=d.rank) }}{% else %}{{ name }}: {{ c.d_unranked.format(few=c.few.format(n=min_resp)) }}{% endif %}{% endblock %}
 {% block og_image %}{% if b.share is not none %}{{ abs_url('site.og_bank', report_id=r.id, domain=b.domain) }}{% else %}{{ super() }}{% endif %}{% endblock %}
+{% block head %}
+{% set report_url = abs_url('site.bank_report_page', report_id=r.id, lang=tl) %}
+{% set desc = self.description() %}
+<script type="application/ld+json">{{ {"@context": "https://schema.org", "@type": "Dataset", "name": name ~ " · " ~ c.title ~ " " ~ r.measured_on[:4], "description": desc, "url": page, "inLanguage": tl, "dateModified": r.measured_on, "temporalCoverage": r.measured_on, "isAccessibleForFree": true, "license": "https://creativecommons.org/licenses/by/4.0/", "creator": {"@type": "Organization", "name": "Quantum Aether", "url": abs_url('site.index')}, "about": {"@type": "BankOrCreditUnion", "name": name, "url": "https://" ~ b.domain, "address": {"@type": "PostalAddress", "addressCountry": b.country | upper}}, "isPartOf": {"@type": "Report", "name": c.title ~ " " ~ r.measured_on[:4], "url": report_url}, "keywords": ["post-quantum cryptography", "PQC readiness", "X25519MLKEM768", "TLS 1.3", "التشفير ما بعد الكمومي", "الجاهزية الكمومية", b.domain]} | tojson }}</script>
+<script type="application/ld+json">{{ {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Quantum Aether", "item": abs_url('site.index', lang=tl)}, {"@type": "ListItem", "position": 2, "name": c.title ~ " " ~ r.measured_on[:4], "item": report_url}, {"@type": "ListItem", "position": 3, "name": name, "item": page}]} | tojson }}</script>
+{% endblock %}
 {% block content %}
 <article class="card prose">
   <p class="muted small"><a href="{{ url_for('site.bank_report_page', report_id=r.id, lang=tl) }}">{{ c.title }} {{ r.measured_on[:4] }}</a> · {{ countries[b.country][tl] }}{% if b.central %} · {{ c.central }}{% endif %}</p>

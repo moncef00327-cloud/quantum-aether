@@ -74,6 +74,18 @@ if __name__ == "__main__":
 
 
 class BankDetailTests(BankReportTests):
+    def test_detail_page_structured_data(self):
+        import json, re
+        html = self.client.get("/banks/arab-banks-2026-11/qnb.com?lang=ar").get_data(as_text=True)
+        blocks = [json.loads(b) for b in re.findall(r'<script type="application/ld\+json">(.*?)</script>', html, re.S)]
+        types = {b["@type"] for b in blocks}
+        self.assertIn("Dataset", types)
+        self.assertIn("BreadcrumbList", types)
+        ds = next(b for b in blocks if b["@type"] == "Dataset")
+        self.assertEqual(ds["inLanguage"], "ar")
+        self.assertEqual(ds["about"]["url"], "https://qnb.com")
+        self.assertIn("الجاهزية الكمومية", ds["keywords"])
+
     def test_detail_page_award_and_badge(self):
         winner = self.client.get("/banks/arab-banks-2026-11/qnb.com?lang=ar").get_data(as_text=True)
         self.assertIn("بنك قطر الوطني", winner)
