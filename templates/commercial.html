@@ -2,6 +2,24 @@
 {% from "_trial_cta.html" import trial_cta with context %}
 {% block title %}{{ commercial.business_title if section == 'business' else commercial.pricing_title }} · Quantum Aether{% endblock %}
 {% block description %}{{ commercial.business_description if section == 'business' else commercial.pricing_description }}{% endblock %}
+{% block head %}
+<script type="application/ld+json">{{ {
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "name": (commercial.business_title if section == 'business' else commercial.pricing_title),
+  "description": (commercial.business_description if section == 'business' else commercial.pricing_description),
+  "provider": org_jsonld(False),
+  "areaServed": "Worldwide",
+  "url": metadata_url(lang),
+  "offers": [
+    {"@type": "Offer", "name": "Free TLS check", "price": "0", "priceCurrency": sub_currency, "availability": "https://schema.org/InStock", "url": abs_url('site.index', lang=lang)},
+    {"@type": "Offer", "name": plans['starter'].name, "price": plans['starter'].price, "priceCurrency": sub_currency, "availability": "https://schema.org/InStock", "url": abs_url('site.monitoring', lang=lang)},
+    {"@type": "Offer", "name": plans['business'].name, "price": plans['business'].price, "priceCurrency": sub_currency, "availability": "https://schema.org/InStock", "url": abs_url('site.monitoring', lang=lang)},
+    {"@type": "Offer", "name": commercial.pack, "price": pack_price, "priceCurrency": pack_currency, "availability": "https://schema.org/InStock", "url": abs_url('site.agency_page', lang=lang)},
+    {"@type": "Offer", "name": audit_cta, "price": audit_price, "priceCurrency": audit_currency, "availability": "https://schema.org/InStock", "url": abs_url('site.audit_page', lang=lang)}
+  ]
+} | tojson }}</script>
+{% endblock %}
 {% block content %}
 <section class="hero commercial-hero">
   <p class="eyebrow">{{ commercial.business if section == 'business' else commercial.pricing }}</p>

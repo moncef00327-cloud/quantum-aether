@@ -1,6 +1,19 @@
 {% extends "base.html" %}
 {% block title %}{{ (t.cfg_server_title.format(name=s.name) if s else t.cfg_title) }} · {{ t.brand }}{% endblock %}
 {% block description %}{{ t.cfg_server_meta.format(name=s.name) if s else t.cfg_meta }}{% endblock %}
+{% block head %}
+<script type="application/ld+json">{{ {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": (t.cfg_server_title.format(name=s.name) if s else t.cfg_title),
+  "description": (t.cfg_server_meta.format(name=s.name) if s else t.cfg_meta),
+  "applicationCategory": "SecurityApplication",
+  "operatingSystem": "All",
+  "provider": org_jsonld(False),
+  "url": metadata_url(lang),
+  "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"}
+} | tojson }}</script>
+{% endblock %}
 {% set glang = lang if lang in ("en", "ar") else "en" %}
 {% block content %}
 <section class="card">

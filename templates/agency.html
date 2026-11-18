@@ -2,6 +2,23 @@
 {% from "_company_form.html" import company_form with context %}
 {% block title %}{{ t.agency_title }} · {{ t.brand }}{% endblock %}
 {% block description %}{{ t.agency_meta.format(credits=credits, price=price|float|int, price_dual=price_dual) }}{% endblock %}
+{% block head %}
+<script type="application/ld+json">{{ {
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": t.agency_title,
+  "description": t.agency_meta.format(credits=credits, price=price|float|int, price_dual=price_dual),
+  "brand": org_jsonld(False),
+  "url": metadata_url(lang),
+  "offers": {
+    "@type": "Offer",
+    "price": price,
+    "priceCurrency": currency,
+    "availability": "https://schema.org/InStock",
+    "url": metadata_url(lang)
+  }
+} | tojson }}</script>
+{% endblock %}
 {% block content %}
 <section class="card">
   <h1>{{ t.agency_title }}</h1>

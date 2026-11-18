@@ -1081,8 +1081,8 @@ Environment=OPENSSL_CONF=/etc/nginx/openssl-oqs.cnf</pre>
     "gulf-banks-post-quantum-cryptography-requirements": {
         "updated": "2026-11-18",
         "en": {
-            "title": "Post-quantum cryptography rules for Gulf banks: SAMA, Saudi NCS and the UAE (2026)",
-            "description": "What SAMA's quantum circular, Saudi Arabia's National Cryptographic Standards and the UAE National Encryption Policy actually require, with dates and clause numbers, and how far Gulf banks' public TLS already is.",
+            "title": "Gulf banks PQC rules: SAMA & UAE (2026)",
+            "description": "SAMA circular 482021280 deadlines, Saudi National Cryptographic Standards (NCS-2) clauses and UAE National Encryption Policy rules for Gulf banks.",
             "body": """
 <p>As of November 2026, Saudi Arabia is the only Gulf state with a binding post-quantum requirement aimed at banks: a SAMA circular that sets deadlines for a cryptographic inventory and a quantum risk assessment. The UAE requires migration plans from government entities. We found no published post-quantum requirement for banks from the central banks of Qatar, Bahrain, Oman or Kuwait.</p>
 
@@ -1149,8 +1149,8 @@ Environment=OPENSSL_CONF=/etc/nginx/openssl-oqs.cnf</pre>
 """,
         },
         "ar": {
-            "title": "متطلبات التشفير ما بعد الكمومي للبنوك في الخليج: ساما والمعايير الوطنية السعودية والإمارات (2026)",
-            "description": "ما يشترطه فعلاً تعميم ساما عن مخاطر الحوسبة الكمومية، والمعايير الوطنية للتشفير في السعودية، وسياسة التشفير الوطنية في الإمارات، مع التواريخ وأرقام البنود، وأين تقف البنوك الخليجية اليوم.",
+            "title": "متطلبات التشفير الكمي لبنوك الخليج (2026)",
+            "description": "ما يشترطه تعميم ساما 482021280 والمعايير الوطنية للتشفير في السعودية وسياسة التشفير الوطنية في الإمارات، مع التواريخ ونتائج فحص البنوك الخليجية.",
             "body": """
 <p>حتى نوفمبر 2026، السعودية هي الدولة الخليجية الوحيدة التي لديها متطلب مُلزِم للبنوك بشأن التشفير ما بعد الكمومي: تعميم من البنك المركزي السعودي (ساما) يحدد مواعيد لحصر أصول التشفير وتقييم المخاطر الكمومية. أما الإمارات فتشترط خطط انتقال على الجهات الحكومية. ولم نجد متطلباً منشوراً للبنوك من البنوك المركزية في قطر والبحرين وعُمان والكويت.</p>
 

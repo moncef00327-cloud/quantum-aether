@@ -2,7 +2,23 @@
 {% from "_countries.html" import country_options with context %}
 {% block title %}{{ c.title }} · {{ t.brand }}{% endblock %}
 {% block description %}{{ c.meta }}{% endblock %}
-{% block head %}{% if state %}<meta name="robots" content="noindex, follow">{% endif %}{% endblock %}
+{% block head %}{% if state %}<meta name="robots" content="noindex, follow">{% endif %}
+<script type="application/ld+json">{{ {
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": c.title,
+  "description": c.meta,
+  "brand": org_jsonld(False),
+  "url": metadata_url(lang),
+  "offers": {
+    "@type": "Offer",
+    "price": price,
+    "priceCurrency": currency,
+    "availability": "https://schema.org/InStock",
+    "url": metadata_url(lang)
+  }
+} | tojson }}</script>
+{% endblock %}
 {% block content %}
 <section class="hero commercial-hero">
   <p class="eyebrow">{{ c.eyebrow }}</p>
