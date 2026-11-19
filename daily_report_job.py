@@ -129,14 +129,18 @@ def build(c, day):
 
     # 6) اتجاه 7 أيام (زيارات/فحوصات)
     L.append("• اتجاه 7 أيام (زيارات بشرية | فحوصات):")
+    trend = []
     for i in range(6, -1, -1):
         d = (dt.date.fromisoformat(y) - dt.timedelta(days=i)).isoformat()
         p = one(c, "SELECT COUNT(*) FROM pageviews WHERE day=? AND is_bot=0 AND is_test=0", (d,))
         s = one(c, "SELECT COUNT(*) FROM scans WHERE substr(created_at,1,10)=? AND is_test=0", (d,))
-        bar = "█" * min(40, p)
+        trend.append((d, p, s))
+    peak = max((p for _, p, _ in trend), default=0) or 1
+    for d, p, s in trend:
+        bar = "█" * (round(30 * p / peak) if p else 0)
         L.append(f"    {d}  {p:>4} | {s:>3}  {bar}")
     L.append("")
-    L.append("— تذكير: راجع alerts@ather-quatum.cloud لردود/ارتدادات حملات البريد.")
+    L.append("— تذكير: راجع alerts@ather-quantum.com لردود/ارتدادات حملات البريد.")
     return "\n".join(L)
 
 
