@@ -46,10 +46,14 @@ class ExposureTests(unittest.TestCase):
     def test_indexing_rule(self):
         self.assertTrue(exposure.is_indexable("x.example", 1000, 1))
         self.assertFalse(exposure.is_indexable("x.example", 1001, 3))
+        self.assertFalse(exposure.is_indexable("x.example", 5000, 4))
+        self.assertTrue(exposure.is_indexable("x.example", 5000, 4, sector="banks-mena"))
         self.assertTrue(exposure.is_indexable("x.example", None, 4))
         self.assertFalse(exposure.is_indexable("w4nkr.com", 10, 10))
         self.assertFalse(exposure.is_indexable("googleapis.com", 5, 10))
-        rows = [(f"2026-W{w}", "long.example", 1, 0, 5000) for w in (44, 45, 46, 47)] + [("2026-W47", "short.example", 1, 0, 5000)]
+        rows = ([(f"2026-W{w}", "long.example", 1, 0, None) for w in (44, 45, 46, 47)]
+                + [(f"2026-W{w}", "tail.example", 1, 0, 5000) for w in (44, 45, 46, 47)]
+                + [("2026-W47", "short.example", 1, 0, None)])
         self.assertEqual([d for d, _ in exposure.sitemap_domains(conn_with(rows))], ["long.example"])
 
     def test_manifest_is_deterministic_and_hides_names(self):

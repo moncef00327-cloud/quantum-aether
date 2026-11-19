@@ -214,12 +214,14 @@ def network_stats(conn, as_name, week):
     return {"as_name": as_name, "measured": total, "pq": pq, "pct": round(100 * pq / total, 1) if total else None}
 
 
-def is_indexable(domain, rank, measured_weeks):
+def is_indexable(domain, rank, measured_weeks, sector=None):
     if (search_indexing.is_excluded(domain)
             or search_indexing.family_dns_blocked(domain)
             or search_indexing.is_infrastructure(domain)):
         return False
-    return (rank is not None and rank <= INDEX_MAX_RANK) or measured_weeks >= INDEX_MIN_WEEKS
+    if rank is not None and rank <= INDEX_MAX_RANK:
+        return True
+    return (rank is None or bool(sector)) and measured_weeks >= INDEX_MIN_WEEKS
 
 
 def window(conn, domain, data_dir=None, peers=True, max_weeks=PUBLIC_WEEKS):
@@ -282,7 +284,7 @@ def window(conn, domain, data_dir=None, peers=True, max_weeks=PUBLIC_WEEKS):
                             "note": "Observed lower bound: classical key exchange may have been in use before our first observation."},
         "last_checked": last["scanned_at"], "network": (current or last)["as_name"],
         "timeline": timeline,
-        "indexable": is_indexable(last["domain"], rank, len(measured)),
+        "indexable": is_indexable(last["domain"], rank, len(measured), last["sector"]),
         "disclaimer": "External observation of the public HTTPS endpoint (one TLS handshake per week on port 443). "
                       "Not a compliance certification, audit or legal advice.",
     }
@@ -310,9 +312,9 @@ def sitemap_domains(conn, optout=None):
     out = []
     cur = conn.execute(
         "SELECT domain, SUM(CASE WHEN ok = 1 AND unsure = 0 THEN 1 ELSE 0 END) AS n, MAX(substr(scanned_at, 1, 10)) AS day, "
-        "MAX(CASE WHEN week = ? THEN rank END) AS rank FROM adoption_results GROUP BY domain", (latest,))
+        "MAX(CASE WHEN week = ? THEN rank END) AS rank, MAX(sector) AS sector FROM adoption_results GROUP BY domain", (latest,))
     for r in cur:
-        if not r["n"] or not is_indexable(r["domain"], r["rank"], r["n"]):
+        if not r["n"] or not is_indexable(r["domain"], r["rank"], r["n"], r["sector"]):
             continue
         if optout is not None and adoption.opted_out(r["domain"], optout):
             continue
