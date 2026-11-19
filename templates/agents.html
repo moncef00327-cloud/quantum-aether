@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% set ar = lang == 'ar' %}
-{% block title %}{{ 'قياسات TLS للوكلاء' if ar else 'TLS evidence for AI agents' }} · Quantum Aether{% endblock %}
+{% block title %}{{ 'قياسات TLS للوكلاء' if ar else 'TLS evidence for AI agents' }} · {{ 'الأثير الكمومي (Quantum Aether)' if ar else t.brand }}{% endblock %}
 {% block description %}{{ 'افحص تبادل مفاتيح TLS لما بعد الكم، واقرأ دليلًا مؤرخًا وحدود القياس عبر API وMCP.' if ar else 'Measure post-quantum TLS key exchange, inspect timestamped evidence, and read measurement limits through HTTP API and remote MCP.' }}{% endblock %}
 {% block head %}<script type="application/ld+json">{{ {"@context":"https://schema.org","@type":"WebAPI","name":"Quantum Aether TLS API","description":agent_manifest.description,"url":metadata_url(lang),"documentation":agent_manifest.documentation.openapi,"provider":{"@type":"Organization","name":"Quantum Aether","url":abs_url('site.index')},"isAccessibleForFree":true} | tojson }}</script>{% endblock %}
 {% block content %}

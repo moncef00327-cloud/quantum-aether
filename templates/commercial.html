@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% from "_trial_cta.html" import trial_cta with context %}
-{% block title %}{{ commercial.business_title if section == 'business' else commercial.pricing_title }} · Quantum Aether{% endblock %}
+{% block title %}{{ commercial.business_title if section == 'business' else commercial.pricing_title }} · {{ 'الأثير الكمومي (Quantum Aether)' if lang == 'ar' else t.brand }}{% endblock %}
 {% block description %}{{ commercial.business_description if section == 'business' else commercial.pricing_description }}{% endblock %}
 {% block head %}
 <script type="application/ld+json">{{ {

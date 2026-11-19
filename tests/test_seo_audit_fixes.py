@@ -28,6 +28,19 @@ class SeoAuditFixTests(unittest.TestCase):
         self.assertNotEqual(titles["en"], titles["ar"])
         self.assertIn("محرك اكتشاف الطلب التقني", titles["ar"])
 
+    def test_arabic_brand_is_in_title_meta_body_and_jsonld(self):
+        body = self.client.get("/?lang=ar").get_data(as_text=True)
+        title = re.search(r"<title>([^<]*)</title>", body).group(1)
+        desc = re.search(r'<meta name="description" content="([^"]*)"', body).group(1)
+        self.assertIn("الأثير الكمومي", title)
+        self.assertIn("الأثير الكمومي", desc)
+        self.assertIn("كوانتوم أثير", desc)
+        self.assertIn("الأثير الكمومي · Quantum Aether", body)
+        self.assertIn('"alternateName"', body)
+        for path in ("/business?lang=ar", "/pricing?lang=ar", "/agents?lang=ar", "/data-license?lang=ar"):
+            page_title = re.search(r"<title>([^<]*)</title>", self.client.get(path).get_data(as_text=True)).group(1)
+            self.assertIn("الأثير الكمومي", page_title, path)
+
 
 if __name__ == "__main__":
     unittest.main()

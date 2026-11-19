@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ d.title }} · Quantum Aether{% endblock %}
+{% block title %}{{ d.title }} · {{ 'الأثير الكمومي (Quantum Aether)' if lang == 'ar' else t.brand }}{% endblock %}
 {% block description %}{{ d.lead }}{% endblock %}
 {% block content %}
 <section class="card">

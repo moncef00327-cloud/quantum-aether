@@ -539,7 +539,8 @@ def org_jsonld(full=True):
     base = public_base()
     ref = {"@type": "Organization", "@id": base + "/#organization", "name": "Quantum Aether", "url": base + "/"}
     if full:
-        ref.update({"logo": base + "/static/favicon.svg", "sameAs": list(SAME_AS),
+        ref.update({"alternateName": ["الأثير الكمومي", "كوانتوم أثير", "أثير كوانتوم", "Ather Quantum"],
+                    "logo": base + "/static/favicon.svg", "sameAs": list(SAME_AS),
                     "email": current_app.config.get("CONTACT_EMAIL") or None})
         ref = {k: v for k, v in ref.items() if v}
     return ref
@@ -554,7 +555,8 @@ def home_jsonld():
     base, t = public_base(), texts()
     return [
         dict({"@context": "https://schema.org"}, **org_jsonld()),
-        {"@context": "https://schema.org", "@type": "WebSite", "@id": base + "/#website", "name": t["brand"], "url": base,
+        {"@context": "https://schema.org", "@type": "WebSite", "@id": base + "/#website", "name": t["brand"],
+         "alternateName": ["الأثير الكمومي", "كوانتوم أثير", "أثير كوانتوم", "Quantum Aether"], "url": base,
          "inLanguage": current_lang(), "publisher": {"@id": base + "/#organization"}, "sameAs": list(SAME_AS),
          "potentialAction": {"@type": "SearchAction", "target": base + "/site/{search_term_string}",
                              "query-input": "required name=search_term_string"}},
