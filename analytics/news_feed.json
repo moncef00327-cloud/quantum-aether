@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-11-18T14:58:55Z",
+  "updated_at": "2026-11-19T15:07:26Z",
   "classification": "Deterministic keyword rules; impact notes are editorial context, not source quotations or security advisories.",
   "sources": [
     {
@@ -31,7 +31,7 @@
     {
       "name": "arXiv quant-ph",
       "ok": true,
-      "entries": 180
+      "entries": 171
     },
     {
       "name": "arXiv cs.CR",
@@ -40,6 +40,20 @@
     }
   ],
   "items": [
+    {
+      "source": "arXiv cs.CR",
+      "url": "https://arxiv.org/abs/2611.23311",
+      "title": "Post-Quantum Cryptography Education for Software Developers: A Multivocal Literature Review",
+      "published_at": "2026-11-19T05:00:00Z",
+      "category": "research",
+      "importance": "medium",
+      "takeaway": {
+        "en": "Editorial takeaway: research context, not a production security advisory or evidence of a new cryptographic break; assess before changing policy.",
+        "ar": "قراءة تحريرية: هذا سياق بحثي، وليس تنبيهاً أمنياً للإنتاج أو دليلاً على كسر تشفيري جديد؛ قيّم النتائج قبل تغيير السياسة.",
+        "de": "Redaktionelle Einordnung: Forschungskontext, keine Produktionswarnung und kein Beleg für einen neuen kryptografischen Bruch; vor einer Richtlinienänderung bewerten."
+      },
+      "id": "b48cd15e97f086de"
+    },
     {
       "source": "Cloudflare Blog",
       "url": "https://blog.cloudflare.com/vole-mole/",
@@ -53,20 +67,6 @@
         "de": "Redaktionelle Einordnung: Forschungskontext, keine Produktionswarnung und kein Beleg für einen neuen kryptografischen Bruch; vor einer Richtlinienänderung bewerten."
       },
       "id": "a4dbacf967e62059"
-    },
-    {
-      "source": "Cloudflare Blog",
-      "url": "https://blog.cloudflare.com/post-quantum-geo-key-manager/",
-      "title": "Bringing post-quantum cryptography to geographically fenced key management",
-      "published_at": "2026-10-23T18:06:56Z",
-      "category": "research",
-      "importance": "medium",
-      "takeaway": {
-        "en": "Editorial takeaway: research context, not a production security advisory or evidence of a new cryptographic break; assess before changing policy.",
-        "ar": "قراءة تحريرية: هذا سياق بحثي، وليس تنبيهاً أمنياً للإنتاج أو دليلاً على كسر تشفيري جديد؛ قيّم النتائج قبل تغيير السياسة.",
-        "de": "Redaktionelle Einordnung: Forschungskontext, keine Produktionswarnung und kein Beleg für einen neuen kryptografischen Bruch; vor einer Richtlinienänderung bewerten."
-      },
-      "id": "70bdd870b2ac82df"
     }
   ]
 }
