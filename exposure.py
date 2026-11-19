@@ -215,7 +215,9 @@ def network_stats(conn, as_name, week):
 
 
 def is_indexable(domain, rank, measured_weeks):
-    if search_indexing.is_excluded(domain):
+    if (search_indexing.is_excluded(domain)
+            or search_indexing.family_dns_blocked(domain)
+            or search_indexing.is_infrastructure(domain)):
         return False
     return (rank is not None and rank <= INDEX_MAX_RANK) or measured_weeks >= INDEX_MIN_WEEKS
 

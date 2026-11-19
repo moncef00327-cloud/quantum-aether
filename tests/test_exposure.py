@@ -47,6 +47,8 @@ class ExposureTests(unittest.TestCase):
         self.assertTrue(exposure.is_indexable("x.example", 1000, 1))
         self.assertFalse(exposure.is_indexable("x.example", 1001, 3))
         self.assertTrue(exposure.is_indexable("x.example", None, 4))
+        self.assertFalse(exposure.is_indexable("w4nkr.com", 10, 10))
+        self.assertFalse(exposure.is_indexable("googleapis.com", 5, 10))
         rows = [(f"2026-W{w}", "long.example", 1, 0, 5000) for w in (44, 45, 46, 47)] + [("2026-W47", "short.example", 1, 0, 5000)]
         self.assertEqual([d for d, _ in exposure.sitemap_domains(conn_with(rows))], ["long.example"])
 
