@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-11-19T15:07:26Z",
+  "updated_at": "2026-11-20T14:48:18Z",
   "classification": "Deterministic keyword rules; impact notes are editorial context, not source quotations or security advisories.",
   "sources": [
     {
@@ -31,20 +31,20 @@
     {
       "name": "arXiv quant-ph",
       "ok": true,
-      "entries": 171
+      "entries": 169
     },
     {
       "name": "arXiv cs.CR",
       "ok": true,
-      "entries": 69
+      "entries": 77
     }
   ],
   "items": [
     {
       "source": "arXiv cs.CR",
-      "url": "https://arxiv.org/abs/2611.23311",
-      "title": "Post-Quantum Cryptography Education for Software Developers: A Multivocal Literature Review",
-      "published_at": "2026-11-19T05:00:00Z",
+      "url": "https://arxiv.org/abs/2611.26574",
+      "title": "Classical Oracle Separation of QMA from the QCMA Hierarchy and Quantum Cryptography Even When P = QCMA",
+      "published_at": "2026-11-20T05:00:00Z",
       "category": "research",
       "importance": "medium",
       "takeaway": {
@@ -52,7 +52,63 @@
         "ar": "قراءة تحريرية: هذا سياق بحثي، وليس تنبيهاً أمنياً للإنتاج أو دليلاً على كسر تشفيري جديد؛ قيّم النتائج قبل تغيير السياسة.",
         "de": "Redaktionelle Einordnung: Forschungskontext, keine Produktionswarnung und kein Beleg für einen neuen kryptografischen Bruch; vor einer Richtlinienänderung bewerten."
       },
-      "id": "b48cd15e97f086de"
+      "id": "279b06cd459da250"
+    },
+    {
+      "source": "arXiv cs.CR",
+      "url": "https://arxiv.org/abs/2611.25663",
+      "title": "Correctable Enrollment and One-Transaction Seed Proofs for Ethereum's Post-Quantum Transition",
+      "published_at": "2026-11-20T05:00:00Z",
+      "category": "research",
+      "importance": "medium",
+      "takeaway": {
+        "en": "Editorial takeaway: research context, not a production security advisory or evidence of a new cryptographic break; assess before changing policy.",
+        "ar": "قراءة تحريرية: هذا سياق بحثي، وليس تنبيهاً أمنياً للإنتاج أو دليلاً على كسر تشفيري جديد؛ قيّم النتائج قبل تغيير السياسة.",
+        "de": "Redaktionelle Einordnung: Forschungskontext, keine Produktionswarnung und kein Beleg für einen neuen kryptografischen Bruch; vor einer Richtlinienänderung bewerten."
+      },
+      "id": "dea97b3cf35069b3"
+    },
+    {
+      "source": "arXiv quant-ph",
+      "url": "https://arxiv.org/abs/2610.37839",
+      "title": "Shor's algorithm compiled on cat qubits: 22 593 qubits for RSA-2048 in 3.14 days",
+      "published_at": "2026-11-20T05:00:00Z",
+      "category": "research",
+      "importance": "medium",
+      "takeaway": {
+        "en": "Editorial takeaway: research context, not a production security advisory or evidence of a new cryptographic break; assess before changing policy.",
+        "ar": "قراءة تحريرية: هذا سياق بحثي، وليس تنبيهاً أمنياً للإنتاج أو دليلاً على كسر تشفيري جديد؛ قيّم النتائج قبل تغيير السياسة.",
+        "de": "Redaktionelle Einordnung: Forschungskontext, keine Produktionswarnung und kein Beleg für einen neuen kryptografischen Bruch; vor einer Richtlinienänderung bewerten."
+      },
+      "id": "b2edcde0404e0626"
+    },
+    {
+      "source": "arXiv cs.CR",
+      "url": "https://arxiv.org/abs/2611.25339",
+      "title": "From FIPS to FPGA with LLM Agents: Measuring What Tests and Reviews Miss in Post-Quantum Cryptographic Hardware",
+      "published_at": "2026-11-20T05:00:00Z",
+      "category": "standards",
+      "importance": "high",
+      "takeaway": {
+        "en": "Editorial takeaway: compare your cryptographic inventory and migration plan with the linked guidance; scope and deadlines depend on the organization.",
+        "ar": "قراءة تحريرية: قارن جرد التشفير وخطة الانتقال لديك بالإرشادات المرتبطة؛ يختلف النطاق والجدول حسب المؤسسة.",
+        "de": "Redaktionelle Einordnung: Gleichen Sie Kryptoinventar und Migrationsplan mit den verlinkten Leitlinien ab; Umfang und Fristen hängen von der Organisation ab."
+      },
+      "id": "0bdb02af4cf20798"
+    },
+    {
+      "source": "arXiv cs.CR",
+      "url": "https://arxiv.org/abs/2611.10403",
+      "title": "QUASI: Post-Quantum Quorum Attestation of Pre-Validated Statements",
+      "published_at": "2026-11-20T05:00:00Z",
+      "category": "research",
+      "importance": "medium",
+      "takeaway": {
+        "en": "Editorial takeaway: research context, not a production security advisory or evidence of a new cryptographic break; assess before changing policy.",
+        "ar": "قراءة تحريرية: هذا سياق بحثي، وليس تنبيهاً أمنياً للإنتاج أو دليلاً على كسر تشفيري جديد؛ قيّم النتائج قبل تغيير السياسة.",
+        "de": "Redaktionelle Einordnung: Forschungskontext, keine Produktionswarnung und kein Beleg für einen neuen kryptografischen Bruch; vor einer Richtlinienänderung bewerten."
+      },
+      "id": "2534bcea02f4f99a"
     },
     {
       "source": "Cloudflare Blog",
