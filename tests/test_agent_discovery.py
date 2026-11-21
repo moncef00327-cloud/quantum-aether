@@ -84,6 +84,8 @@ class AgentDiscoveryTests(unittest.TestCase):
   expected={'scan_tls','get_tls_evidence','exposure_window','get_methodology','get_example_result','get_service_info','get_full_report',
             'create_full_report_order','verify_full_report_payment'}
   self.assertEqual({t['name'] for t in tools},expected)
+  paid=next(t for t in tools if t['name']=='get_full_report')['description']
+  self.assertIn('x402',paid);self.assertIn('$'+str(self.app.config['PRICE'])+' USDC',paid);self.assertNotIn('{price}',paid)
   read_only=[t for t in tools if t.get('annotations',{}).get('readOnlyHint') is True]
   self.assertEqual({t['name'] for t in read_only},
                    {'get_tls_evidence','exposure_window','get_methodology','get_example_result','get_service_info'})

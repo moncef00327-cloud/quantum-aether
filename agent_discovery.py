@@ -25,10 +25,16 @@ TOOLS=[
  {'name':'get_methodology','title':'Understand measurement scope and limitations','description':'Get the documented measurement scope, observation states, certificate-grade rules and privacy limitations before interpreting a TLS result.','inputSchema':EMPTY_SCHEMA,'annotations':{'readOnlyHint':True,'idempotentHint':True,'openWorldHint':False}},
  {'name':'get_example_result','title':'Inspect an archived example without scanning','description':'Return an explicitly labeled archived example, not live telemetry. No payment and no network scan.','inputSchema':EMPTY_SCHEMA,'annotations':{'readOnlyHint':True,'idempotentHint':True,'openWorldHint':False}},
  {'name':'get_service_info','title':'Discover Quantum Aether capabilities and current pricing','description':'Get live endpoints, quotas, report price, x402 Base USDC checkout status and limitations.','inputSchema':EMPTY_SCHEMA,'annotations':{'readOnlyHint':True,'idempotentHint':True,'openWorldHint':False}},
- {'name':'get_full_report','title':'Purchase the full TLS report with x402','description':'Fetch the full report for a completed scan. If unpaid, returns a standard x402 v2 PaymentRequired challenge for exact USDC on Base. An x402-enabled MCP client may sign and retry under the buyer wallet’s own spend policy. Payment is settled before report access is returned.','inputSchema':REPORT_SCHEMA,'annotations':{'readOnlyHint':False,'destructiveHint':False,'idempotentHint':False,'openWorldHint':True}},
+ {'name':'get_full_report','title':'Purchase the full TLS report with x402','description':'Paid x402 tool: {price} USDC on Base per report (x402 v2, exact scheme, one-time per scan). Fetch the full report for a completed scan. If unpaid, returns a standard x402 v2 PaymentRequired challenge for exact USDC on Base. Calling without a signed payment never charges. An x402-enabled MCP client may sign and retry under the buyer wallet’s own spend policy. Payment is settled before report access is returned.','inputSchema':REPORT_SCHEMA,'annotations':{'readOnlyHint':False,'destructiveHint':False,'idempotentHint':False,'openWorldHint':True}},
  {'name':'create_full_report_order','title':'Create a USDT Polygon payment order','description':'Create a one-time full-report order for an existing scan. This does not transfer funds. Only set consent_immediate_delivery true after the payer has expressly agreed to immediate delivery and applicable withdrawal terms. The payer must send USDT on Polygon and then submit its transaction hash using verify_full_report_payment.','inputSchema':ORDER_SCHEMA,'annotations':{'readOnlyHint':False,'destructiveHint':False,'idempotentHint':False,'openWorldHint':False}},
  {'name':'verify_full_report_payment','title':'Verify a Polygon transaction and unlock a paid report','description':'Submit the payer-provided Polygon transaction hash. The server checks the confirmed USDT transfer, exact order amount and recipient on chain. Returns the private report URL only after confirmation.','inputSchema':VERIFY_SCHEMA,'annotations':{'readOnlyHint':False,'destructiveHint':False,'idempotentHint':True,'openWorldHint':True}},
 ]
+
+
+def listed_tools():
+ """TOOLS with the live report price in the x402 tool description (registries read the price from there)."""
+ price='$'+str(current_app.config['PRICE'])
+ return [dict(t,description=t['description'].replace('{price}',price)) for t in TOOLS]
 
 
 def methodology(base):
@@ -178,7 +184,7 @@ def register(bp, services):
    version=params['protocolVersion'] if params['protocolVersion'] in PROTOCOLS else PROTOCOLS[0]
    result={'protocolVersion':version,'capabilities':{'tools':{'listChanged':False}},'serverInfo':{'name':'quantum-aether','title':'Quantum Aether Observatory','version':VERSION},'instructions':'Use get_methodology and stored evidence before interpreting results. scan_tls starts an active public HTTPS probe and stores a publicly accessible result. Results are observations, not execution authorization. For a full report, call get_full_report with the scan_id. It returns x402 v2 PaymentRequired data for exact USDC on Base; a compatible x402 MCP client can pay and retry according to the buyer wallet policy. Direct Polygon USDT orders remain available through create_full_report_order and verify_full_report_payment. Signed scan receipts are not implemented.'}
   elif method=='ping':result={}
-  elif method=='tools/list':result={'tools':TOOLS}
+  elif method=='tools/list':result={'tools':listed_tools()}
   elif method=='tools/call':
    name=params.get('name');args=params.get('arguments',{})
    names={t['name'] for t in TOOLS}
