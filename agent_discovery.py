@@ -12,9 +12,10 @@ import scan_experience
 import sector_snapshot
 import x402_pay
 
-UPDATED='2026-11-15'
+UPDATED='2026-11-21'
 PROTOCOLS=('2025-11-25','2025-06-18','2025-03-26')  # 2025-03-26 introduced Streamable HTTP; many enterprise clients still speak it
-VERSION='1.4.2'
+VERSION='1.5.0'
+PACKAGE_VERSION='1.4.2'  # PyPI/npm wrappers are versioned separately from the remote server
 DOMAIN_SCHEMA={'type':'object','properties':{'domain':{'type':'string','minLength':1,'maxLength':253,'description':'Public DNS hostname, for example example.com. HTTPS port 443 only.'}},'required':['domain'],'additionalProperties':False}
 EMPTY_SCHEMA={'type':'object','properties':{},'additionalProperties':False}
 ORDER_SCHEMA={'type':'object','properties':{'scan_id':{'type':'string','minLength':1,'description':'ID returned by scan_tls.'},'consent_immediate_delivery':{'type':'boolean','const':True,'description':'Set true only after the payer explicitly agrees to immediate delivery and the applicable withdrawal-right terms.'}},'required':['scan_id','consent_immediate_delivery'],'additionalProperties':False}
@@ -157,8 +158,8 @@ def register(bp, services):
    'name':'io.github.moncef00327-cloud/quantum-aether','title':'Quantum Aether','version':VERSION,
    'description':'Measure public TLS and post-quantum key exchange; read timestamped evidence and measurement limits.',
    'repository':{'url':'https://github.com/moncef00327-cloud/quantum-aether','source':'github','subfolder':'mcp'},
-   'packages':[{'registryType':'pypi','identifier':'quantum-aether-mcp','version':VERSION,'transport':{'type':'stdio'}},
-    {'registryType':'npm','identifier':'quantum-aether','version':VERSION}],
+   'packages':[{'registryType':'pypi','identifier':'quantum-aether-mcp','version':PACKAGE_VERSION,'transport':{'type':'stdio'}},
+    {'registryType':'npm','identifier':'quantum-aether','version':PACKAGE_VERSION}],
    'remotes':[{'type':'streamable-http','url':base()+'/mcp'}]})
 
  @bp.get('/.well-known/ai-plugin.json')

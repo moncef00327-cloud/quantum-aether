@@ -43,6 +43,7 @@ This file is a discovery index, not a certification. For a current result, use t
 - Machine-readable methodology: {{ base }}/api/v1/agent/methodology
 - Archived example: {{ base }}/api/v1/agent/example — explicitly is_example:true and is_live:false; not a fresh observation.
 - Agents can pay for full reports with x402 v2 exact USDC on Base at `POST {{ base }}/api/v1/agent/report/{scan_id}`. The server verifies and settles via PayAI before releasing the report. Direct-transfer checkout supports USDT Polygon and USDC on Arbitrum or Base. Signed scan receipts are not implemented.
+- Weekly sector snapshots (read-only, x402 $0.50 USDC on Base per call): `GET {{ base }}/api/v1/agent/sector/{sector}` or the remote MCP tool `get_sector_snapshot`. Every domain of one watch list (banks, government, cyber agencies, telecom, insurers ...) with grade, group and post-quantum status. Without payment it returns the x402 challenge and never charges.
 - Source: https://github.com/moncef00327-cloud/quantum-aether
 
 ## Free API

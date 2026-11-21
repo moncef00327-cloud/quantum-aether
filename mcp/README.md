@@ -74,11 +74,18 @@ execute changes on the scanned system.
 Agent guide: https://ather-quantum.com/agents?lang=en
 Service manifest: https://ather-quantum.com/.well-known/agent-service.json
 
-The MCP registry metadata declares remote server version 1.4.2. The separate
+The MCP registry metadata declares remote server version 1.5.0. The separate
 PyPI stdio wrapper is version 1.4.2 (defaults to ather-quantum.com) and uses the human-assisted checkout
 flow described by its local tools; automatic x402 payment is provided by the
 remote MCP tool. Signed scan receipts are not implemented.
 
+
+## get_sector_snapshot(sector) — remote only, paid x402
+
+Read-only. Every domain of one sector watch list (for example `banks-mena`, `government-gcc`,
+`cyber-agencies-worldwide`) in the latest weekly registry measurement: grade, key-exchange group, TLS version and
+post-quantum status, plus a summary. $0.50 USDC on Base per call via x402 v2 (exact scheme). Without a signed
+payment it returns the x402 PaymentRequired challenge and never charges. HTTP: `GET /api/v1/agent/sector/<sector>`.
 
 ## exposure_window(domain)
 
