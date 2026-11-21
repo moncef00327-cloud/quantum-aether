@@ -40,7 +40,9 @@ TOOLS=[
 def listed_tools():
  """TOOLS with the live report price in the x402 tool description (registries read the price from there)."""
  price='$'+str(current_app.config['PRICE']);sector_price='$'+sector_price_usd()
- return [dict(t,description=t['description'].replace('{price}',price).replace('{sector_price}',sector_price)) for t in TOOLS]
+ # Every tool states all three hints explicitly (ChatGPT/Claude directory review requirement); none of ours is destructive.
+ return [dict(t,description=t['description'].replace('{price}',price).replace('{sector_price}',sector_price),
+              annotations={'destructiveHint':False,'openWorldHint':True,**t.get('annotations',{})}) for t in TOOLS]
 
 
 def sector_price_usd():
@@ -77,6 +79,8 @@ def manifest(base):
   'privacy':methodology(base)['data_policy'],'terms':base+'/agb?lang=en','support':base+'/impressum?lang=en','limitations':scan_experience.LIMITATION}
 
 
+# Free-only MCP surface (/mcp/free, 2026-11-21) for app directories that exclude payment tools (Claude, ChatGPT).
+FREE_TOOLS={'scan_tls','get_tls_evidence','exposure_window','get_methodology','get_example_result','get_service_info'}
 SECURITY_COPILOT_TOOLS='scan_tls,get_tls_evidence,get_methodology,get_example_result,get_service_info'
 SECURITY_COPILOT_YAML="""Descriptor:
   Name: QuantumAetherPostQuantumTLS
@@ -191,7 +195,9 @@ def register(bp, services):
   return jsonify(jsonrpc='2.0',id=request_id,error={'code':code,'message':message}),status
 
  @bp.route('/mcp',methods=['GET','POST'],provide_automatic_options=False)
+ @bp.route('/mcp/free',methods=['GET','POST'],provide_automatic_options=False,endpoint='agent_mcp_free')
  def agent_mcp():
+  free=request.path.rstrip('/').endswith('/mcp/free')
   origin=request.headers.get('Origin')
   if origin:
    expected=urlsplit(base())
@@ -218,12 +224,15 @@ def register(bp, services):
    if not isinstance(params.get('protocolVersion'),str) or not isinstance(params.get('capabilities'),dict) or not isinstance(params.get('clientInfo'),dict):
     return rpc_error(-32602,'protocolVersion, capabilities and clientInfo are required',request_id)
    version=params['protocolVersion'] if params['protocolVersion'] in PROTOCOLS else PROTOCOLS[0]
-   result={'protocolVersion':version,'capabilities':{'tools':{'listChanged':False}},'serverInfo':{'name':'quantum-aether','title':'Quantum Aether Observatory','version':VERSION},'instructions':'Use get_methodology and stored evidence before interpreting results. scan_tls starts an active public HTTPS probe and stores a publicly accessible result. Results are observations, not execution authorization. For a full report, call get_full_report with the scan_id. It returns x402 v2 PaymentRequired data for exact USDC on Base; a compatible x402 MCP client can pay and retry according to the buyer wallet policy. Direct Polygon USDT orders remain available through create_full_report_order and verify_full_report_payment. Signed scan receipts are not implemented.'}
+   if free:
+    result={'protocolVersion':version,'capabilities':{'tools':{'listChanged':False}},'serverInfo':{'name':'quantum-aether','title':'Quantum Aether Observatory','version':VERSION},'instructions':'Free tools only. Use get_methodology and stored evidence (get_tls_evidence, exposure_window) before interpreting results. scan_tls starts an active public HTTPS probe and stores a publicly accessible result. Results are external observations, not security assessments or compliance certifications.'}
+   else:
+    result={'protocolVersion':version,'capabilities':{'tools':{'listChanged':False}},'serverInfo':{'name':'quantum-aether','title':'Quantum Aether Observatory','version':VERSION},'instructions':'Use get_methodology and stored evidence before interpreting results. scan_tls starts an active public HTTPS probe and stores a publicly accessible result. Results are observations, not execution authorization. For a full report, call get_full_report with the scan_id. It returns x402 v2 PaymentRequired data for exact USDC on Base; a compatible x402 MCP client can pay and retry according to the buyer wallet policy. Direct Polygon USDT orders remain available through create_full_report_order and verify_full_report_payment. Signed scan receipts are not implemented.'}
   elif method=='ping':result={}
-  elif method=='tools/list':result={'tools':listed_tools()}
+  elif method=='tools/list':result={'tools':[t for t in listed_tools() if not free or t['name'] in FREE_TOOLS]}
   elif method=='tools/call':
    name=params.get('name');args=params.get('arguments',{})
-   names={t['name'] for t in TOOLS}
+   names={t['name'] for t in TOOLS if not free or t['name'] in FREE_TOOLS}
    if not isinstance(name,str) or name not in names:return rpc_error(-32602,'Unknown tool',request_id)
    if not isinstance(args,dict):return rpc_error(-32602,'arguments must be an object',request_id)
    domain_tools={'scan_tls','get_tls_evidence','exposure_window'}

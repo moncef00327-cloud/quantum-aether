@@ -192,3 +192,17 @@ class AgentDiscoveryTests(unittest.TestCase):
   plugin=self.client.get('/.well-known/ai-plugin.json').json
   self.assertEqual(plugin['api']['url'],'https://ather-quantum.com/openapi.yaml')
   self.assertEqual(plugin['mcp']['url'],'https://ather-quantum.com/mcp')
+
+ def test_free_mcp_endpoint_lists_only_free_tools_with_explicit_hints(self):
+  r=self.client.post('/mcp/free',json={'jsonrpc':'2.0','id':1,'method':'tools/list'}).json['result']['tools']
+  self.assertEqual({t['name'] for t in r},agent_discovery.FREE_TOOLS)
+  for t in r:
+   self.assertTrue(t['title'])
+   for k in ('readOnlyHint','destructiveHint','openWorldHint'):self.assertIsInstance(t['annotations'][k],bool,(t['name'],k))
+  paid=self.client.post('/mcp/free',json={'jsonrpc':'2.0','id':2,'method':'tools/call','params':{'name':'get_full_report','arguments':{'scan_id':'x'}}}).json
+  self.assertEqual(paid['error']['code'],-32602)
+  init=self.client.post('/mcp/free',json={'jsonrpc':'2.0','id':3,'method':'initialize','params':{'protocolVersion':'2025-06-18','capabilities':{},'clientInfo':{'name':'t','version':'1'}}}).json
+  self.assertIn('Free tools only',init['result']['instructions'])
+  full=self.client.post('/mcp',json={'jsonrpc':'2.0','id':4,'method':'tools/list'}).json['result']['tools']
+  self.assertIn('get_sector_snapshot',{t['name'] for t in full})
+
