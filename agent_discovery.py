@@ -9,6 +9,8 @@ from werkzeug.exceptions import HTTPException
 import badge_evidence
 import quantum_vuln_scanner
 import scan_experience
+import sector_snapshot
+import x402_pay
 
 UPDATED='2026-11-15'
 PROTOCOLS=('2025-11-25','2025-06-18','2025-03-26')  # 2025-03-26 introduced Streamable HTTP; many enterprise clients still speak it
@@ -18,6 +20,8 @@ EMPTY_SCHEMA={'type':'object','properties':{},'additionalProperties':False}
 ORDER_SCHEMA={'type':'object','properties':{'scan_id':{'type':'string','minLength':1,'description':'ID returned by scan_tls.'},'consent_immediate_delivery':{'type':'boolean','const':True,'description':'Set true only after the payer explicitly agrees to immediate delivery and the applicable withdrawal-right terms.'}},'required':['scan_id','consent_immediate_delivery'],'additionalProperties':False}
 VERIFY_SCHEMA={'type':'object','properties':{'order_id':{'type':'string','minLength':1},'tx_hash':{'type':'string','pattern':'^0x[0-9a-fA-F]{64}$'}},'required':['order_id','tx_hash'],'additionalProperties':False}
 REPORT_SCHEMA={'type':'object','properties':{'scan_id':{'type':'string','minLength':1,'description':'ID returned by scan_tls. A compatible x402 MCP client handles the Base USDC payment challenge.'}},'required':['scan_id'],'additionalProperties':False}
+SECTOR_KEYS=sector_snapshot.keys()
+SECTOR_SCHEMA={'type':'object','properties':{'sector':{'type':'string','enum':SECTOR_KEYS,'default':sector_snapshot.DEFAULT_SECTOR,'description':'Sector watch-list key. Default: '+sector_snapshot.DEFAULT_SECTOR+'.'}},'additionalProperties':False}
 TOOLS=[
  {'name':'scan_tls','title':'Measure TLS and post-quantum key exchange','description':'Run a new, rate-limited TLS scan of a public hostname on port 443. Returns observation_status, measured time, negotiated group and certificate summary. Starts an external connection and stores a publicly accessible result. Does not judge application safety.', 'inputSchema':DOMAIN_SCHEMA,'annotations':{'readOnlyHint':False,'destructiveHint':False,'idempotentHint':False,'openWorldHint':True}},
  {'name':'get_tls_evidence','title':'Read stored TLS evidence without scanning','description':'Read existing TLS evidence with source, checked_at, expires_at and fresh/stale/undetermined/not_scanned state. Never starts a new network scan. A missing record is not proof that a domain is unsafe.', 'inputSchema':DOMAIN_SCHEMA,'annotations':{'readOnlyHint':True,'idempotentHint':True,'openWorldHint':False}},
@@ -26,6 +30,7 @@ TOOLS=[
  {'name':'get_example_result','title':'Inspect an archived example without scanning','description':'Return an explicitly labeled archived example, not live telemetry. No payment and no network scan.','inputSchema':EMPTY_SCHEMA,'annotations':{'readOnlyHint':True,'idempotentHint':True,'openWorldHint':False}},
  {'name':'get_service_info','title':'Discover Quantum Aether capabilities and current pricing','description':'Get live endpoints, quotas, report price, x402 Base USDC checkout status and limitations.','inputSchema':EMPTY_SCHEMA,'annotations':{'readOnlyHint':True,'idempotentHint':True,'openWorldHint':False}},
  {'name':'get_full_report','title':'Purchase the full TLS report with x402','description':'Paid x402 tool: {price} USDC on Base per report (x402 v2, exact scheme, one-time per scan). Fetch the full report for a completed scan. If unpaid, returns a standard x402 v2 PaymentRequired challenge for exact USDC on Base. Calling without a signed payment never charges. An x402-enabled MCP client may sign and retry under the buyer wallet’s own spend policy. Payment is settled before report access is returned.','inputSchema':REPORT_SCHEMA,'annotations':{'readOnlyHint':False,'destructiveHint':False,'idempotentHint':False,'openWorldHint':True}},
+ {'name':'get_sector_snapshot','title':'Weekly post-quantum TLS snapshot of one sector (paid, x402)','description':'Paid x402 tool: {sector_price} USDC on Base per call (x402 v2, exact scheme). Read-only: every domain of one sector watch list (banks, government, cyber agencies, telecom, insurers ...) in the latest weekly registry measurement, with grade, key-exchange group, TLS version and post-quantum status, plus a summary. Without a signed payment it returns the x402 PaymentRequired challenge and never charges. Sectors: '+', '.join(SECTOR_KEYS)+'.','inputSchema':SECTOR_SCHEMA,'annotations':{'readOnlyHint':True,'destructiveHint':False,'idempotentHint':True,'openWorldHint':False}},
  {'name':'create_full_report_order','title':'Create a USDT Polygon payment order','description':'Create a one-time full-report order for an existing scan. This does not transfer funds. Only set consent_immediate_delivery true after the payer has expressly agreed to immediate delivery and applicable withdrawal terms. The payer must send USDT on Polygon and then submit its transaction hash using verify_full_report_payment.','inputSchema':ORDER_SCHEMA,'annotations':{'readOnlyHint':False,'destructiveHint':False,'idempotentHint':False,'openWorldHint':False}},
  {'name':'verify_full_report_payment','title':'Verify a Polygon transaction and unlock a paid report','description':'Submit the payer-provided Polygon transaction hash. The server checks the confirmed USDT transfer, exact order amount and recipient on chain. Returns the private report URL only after confirmation.','inputSchema':VERIFY_SCHEMA,'annotations':{'readOnlyHint':False,'destructiveHint':False,'idempotentHint':True,'openWorldHint':True}},
 ]
@@ -33,8 +38,12 @@ TOOLS=[
 
 def listed_tools():
  """TOOLS with the live report price in the x402 tool description (registries read the price from there)."""
- price='$'+str(current_app.config['PRICE'])
- return [dict(t,description=t['description'].replace('{price}',price)) for t in TOOLS]
+ price='$'+str(current_app.config['PRICE']);sector_price='$'+sector_price_usd()
+ return [dict(t,description=t['description'].replace('{price}',price).replace('{sector_price}',sector_price)) for t in TOOLS]
+
+
+def sector_price_usd():
+ return str(current_app.config.get('X402_SECTOR_PRICE') or '0.50')
 
 
 def methodology(base):
@@ -60,7 +69,7 @@ def manifest(base):
    'quantum_scan':{'url':base+'/api/v1/quantum-scan','method':'POST'},'stored_evidence':{'url_template':base+'/api/v1/badge/{domain}','method':'GET','starts_scan':False},
    'methodology':{'url':base+'/api/v1/agent/methodology','method':'GET'},'example':{'url':base+'/api/v1/agent/example','method':'GET','is_live':False},'health':{'url':base+'/healthz','method':'GET'}},
   'mcp':{'url':base+'/mcp','transport':'streamable-http','mode':'stateless JSON responses; no SSE stream','protocol_versions':list(PROTOCOLS),'authentication':'none','tools':[t['name'] for t in TOOLS],'active_scan_tool':'scan_tls'},
-  'pricing':{'scan_summary':{'amount':'0','currency':cfg['CURRENCY']},'monitoring':{'signup':base+'/monitoring','free_trial_days':14,'free_trial_domains':10,'plans':[{'name':'Starter','amount':'29.00','currency':cfg['CURRENCY'],'period':'month','domains':10},{'name':'Business','amount':'99.00','currency':cfg['CURRENCY'],'period':'month','domains':100}],'human_signup_required':True},'full_report':{'amount':str(cfg['PRICE']),'currency':cfg['CURRENCY'],'purchase_method':'x402','network':'Base','token':'USDC','endpoint_template':base+'/api/v1/agent/report/{scan_id}','mcp_tool':'get_full_report','payment_authorization_required':True,'buyer_wallet_required':True,'purchase_documentation':base+'/openapi.yaml'},'x402':{'enabled':bool(re.fullmatch(r'0x[0-9a-fA-F]{40}',cfg.get('USDC_BASE_ADDR',''))),'status':'configured' if re.fullmatch(r'0x[0-9a-fA-F]{40}',cfg.get('USDC_BASE_ADDR','')) else 'disabled_missing_receiver','automatic_checkout':bool(re.fullmatch(r'0x[0-9a-fA-F]{40}',cfg.get('USDC_BASE_ADDR',''))),'buyer_wallet_required':True,'network':'eip155:8453','asset':'0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913','scheme':'exact','facilitator':'https://facilitator.payai.network'},'signed_receipts':{'enabled':False}},
+  'pricing':{'scan_summary':{'amount':'0','currency':cfg['CURRENCY']},'monitoring':{'signup':base+'/monitoring','free_trial_days':14,'free_trial_domains':10,'plans':[{'name':'Starter','amount':'29.00','currency':cfg['CURRENCY'],'period':'month','domains':10},{'name':'Business','amount':'99.00','currency':cfg['CURRENCY'],'period':'month','domains':100}],'human_signup_required':True},'full_report':{'amount':str(cfg['PRICE']),'currency':cfg['CURRENCY'],'purchase_method':'x402','network':'Base','token':'USDC','endpoint_template':base+'/api/v1/agent/report/{scan_id}','mcp_tool':'get_full_report','payment_authorization_required':True,'buyer_wallet_required':True,'purchase_documentation':base+'/openapi.yaml'},'x402':{'enabled':bool(re.fullmatch(r'0x[0-9a-fA-F]{40}',cfg.get('USDC_BASE_ADDR',''))),'status':'configured' if re.fullmatch(r'0x[0-9a-fA-F]{40}',cfg.get('USDC_BASE_ADDR','')) else 'disabled_missing_receiver','automatic_checkout':bool(re.fullmatch(r'0x[0-9a-fA-F]{40}',cfg.get('USDC_BASE_ADDR',''))),'buyer_wallet_required':True,'network':'eip155:8453','asset':'0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913','scheme':'exact','facilitator':'https://facilitator.payai.network'},'sector_snapshot':{'amount':sector_price_usd(),'currency':'USDC','purchase_method':'x402','network':'Base','endpoint_template':base+'/api/v1/agent/sector/{sector}','mcp_tool':'get_sector_snapshot','sectors':SECTOR_KEYS,'read_only':True},'signed_receipts':{'enabled':False}},
   'limits':{'scan_attempts_per_client_per_hour':cfg['SCANS_PER_HOUR'],'global_scan_attempts_per_hour':cfg['GLOBAL_SCANS_PER_HOUR'],'rate_limit_status':429,'retry_after_seconds':3600},
   'documentation':{'human':base+'/agents?lang=en','openapi':base+'/openapi.yaml','llms':base+'/llms.txt','full_context':base+'/llms-full.txt','methodology':base+'/api/v1/agent/methodology','mcp_registry_metadata':base+'/api/v1/agent/mcp-server.json','source':'https://github.com/moncef00327-cloud/quantum-aether'},
   'directory_status':{'mcp_registry':'Official listing active; current MCP server version is '+VERSION+'.','x402_bazaar':'Not listed. The HTTP x402 endpoint and paid MCP tool are available when Base USDC receiving is configured.'},
@@ -99,6 +108,17 @@ def register(bp, services):
    response=current_app.make_response(view())
    body=response.get_json(silent=True) or {}
    return (response.status_code,body,dict(response.headers)) if include_headers else (response.status_code,body)
+
+ def sector_view(key):
+  conn=services['db']()
+  x402_pay.init(conn)  # CREATE TABLE IF NOT EXISTS: cheap, and correct per database
+  if key not in SECTOR_KEYS:return jsonify(error='unknown_sector',sectors=SECTOR_KEYS),404
+  if not sector_snapshot.latest_week(conn):return jsonify(error='no_measurement_yet'),404
+  return x402_pay.paywall(conn,sector_price_usd(),f'Quantum Aether weekly post-quantum TLS snapshot of sector {key} (latest week). Read-only data; see license field.',lambda:sector_snapshot.build(conn,key))
+
+ @bp.route('/api/v1/agent/sector/<key>',methods=['GET','POST'])
+ def agent_sector(key):
+  return sector_view(key)
 
  @bp.get('/agents')
  def agents_page():
@@ -198,6 +218,8 @@ def register(bp, services):
     if set(args)!={'scan_id','consent_immediate_delivery'} or not isinstance(args.get('scan_id'),str) or args.get('consent_immediate_delivery') is not True:return rpc_error(-32602,'Requires scan_id and explicit consent_immediate_delivery=true',request_id)
    elif name=='verify_full_report_payment':
     if set(args)!={'order_id','tx_hash'} or not isinstance(args.get('order_id'),str) or not isinstance(args.get('tx_hash'),str):return rpc_error(-32602,'Requires order_id and tx_hash',request_id)
+   elif name=='get_sector_snapshot':
+    if not set(args)<={'sector'} or args.get('sector',sector_snapshot.DEFAULT_SECTOR) not in SECTOR_KEYS:return rpc_error(-32602,'Optional sector must be one of: '+', '.join(SECTOR_KEYS),request_id)
    elif name=='get_full_report':
     if set(args)!={'scan_id'} or not isinstance(args.get('scan_id'),str) or not args['scan_id']:return rpc_error(-32602,'Requires scan_id',request_id)
    elif args:return rpc_error(-32602,'This tool takes no arguments',request_id)
@@ -212,7 +234,7 @@ def register(bp, services):
      value=exposure_web.window_for(services['db'](),domain) or {'domain':domain,'error':'not_tracked','message':'No weekly observation of this domain in the registry yet. Not proof of anything.'}
     elif name=='get_methodology':value=methodology(base())
     elif name=='get_example_result':value=example()
-    elif name=='get_full_report':
+    elif name in ('get_full_report','get_sector_snapshot'):
      payment_meta=params.get('_meta',{})
      payment=payment_meta.get('x402/payment') if isinstance(payment_meta,dict) else None
      headers={}
@@ -220,7 +242,10 @@ def register(bp, services):
       if not isinstance(payment,dict):return rpc_error(-32602,'x402/payment must be an object',request_id)
       encoded=base64.urlsafe_b64encode(json.dumps(payment,separators=(',',':')).encode()).decode().rstrip('=')
       headers['PAYMENT-SIGNATURE']=encoded
-     status,value,response_headers=invoke_view(lambda:services['x402_report'](args['scan_id']),f"/api/v1/agent/report/{args['scan_id']}",headers=headers,include_headers=True)
+     if name=='get_full_report':view,path=(lambda:services['x402_report'](args['scan_id'])),f"/api/v1/agent/report/{args['scan_id']}"
+     else:
+      key=args.get('sector',sector_snapshot.DEFAULT_SECTOR);view,path=(lambda:sector_view(key)),f"/api/v1/agent/sector/{key}"
+     status,value,response_headers=invoke_view(view,path,headers=headers,include_headers=True)
      if status==402:
       challenge=json.loads(base64.b64decode(response_headers['PAYMENT-REQUIRED']))
       value=challenge
@@ -240,7 +265,7 @@ def register(bp, services):
      status,value=invoke_view(services['crypto_verify'],f"/api/v1/crypto/orders/{args['order_id']}/verify",{'tx_hash':args['tx_hash']})
      if status>=400 or status==202:value={'http_status':status,**value};tool_is_error=status>=400
     else:value=manifest(base())
-    if name!='get_full_report':result={'content':[{'type':'text','text':json.dumps(value,ensure_ascii=False)}],'structuredContent':value,'isError':tool_is_error}
+    if name not in ('get_full_report','get_sector_snapshot'):result={'content':[{'type':'text','text':json.dumps(value,ensure_ascii=False)}],'structuredContent':value,'isError':tool_is_error}
    except quantum_vuln_scanner.ScanError as exc:
     value={'error':exc.code,'message':str(exc)}
     result={'content':[{'type':'text','text':json.dumps(value)}],'structuredContent':value,'isError':True}
