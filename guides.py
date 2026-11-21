@@ -1221,4 +1221,103 @@ Environment=OPENSSL_CONF=/etc/nginx/openssl-oqs.cnf</pre>
 """,
         },
     },
+    "post-quantum-vendor-security-questionnaire": {
+        "updated": "2026-11-21",
+        "en": {
+            "title": "Answering post-quantum questions in customer security questionnaires",
+            "description": "How software and payment vendors can answer bank and enterprise questions about post-quantum TLS with dated, checkable evidence instead of promises.",
+            "body": """
+<p>Banks, insurers and large enterprises have started asking their software and payment vendors about post-quantum readiness, in security questionnaires and supplier due diligence. The question usually sounds like <em>"Do your public endpoints support post-quantum or hybrid key exchange, and what is your migration plan?"</em> This page shows how to answer it with evidence instead of promises.</p>
+
+<h2>Why the question is coming now</h2>
+<ul>
+<li>NIST published the ML-KEM standard (FIPS 203) in August 2024. Its draft transition guidance (NIST IR 8547) proposes deprecating RSA and elliptic-curve key establishment from 2030 and disallowing it from 2035.</li>
+<li>The EU's coordinated post-quantum roadmap (2025) asks member states to start the transition by the end of 2026 and to protect high-risk use cases by 2030.</li>
+<li>Chrome, Firefox, Safari and Cloudflare already negotiate the hybrid group <code>X25519MLKEM768</code> by default. Customers can see whether your endpoints do.</li>
+<li>The risk they worry about is "harvest now, decrypt later": traffic recorded today can be decrypted once quantum computers are capable enough.</li>
+</ul>
+
+<h2>Three honest answers</h2>
+<p><strong>If your endpoints already negotiate it:</strong> "Our public endpoints (list) negotiate the hybrid post-quantum key exchange X25519MLKEM768 in TLS 1.3, observed on (date) by an independent external measurement (link). We monitor this daily and are alerted if it regresses."</p>
+<p><strong>If some do and some do not:</strong> "X25519MLKEM768 is enabled on (list), observed on (date) (link). The remaining endpoints (list) are terminated by (CDN / load balancer / server) and are scheduled for (quarter). Progress is monitored daily."</p>
+<p><strong>If none do yet:</strong> "Our public endpoints currently use classical key exchange (x25519), observed on (date) (link). Enabling the hybrid group requires (component and version); our target date is (quarter). Certificates remain classical industry-wide until post-quantum certificates are available in public PKI."</p>
+
+<h2>Evidence a reviewer can check</h2>
+<ol>
+<li>One external observation per hostname: date, address, TLS version and negotiated group. A link the reviewer can open is worth more than a screenshot.</li>
+<li>A dated history that shows the change, not only today's state. Daily monitoring keeps a log of every check that you can export as CSV.</li>
+<li>A public verification link or badge per domain, so the customer can re-check without asking you.</li>
+<li>The limits of the measurement: a public probe sees the edge (often a CDN), not the origin, and says nothing about certificates or internal traffic.</li>
+</ol>
+<p><a href="/?lang=en">Check your endpoints now</a> (free), or see a <a href="/sample-report?lang=en">full sample report</a>.</p>
+
+<h2>Keep the answer true after you send it</h2>
+<p>A CDN policy change, a load-balancer migration or a server upgrade can silently remove post-quantum key exchange. If you told a customer it is enabled, re-check it continuously: monitoring re-tests your domains and common subdomains every day and emails you when the key exchange changes.</p>
+""",
+        },
+        "de": {
+            "title": "Post-Quanten-Fragen in Sicherheitsfragebögen von Kunden beantworten",
+            "description": "Wie Software- und Zahlungsanbieter Fragen von Banken und Großkunden zu Post-Quanten-TLS mit datierten, prüfbaren Nachweisen beantworten.",
+            "body": """
+<p>Banken, Versicherungen und Großunternehmen fragen ihre Software- und Zahlungsdienstleister inzwischen nach Post-Quanten-Bereitschaft, in Sicherheitsfragebögen und bei der Lieferantenprüfung. Die Frage lautet meist: <em>„Unterstützen Ihre öffentlichen Endpunkte Post-Quanten- bzw. hybriden Schlüsselaustausch, und wie sieht Ihr Migrationsplan aus?“</em> Diese Seite zeigt, wie Sie mit Nachweisen statt mit Versprechen antworten.</p>
+
+<h2>Warum die Frage jetzt kommt</h2>
+<ul>
+<li>NIST hat ML-KEM (FIPS 203) im August 2024 veröffentlicht. Der Entwurf der Übergangsleitlinie (NIST IR 8547) sieht vor, RSA- und Elliptische-Kurven-Schlüsselaustausch ab 2030 abzukündigen und ab 2035 nicht mehr zuzulassen.</li>
+<li>Der koordinierte EU-Fahrplan für Post-Quanten-Kryptografie (2025) sieht vor, dass die Mitgliedstaaten bis Ende 2026 mit der Umstellung beginnen und Hochrisiko-Anwendungen bis 2030 schützen.</li>
+<li>Chrome, Firefox, Safari und Cloudflare handeln die hybride Gruppe <code>X25519MLKEM768</code> bereits standardmäßig aus. Ihre Kunden können sehen, ob Ihre Endpunkte es tun.</li>
+<li>Das befürchtete Risiko heißt „harvest now, decrypt later“: Heute aufgezeichneter Verkehr kann entschlüsselt werden, sobald Quantencomputer leistungsfähig genug sind.</li>
+</ul>
+
+<h2>Drei ehrliche Antworten</h2>
+<p><strong>Wenn Ihre Endpunkte es bereits aushandeln:</strong> „Unsere öffentlichen Endpunkte (Liste) handeln in TLS 1.3 den hybriden Post-Quanten-Schlüsselaustausch X25519MLKEM768 aus, beobachtet am (Datum) durch eine unabhängige externe Messung (Link). Wir überwachen das täglich und werden bei einer Verschlechterung alarmiert.“</p>
+<p><strong>Wenn es teilweise umgesetzt ist:</strong> „X25519MLKEM768 ist auf (Liste) aktiv, beobachtet am (Datum) (Link). Die übrigen Endpunkte (Liste) terminieren auf (CDN / Load Balancer / Server) und sind für (Quartal) geplant. Der Fortschritt wird täglich überwacht.“</p>
+<p><strong>Wenn noch keiner es tut:</strong> „Unsere öffentlichen Endpunkte nutzen derzeit klassischen Schlüsselaustausch (x25519), beobachtet am (Datum) (Link). Für die hybride Gruppe ist (Komponente und Version) nötig; unser Zieltermin ist (Quartal). Zertifikate bleiben branchenweit klassisch, bis Post-Quanten-Zertifikate in der öffentlichen PKI verfügbar sind.“</p>
+
+<h2>Nachweise, die ein Prüfer selbst prüfen kann</h2>
+<ol>
+<li>Eine externe Beobachtung pro Hostname: Datum, Adresse, TLS-Version und ausgehandelte Gruppe. Ein Link, den der Prüfer öffnen kann, ist mehr wert als ein Screenshot.</li>
+<li>Ein datierter Verlauf, der die Änderung zeigt, nicht nur den heutigen Stand. Die tägliche Überwachung protokolliert jede Prüfung, exportierbar als CSV.</li>
+<li>Ein öffentlicher Prüflink oder ein Badge pro Domain, damit der Kunde selbst nachprüfen kann.</li>
+<li>Die Grenzen der Messung: Eine öffentliche Prüfung sieht den Rand (oft ein CDN), nicht den Ursprungsserver, und sagt nichts über Zertifikate oder internen Verkehr.</li>
+</ol>
+<p><a href="/?lang=de">Endpunkte jetzt prüfen</a> (kostenlos) oder einen <a href="/sample-report?lang=en">vollständigen Beispielbericht</a> ansehen.</p>
+
+<h2>Damit die Antwort wahr bleibt</h2>
+<p>Eine geänderte CDN-Richtlinie, ein Load-Balancer-Umzug oder ein Server-Update kann den Post-Quanten-Schlüsselaustausch unbemerkt entfernen. Wenn Sie einem Kunden zugesagt haben, dass er aktiv ist, prüfen Sie das laufend: Die Überwachung testet Ihre Domains und üblichen Subdomains täglich und mailt Ihnen, wenn sich der Schlüsselaustausch ändert.</p>
+""",
+        },
+        "ar": {
+            "title": "كيف تجيب عن أسئلة ما بعد الكم في استبيانات أمن العملاء",
+            "description": "كيف يجيب مزوّدو البرمجيات وخدمات الدفع عن أسئلة البنوك والمؤسسات حول TLS ما بعد الكمّي بأدلة مؤرّخة قابلة للتحقق بدل الوعود.",
+            "body": """
+<p>بدأت البنوك وشركات التأمين والمؤسسات الكبرى تسأل مزوّدي البرمجيات وخدمات الدفع عن جاهزيتهم لما بعد الكم، في استبيانات الأمن وفي تقييم الموردين. يأتي السؤال عادةً بصيغة: <em>«هل تدعم نقاطكم العامة تبادل المفاتيح ما بعد الكمّي أو الهجين، وما خطتكم للانتقال؟»</em> توضّح هذه الصفحة كيف تجيب بأدلة لا بوعود.</p>
+
+<h2>لماذا يأتي السؤال الآن</h2>
+<ul>
+<li>نشر NIST معيار ML-KEM ‏(FIPS 203) في أغسطس 2024. ومسودة إرشادات الانتقال (NIST IR 8547) تقترح إيقاف اعتماد تبادل المفاتيح بـ RSA والمنحنيات الإهليلجية بدءاً من 2030 ومنعه من 2035.</li>
+<li>خارطة الطريق الأوروبية المنسّقة للتشفير ما بعد الكمّي (2025) تطلب من الدول الأعضاء بدء الانتقال بنهاية 2026 وحماية الاستخدامات عالية الخطورة بحلول 2030.</li>
+<li>متصفحات Chrome وFirefox وSafari وشبكة Cloudflare تتفاوض أصلاً على المجموعة الهجينة <code>X25519MLKEM768</code> افتراضياً، ويستطيع عملاؤك رؤية هل تفعل نقاطك ذلك.</li>
+<li>الخطر الذي يقلقهم: «احصد الآن، فكّ لاحقاً». حركة البيانات المسجّلة اليوم قابلة لفكّ تشفيرها عندما تصبح الحواسيب الكمّية قادرة.</li>
+</ul>
+
+<h2>ثلاث إجابات صادقة</h2>
+<p><strong>إن كانت نقاطك تتفاوض عليه:</strong> «نقاطنا العامة (القائمة) تتفاوض على تبادل المفاتيح الهجين ما بعد الكمّي X25519MLKEM768 في TLS 1.3، رُصد ذلك في (التاريخ) بقياس خارجي مستقل (الرابط). نراقب ذلك يومياً ونُنبَّه عند أي تراجع.»</p>
+<p><strong>إن كان مطبّقاً جزئياً:</strong> «X25519MLKEM768 مفعّل على (القائمة)، رُصد في (التاريخ) (الرابط). النقاط الباقية (القائمة) تنتهي عند (CDN / موازن حمل / خادم) ومجدولة في (الربع). نتابع التقدّم يومياً.»</p>
+<p><strong>إن لم تكن أي نقطة تتفاوض عليه بعد:</strong> «نقاطنا العامة تستخدم حالياً تبادل مفاتيح كلاسيكياً (x25519)، رُصد في (التاريخ) (الرابط). تفعيل المجموعة الهجينة يتطلب (المكوّن والإصدار)، وموعدنا المستهدف (الربع). الشهادات ستبقى كلاسيكية في القطاع كله حتى تتوفر شهادات ما بعد كمّية في البنية العامة.»</p>
+
+<h2>أدلة يستطيع المراجع التحقق منها بنفسه</h2>
+<ol>
+<li>رصد خارجي لكل اسم نطاق: التاريخ، والعنوان، ونسخة TLS، والمجموعة المتفاوض عليها. رابط يفتحه المراجع أقوى من لقطة شاشة.</li>
+<li>سجلّ مؤرَّخ يُظهر التغيير، لا الحالة اليوم فقط. المراقبة اليومية تحفظ سجلاً بكل فحص يمكن تصديره CSV.</li>
+<li>رابط تحقق عام أو شارة لكل نطاق، ليتحقق العميل بنفسه دون أن يسألك.</li>
+<li>حدود القياس: الفحص العام يرى الحافة (غالباً CDN) لا الخادم الأصلي، ولا يقول شيئاً عن الشهادات أو الحركة الداخلية.</li>
+</ol>
+<p><a href="/?lang=ar">افحص نقاطك الآن</a> مجاناً، أو شاهد <a href="/sample-report?lang=ar">نموذج تقرير كامل</a>.</p>
+
+<h2>لتبقى الإجابة صحيحة بعد إرسالها</h2>
+<p>تغيير سياسة الـ CDN أو نقل موازن الحمل أو تحديث الخادم قد يزيل تبادل المفاتيح ما بعد الكمّي دون أن تلاحظ. إن أخبرت عميلاً أنه مفعّل، فتحقق منه باستمرار: المراقبة تعيد فحص نطاقاتك ونطاقاتها الفرعية الشائعة يومياً وتراسلك عند تغيّر تبادل المفاتيح.</p>
+""",
+        },
+    },
 }
