@@ -90,7 +90,7 @@ class DatasetJsonLdTests(unittest.TestCase):
         home=self.documents('/?lang=en')
         self.assertEqual([d['@type'] for d in home],['Organization','WebSite','SoftwareApplication','FAQPage'])  # Organization+sameAs 2026-11-14
         guide=self.documents('/guides/enable-x25519mlkem768-nginx?lang=en')
-        self.assertEqual([d['@type'] for d in guide],['TechArticle'])
+        self.assertEqual([d['@type'] for d in guide],['TechArticle','FAQPage'])  # FAQ section 2026-11-21 (guide_faq.py)
         for docs in [home,guide]:
             for doc in docs:
                 self.assertFalse(any(obj.get('@type')=='Dataset' for obj in objects(doc)))

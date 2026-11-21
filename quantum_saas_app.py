@@ -38,6 +38,7 @@ import dna_encode
 import analytics_db
 import assets
 import guides
+import guide_faq
 import legal
 import monitor
 import countries
@@ -1992,7 +1993,9 @@ def guide(slug):
             abort(404)
         return redirect(url_for(".guide", slug=matches[0], **({"lang": request.args["lang"]} if "lang" in request.args else {})), code=301)
     page = g[current_lang()]
-    return render_template("guide.html", slug=slug, page=page, updated=g["updated"])
+    faq = guide_faq.for_page(slug, current_lang())
+    return render_template("guide.html", slug=slug, page=page, updated=g["updated"], faq=faq,
+                           faq_labels=guide_faq.LABELS[current_lang()])
 
 
 @bp.get("/study/top-1000-post-quantum-tls")

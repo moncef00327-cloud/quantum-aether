@@ -4,14 +4,24 @@
 {% block description %}{{ page.description }}{% endblock %}
 {% block head %}
 <script type="application/ld+json">{{ {"@context": "https://schema.org", "@type": "TechArticle", "headline": page.title, "description": page.description, "dateModified": updated, "inLanguage": lang, "url": abs_url('site.guide', slug=slug, lang=lang), "author": org_jsonld(False), "publisher": org_jsonld()} | tojson }}</script>
+{% if faq %}{% set qa = [] %}{% for q, a in faq.faq %}{% set _ = qa.append({"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a | striptags}}) %}{% endfor %}<script type="application/ld+json">{{ {"@context": "https://schema.org", "@type": "FAQPage", "inLanguage": lang, "mainEntity": qa} | tojson }}</script>{% endif %}
 {% endblock %}
 {% block content %}
 <article class="card prose">
   <h1>{{ page.title }}</h1>
   <p class="muted small">{{ t.updated_label }}: <time datetime="{{ updated }}">{{ updated }}</time></p>
+  {% if faq %}<div class="notice guide-short" id="short-answer"><h2>{{ faq_labels[0] }}</h2>{{ faq.short | safe }}</div>{% endif %}
   {% with box_id='domain-box-top', box_src='guide' %}{% include "_scan_box.html" %}{% endwith %}
   {{ page.body | safe }}
 </article>
+{% if faq %}
+<section class="card prose" id="faq">
+  <h2>{{ faq_labels[1] }}</h2>
+  {% for q, a in faq.faq %}<h3>{{ q }}</h3>
+  {{ a | safe }}
+  {% endfor %}
+</section>
+{% endif %}
 {% if slug == "enable-x25519mlkem768-nginx" %}
 <section class="card highlight trial-cta" id="guide-next">
   <h2>{{ t.guide_nginx_next_title }}</h2>

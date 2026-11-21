@@ -3,7 +3,7 @@
 
 GUIDES = {
     "enable-x25519mlkem768-nginx": {
-        "updated": "2026-11-18",
+        "updated": "2026-11-21",
         "en": {
             "title": "How to enable post-quantum TLS (X25519MLKEM768) on nginx",
             "description": "Turn on the hybrid ML-KEM key exchange that Chrome and Firefox already use, on nginx with OpenSSL 3.5, and verify it.",
@@ -552,7 +552,7 @@ ELBSecurityPolicy-TLS13-1-2-Res-FIPS-PQ-2025-09   # same, FIPS</pre>
         },
     },
     "nodejs-post-quantum-tls-x25519mlkem768": {
-        "updated": "2026-11-09",
+        "updated": "2026-11-21",
         "en": {
             "title": "Post-quantum TLS in Node.js (X25519MLKEM768): versions, config and checks",
             "description": "Node.js 24 official builds include OpenSSL 3.5, which offers X25519MLKEM768 by default. How to check your build, avoid the ecdhCurve trap and verify the handshake.",
@@ -617,7 +617,7 @@ https.createServer({
         },
     },
     "java-post-quantum-tls-jdk27": {
-        "updated": "2026-11-09",
+        "updated": "2026-11-21",
         "en": {
             "title": "Post-quantum TLS in Java: X25519MLKEM768 in JDK 27 (JEP 527)",
             "description": "JDK 27 adds hybrid ML-KEM key exchange to TLS 1.3 and enables X25519MLKEM768 by default. What changes for Tomcat, Spring Boot and HTTP clients, and what to do on JDK 21 or 25.",
@@ -667,7 +667,7 @@ openssl s_client -connect example.com:443 -groups X25519MLKEM768 &lt;/dev/null 2
     },
 
     "go-post-quantum-tls-x25519mlkem768": {
-        "updated": "2026-11-10",
+        "updated": "2026-11-21",
         "en": {
             "title": "Post-quantum TLS in Go (crypto/tls): X25519MLKEM768 and the go.mod trap",
             "description": "Go 1.24+ enables X25519MLKEM768 by default, but only if your go.mod says go 1.24 or newer. How to check, fix CurvePreferences and verify the handshake.",
@@ -817,7 +817,7 @@ with socket.create_connection(("example.com", 443)) as s:
         },
     },
     "check-website-post-quantum-tls": {
-        "updated": "2026-11-10",
+        "updated": "2026-11-21",
         "en": {
             "title": "How to check if a website uses post-quantum TLS (X25519MLKEM768)",
             "description": "Four ways to see whether a site negotiates the hybrid ML-KEM key exchange: Chrome DevTools, openssl s_client, a few lines of Go or Python, and a free online scan.",
@@ -1084,7 +1084,7 @@ Environment=OPENSSL_CONF=/etc/nginx/openssl-oqs.cnf</pre>
         },
     },
     "gulf-banks-post-quantum-cryptography-requirements": {
-        "updated": "2026-11-18",
+        "updated": "2026-11-21",
         "en": {
             "title": "Gulf banks PQC rules: SAMA & UAE (2026)",
             "description": "SAMA circular 482021280 deadlines, Saudi National Cryptographic Standards (NCS-2) clauses and UAE National Encryption Policy rules for Gulf banks.",
