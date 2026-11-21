@@ -288,6 +288,8 @@ def finish_marked(rows, real_hosts):
         r = dict(r)
         if r["domain"] not in real_hosts:
             r.update(name="", org_id="", role="", sector="", host=r["domain"])
+            if not is_cdn(r):  # an institution's own network would point at that institution
+                r.update(network="", asn=None)
         out.append({k: r.get(k) for k in CSV_COLUMNS})
     return out
 

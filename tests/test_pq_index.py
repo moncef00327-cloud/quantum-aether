@@ -86,6 +86,7 @@ class PqIndexTests(unittest.TestCase):
             if r["host"].startswith("zz-canary"):
                 self.assertEqual(r["name"], "")
                 self.assertEqual(r["org_id"], "")
+                self.assertIn(r["network"], ("", "Cloudflare, Inc."))
         body = json.loads(self.client.get("/index.json").get_data(as_text=True))
         self.assertEqual(body["meta"]["license"], "CC BY 4.0")
         self.assertTrue(any(r["host"].startswith("zz-canary") and r["name"] == "" for r in body["results"]))
