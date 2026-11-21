@@ -36,6 +36,7 @@ This file is a discovery index, not a certification. For a current result, use t
 
 - Agent guide: {{ base }}/agents?lang=en{{ ua }} — implemented capabilities, examples, limitations and current payment status.
 - Service discovery JSON: {{ base }}/.well-known/agent-service.json — custom service metadata with real endpoints and configured limits; not an A2A Agent Card.
+- A2A Agent Card (Agent2Agent protocol 0.3): {{ base }}/.well-known/agent-card.json — JSON-RPC `message/send` at {{ base }}/a2a. Send a hostname as text ("Is example.com post-quantum ready?", "scan example.com") or data ({"skill":"tls-scan","domain":"example.com"}). Free evidence and rate-limited scans; paid data via x402.
 - Remote MCP: {{ base }}/mcp — stateless Streamable HTTP with JSON responses; initialize, tools/list and tools/call. Tools: scan_tls, get_tls_evidence, exposure_window, get_methodology, get_example_result, get_service_info.
 - ChatGPT / ChatGPT for Sales / OpenAI Codex / Claude / Cursor: connect custom MCP connector to `{{ base }}/mcp` (Streamable HTTP, Authentication: None). Discovery metadata: `{{ base }}/.well-known/mcp.json` and `{{ base }}/.well-known/ai-plugin.json`.
 - Microsoft Copilot Studio: add {{ base }}/mcp as a Model Context Protocol tool with authentication None. Microsoft Security Copilot: custom plugin manifest at {{ base }}/security-copilot.yaml (read and scan tools only).
