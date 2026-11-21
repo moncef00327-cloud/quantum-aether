@@ -4004,6 +4004,9 @@ def _sitemap_pages():
     pages.append(("/data-license", _template_day("data_license.html"), de_langs))
     if dach_hosting.load(BASE_DIR):
         pages.append(("/adoption/dach-hosting", dach_hosting.updated(BASE_DIR), de_langs))
+    mea = _mea_summary()
+    if mea:
+        pages.append(("/adoption/arab-africa-hosting", mea["updated"], site_langs))
     legal_date = os.path.getmtime(os.path.join(BASE_DIR, "legal.py"))
     legal_day = dt.datetime.fromtimestamp(legal_date, dt.timezone.utc).date().isoformat()
     pages += [(f"/{slug}", legal_day, legal_langs) for slug in legal.PAGES]
@@ -4134,6 +4137,9 @@ def feed():
     dach = _dach_summary()
     if dach:
         entries.append((f"{base}/adoption/dach-hosting", dach["updated"], dach["title"], dach["summary"]))
+    mea = _mea_summary()
+    if mea:
+        entries.append((f"{base}/adoption/arab-africa-hosting", mea["updated"], mea["title"], mea["summary"]))
     entries.append((f"{base}/exposure", _template_day("exposure_index.html"), exposure_web.T["en"]["index_title"],
                     "Since which week each tracked site negotiates post-quantum key exchange, with weekly "
                     "OpenTimestamps anchors as tamper-evident proof."))
@@ -4214,6 +4220,14 @@ def _dach_summary():
             "summary": dach_hosting.T["en"]["meta"]}
 
 
+def _mea_summary():
+    data = mea_hosting.load(BASE_DIR)
+    if not data:
+        return None
+    return {"title": mea_hosting.T["en"]["title"], "updated": data.get("generated_utc", "")[:10],
+            "summary": mea_hosting.T["en"]["meta"]}
+
+
 def _index_listing():
     """Everything published on the site, for llms.txt and the Atom feed (one source, so new pages are not forgotten)."""
     return {
@@ -4223,6 +4237,7 @@ def _index_listing():
                              "title": f"State of post-quantum TLS: {_month_name(rid, 'en')}"} for rid in reports.ids()],
         "bank_reports": _bank_summaries(),
         "dach_hosting": _dach_summary(),
+        "mea_hosting": _mea_summary(),
         # Generated from the sitemap itself: a page added to _sitemap_pages() is listed here with no extra edit.
         "all_pages": [{"path": path, "updated": day, "langs": list(langs)}
                       for path, day, langs in sorted(_sitemap_pages(), key=lambda p: p[0])],
@@ -4495,6 +4510,9 @@ gravity_web.register(bp, db)
 import dach_hosting  # noqa: E402  DACH hosting study page (self-contained module)
 dach_hosting.register(bp, {"base_dir": BASE_DIR, "db": db, "lang": current_lang, "client_hash": client_hash,
                            "de_pages": DE_PAGES, "de_endpoints": i18n.DE_ENDPOINTS})
+
+import mea_hosting  # noqa: E402  Arab world + Africa hosting study page (2026-11-21, self-contained module)
+mea_hosting.register(bp, {"base_dir": BASE_DIR, "db": db, "lang": current_lang, "client_hash": client_hash})
 
 import exposure_web  # noqa: E402  Quantum Exposure Registry (/exposure, self-contained module)
 exposure_web.register(bp, {"db": db, "lang": current_lang, "base": public_base, "de_pages": DE_PAGES,

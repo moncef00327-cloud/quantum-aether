@@ -76,6 +76,9 @@ This file is a discovery index, not a certification. For a current result, use t
 {%- if dach_hosting %}
 - {{ base }}/adoption/dach-hosting{{ u }} — {{ dach_hosting.title }} (updated {{ dach_hosting.updated }}): {{ dach_hosting.summary }} Aggregates only, no customer domains.
 {%- endif %}
+{%- if mea_hosting %}
+- {{ base }}/adoption/arab-africa-hosting{{ u }} — {{ mea_hosting.title }} (updated {{ mea_hosting.updated }}): {{ mea_hosting.summary }} Aggregates only, no customer domains.
+{%- endif %}
 - {{ base }}/exposure{{ u }} — Quantum Exposure Registry: since which week each tracked site negotiates post-quantum key exchange, with weekly OpenTimestamps anchors.
 - {{ base }}/press{{ u }} — press page: key figures, charts and citation terms.
 

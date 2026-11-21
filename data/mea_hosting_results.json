@@ -1,0 +1,2825 @@
+{
+ "generated_utc": "2026-11-21T02:51:51+00:00",
+ "source": "Tranco top 100k (list GQ38K)",
+ "selected_utc": "2026-11-21T01:49:15+00:00",
+ "min_sites": 5,
+ "max_sites": 10,
+ "buckets": {
+  "africa": {
+   "global_cdn_cloud": 416,
+   "local_host": 251,
+   "no_address": 58,
+   "multi_or_unknown": 9
+  },
+  "arab": {
+   "local_host": 175,
+   "global_cdn_cloud": 142,
+   "no_address": 36,
+   "multi_or_unknown": 10
+  }
+ },
+ "rounds": [
+  {
+   "round": 1,
+   "started_utc": "2026-11-21T01:49:24+00:00",
+   "finished_utc": "2026-11-21T01:50:13+00:00",
+   "sites": 126,
+   "probe": "TLS 1.3 ClientHello on port 443 only"
+  },
+  {
+   "round": 2,
+   "started_utc": "2026-11-21T02:20:18+00:00",
+   "finished_utc": "2026-11-21T02:21:06+00:00",
+   "sites": 126,
+   "probe": "TLS 1.3 ClientHello on port 443 only"
+  },
+  {
+   "round": 3,
+   "started_utc": "2026-11-21T02:51:06+00:00",
+   "finished_utc": "2026-11-21T02:51:51+00:00",
+   "sites": 126,
+   "probe": "TLS 1.3 ClientHello on port 443 only"
+  }
+ ],
+ "providers": [
+  {
+   "asn": 37153,
+   "provider": "Xneelo (Pty) Ltd",
+   "sites_found": 8,
+   "countries": [
+    "ZA"
+   ],
+   "region": "africa",
+   "measured": 8,
+   "counts": {
+    "pq": 4,
+    "classical": 3,
+    "mixed": 0,
+    "undetermined": 0,
+    "unreachable": 1,
+    "variable": 0
+   },
+   "graded": true,
+   "pq_share": 57.1,
+   "sites": [
+    {
+     "domain": "sants.co.za",
+     "rounds": [
+      "pq",
+      "pq",
+      "pq"
+     ],
+     "groups": [
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ]
+     ],
+     "result": "pq"
+    },
+    {
+     "domain": "ukzn.ac.za",
+     "rounds": [
+      "pq",
+      "pq",
+      "pq"
+     ],
+     "groups": [
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ]
+     ],
+     "result": "pq"
+    },
+    {
+     "domain": "uwc.ac.za",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "ul.ac.za",
+     "rounds": [
+      "pq",
+      "pq",
+      "pq"
+     ],
+     "groups": [
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ]
+     ],
+     "result": "pq"
+    },
+    {
+     "domain": "ekurhuleni.gov.za",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "gsed.co.za",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "pns.co.za",
+     "rounds": [
+      "pq",
+      "pq",
+      "pq"
+     ],
+     "groups": [
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ]
+     ],
+     "result": "pq"
+    },
+    {
+     "domain": "thishost.co.za",
+     "rounds": [
+      "unreachable",
+      "unreachable",
+      "unreachable"
+     ],
+     "groups": [
+      [],
+      [],
+      []
+     ],
+     "result": "unreachable"
+    }
+   ]
+  },
+  {
+   "asn": 51167,
+   "provider": "Contabo GmbH",
+   "sites_found": 7,
+   "countries": [
+    "BI",
+    "CD",
+    "CI",
+    "ST",
+    "TG"
+   ],
+   "region": "africa",
+   "measured": 7,
+   "counts": {
+    "pq": 3,
+    "classical": 3,
+    "mixed": 0,
+    "undetermined": 0,
+    "unreachable": 1,
+    "variable": 0
+   },
+   "graded": true,
+   "pq_share": 50.0,
+   "sites": [
+    {
+     "domain": "ngengesport.cd",
+     "rounds": [
+      "unreachable",
+      "unreachable",
+      "unreachable"
+     ],
+     "groups": [
+      [],
+      [],
+      []
+     ],
+     "result": "unreachable"
+    },
+    {
+     "domain": "abuse.st",
+     "rounds": [
+      "pq",
+      "pq",
+      "pq"
+     ],
+     "groups": [
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ]
+     ],
+     "result": "pq"
+    },
+    {
+     "domain": "dpfc.ci",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "nic.bi",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "labubu.st",
+     "rounds": [
+      "pq",
+      "pq",
+      "pq"
+     ],
+     "groups": [
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ]
+     ],
+     "result": "pq"
+    },
+    {
+     "domain": "potassium.st",
+     "rounds": [
+      "pq",
+      "pq",
+      "pq"
+     ],
+     "groups": [
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ]
+     ],
+     "result": "pq"
+    },
+    {
+     "domain": "kchgame.tg",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    }
+   ]
+  },
+  {
+   "asn": 24940,
+   "provider": "Hetzner Online GmbH",
+   "sites_found": 7,
+   "countries": [
+    "AO",
+    "CV",
+    "NA",
+    "NG",
+    "ST",
+    "SY",
+    "ZA"
+   ],
+   "region": "mixed",
+   "measured": 7,
+   "counts": {
+    "pq": 2,
+    "classical": 3,
+    "mixed": 0,
+    "undetermined": 1,
+    "unreachable": 1,
+    "variable": 0
+   },
+   "graded": true,
+   "pq_share": 40.0,
+   "sites": [
+    {
+     "domain": "castlebet.com.na",
+     "rounds": [
+      "pq",
+      "pq",
+      "pq"
+     ],
+     "groups": [
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ]
+     ],
+     "result": "pq"
+    },
+    {
+     "domain": "sana.sy",
+     "rounds": [
+      "undetermined",
+      "undetermined",
+      "undetermined"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "undetermined"
+    },
+    {
+     "domain": "maxdate.cv",
+     "rounds": [
+      "pq",
+      "pq",
+      "pq"
+     ],
+     "groups": [
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ]
+     ],
+     "result": "pq"
+    },
+    {
+     "domain": "noti.st",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "secp256r1"
+      ],
+      [
+       "secp256r1"
+      ],
+      [
+       "secp256r1"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "dns.com.ng",
+     "rounds": [
+      "unreachable",
+      "unreachable",
+      "unreachable"
+     ],
+     "groups": [
+      [],
+      [],
+      []
+     ],
+     "result": "unreachable"
+    },
+    {
+     "domain": "singles2meet.co.za",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "concurso-minsa.ao",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    }
+   ]
+  },
+  {
+   "asn": 327795,
+   "provider": "e-Government Authority",
+   "sites_found": 6,
+   "countries": [
+    "TZ"
+   ],
+   "region": "africa",
+   "measured": 6,
+   "counts": {
+    "pq": 2,
+    "classical": 3,
+    "mixed": 0,
+    "undetermined": 0,
+    "unreachable": 1,
+    "variable": 0
+   },
+   "graded": true,
+   "pq_share": 40.0,
+   "sites": [
+    {
+     "domain": "ifm.ac.tz",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "heslb.go.tz",
+     "rounds": [
+      "pq",
+      "pq",
+      "pq"
+     ],
+     "groups": [
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ]
+     ],
+     "result": "pq"
+    },
+    {
+     "domain": "utumishi.go.tz",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "brela.go.tz",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "secp256r1"
+      ],
+      [
+       "secp256r1"
+      ],
+      [
+       "secp256r1"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "ajira.go.tz",
+     "rounds": [
+      "unreachable",
+      "unreachable",
+      "unreachable"
+     ],
+     "groups": [
+      [],
+      [],
+      []
+     ],
+     "result": "unreachable"
+    },
+    {
+     "domain": "rita.go.tz",
+     "rounds": [
+      "pq",
+      "pq",
+      "pq"
+     ],
+     "groups": [
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ]
+     ],
+     "result": "pq"
+    }
+   ]
+  },
+  {
+   "asn": 16276,
+   "provider": "OVH SAS",
+   "sites_found": 14,
+   "countries": [
+    "AO",
+    "BJ",
+    "LS",
+    "MA",
+    "ML",
+    "NG",
+    "RW",
+    "SO",
+    "TN",
+    "ZA"
+   ],
+   "region": "mixed",
+   "measured": 10,
+   "counts": {
+    "pq": 2,
+    "classical": 7,
+    "mixed": 0,
+    "undetermined": 0,
+    "unreachable": 1,
+    "variable": 0
+   },
+   "graded": true,
+   "pq_share": 22.2,
+   "sites": [
+    {
+     "domain": "cello.so",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "minint.ao",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "bedienungsanleitu.ng",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "manua.ls",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "hostdns.co.za",
+     "rounds": [
+      "unreachable",
+      "unreachable",
+      "unreachable"
+     ],
+     "groups": [
+      [],
+      [],
+      []
+     ],
+     "result": "unreachable"
+    },
+    {
+     "domain": "radio-south-africa.co.za",
+     "rounds": [
+      "pq",
+      "pq",
+      "pq"
+     ],
+     "groups": [
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ]
+     ],
+     "result": "pq"
+    },
+    {
+     "domain": "lapresse.tn",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "egis.com.ng",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "lnbloto.bj",
+     "rounds": [
+      "pq",
+      "pq",
+      "pq"
+     ],
+     "groups": [
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ],
+      [
+       "X25519MLKEM768"
+      ]
+     ],
+     "result": "pq"
+    },
+    {
+     "domain": "ines.ac.rw",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    }
+   ]
+  },
+  {
+   "asn": 36914,
+   "provider": "Kenya Education Network",
+   "sites_found": 13,
+   "countries": [
+    "KE"
+   ],
+   "region": "africa",
+   "measured": 10,
+   "counts": {
+    "pq": 0,
+    "classical": 10,
+    "mixed": 0,
+    "undetermined": 0,
+    "unreachable": 0,
+    "variable": 0
+   },
+   "graded": true,
+   "pq_share": 0.0,
+   "sites": [
+    {
+     "domain": "hef.co.ke",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "kcau.ac.ke",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "kenet.or.ke",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "secp256r1"
+      ],
+      [
+       "secp256r1"
+      ],
+      [
+       "secp256r1"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "mu.ac.ke",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "mmust.ac.ke",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "jkuat.ac.ke",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "kabianga.ac.ke",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "karu.ac.ke",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "mut.ac.ke",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "must.ac.ke",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    }
+   ]
+  },
+  {
+   "asn": 8452,
+   "provider": "IDDQD-AS",
+   "sites_found": 10,
+   "countries": [
+    "EG"
+   ],
+   "region": "arab",
+   "measured": 10,
+   "counts": {
+    "pq": 0,
+    "classical": 9,
+    "mixed": 0,
+    "undetermined": 0,
+    "unreachable": 1,
+    "variable": 0
+   },
+   "graded": true,
+   "pq_share": 0.0,
+   "sites": [
+    {
+     "domain": "digital.gov.eg",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "secp256r1"
+      ],
+      [
+       "secp256r1"
+      ],
+      [
+       "secp256r1"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "di.gov.eg",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "te.eg",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "secp384r1"
+      ],
+      [
+       "secp384r1"
+      ],
+      [
+       "secp384r1"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "sis.gov.eg",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "shmff.gov.eg",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "secp256r1"
+      ],
+      [
+       "secp256r1"
+      ],
+      [
+       "secp256r1"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "alahlynet.com.eg",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "caoa.gov.eg",
+     "rounds": [
+      "unreachable",
+      "unreachable",
+      "unreachable"
+     ],
+     "groups": [
+      [],
+      [],
+      []
+     ],
+     "result": "unreachable"
+    },
+    {
+     "domain": "visa2egypt.gov.eg",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "secp256r1"
+      ],
+      [
+       "secp256r1"
+      ],
+      [
+       "secp256r1"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "azhar.gov.eg",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "azu.edu.eg",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    }
+   ]
+  },
+  {
+   "asn": 2018,
+   "provider": "Tertiary Education and Research Network of South Africa",
+   "sites_found": 9,
+   "countries": [
+    "ZA"
+   ],
+   "region": "africa",
+   "measured": 9,
+   "counts": {
+    "pq": 0,
+    "classical": 7,
+    "mixed": 0,
+    "undetermined": 0,
+    "unreachable": 2,
+    "variable": 0
+   },
+   "graded": true,
+   "pq_share": 0.0,
+   "sites": [
+    {
+     "domain": "unisa.ac.za",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "secp256r1"
+      ],
+      [
+       "secp256r1"
+      ],
+      [
+       "secp256r1"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "up.ac.za",
+     "rounds": [
+      "unreachable",
+      "unreachable",
+      "unreachable"
+     ],
+     "groups": [
+      [],
+      [],
+      []
+     ],
+     "result": "unreachable"
+    },
+    {
+     "domain": "wits.ac.za",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "secp256r1"
+      ],
+      [
+       "secp256r1"
+      ],
+      [
+       "secp256r1"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "uj.ac.za",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "tenet.ac.za",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "cput.ac.za",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "mandela.ac.za",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "cut.ac.za",
+     "rounds": [
+      "unreachable",
+      "unreachable",
+      "unreachable"
+     ],
+     "groups": [
+      [],
+      [],
+      []
+     ],
+     "result": "unreachable"
+    },
+    {
+     "domain": "nsfas.org.za",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    }
+   ]
+  },
+  {
+   "asn": 14061,
+   "provider": "DigitalOcean, LLC",
+   "sites_found": 8,
+   "countries": [
+    "AE",
+    "CM",
+    "KE",
+    "SD",
+    "ZA"
+   ],
+   "region": "mixed",
+   "measured": 8,
+   "counts": {
+    "pq": 0,
+    "classical": 7,
+    "mixed": 0,
+    "undetermined": 0,
+    "unreachable": 1,
+    "variable": 0
+   },
+   "graded": true,
+   "pq_share": 0.0,
+   "sites": [
+    {
+     "domain": "sun.ac.za",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "result.sd",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "fdl.ae",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "zhizhuchi.cm",
+     "rounds": [
+      "unreachable",
+      "unreachable",
+      "unreachable"
+     ],
+     "groups": [
+      [],
+      [],
+      []
+     ],
+     "result": "unreachable"
+    },
+    {
+     "domain": "inspiretech.co.ke",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "newarkfrontierstech.co.ke",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "simplepaytech.co.ke",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "spectrumtech.co.ke",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    }
+   ]
+  },
+  {
+   "asn": 24757,
+   "provider": "Ethio Telecom",
+   "sites_found": 8,
+   "countries": [
+    "ET"
+   ],
+   "region": "africa",
+   "measured": 8,
+   "counts": {
+    "pq": 0,
+    "classical": 5,
+    "mixed": 0,
+    "undetermined": 0,
+    "unreachable": 3,
+    "variable": 0
+   },
+   "graded": true,
+   "pq_share": 0.0,
+   "sites": [
+    {
+     "domain": "aau.edu.et",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "ethernet.edu.et",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "eaes.et",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "secp384r1"
+      ],
+      [
+       "secp384r1"
+      ],
+      [
+       "secp384r1"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "ethiotelecom.et",
+     "rounds": [
+      "unreachable",
+      "unreachable",
+      "unreachable"
+     ],
+     "groups": [
+      [],
+      [],
+      []
+     ],
+     "result": "unreachable"
+    },
+    {
+     "domain": "fayda.et",
+     "rounds": [
+      "unreachable",
+      "unreachable",
+      "unreachable"
+     ],
+     "groups": [
+      [],
+      [],
+      []
+     ],
+     "result": "unreachable"
+    },
+    {
+     "domain": "etrade.gov.et",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "erca.gov.et",
+     "rounds": [
+      "unreachable",
+      "unreachable",
+      "unreachable"
+     ],
+     "groups": [
+      [],
+      [],
+      []
+     ],
+     "result": "unreachable"
+    },
+    {
+     "domain": "esw.et",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    }
+   ]
+  },
+  {
+   "asn": 2561,
+   "provider": "Egyptian Universities Network (EUN)",
+   "sites_found": 7,
+   "countries": [
+    "EG"
+   ],
+   "region": "arab",
+   "measured": 7,
+   "counts": {
+    "pq": 0,
+    "classical": 7,
+    "mixed": 0,
+    "undetermined": 0,
+    "unreachable": 0,
+    "variable": 0
+   },
+   "graded": true,
+   "pq_share": 0.0,
+   "sites": [
+    {
+     "domain": "asu.edu.eg",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "secp256r1"
+      ],
+      [
+       "secp256r1"
+      ],
+      [
+       "secp256r1"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "cu.edu.eg",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "alexu.edu.eg",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "bu.edu.eg",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "tanta.edu.eg",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "capu.edu.eg",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "aun.edu.eg",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    }
+   ]
+  },
+  {
+   "asn": 37228,
+   "provider": "KT RWANDA NETWORK Ltd",
+   "sites_found": 5,
+   "countries": [
+    "RW"
+   ],
+   "region": "africa",
+   "measured": 5,
+   "counts": {
+    "pq": 0,
+    "classical": 5,
+    "mixed": 0,
+    "undetermined": 0,
+    "unreachable": 0,
+    "variable": 0
+   },
+   "graded": true,
+   "pq_share": 0.0,
+   "sites": [
+    {
+     "domain": "aos.rw",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "rdb.rw",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "irembo.gov.rw",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "rra.gov.rw",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "reb.rw",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    }
+   ]
+  },
+  {
+   "asn": 35656,
+   "provider": "JUNet Jordanian Universities Network L.L.C.",
+   "sites_found": 5,
+   "countries": [
+    "JO"
+   ],
+   "region": "arab",
+   "measured": 5,
+   "counts": {
+    "pq": 0,
+    "classical": 5,
+    "mixed": 0,
+    "undetermined": 0,
+    "unreachable": 0,
+    "variable": 0
+   },
+   "graded": true,
+   "pq_share": 0.0,
+   "sites": [
+    {
+     "domain": "ju.edu.jo",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "secp256r1"
+      ],
+      [
+       "secp256r1"
+      ],
+      [
+       "secp256r1"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "hu.edu.jo",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "aabu.edu.jo",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "bau.edu.jo",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "secp256r1"
+      ],
+      [
+       "secp256r1"
+      ],
+      [
+       "secp256r1"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "just.edu.jo",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    }
+   ]
+  },
+  {
+   "asn": 36947,
+   "provider": "Telecom Algeria",
+   "sites_found": 10,
+   "countries": [
+    "DZ"
+   ],
+   "region": "arab",
+   "measured": 10,
+   "counts": {
+    "pq": 0,
+    "classical": 2,
+    "mixed": 0,
+    "undetermined": 0,
+    "unreachable": 6,
+    "variable": 2
+   },
+   "graded": false,
+   "pq_share": null,
+   "sites": [
+    {
+     "domain": "poste.dz",
+     "rounds": [
+      "unreachable",
+      "unreachable",
+      "unreachable"
+     ],
+     "groups": [
+      [],
+      [],
+      []
+     ],
+     "result": "unreachable"
+    },
+    {
+     "domain": "algerietelecom.dz",
+     "rounds": [
+      "unreachable",
+      "unreachable",
+      "unreachable"
+     ],
+     "groups": [
+      [],
+      [],
+      []
+     ],
+     "result": "unreachable"
+    },
+    {
+     "domain": "univ-boumerdes.dz",
+     "rounds": [
+      "unreachable",
+      "unreachable",
+      "classical"
+     ],
+     "groups": [
+      [],
+      [],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "variable"
+    },
+    {
+     "domain": "djaweb.dz",
+     "rounds": [
+      "unreachable",
+      "unreachable",
+      "unreachable"
+     ],
+     "groups": [
+      [],
+      [],
+      []
+     ],
+     "result": "unreachable"
+    },
+    {
+     "domain": "at.dz",
+     "rounds": [
+      "unreachable",
+      "unreachable",
+      "unreachable"
+     ],
+     "groups": [
+      [],
+      [],
+      []
+     ],
+     "result": "unreachable"
+    },
+    {
+     "domain": "cnas.dz",
+     "rounds": [
+      "unreachable",
+      "unreachable",
+      "unreachable"
+     ],
+     "groups": [
+      [],
+      [],
+      []
+     ],
+     "result": "unreachable"
+    },
+    {
+     "domain": "univ-bejaia.dz",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "aadl.dz",
+     "rounds": [
+      "unreachable",
+      "unreachable",
+      "unreachable"
+     ],
+     "groups": [
+      [],
+      [],
+      []
+     ],
+     "result": "unreachable"
+    },
+    {
+     "domain": "anae.dz",
+     "rounds": [
+      "classical",
+      "unreachable",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "variable"
+    },
+    {
+     "domain": "takwin.dz",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    }
+   ]
+  },
+  {
+   "asn": 5384,
+   "provider": "EMIRATES TELECOMMUNICATIONS GROUP COMPANY (ETISALAT GROUP) PJSC",
+   "sites_found": 6,
+   "countries": [
+    "AE"
+   ],
+   "region": "arab",
+   "measured": 6,
+   "counts": {
+    "pq": 0,
+    "classical": 4,
+    "mixed": 0,
+    "undetermined": 0,
+    "unreachable": 2,
+    "variable": 0
+   },
+   "graded": false,
+   "pq_share": null,
+   "sites": [
+    {
+     "domain": "etisalatdomains.ae",
+     "rounds": [
+      "unreachable",
+      "unreachable",
+      "unreachable"
+     ],
+     "groups": [
+      [],
+      [],
+      []
+     ],
+     "result": "unreachable"
+    },
+    {
+     "domain": "etisalat.ae",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "alshamil.net.ae",
+     "rounds": [
+      "unreachable",
+      "unreachable",
+      "unreachable"
+     ],
+     "groups": [
+      [],
+      [],
+      []
+     ],
+     "result": "unreachable"
+    },
+    {
+     "domain": "moe.gov.ae",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "eand.ae",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "moi.gov.ae",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "secp256r1"
+      ],
+      [
+       "secp256r1"
+      ],
+      [
+       "secp256r1"
+      ]
+     ],
+     "result": "classical"
+    }
+   ]
+  },
+  {
+   "asn": 37061,
+   "provider": "Safaricom Limited",
+   "sites_found": 5,
+   "countries": [
+    "KE"
+   ],
+   "region": "africa",
+   "measured": 5,
+   "counts": {
+    "pq": 0,
+    "classical": 4,
+    "mixed": 0,
+    "undetermined": 0,
+    "unreachable": 1,
+    "variable": 0
+   },
+   "graded": false,
+   "pq_share": null,
+   "sites": [
+    {
+     "domain": "ecitizen.go.ke",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "tsc.go.ke",
+     "rounds": [
+      "unreachable",
+      "unreachable",
+      "unreachable"
+     ],
+     "groups": [
+      [],
+      [],
+      []
+     ],
+     "result": "unreachable"
+    },
+    {
+     "domain": "ntsa.go.ke",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "secp256r1"
+      ],
+      [
+       "secp256r1"
+      ],
+      [
+       "secp256r1"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "safaricombusiness.co.ke",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "sha.go.ke",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    }
+   ]
+  },
+  {
+   "asn": 204206,
+   "provider": "Digital Dubai Government Establishment",
+   "sites_found": 5,
+   "countries": [
+    "AE"
+   ],
+   "region": "arab",
+   "measured": 5,
+   "counts": {
+    "pq": 0,
+    "classical": 4,
+    "mixed": 0,
+    "undetermined": 1,
+    "unreachable": 0,
+    "variable": 0
+   },
+   "graded": false,
+   "pq_share": null,
+   "sites": [
+    {
+     "domain": "uaepass.ae",
+     "rounds": [
+      "undetermined",
+      "undetermined",
+      "undetermined"
+     ],
+     "groups": [
+      [],
+      [],
+      []
+     ],
+     "result": "undetermined"
+    },
+    {
+     "domain": "rta.ae",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "secp256r1"
+      ],
+      [
+       "secp256r1"
+      ],
+      [
+       "secp256r1"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "gdrfad.gov.ae",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "secp256r1"
+      ],
+      [
+       "secp256r1"
+      ],
+      [
+       "secp256r1"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "dubaipolice.gov.ae",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "secp256r1"
+      ],
+      [
+       "secp256r1"
+      ],
+      [
+       "secp256r1"
+      ]
+     ],
+     "result": "classical"
+    },
+    {
+     "domain": "dc.gov.ae",
+     "rounds": [
+      "classical",
+      "classical",
+      "classical"
+     ],
+     "groups": [
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ],
+      [
+       "x25519"
+      ]
+     ],
+     "result": "classical"
+    }
+   ]
+  }
+ ]
+}
