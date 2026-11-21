@@ -2476,3 +2476,66 @@ for _l in ("en", "ar", "de"):
     TEXTS[_l].update(_FB[_l])
     if "dash_notices" in TEXTS[_l]:
         TEXTS[_l]["dash_notices"] = dict(TEXTS[_l]["dash_notices"], **_FB_NOTICES[_l])
+
+# Quantum exposure score + CBOM (qrisk.py, 2026-11-21). Factual: an external observation, not a compliance rating.
+_QES = {
+    "en": {
+        "qes_title": "Quantum exposure score",
+        "qes_scale": "0 = nothing exposed in what we observed, 100 = fully exposed. Higher is worse. Each point is listed below.",
+        "qes_bands": {"low": "Low exposure", "moderate": "Moderate exposure", "high": "High exposure"},
+        "qes_items": {
+            "kx_tls12": "TLS {version} only: no post-quantum key exchange is possible, so recorded traffic can be decrypted later (harvest now, decrypt later).",
+            "kx_classical": "Key exchange {group} is classical: traffic recorded today could be decrypted by a future quantum computer (harvest now, decrypt later).",
+            "endpoints_mixed": "Only {pq} of {total} addresses negotiated post-quantum key exchange; visitors routed to the others are exposed.",
+            "hosts_classical": "Common subdomains still classical: {hosts}.",
+            "cert_classical": "Certificate signature {algorithm} is classical. This is true for the whole web today (no post-quantum certificates in public PKI yet); no action needed now.",
+        },
+        "qes_none": "Nothing exposed in what we observed.",
+        "qes_hosts_pending": "Checking www/api/mail/auth/login … the score may rise if any of them is classical.",
+        "qes_undetermined": "No score: the server's answer did not let us determine the key exchange. We do not guess a number.",
+        "qes_cta": "Full report: step-by-step fix plan + machine-readable CBOM (CycloneDX 1.6)",
+        "qes_disclaimer": "Formula {version}, computed only from this scan (one location, port 443). An external observation, not a compliance certificate or a complete security assessment.",
+        "qes_cbom_download": "Download CBOM (CycloneDX 1.6 JSON)",
+        "qes_cbom_sub": "Cryptographic bill of materials for the observed public TLS endpoint: protocol, key exchange, cipher, certificate key and signature, with NIST quantum security levels. Import it into Dependency-Track or any CycloneDX tool.",
+    },
+    "ar": {
+        "qes_title": "درجة التعرّض الكمّي",
+        "qes_scale": "0 = لا تعرّض فيما رصدناه، 100 = تعرّض كامل. الأعلى أسوأ. كل نقطة مذكورة أدناه.",
+        "qes_bands": {"low": "تعرّض منخفض", "moderate": "تعرّض متوسط", "high": "تعرّض مرتفع"},
+        "qes_items": {
+            "kx_tls12": "يعمل الخادم بـ TLS {version} فقط: لا يمكن تبادل مفاتيح ما بعد كمّي، فالحركة المسجَّلة اليوم قابلة لفكّ تشفيرها لاحقاً (احصد الآن، فكّ لاحقاً).",
+            "kx_classical": "تبادل المفاتيح {group} كلاسيكي: الحركة المسجَّلة اليوم قد يفكّها حاسوب كمّي مستقبلاً (احصد الآن، فكّ لاحقاً).",
+            "endpoints_mixed": "فقط {pq} من {total} عناوين تفاوضت على تبادل مفاتيح ما بعد كمّي؛ الزوار الذين يصلون للبقية مكشوفون.",
+            "hosts_classical": "نطاقات فرعية شائعة ما زالت كلاسيكية: {hosts}.",
+            "cert_classical": "توقيع الشهادة {algorithm} كلاسيكي. هذا حال الويب كله اليوم (لا توجد شهادات ما بعد كمّية في البنية العامة بعد)؛ لا إجراء مطلوب الآن.",
+        },
+        "qes_none": "لا تعرّض فيما رصدناه.",
+        "qes_hosts_pending": "جارٍ فحص www/api/mail/auth/login … قد ترتفع الدرجة إن كان أحدها كلاسيكياً.",
+        "qes_undetermined": "لا درجة: ردّ الخادم لم يسمح بتحديد تبادل المفاتيح. لا نخمّن رقماً.",
+        "qes_cta": "التقرير الكامل: خطة إصلاح خطوة بخطوة + ملف CBOM قابل للقراءة آلياً (CycloneDX 1.6)",
+        "qes_disclaimer": "المعادلة {version}، محسوبة من هذا الفحص فقط (موقع واحد، المنفذ 443). ملاحظة خارجية، وليست شهادة امتثال ولا تقييماً أمنياً شاملاً.",
+        "qes_cbom_download": "تنزيل CBOM (CycloneDX 1.6 JSON)",
+        "qes_cbom_sub": "جرد المواد التشفيرية لنقطة TLS العامة المرصودة: البروتوكول، تبادل المفاتيح، التشفير، مفتاح الشهادة وتوقيعها، مع مستويات الأمان الكمّي حسب NIST. يمكن استيراده في Dependency-Track أو أي أداة CycloneDX.",
+    },
+    "de": {
+        "qes_title": "Quanten-Exposure-Score",
+        "qes_scale": "0 = in unserer Beobachtung nichts exponiert, 100 = vollständig exponiert. Höher ist schlechter. Jeder Punkt ist unten aufgeführt.",
+        "qes_bands": {"low": "Geringe Exposition", "moderate": "Mittlere Exposition", "high": "Hohe Exposition"},
+        "qes_items": {
+            "kx_tls12": "Nur TLS {version}: kein Post-Quanten-Schlüsselaustausch möglich, aufgezeichneter Verkehr kann später entschlüsselt werden (Harvest now, decrypt later).",
+            "kx_classical": "Schlüsselaustausch {group} ist klassisch: heute aufgezeichneter Verkehr könnte ein künftiger Quantencomputer entschlüsseln (Harvest now, decrypt later).",
+            "endpoints_mixed": "Nur {pq} von {total} Adressen handelten Post-Quanten-Schlüsselaustausch aus; Besucher der übrigen sind exponiert.",
+            "hosts_classical": "Übliche Subdomains noch klassisch: {hosts}.",
+            "cert_classical": "Zertifikatssignatur {algorithm} ist klassisch. Das gilt heute für das gesamte Web (noch keine Post-Quanten-Zertifikate in der öffentlichen PKI); derzeit kein Handlungsbedarf.",
+        },
+        "qes_none": "In unserer Beobachtung nichts exponiert.",
+        "qes_hosts_pending": "Prüfe www/api/mail/auth/login … der Score kann steigen, falls eine davon klassisch ist.",
+        "qes_undetermined": "Kein Score: Die Antwort des Servers ließ keine Bestimmung des Schlüsselaustauschs zu. Wir raten keine Zahl.",
+        "qes_cta": "Vollständiger Bericht: Schritt-für-Schritt-Plan + maschinenlesbare CBOM (CycloneDX 1.6)",
+        "qes_disclaimer": "Formel {version}, nur aus diesem Scan berechnet (ein Standort, Port 443). Eine externe Beobachtung, kein Compliance-Zertifikat und keine vollständige Sicherheitsbewertung.",
+        "qes_cbom_download": "CBOM herunterladen (CycloneDX 1.6 JSON)",
+        "qes_cbom_sub": "Cryptographic Bill of Materials des beobachteten öffentlichen TLS-Endpunkts: Protokoll, Schlüsselaustausch, Cipher, Zertifikatsschlüssel und -signatur, mit NIST-Quantensicherheitsstufen. Importierbar in Dependency-Track oder jedes CycloneDX-Tool.",
+    },
+}
+for _l in ("en", "ar", "de"):
+    TEXTS[_l].update(_QES[_l])

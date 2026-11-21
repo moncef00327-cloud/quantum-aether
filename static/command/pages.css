@@ -158,3 +158,5 @@ article.card[data-select-plan],.price-box[data-select-plan]{cursor:pointer}
 article.card.is-plan-selected,.price-box.is-plan-selected{border-color:#67e8f9!important;box-shadow:0 0 0 1px rgba(103,232,249,.35)}
 
 @media(max-width:600px){.service-content .result-head{gap:14px}.service-content .result-head>div:not(.grade){flex:1 1 100%;min-width:0}.service-content .domain{font-size:clamp(20px,6.5vw,30px);line-height:1.2}}
+
+/* qrisk exposure score 2026-11-21 */.qes-head{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}.qes-score{font-size:28px;line-height:1}.qes-score strong{font-size:40px}.qes-high{color:var(--qa-danger)}.qes-moderate{color:#f2c86b}.qes-low{color:#8fd9a8}.qes-items{padding-inline-start:18px}.qes-items li{margin:6px 0}

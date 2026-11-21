@@ -47,6 +47,8 @@
         if (d.state === "busy" && ++tries < 6) { setTimeout(load, 2500); return; }
         if (d.state !== "done") { alertEl.textContent = msg.failed; return; }
         show(d);
+        var qes = document.getElementById("exposure");
+        if (qes && d.exposure_html) qes.innerHTML = d.exposure_html;  // server-rendered, now including subdomains
       })
       .catch(function () { alertEl.textContent = msg.failed; });
   }

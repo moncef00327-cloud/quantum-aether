@@ -1,0 +1,21 @@
+{# Quantum exposure score (qrisk.py, 2026-11-21). Transparent: every point has a visible line. Rendered on the
+   result page and again by /api/scan/<id>/insights once the subdomain check finished (insights.js swaps it in). #}
+<h2>{{ t.qes_title }}</h2>
+{% if exposure.score is none %}
+<p>{{ t.qes_undetermined }}</p>
+{% else %}
+<p class="qes-head"><span class="qes-score qes-{{ exposure.band }}" dir="ltr"><strong>{{ exposure.score }}</strong>/100</span>
+  <span class="qes-band">{{ t.qes_bands[exposure.band] }}</span></p>
+<p class="muted small">{{ t.qes_scale }}</p>
+<ul class="qes-items">
+{% for i in exposure['items'] %}
+  {% set p = i.params %}
+  <li><strong dir="ltr">+{{ i.points }}</strong> — {{ t.qes_items[i.code].format(group=p.group, version=p.version, pq=p.pq, total=p.total, algorithm=p.algorithm, hosts=(p.hosts or [])|join(', ')) }}</li>
+{% else %}
+  <li>{{ t.qes_none }}</li>
+{% endfor %}
+{% if not exposure.hosts_checked %}<li class="muted">{{ t.qes_hosts_pending }}</li>{% endif %}
+</ul>
+{% if not paid %}<p><a href="#buy" data-ev="qes_buy">{{ t.qes_cta }} →</a></p>{% endif %}
+<p class="muted small">{{ t.qes_disclaimer.format(version=exposure.version) }}</p>
+{% endif %}

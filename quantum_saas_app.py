@@ -63,6 +63,7 @@ import sales_db
 import scorecard
 import scan_experience
 import scan_insights
+import qrisk
 import evidence
 import search_indexing
 import badge_evidence
@@ -675,6 +676,7 @@ def scan_page(scan_id):
         observation=scan_experience.status(scan['result']), next_steps=scan_experience.advice(scan['result']),
         pq_reason=scan_insights.reason(scan['result']), fix_tabs=scan_insights.fix_tabs(lang),
         common_prefixes=scan_insights.COMMON_PREFIXES,
+        exposure=qrisk.score(scan['result'], scan_insights.get(db(), scan['id'])),
     )
 
 
@@ -687,7 +689,9 @@ def scan_insights_api(scan_id):
     if state == "busy":
         return jsonify(state="busy"), 429
     fix = scan_insights.fix_line(data["stack"], current_lang()) if data.get("stack") else None
-    return jsonify(dict(data, state="done", fix=fix))
+    exposure_html = render_template("_exposure.html", exposure=qrisk.score(scan["result"], data), r=scan["result"],
+                                    scan=scan, paid=sales_db.is_scan_paid(db(), scan["id"]))
+    return jsonify(dict(data, state="done", fix=fix, exposure_html=exposure_html))
 
 
 @bp.get("/report/<token>")
@@ -697,7 +701,8 @@ def report(token):
     findings = [dict(f, text=i18n.finding_text(f, lang)) for f in scan["result"]["findings"]]
     return render_template("report.html", scan=scan, r=scan["result"], findings=findings,
                            remediation=i18n.REMEDIATION, token=token,
-                           observation=scan_experience.status(scan['result']))
+                           observation=scan_experience.status(scan['result']),
+                           exposure=qrisk.score(scan['result'], scan_insights.get(db(), scan['id'])))
 
 
 SAMPLE_FILE = os.path.join(BASE_DIR, "data", "sample_report.json")
@@ -715,7 +720,25 @@ def sample_report():
     r = sample_result()
     findings = [dict(f, text=i18n.finding_text(f, current_lang())) for f in r["findings"]]
     return render_template("report.html", scan=None, r=r, findings=findings, remediation=i18n.REMEDIATION,
-                           token=None, sample=True, observation=scan_experience.status(r))
+                           token=None, sample=True, observation=scan_experience.status(r), exposure=qrisk.score(r))
+
+
+@bp.get("/sample-report/cbom.json")
+def sample_cbom():
+    """The CBOM a buyer gets, for the public sample scan (github.com), so visitors can see the format first."""
+    r = sample_result()
+    return Response(json.dumps(qrisk.cbom(r), ensure_ascii=False, indent=2), mimetype="application/vnd.cyclonedx+json",
+                    headers={"Content-Disposition": f'attachment; filename="cbom-sample-{r["domain"]}.cdx.json"'})
+
+
+@bp.get("/report/<token>/cbom.json")
+def report_cbom(token):
+    """Paid report extra (2026-11-21): CycloneDX 1.6 CBOM of the observed public TLS endpoint."""
+    scan = paid_scan_or_404(token)
+    doc = qrisk.cbom(scan["result"], scan_insights.get(db(), scan["id"]))
+    name = f"cbom-{scan['domain']}.cdx.json"
+    return Response(json.dumps(doc, ensure_ascii=False, indent=2), mimetype="application/vnd.cyclonedx+json",
+                    headers={"Content-Disposition": f'attachment; filename="{name}"', "Cache-Control": "no-store"})
 
 
 @bp.get("/report/<token>/dna.txt")

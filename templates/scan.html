@@ -16,6 +16,7 @@
     <p class="muted small">{{ t.scanned_at }}: <span dir="ltr">{{ r.scanned_at }}</span></p>
   </div>
 </section>
+<section class="card qes" id="exposure">{% include "_exposure.html" %}</section>
 {% if not paid %}
 {% if conversion_variant == 'treatment' %}
 {% set offer_grade = 'unknown' if observation == 'undetermined' else r.grade|lower %}
@@ -250,7 +251,7 @@
 {% endblock %}
 {% block scripts %}
 <script src="{{ url_for('static', filename='discovery.js') }}" defer></script>
-<script src="{{ url_for('static', filename='insights.js') }}?v=20261114-b2" defer></script>
+<script src="{{ url_for('static', filename='insights.js') }}?v=20261121-q1" defer></script>
 {% if payments_enabled and not paid %}
 <script src="https://www.paypal.com/sdk/js?client-id={{ paypal_client_id | urlencode }}&currency={{ currency }}&intent=capture"></script>
 <script src="{{ url_for('static', filename='checkout.js') }}"></script>

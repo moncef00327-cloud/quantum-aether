@@ -29,6 +29,15 @@
 
 {% include "_endpoints.html" %}
 
+{% if exposure %}
+<section class="card qes" id="exposure">
+  {% set paid = true %}{% include "_exposure.html" %}
+  {% if token %}<p class="no-print"><a class="button-link" href="{{ url_for('site.report_cbom', token=token) }}" data-ev="cbom_download">{{ t.qes_cbom_download }}</a></p>
+  {% elif sample %}<p class="no-print"><a class="button-link" href="{{ url_for('site.sample_cbom') }}" data-ev="cbom_sample">{{ t.qes_cbom_download }}</a></p>{% endif %}
+  <p class="muted small">{{ t.qes_cbom_sub }}</p>
+</section>
+{% endif %}
+
 <section class="card">
   <h2>{{ t.findings_title }}</h2>
   {% for f in findings %}
