@@ -75,7 +75,19 @@ class WeeklyBanksTests(unittest.TestCase):
 
     def test_in_sitemap(self):
         body = self.client.get("/sitemap-pages.xml").get_data(as_text=True)
-        self.assertIn("/banks/weekly/2026-W47", body)
+        # The newest week is served by the hub; only older weeks are listed as dated archive pages.
+        self.assertIn("/banks/weekly?lang=ar", body)
+        self.assertIn("/banks/weekly/2026-W46", body)
+        self.assertNotIn("/banks/weekly/2026-W47", body)
+
+    def test_newest_dated_page_canonicalises_to_hub(self):
+        for lang in ("en", "ar", "de"):
+            body = self.client.get(f"/banks/weekly/2026-W47?lang={lang}").get_data(as_text=True)
+            self.assertIn(f'<link rel="canonical" href="http://localhost/banks/weekly?lang={lang}">', body)
+        body = self.client.get("/banks/weekly/2026-W46?lang=en").get_data(as_text=True)
+        self.assertIn('<link rel="canonical" href="http://localhost/banks/weekly/2026-W46?lang=en">', body)
+        hub = self.client.get("/banks/weekly?lang=en").get_data(as_text=True)
+        self.assertIn('<link rel="canonical" href="http://localhost/banks/weekly?lang=en">', hub)
 
 
 if __name__ == "__main__":

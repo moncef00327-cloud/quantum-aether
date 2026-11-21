@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% set tl = lang if lang in ("ar", "en", "de") else "en" %}
-{% block title %}{{ c.title }} · {{ rep.week }} · {{ t.brand }}{% endblock %}
+{% block title %}{{ c.get('seo_title', c.title) }} · {{ rep.week }} · {{ t.brand }}{% endblock %}
 {% block description %}{{ c.meta.format(week=rep.week, pq=rep.pq, n=rep.n, pct=rep.pct) }}{% endblock %}
 {% block head %}
 <script type="application/ld+json">{{ {"@context": "https://schema.org", "@type": "Dataset", "name": c.title ~ " " ~ rep.week, "description": c.meta.format(week=rep.week, pq=rep.pq, n=rep.n, pct=rep.pct), "temporalCoverage": rep.week_start, "dateModified": rep.week_start, "inLanguage": tl, "isAccessibleForFree": true, "license": "https://creativecommons.org/licenses/by/4.0/", "creator": {"@type": "Organization", "name": "Quantum Aether"}, "spatialCoverage": ["DE", "AT", "CH"], "keywords": ["post-quantum cryptography", "insurance", "Krankenkasse", "X25519MLKEM768", "DORA", "NIS2"], "distribution": [{"@type": "DataDownload", "encodingFormat": "application/json", "contentUrl": abs_url('site.weekly_insurers_json', week=rep.week)}]} | tojson }}</script>

@@ -1,0 +1,6 @@
+{% for br in bank_reports or [] %}
+<section class="card">
+  <h2><a href="{{ url_for('site.bank_report_page', report_id=br.id, lang=br.lang) }}">{{ br.title }} →</a></h2>
+  <p class="small">{% for b in br.banks %}<a href="{{ url_for('site.bank_detail_page', report_id=br.id, domain=b.domain, lang=br.lang) }}">{{ b.name }}</a>{% if not loop.last %} · {% endif %}{% endfor %}</p>
+</section>
+{% endfor %}

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% set tl = lang if lang in ("ar", "en", "de") else "en" %}
-{% block title %}{{ c.title }} · {{ rep.week }} · {{ t.brand }}{% endblock %}
+{% block title %}{{ c.get('seo_title', c.title) }} · {{ rep.week }} · {{ t.brand }}{% endblock %}
 {% block description %}{{ c.meta.format(week=rep.week, pq=rep.pq, n=rep.n, pct=rep.pct) }}{% endblock %}
 {% block head %}
 <script type="application/ld+json">{{ {"@context": "https://schema.org", "@type": "Dataset", "name": c.title ~ " " ~ rep.week, "description": c.meta.format(week=rep.week, pq=rep.pq, n=rep.n, pct=rep.pct), "temporalCoverage": rep.week_start, "dateModified": rep.week_start, "inLanguage": tl, "isAccessibleForFree": true, "license": "https://creativecommons.org/licenses/by/4.0/", "creator": {"@type": "Organization", "name": "Quantum Aether"}, "keywords": ["post-quantum cryptography", "banks", "X25519MLKEM768", "NIS2", "DORA", "SAMA"], "distribution": [{"@type": "DataDownload", "encodingFormat": "application/json", "contentUrl": abs_url('site.weekly_banks_json', week=rep.week)}]} | tojson }}</script>
@@ -37,6 +37,8 @@
   </table></div>
 </section>
 {% endfor %}
+
+{% include "_bank_report_links.html" %}
 
 <section class="card">
   <p class="muted small">{{ c.limits }}</p>

@@ -115,7 +115,10 @@
 {% endfor %}
 {% endif %}
 
-<section class="card"><h2><a href="{{ url_for('site.countries_page', lang=lang) }}">{{ t.countries_link }} →</a></h2></section>
+<section class="card"><h2><a href="{{ url_for('site.countries_page', lang=lang) }}">{{ t.countries_link }} →</a></h2>
+  {% if country_links %}<p class="small">{% for e in country_links %}<a href="{{ url_for('site.country_page', code=e.code, lang=lang) }}">{{ e.flag }} {{ e.name }}</a>{% if not loop.last %} · {% endif %}{% endfor %}</p>{% endif %}
+</section>
+{% include "_bank_report_links.html" %}
 <section class="card"><h2><a href="{{ url_for('site.hosting_page', lang=lang) }}">{{ t.hosting_link }} →</a></h2></section>
 {% include "_scan_box.html" %}
 

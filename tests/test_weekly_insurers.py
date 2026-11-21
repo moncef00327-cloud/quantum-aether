@@ -70,7 +70,11 @@ class WeeklyInsurersTests(unittest.TestCase):
         data = self.client.get("/insurers/weekly/2026-W47.json").get_json()
         self.assertEqual(data["pq"], 2)
         self.assertNotIn("dkb.de", str(data))
-        self.assertIn("/insurers/weekly/2026-W47", self.client.get("/sitemap-pages.xml").get_data(as_text=True))
+        sitemap = self.client.get("/sitemap-pages.xml").get_data(as_text=True)
+        self.assertIn("/insurers/weekly?lang=de", sitemap)
+        self.assertNotIn("/insurers/weekly/2026-W47", sitemap)  # newest week = the hub, canonicalised there
+        body = self.client.get("/insurers/weekly/2026-W47?lang=ar").get_data(as_text=True)
+        self.assertIn('<link rel="canonical" href="http://localhost/insurers/weekly?lang=ar">', body)
 
 
 if __name__ == "__main__":

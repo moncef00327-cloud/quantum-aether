@@ -20,6 +20,7 @@ STATUTORY = {"www.aok.de", "www.barmer.de", "www.dak.de", "www.tk.de", "www.kkh.
 COPY = {
     "de": {
         "title": "Post-Quanten-Tracker: Versicherer und Krankenkassen in DACH",
+        "seo_title": "Versicherer in DACH: Post-Quanten-Tracker",
         "kicker": "Deutschland, Österreich, Schweiz · jeden Montag aktualisiert",
         "lead": "Welche Versicherer und Krankenkassen handeln auf ihrer Website bereits einen Post-Quanten-"
                 "Schlüsselaustausch (X25519MLKEM768) aus? Wir prüfen jede Woche die Startseite von {total} "
@@ -53,6 +54,7 @@ COPY = {
     },
     "en": {
         "title": "Post-quantum tracker: DACH insurers and health funds",
+        "seo_title": "DACH insurers: post-quantum TLS tracker",
         "kicker": "Germany, Austria, Switzerland · updated every Monday",
         "lead": "Which insurers and health funds already negotiate a post-quantum key exchange (X25519MLKEM768) on "
                 "their website? Every week we test the homepage of {total} statutory health funds, health and "
@@ -83,6 +85,7 @@ COPY = {
     },
     "ar": {
         "title": "متتبع التشفير المقاوم للكم: شركات التأمين وصناديق التأمين الصحي في ألمانيا والنمسا وسويسرا",
+        "seo_title": "شركات التأمين في DACH والتشفير المقاوم للكم",
         "kicker": "ألمانيا والنمسا وسويسرا · يُحدَّث كل اثنين",
         "lead": "أيّ شركات التأمين وصناديق التأمين الصحي تتفاوض مواقعها على تبادل مفاتيح مقاوم للحوسبة الكمومية "
                 "(X25519MLKEM768)؟ نفحص كل أسبوع الموقع الرئيسي لـ {total} جهة.",

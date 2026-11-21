@@ -33,6 +33,7 @@ COPY = {
     },
     "ar": {
         "title": "المتتبع الأسبوعي لتشفير البنوك المقاوم للحوسبة الكمومية",
+        "seo_title": "متتبع البنوك الأسبوعي للتشفير المقاوم للكم",
         "kicker": "بنوك الخليج والشرق الأوسط وأوروبا · يُحدَّث كل اثنين",
         "lead": "أيّ البنوك تتفاوض مواقعها العامة على تبادل مفاتيح مقاوم للحوسبة الكمومية (X25519MLKEM768)؟ "
                 "نفحص كل أسبوع الموقع الرئيسي لـ {banks} من البنوك والبنوك المركزية.",
@@ -56,6 +57,7 @@ COPY = {
     },
     "de": {
         "title": "Wöchentlicher Post-Quanten-Tracker für Banken",
+        "seo_title": "Post-Quanten-Tracker für Banken",
         "kicker": "Banken am Golf, in DACH und Europa · jeden Montag aktualisiert",
         "lead": "Welche Banken handeln auf ihrer Website einen Post-Quanten-Schlüsselaustausch (X25519MLKEM768) aus? "
                 "Wir prüfen jede Woche die Startseite von {banks} Banken und Zentralbanken.",

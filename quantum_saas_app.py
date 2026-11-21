@@ -66,6 +66,7 @@ import scan_insights
 import qrisk
 import evidence
 import search_indexing
+import seo_meta
 import badge_evidence
 import public_stats
 import pqc_news
@@ -328,6 +329,8 @@ def _inject():
             "page_langs": ["en", "ar", "de"] if german_allowed() else ["en", "ar"],
             "abs_url": lambda endpoint, **kw: public_base() + url_for(endpoint, **kw),
             "localized_url": localized_url, "metadata_url": metadata_url,
+            "seo_title": lambda text: seo_meta.title(text, request.path, lang),
+            "seo_description": seo_meta.description,
             "sx": scan_experience.COPY[lang],
             "audit_cta": audit.COPY[lang]["cta"], "conversion_variant": conversion_variant(),
             "domain_discoverable": lambda domain: not search_indexing.is_excluded(domain)}
@@ -357,6 +360,9 @@ def localized_url(lang, canonical=False):
             pass  # Invalid routes still render their existing 404/noindex response.
     if request.endpoint == 'site.compare' and not canonical:
         values.update({k: request.args[k][:4096] for k in ('a', 'b') if request.args.get(k)})
+    if canonical and g.get("canonical_endpoint"):
+        # The newest dated weekly page duplicates its hub (/banks/weekly), so it points there until a newer week exists.
+        return public_base() + url_for(g.canonical_endpoint, lang=lang)
     if request.endpoint:
         # Google selected the language-neutral root as the homepage canonical.
         if canonical and request.endpoint == "site.index" and lang == "en":
@@ -1021,13 +1027,17 @@ def _weekly_banks_or_404(week=None):
 @bp.get("/banks/weekly")
 def weekly_banks_latest():
     rep = _weekly_banks_or_404()
-    return render_template("weekly_banks.html", rep=rep, c=weekly_banks.COPY[current_lang()])
+    return render_template("weekly_banks.html", rep=rep, c=weekly_banks.COPY[current_lang()],
+                           bank_reports=_bank_report_links())
 
 
 @bp.get("/banks/weekly/<week>")
 def weekly_banks_page(week):
     rep = _weekly_banks_or_404(week)
-    return render_template("weekly_banks.html", rep=rep, c=weekly_banks.COPY[current_lang()])
+    if rep["week"] == rep["weeks"][-1]:
+        g.canonical_endpoint = "site.weekly_banks_latest"
+    return render_template("weekly_banks.html", rep=rep, c=weekly_banks.COPY[current_lang()],
+                           bank_reports=_bank_report_links())
 
 
 @bp.get("/banks/weekly/<week>.json")
@@ -1052,6 +1062,8 @@ def weekly_insurers_latest():
 @bp.get("/insurers/weekly/<week>")
 def weekly_insurers_page(week):
     rep = _weekly_insurers_or_404(week)
+    if rep["week"] == rep["weeks"][-1]:
+        g.canonical_endpoint = "site.weekly_insurers_latest"
     return render_template("weekly_insurers.html", rep=rep, c=weekly_insurers.COPY[current_lang()])
 
 
@@ -2050,7 +2062,31 @@ def adoption_page():
             "adoption_sector.html", s=snap, iso=iso, sector=sector,
             rows=rows[start:start + ADOPTION_SECTOR_PAGE_SIZE],
             page=page, pages=pages, total=total)
-    return render_template("adoption.html", s=snap, iso=iso, preview=ADOPTION_SECTOR_PREVIEW)
+    return render_template("adoption.html", s=snap, iso=iso, preview=ADOPTION_SECTOR_PREVIEW,
+                           country_links=_country_links(), bank_reports=_bank_report_links())
+
+
+def _country_links():
+    """Crawlable links to every /adoption/countries/<code> page (they were only one click deeper, via the table)."""
+    board = cached_countries()
+    if not board:
+        return []
+    lang = current_lang()
+    return [{"code": e["code"], "flag": e.get("flag", ""), "name": countries.name(e["code"], lang)}
+            for e in board["entries"]]
+
+
+def _bank_report_links():
+    """Bank reports with their per-bank pages, for crawlable links from /adoption and /banks/weekly."""
+    optout = adoption.load_optout(conn=db())
+    out = []
+    for rid in bank_report.ids():
+        r = bank_report.load(rid)
+        tl = current_lang() if current_lang() in bank_report.COPY else "en"
+        out.append({"id": rid, "lang": tl, "title": f'{bank_report.COPY[tl]["title"]} {r["measured_on"][:4]}',
+                    "banks": [{"domain": x["domain"], "name": x["name"].get(tl) or x["name"]["en"]}
+                              for x in bank_report.ranked(r, optout)]})
+    return out
 
 
 @bp.get("/analytics")
@@ -4083,11 +4119,12 @@ def _sitemap_pages():
     bank_weeks = weekly_banks.weeks(db())
     if bank_weeks:
         pages.append(("/banks/weekly", adoption.week_monday(bank_weeks[-1]).isoformat(), de_langs))
-        pages += [(f"/banks/weekly/{w}", adoption.week_monday(w).isoformat(), de_langs) for w in bank_weeks]
+        # The newest week is the hub itself (its dated URL is canonicalised to /banks/weekly), so only archives.
+        pages += [(f"/banks/weekly/{w}", adoption.week_monday(w).isoformat(), de_langs) for w in bank_weeks[:-1]]
     insurer_weeks = weekly_insurers.weeks(db())
     if insurer_weeks:
         pages.append(("/insurers/weekly", adoption.week_monday(insurer_weeks[-1]).isoformat(), de_langs))
-        pages += [(f"/insurers/weekly/{w}", adoption.week_monday(w).isoformat(), de_langs) for w in insurer_weeks]
+        pages += [(f"/insurers/weekly/{w}", adoption.week_monday(w).isoformat(), de_langs) for w in insurer_weeks[:-1]]
     board = countries.leaderboard(db())
     if board:
         week_day = adoption.week_monday(board["week"]).isoformat()
