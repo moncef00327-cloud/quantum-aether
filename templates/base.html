@@ -10,7 +10,7 @@
   <meta property="og:type" content="website">
   <meta property="og:title" content="{{ self.title() }}">
   <meta property="og:description" content="{{ self.description() }}">
-  <meta property="og:url" content="{{ metadata_url(lang) }}">
+  <meta property="og:url" content="{{ (url_for("site.index", lang=lang, _external=True) if seo_noindex else metadata_url(lang)) }}">
   <meta property="og:locale" content="{{ 'ar_AR' if lang == 'ar' else 'de_DE' if lang == 'de' else 'en_US' }}">
   {% set og_img %}{% block og_image %}{{ abs_url('site.og_default') }}{% endblock %}{% endset %}
   <meta property="og:image" content="{{ og_img | trim }}">
@@ -22,9 +22,13 @@
   <meta name="twitter:description" content="{{ self.description() }}">
   <link rel="alternate" type="application/atom+xml" title="{{ t.brand }}" href="{{ url_for('site.feed') }}">
   {% block alternates %}
+  {% if seo_noindex %}
+  <meta name="robots" content="noindex, follow">
+  {% else %}
   <link rel="canonical" href="{{ metadata_url(lang) }}">
   {% for l in page_langs %}<link rel="alternate" hreflang="{{ l }}" href="{{ metadata_url(l) }}">
   {% endfor %}<link rel="alternate" hreflang="x-default" href="{{ metadata_url('en') }}">
+  {% endif %}
   {% endblock %}
   <link rel="service-desc" type="application/json" href="{{ abs_url('site.agent_service_manifest') }}">
 <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">

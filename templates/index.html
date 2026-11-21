@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% from "_trial_cta.html" import trial_cta with context %}
-{% block title %}{{ 'فحص TLS لما بعد الكم مجانًا' if lang == 'ar' else ('Kostenloser Post-Quantum-TLS-Check' if lang == 'de' else 'Post-quantum TLS checker') }} · {{ 'الأثير الكمومي (Quantum Aether)' if lang == 'ar' else t.brand }}{% endblock %}
+{% block title %}{{ 'فحص TLS لما بعد الكم مجانًا' if lang == 'ar' else ('Kostenloser Post-Quantum-TLS-Check' if lang == 'de' else 'Post-quantum TLS checker') }} · {{ t.brand }}{% endblock %}
+{% block description %}{{ t.home_meta }}{% endblock %}
 {% block head %}{% for obj in jsonld %}
 <script type="application/ld+json">{{ obj | tojson }}</script>{% endfor %}{% endblock %}
 {% block content %}

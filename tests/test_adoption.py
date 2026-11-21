@@ -185,7 +185,16 @@ class TrackerTests(unittest.TestCase):
         self.assertEqual(bank["unsure"], 1)
         self.assertEqual(bank["reachable"], sum(1 for r in bank["rows"] if r["ok"]) - 1)
         for lang, text in (("en", "Undetermined, will be rescanned"), ("ar", "غير محسوم، يُعاد فحصه")):
-            body = self.client.get(f"/adoption?lang={lang}").get_data(as_text=True)
+            # Full sector lists are paginated off the hub (50 per page); find the row on any page.
+            body = ""
+            for page in range(1, 8):
+                response = self.client.get(f"/adoption?lang={lang}&sector={bank['key']}&page={page}")
+                self.assertEqual(response.status_code, 200)
+                chunk = response.get_data(as_text=True)
+                if "www.bundesbank.de</a>" in chunk:
+                    body = chunk
+                    break
+            self.assertIn("www.bundesbank.de</a>", body)
             bank_row = body.split("www.bundesbank.de</a>")[1].split("</tr>")[0]
             self.assertIn(text, bank_row)
             self.assertNotIn(adoption_texts(lang)["adoption_status_off"], bank_row)

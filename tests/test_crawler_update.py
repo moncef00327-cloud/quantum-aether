@@ -19,7 +19,7 @@ class CrawlerUpdateTest(unittest.TestCase):
         shutil.rmtree(self.tmp)
 
     def test_monitoring_title_description_and_offers(self):
-        for lang, word in (("en", "free trial"), ("ar", "تجربة مجانية"), ("de", "kostenlos")):
+        for lang, word in (("en", "free trial"), ("ar", "14 يوماً"), ("de", "14 Tage")):
             html = self.client.get(f"/monitoring?lang={lang}").get_data(as_text=True)
             title = re.search(r"<title>([^<]*)</title>", html).group(1)
             self.assertIn(word.lower(), title.lower())

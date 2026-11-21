@@ -1,4 +1,13 @@
 {% extends "base.html" %}
+{% block title %}{{ t.brand }}{% endblock %}
+{% block description %}{{ t.brand }}{% endblock %}
+{# Typo / unknown URLs must not be indexed and must not canonicalise themselves. #}
+{% block alternates %}
+<meta name="robots" content="noindex, follow">
+{% endblock %}
+{% block head %}
+<meta name="robots" content="noindex, follow">
+{% endblock %}
 {% block content %}
 <section class="card">
   <h1>{{ message }}</h1>

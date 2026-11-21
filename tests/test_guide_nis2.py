@@ -24,7 +24,10 @@ class Nis2GuideTests(unittest.TestCase):
         self.assertIn(f'hreflang="de" href="http://localhost/guides/{SLUG}?lang=de"'.split(' href')[0], body)
 
     def test_german_only_where_translated(self):
-        body = self.client.get("/guides/harvest-now-decrypt-later?lang=de").get_data(as_text=True)
+        response = self.client.get("/guides/harvest-now-decrypt-later?lang=de", follow_redirects=False)
+        self.assertEqual(response.status_code, 301)
+        self.assertIn("lang=en", response.headers.get("Location", ""))
+        body = self.client.get("/guides/harvest-now-decrypt-later?lang=en").get_data(as_text=True)
         self.assertIn('<html lang="en"', body)
         self.assertNotIn('hreflang="de"', body)
 

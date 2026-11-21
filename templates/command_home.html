@@ -2,7 +2,7 @@
 <html lang="{{ lang }}" dir="{{ t.dir }}">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>{{ t.home_title }} · {{ 'الأثير الكمومي (Quantum Aether)' if lang == 'ar' else t.brand }}</title>
+<title>{{ t.home_title }} · {{ t.brand }}</title>
 <meta name="description" content="{{ t.home_meta }}">
 <meta name="google-site-verification" content="lomNrWcm6STSBOBFYRuatxcSN8DGmceimGw_y79Sc7o">
 <link rel="canonical" href="{{ metadata_url(lang) }}">
@@ -10,7 +10,7 @@
 <meta name="twitter:card" content="summary_large_image"><link rel="alternate" type="application/atom+xml" href="/feed.xml" title="{{ t.brand }}">
 <meta property="og:site_name" content="{{ t.brand }}">
 <meta property="og:locale" content="{{ 'ar_AR' if lang == 'ar' else 'en_US' }}">
-<meta property="og:title" content="{{ t.home_title }} · {{ 'الأثير الكمومي (Quantum Aether)' if lang == 'ar' else t.brand }}">
+<meta property="og:title" content="{{ t.home_title }} · {{ t.brand }}">
 <meta property="og:description" content="{{ t.home_meta }}"><meta property="og:type" content="website">
 <meta property="og:url" content="{{ metadata_url(lang) }}"><meta property="og:image" content="{{ abs_url('site.og_default') }}">
 <link rel="service-desc" type="application/json" href="{{ abs_url('site.agent_service_manifest') }}">

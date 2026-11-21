@@ -105,8 +105,8 @@ COPY = {
         "nav": "ProofLab",
     },
     "de": {
-        "title": "ProofLab: Beweisen, dass eine Post-Quanten-TLS-Änderung funktioniert – vor der Produktion",
-        "meta": "ProofLab findet Ihre TLS-Kryptografie, schlägt eine minimale X25519MLKEM768-Änderung mit Belegen vor, testet sie in einem isolierten Container und liefert ein überprüfbares Ergebnis. Kostenloser Pilot für ein Repository.",
+        "title": "ProofLab: Post-Quanten-TLS vor der Produktion prüfen",
+        "meta": "ProofLab findet Ihre TLS-Kryptografie, schlägt eine minimale X25519MLKEM768-Änderung vor, testet sie isoliert und liefert ein prüfbares Ergebnis.",
         "kicker": "Quantum Aether ProofLab · Early Access",
         "lead": "Die meisten Werkzeuge warnen oder schreiben einen Plan. ProofLab probiert die Korrektur zuerst an einem sicheren Ort aus und zeigt die Belege: Patch, bestandene und fehlgeschlagene Tests, Messwerte und Rückfallschritte. Nichts erreicht die Produktion ohne Ihre ausdrückliche Freigabe.",
         "how_title": "So funktioniert es",

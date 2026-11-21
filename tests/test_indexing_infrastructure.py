@@ -37,7 +37,9 @@ class InfrastructurePolicyTests(unittest.TestCase):
         for host in ['google.com', 'cloudflare.com', 'github.com', 'tencent.com']:
             with self.subTest(host=host):
                 self.assertTrue(search_indexing.is_indexable(host, 5))
-        self.assertTrue(search_indexing.is_indexable('googleapis.com', None, 'banks-europe'))  # a buyer sector always wins
+        # Infrastructure hosts stay noindex even if a tracker row is tagged with a sector.
+        self.assertFalse(search_indexing.is_indexable('googleapis.com', None, 'banks-europe'))
+        self.assertFalse(search_indexing.is_indexable('googleapis.com', None, 'banks-dach'))
 
     def test_infrastructure_stays_in_the_weekly_sample(self):
         targets = {t['domain'] for t in adoption.load_targets()}

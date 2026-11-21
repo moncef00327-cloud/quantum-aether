@@ -43,7 +43,9 @@ class SearchIndexingTests(unittest.TestCase):
                 self.conn.execute('INSERT INTO adoption_results (week,domain,rank,ok,grade,grp,tls,pq,unsure,as_name,scanned_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
                     ('2026-W45',domain,4998+i,1,'B','X25519','TLSv1.3',0,0,'CLOUDFLARENET','2026-11-02T01:00:00Z'))
         with self.conn:
-            self.conn.execute("UPDATE adoption_results SET sector='banks-europe'")  # a buyer sector always wins
+            # banks-europe is no longer a blanket index ticket; keep the fixture
+            # rows tagged for analytics, but indexation follows the allow-list / rank.
+            self.conn.execute("UPDATE adoption_results SET sector='banks-europe'")
     def tearDown(self):self.conn.close();self.tmp.cleanup()
 
     def test_every_excluded_host_is_gone_for_every_client(self):
@@ -70,8 +72,10 @@ class SearchIndexingTests(unittest.TestCase):
                      'news.pornhub.com','www.pornhub.com','pornhub.com.example','notpornhub.com','']:
             with self.subTest(host=host):self.assertFalse(search_indexing.is_excluded(host))
         response=self.client.get('/site/xxx-industry.test?lang=en&q=pornhub.com&search=xxx')
-        self.assertEqual(response.status_code,200);self.assertNotIn('noindex',response.headers.get('X-Robots-Tag',''))
-        self.assertFalse(metadata(response).robots)
+        self.assertEqual(response.status_code,200)
+        # Not an excluded host, but also not on the notable-institution allow-list.
+        self.assertIn('noindex', response.headers.get('X-Robots-Tag',''))
+        self.assertTrue(any('noindex' in tag for tag in metadata(response).robots))
 
     def test_sitemap_excludes_only_reviewed_hosts_across_all_chunks(self):
         index=ET.fromstring(self.client.get('/sitemap.xml').data)
@@ -84,7 +88,7 @@ class SearchIndexingTests(unittest.TestCase):
             for host in search_indexing.reviewed_hosts():self.assertNotIn('/site/'+host+'?',xml)
         self.assertIn(BASE+'/site/alpha.test?lang=en',locations)
         self.assertNotIn(BASE+'/site/onlyfans.com?lang=ar',locations)  # reviewed exclusion since 2026-11-10
-        self.assertIn(BASE+'/site/xxx-industry.test?lang=en',locations)
+        self.assertNotIn(BASE+'/site/xxx-industry.test?lang=en',locations)
         self.assertEqual(len(locations),len(set(locations)))
 
     def test_related_discovery_links_remove_only_excluded_destinations(self):

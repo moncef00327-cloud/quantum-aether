@@ -44,14 +44,17 @@ class ExposureTests(unittest.TestCase):
         self.assertIsNone(exposure.window(c2, "nothing.example"))
 
     def test_indexing_rule(self):
-        self.assertTrue(exposure.is_indexable("x.example", 100, 1))
-        self.assertFalse(exposure.is_indexable("x.example", 101, 3))
+        # Same allow-list as /site/: top REFERENCE_MAX_RANK (50) or a notable institution.
+        self.assertTrue(exposure.is_indexable("x.example", 50, 1))
+        self.assertFalse(exposure.is_indexable("x.example", 51, 3))
+        self.assertFalse(exposure.is_indexable("x.example", 100, 1))  # was indexable when the cutoff was 100
         self.assertFalse(exposure.is_indexable("x.example", 500, 10))  # was indexable before 2026-11-20 (top 1000)
         self.assertFalse(exposure.is_indexable("x.example", 5000, 4))
-        self.assertTrue(exposure.is_indexable("x.example", 5000, 4, sector="banks-mena"))
-        self.assertFalse(exposure.is_indexable("x.example", 5000, 3, sector="banks-mena"))  # 4 real weeks first
-        self.assertFalse(exposure.is_indexable("x.example", None, 10, sector="government-worldwide"))  # not a buyer
+        self.assertFalse(exposure.is_indexable("x.example", 5000, 4, sector="banks-mena"))  # no worldwide blanket
+        self.assertFalse(exposure.is_indexable("x.example", None, 10, sector="government-worldwide"))
         self.assertFalse(exposure.is_indexable("x.example", None, 4))
+        self.assertFalse(exposure.is_indexable("www.bundesbank.de", 5000, 1))  # notable, but needs 4 weeks
+        self.assertTrue(exposure.is_indexable("www.bundesbank.de", 5000, 4))
         self.assertFalse(exposure.is_indexable("w4nkr.com", 10, 10))
         self.assertFalse(exposure.is_indexable("googleapis.com", 5, 10))
         rows = ([(f"2026-W{w}", "long.example", 1, 0, None) for w in (44, 45, 46, 47)]

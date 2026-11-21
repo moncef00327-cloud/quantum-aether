@@ -1,5 +1,12 @@
-"""Evidence-reviewed, exact-host indexing exceptions; never a request/content filter."""
+"""Evidence-reviewed, exact-host indexing exceptions; never a request/content filter.
+
+Indexable /site/<domain> pages are an allow-list of notable institutions, plus
+domains with real human traffic or a high public rank (household-name lookups).
+Everyone else still has a live /site/ page (noindex, follow) but is kept out of
+the sitemap. Googlebot is not Disallowed in robots.txt.
+"""
 from functools import lru_cache
+import csv
 import json
 from pathlib import Path
 
@@ -10,6 +17,35 @@ INFRASTRUCTURE_FILE = Path(__file__).resolve().parent / 'data' / 'indexing_infra
 # (adult/malware). Populated by tools/family_dns_scan.py; never indexed, so new
 # adult/malicious domains are de-indexed without waiting for manual review.
 FAMILY_DNS_FILE = Path(__file__).resolve().parent / 'data' / 'family_dns_blocked.json'
+WATCHLIST_FILE = Path(__file__).resolve().parent / 'data' / 'adoption_watchlists.json'
+DACH_STUDY_FILE = Path(__file__).resolve().parent / 'data' / 'dach_hosting_results.json'
+BANK_REPORTS_DIR = Path(__file__).resolve().parent / 'data' / 'bank_reports'
+# Optional PQ-TLS Index org list (column "domain" or "host"). Absent until the
+# index ships; drop the CSV here or at data/pq_index_orgs.csv.
+ORGS_CSV_CANDIDATES = (
+    Path(__file__).resolve().parent / 'data' / 'pq_index_orgs.csv',
+    Path(__file__).resolve().parent / 'data' / 'orgs.csv',
+)
+
+# DACH institution watchlists (banks, government, companies, insurers) plus the
+# published DACH hosting study. Worldwide sector lists are not auto-indexed;
+# those domains stay indexable only if they have human traffic, a bank-report
+# row, an orgs.csv entry, or a top REFERENCE_MAX_RANK placement.
+NOTABLE_WATCHLIST_SECTORS = frozenset({
+    "government-dach", "banks-dach", "companies-dach", "health-insurance-dach",
+})
+
+# Household-name lookups such as "does amazon.com use post-quantum TLS?".
+# 2026-11-21: was INDEX_MAX_RANK = 100 plus every buyer-sector watchlist (~736
+# domains), which still left Google crawling thin /site/ templates.
+# 50, not 25: Tranco's top 25 is heavy on CDNs/trackers, while Amazon (30),
+# GitHub (34) and Wikipedia (38) sit just outside that cut.
+REFERENCE_MAX_RANK = 50
+
+# Kept as a deprecated alias so older tests/comments that import the name do not
+# explode; it is no longer used as a blanket sector pass.
+INDEX_MAX_RANK = REFERENCE_MAX_RANK
+PRIORITY_SECTORS = NOTABLE_WATCHLIST_SECTORS
 
 
 @lru_cache(maxsize=1)
@@ -32,6 +68,22 @@ def infrastructure_hosts():
 
 def _normal(domain):
     return domain.lower().rstrip('.') if isinstance(domain, str) else None
+
+
+def bare_host(domain):
+    """Lowercase host without a leading www. Used to match watchlists to /site/ slugs."""
+    host = _normal(domain)
+    if not host:
+        return None
+    return host[4:] if host.startswith("www.") else host
+
+
+def host_aliases(domain):
+    host = _normal(domain)
+    if not host:
+        return frozenset()
+    bare = bare_host(host)
+    return frozenset({host, bare, "www." + bare})
 
 
 _family_cache = {'mtime': None, 'hosts': frozenset()}
@@ -67,24 +119,179 @@ def is_infrastructure(domain):
     return host is not None and host in infrastructure_hosts()
 
 
-# 2026-11-20: was 1000 and "every watch-list sector". ~6,700 thin per-domain URLs on a days-old domain made Google
-# rate the whole site low (crawl fell 444 -> 6/day; Google landings were unrelated sites such as gambling or news).
-# Keep only reference brands plus the sectors that can buy (banks, insurers, finance, DACH companies).
-INDEX_MAX_RANK = 100
-PRIORITY_SECTORS = frozenset({
-    "banks-mena", "banks-europe", "banks-dach", "banks-americas-apac",
-    "health-insurance-dach", "global-insurance-healthcare",
-    "finance-worldwide", "payments-fintech", "companies-dach",
-})
+def _read_orgs_csv(path):
+    hosts = set()
+    try:
+        with path.open(encoding='utf-8', newline='') as fh:
+            sample = fh.read(2048)
+            fh.seek(0)
+            dialect = csv.Sniffer().sniff(sample, delimiters=",;\t") if sample.strip() else csv.excel
+            reader = csv.DictReader(fh, dialect=dialect)
+            if not reader.fieldnames:
+                return hosts
+            fields = [f.lower().strip() for f in reader.fieldnames]
+            col = None
+            for candidate in ('domain', 'host', 'hostname', 'site', 'website'):
+                if candidate in fields:
+                    col = reader.fieldnames[fields.index(candidate)]
+                    break
+            if col is None:
+                col = reader.fieldnames[0]
+            for row in reader:
+                value = (row.get(col) or '').strip()
+                if not value or value.startswith('#'):
+                    continue
+                # Allow a URL in the column.
+                if '://' in value:
+                    value = value.split('://', 1)[1].split('/', 1)[0]
+                host = bare_host(value)
+                if host:
+                    hosts.add(host)
+    except (OSError, csv.Error, UnicodeError):
+        return set()
+    return hosts
 
 
-def is_indexable(domain, rank=None, sector=None):
-    """Should /site/<domain> appear in search results? Reviewed exclusions never; buyer-sector domains always;
-    else the top INDEX_MAX_RANK sites, minus infrastructure endpoints nobody looks up."""
+def _load_notable_hosts():
+    """Union of DACH study hosts, notable watchlists, bank-report rows, and optional orgs.csv."""
+    hosts = set()
+    if DACH_STUDY_FILE.exists():
+        try:
+            data = json.loads(DACH_STUDY_FILE.read_text(encoding='utf-8'))
+        except (ValueError, OSError):
+            data = {}
+        for provider in data.get('providers') or []:
+            website = bare_host(provider.get('website') or provider.get('domain') or '')
+            if website:
+                hosts.add(website)
+            for site in provider.get('sites') or []:
+                if isinstance(site, str):
+                    host = bare_host(site)
+                elif isinstance(site, dict):
+                    host = bare_host(site.get('domain') or site.get('host') or '')
+                else:
+                    host = None
+                if host:
+                    hosts.add(host)
+    if WATCHLIST_FILE.exists():
+        try:
+            data = json.loads(WATCHLIST_FILE.read_text(encoding='utf-8'))
+        except (ValueError, OSError):
+            data = {}
+        for key, sector in (data.get('sectors') or {}).items():
+            if key not in NOTABLE_WATCHLIST_SECTORS:
+                continue
+            for domain in (sector.get('domains') if isinstance(sector, dict) else sector) or []:
+                host = bare_host(domain if isinstance(domain, str) else '')
+                if host:
+                    hosts.add(host)
+    if BANK_REPORTS_DIR.is_dir():
+        for path in BANK_REPORTS_DIR.glob('*.json'):
+            try:
+                data = json.loads(path.read_text(encoding='utf-8'))
+            except (ValueError, OSError):
+                continue
+            for row in data.get('rows') or []:
+                host = bare_host((row or {}).get('domain') or '')
+                if host:
+                    hosts.add(host)
+    for path in ORGS_CSV_CANDIDATES:
+        if path.exists():
+            hosts.update(_read_orgs_csv(path))
+    return frozenset(hosts)
+
+
+_notable_cache = {'mtime': None, 'hosts': frozenset()}
+
+
+def _sources_mtime():
+    total = 0
+    for path in (DACH_STUDY_FILE, WATCHLIST_FILE) + ORGS_CSV_CANDIDATES:
+        try:
+            total += path.stat().st_mtime
+        except OSError:
+            continue
+    if BANK_REPORTS_DIR.is_dir():
+        for path in BANK_REPORTS_DIR.glob('*.json'):
+            try:
+                total += path.stat().st_mtime
+            except OSError:
+                continue
+    return total
+
+
+def notable_institution_hosts():
+    mtime = _sources_mtime()
+    if _notable_cache['mtime'] != mtime:
+        _notable_cache.update(mtime=mtime, hosts=_load_notable_hosts())
+    return _notable_cache['hosts']
+
+
+# Runtime allow-list from analytics (human /site/ visitors) and tests.
+_human_traffic_hosts = frozenset()
+_extra_allow_hosts = frozenset()
+
+
+def set_human_traffic_hosts(hosts):
+    """Bare hostnames that received real human (non-bot, non-test) /site/ visits."""
+    global _human_traffic_hosts
+    _human_traffic_hosts = frozenset(filter(None, (bare_host(h) for h in (hosts or ()))))
+
+
+def set_extra_allow_hosts(hosts):
+    """Test hook: extra bare hosts treated as allow-listed notable institutions."""
+    global _extra_allow_hosts
+    _extra_allow_hosts = frozenset(filter(None, (bare_host(h) for h in (hosts or ()))))
+
+
+def reset_runtime_state():
+    set_human_traffic_hosts(())
+    set_extra_allow_hosts(())
+    _notable_cache.update(mtime=None, hosts=frozenset())
+    notable_institution_hosts.cache_clear() if hasattr(notable_institution_hosts, 'cache_clear') else None
+
+
+def human_traffic_hosts():
+    return _human_traffic_hosts
+
+
+def is_notable_institution(domain):
+    aliases = host_aliases(domain)
+    if not aliases:
+        return False
+    allowed = notable_institution_hosts() | _extra_allow_hosts
+    return any(bare_host(a) in allowed for a in aliases)
+
+
+def is_human_traffic_host(domain):
+    aliases = host_aliases(domain)
+    return any(bare_host(a) in _human_traffic_hosts for a in aliases)
+
+
+def is_indexable(domain, rank=None, sector=None, has_human_traffic=None):
+    """Should /site/<domain> appear in search results?
+
+    Denied: reviewed exclusions, family-DNS blocked hosts, infrastructure endpoints.
+    Allowed: notable institutions (DACH study, DACH watchlists, bank reports, orgs.csv),
+    domains with real human /site/ traffic, or a Tranco rank at or below
+    REFERENCE_MAX_RANK. A watchlist sector alone is no longer enough.
+    """
     if is_excluded(domain) or family_dns_blocked(domain):
         return False
-    if sector in PRIORITY_SECTORS:
-        return True
     if is_infrastructure(domain):
         return False
-    return rank is not None and rank <= INDEX_MAX_RANK
+    if is_notable_institution(domain):
+        return True
+    if has_human_traffic or is_human_traffic_host(domain):
+        return True
+    if rank is not None and rank <= REFERENCE_MAX_RANK:
+        return True
+    # Sector is only a hint now: a notable DACH sector still counts if the
+    # watchlist file could not be read, so a typo in the file does not hide
+    # a Bundesbank page that the tracker already tagged.
+    if sector in NOTABLE_WATCHLIST_SECTORS and WATCHLIST_FILE.exists():
+        # Prefer the explicit host list; do not re-open the blanket.
+        return False
+    if sector in NOTABLE_WATCHLIST_SECTORS:
+        return True
+    return False

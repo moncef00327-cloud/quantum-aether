@@ -533,10 +533,12 @@ class AdminExclusionAndSeoTest(unittest.TestCase):
         self.assertIn('xmlns:xhtml="http://www.w3.org/1999/xhtml"', body)
         self.assertIn('<xhtml:link rel="alternate" hreflang="x-default" href="https://ather-quantum.com/guides?lang=en"/>', body)
         self.assertIn("https://ather-quantum.com/impressum?lang=de", body)
-        # Pages sitemap (2026-11-21): 35 trilingual paths (incl. analytics, vendor questionnaire guide, /partners) + 48 bilingual paths (incl. /gravity, Gulf banks guide, Arab+Africa hosting study) + bare "/". Update when pages are added; every <loc> must stay unique.
+        # Pages sitemap (2026-11-21 SEO first-deploy): 33 trilingual paths + 50 bilingual paths
+        # (/exposure and /data-license no longer advertise untranslated German) + bare "/".
+        # Update when pages are added; every <loc> must stay unique.
         locs = re.findall(r"<loc>([^<]+)</loc>", body)
         self.assertEqual(len(locs), len(set(locs)))
-        self.assertEqual(body.count("<url>"), 35 * 3 + 48 * 2 + 1)
+        self.assertEqual(body.count("<url>"), 33 * 3 + 50 * 2 + 1)
         self.assertIn("https://ather-quantum.com/compare?lang=en", body)
         import quantum_saas_app
         sites_xml = client.get("/sitemap-sites-1.xml").get_data(as_text=True)
@@ -688,8 +690,11 @@ class OrdersUtmScanBoxGermanTest(unittest.TestCase):
             self.assertIn('hreflang="de"', body, url)
             self.assertIn(">English</a>", body, url)
             self.assertIn(">العربية</a>", body, url)
-        # صفحة بلا نسخة ألمانية: ?lang=de يعود للإنجليزية ولا يُعرض الألماني في المبدّل
-        body = client.get("/guides?lang=de").get_data(as_text=True)
+        # صفحة بلا نسخة ألمانية: ?lang=de يُحوَّل إلى الإنجليزية ولا يُعرض الألماني في المبدّل
+        response = client.get("/guides?lang=de", follow_redirects=False)
+        self.assertEqual(response.status_code, 301)
+        self.assertIn("lang=en", response.headers.get("Location", ""))
+        body = client.get("/guides?lang=en").get_data(as_text=True)
         self.assertIn('<html lang="en"', body)
         self.assertNotIn('hreflang="de"', body)
         self.assertNotIn(">Deutsch</a>", body)

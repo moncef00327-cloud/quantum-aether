@@ -1,7 +1,8 @@
 {% extends "base.html" %}
 {% set lead = t.adoption_lead.format(week=iso(s.week), date=iso(s.week_start), pq=s.pq, reachable=s.reachable, pct=s.pct) %}
+{% set meta = t.adoption_meta.format(week=iso(s.week), pq=s.pq, reachable=s.reachable, pct=s.pct) if t.adoption_meta is defined else lead %}
 {% block title %}{{ t.adoption_title }} · {{ s.week }} · {{ t.brand }}{% endblock %}
-{% block description %}{{ lead }}{% endblock %}
+{% block description %}{{ meta }}{% endblock %}
 {% block head %}
 <script type="application/ld+json">{{ {"@context": "https://schema.org", "@type": "Dataset", "name": t.adoption_title, "description": lead, "dateModified": s.week_start, "temporalCoverage": s.timeline[0].date ~ "/" ~ s.week_start, "license": "https://creativecommons.org/licenses/by/4.0/", "isAccessibleForFree": true, "creator": {"@type": "Organization", "name": "Quantum Aether", "url": url_for('site.index', _external=True)}, "distribution": [{"@type": "DataDownload", "encodingFormat": "application/json", "contentUrl": url_for('site.adoption_json', _external=True)}, {"@type": "DataDownload", "encodingFormat": "text/csv", "contentUrl": url_for('site.adoption_csv', _external=True)}]} | tojson }}</script>
 {% endblock %}
@@ -93,10 +94,11 @@
   <h3>{{ sector.labels[lang] or sector.labels.en or sector.key }}</h3>
   {% if sector.rows %}
   <p class="muted">{{ t.adoption_enabled_of.format(pq=sector.pq, reachable=sector.reachable) }}{% if sector.unsure %} · {{ t.adoption_unsure_count.format(n=sector.unsure) }}{% endif %}</p>
-  {% if sector.rows | length > 100 %}<details><summary>{{ t.adoption_show_all.format(n=sector.rows | length) }}</summary>{% endif %}
+  {% set preview_n = preview or 25 %}
+  {% set preview_rows = sector.rows[:preview_n] %}
   <table class="data" dir="ltr">
     <tr><th>{{ t.host_col }}</th><th>{{ t.adoption_status_col }}</th><th>{{ t.grade_col }}</th><th>{{ t.group_col }}</th></tr>
-    {% for r in sector.rows %}<tr><td>{{ host_link(r.domain) }}</td>
+    {% for r in preview_rows %}<tr><td>{{ host_link(r.domain) }}</td>
       <td>{% if not r.ok %}<span class="muted">{{ t.adoption_status_noanswer }}</span>
           {% elif r.unsure %}<span class="muted">{{ t.adoption_status_unsure }}</span>
           {% elif r.pq %}<span class="pq-on">{{ t.adoption_status_on }}</span>{% if r.pq_since %} <span class="muted small">{{ t.adoption_status_since.format(week=iso(r.pq_since)) }}</span>{% endif %}
@@ -104,7 +106,10 @@
       <td>{% if r.ok and not r.unsure %}<a href="{{ grade_guide_url }}" class="grade-chip grade-{{ r.grade }}">{{ r.grade }}</a>{% endif %}</td>
       <td>{% if r.ok and not r.unsure %}<code>{{ r.grp or r.tls or "?" }}</code>{% endif %}</td></tr>{% endfor %}
   </table>
-  {% if sector.rows | length > 100 %}</details>{% endif %}
+  {% if sector.rows | length > preview_n %}
+  <p class="small"><a href="{{ url_for('site.adoption_page', lang=lang, sector=sector.key) }}">{{ t.adoption_show_all.format(n=sector.rows | length) }} →</a>
+     · <a href="{{ url_for('site.adoption_json') }}">JSON</a> · <a href="{{ url_for('site.adoption_csv') }}">CSV</a></p>
+  {% endif %}
   {% endif %}
 </section>
 {% endfor %}

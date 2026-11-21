@@ -17,6 +17,9 @@ class ExposureWebTests(unittest.TestCase):
         self.app = quantum_saas_app.create_app({"TESTING": True, "DATA_DIR": self.tmp, "TRUSTED_PROXIES": 0},
                                                scanner=lambda d: (_ for _ in ()).throw(AssertionError("no scans")))
         self.client = self.app.test_client()
+        import search_indexing
+        # Stand-in notable institution (banks-dach sector tag alone is no longer a blanket ticket).
+        search_indexing.set_extra_allow_hosts({"bank.example"})
         with closing(sales_db.connect(os.path.join(self.tmp, "quantum_saas.db"))) as c:
             adoption.init(c)
             rows = [("2026-W44", "bank.example", None, "banks-dach", 0), ("2026-W45", "bank.example", None, "banks-dach", 0),
@@ -31,6 +34,8 @@ class ExposureWebTests(unittest.TestCase):
             exposure.anchor_week(c, self.tmp, "2026-W46", stamp=lambda p: (open(p + ".ots", "wb").write(b"x") and 0, "ok"))
 
     def tearDown(self):
+        import search_indexing
+        search_indexing.reset_runtime_state()
         shutil.rmtree(self.tmp)
 
     def test_page_languages_and_indexing(self):

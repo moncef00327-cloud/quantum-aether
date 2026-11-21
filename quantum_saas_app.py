@@ -209,6 +209,8 @@ def guide_has_german():
 
 
 def german_allowed():
+    if request.endpoint == "site.legal_page":
+        return True
     return request.endpoint in i18n.DE_ENDPOINTS or guide_has_german()
 
 
@@ -220,6 +222,30 @@ def current_lang():
     if lang in ("en", "ar"):
         return lang
     return request.accept_languages.best_match(["en", "ar"] + (["de"] if german_allowed() else [])) or "en"
+
+
+@bp.after_app_request
+def _redirect_untranslated_german(response):
+    """Stop advertising untranslated German: /guides?lang=de and similar 301 to English.
+
+    Only rewrite successful responses so 404/410 (excluded hosts, typo URLs) stay as-is.
+    """
+    if request.method not in ("GET", "HEAD"):
+        return response
+    if request.args.get("lang") != "de":
+        return response
+    if request.endpoint is None or german_allowed():
+        return response
+    if response.status_code not in (200, 304):
+        return response
+    values = dict(request.view_args or {})
+    args = request.args.to_dict(flat=True)
+    args["lang"] = "en"
+    try:
+        target = url_for(request.endpoint, **values, **args)
+    except Exception:
+        return response
+    return redirect(target, code=301)
 
 
 def analytics_visitor_key(day=None, user_agent=None):
@@ -270,6 +296,7 @@ DE_PAGES = {"site.monthly_report", "site.press_page", "site.pq_config", "site.pq
 i18n.DE_ENDPOINTS.add("site.analytics_page")
 i18n.DE_ENDPOINTS.update({"site.weekly_banks_latest", "site.weekly_banks_page"})  # weekly_banks.COPY has de
 i18n.DE_ENDPOINTS.update({"site.weekly_insurers_latest", "site.weekly_insurers_page"})  # weekly_insurers.COPY has de
+i18n.DE_ENDPOINTS.update({"site.prooflab_page", "site.prooflab_join"})  # prooflab.COPY has de
 
 
 def texts():
@@ -293,7 +320,7 @@ def _inject():
             "starter_price": monitor.PLANS["starter"]["price"],
             "business_price": monitor.PLANS["business"]["price"],
             "usd_per_eur": business_pages.USD_PER_EUR, "fx_rate_date": business_pages.FX_RATE_DATE,
-            "page_langs": ["en", "ar", "de"] if request.endpoint in DE_PAGES or guide_has_german() else ["en", "ar"],
+            "page_langs": ["en", "ar", "de"] if german_allowed() else ["en", "ar"],
             "abs_url": lambda endpoint, **kw: public_base() + url_for(endpoint, **kw),
             "localized_url": localized_url, "metadata_url": metadata_url,
             "sx": scan_experience.COPY[lang],
@@ -1991,11 +2018,34 @@ def _open_data(response):
     return response
 
 
+ADOPTION_SECTOR_PREVIEW = 25
+ADOPTION_SECTOR_PAGE_SIZE = 50
+
+
 @bp.get("/adoption")
 def adoption_page():
     # في العربية نعزل اتجاه رمز الأسبوع (Unicode isolate) حتى لا ينقلب «2026-W46» إلى «W46-2026»
     iso = (lambda value: f"\u2066{value}\u2069") if current_lang() == "ar" else str
-    return render_template("adoption.html", s=adoption_snapshot(), iso=iso)
+    snap = adoption_snapshot() or {}
+    sector_key = (request.args.get("sector") or "").strip()
+    if sector_key:
+        sector = next((item for item in (snap.get("sectors") or []) if item.get("key") == sector_key), None)
+        if not sector:
+            abort(404)
+        rows = sector.get("rows") or []
+        total = len(rows)
+        pages = max(1, (total + ADOPTION_SECTOR_PAGE_SIZE - 1) // ADOPTION_SECTOR_PAGE_SIZE)
+        try:
+            page = int(request.args.get("page") or 1)
+        except (TypeError, ValueError):
+            page = 1
+        page = min(max(page, 1), pages)
+        start = (page - 1) * ADOPTION_SECTOR_PAGE_SIZE
+        return render_template(
+            "adoption_sector.html", s=snap, iso=iso, sector=sector,
+            rows=rows[start:start + ADOPTION_SECTOR_PAGE_SIZE],
+            page=page, pages=pages, total=total)
+    return render_template("adoption.html", s=snap, iso=iso, preview=ADOPTION_SECTOR_PREVIEW)
 
 
 @bp.get("/analytics")
@@ -2344,9 +2394,49 @@ def site_verdict(domain, summary):
             f"(Quantum Aether grade {summary['grade']}), so recorded traffic is exposed to harvest-now-decrypt-later.")
 
 
+_traffic_hosts_cache = {"at": 0, "hosts": frozenset()}
+HUMAN_TRAFFIC_MIN_VISITORS = 2
+HUMAN_TRAFFIC_REFRESH_SEC = 300
+
+
+def refresh_site_human_traffic(conn=None):
+    """Load bare hosts with real human (non-bot, non-test) /site/ visits into the allow-list."""
+    import time as _time
+    now = _time.time()
+    testing = False
+    try:
+        testing = bool(current_app.config.get("TESTING"))
+    except Exception:
+        pass
+    if (not testing) and _traffic_hosts_cache["at"] and now - _traffic_hosts_cache["at"] < HUMAN_TRAFFIC_REFRESH_SEC:
+        search_indexing.set_human_traffic_hosts(_traffic_hosts_cache["hosts"])
+        return _traffic_hosts_cache["hosts"]
+    conn = conn or db()
+    hosts = set()
+    try:
+        rows = conn.execute(
+            "SELECT path, COUNT(DISTINCT visitor) FROM pageviews "
+            "WHERE is_bot=0 AND is_test=0 AND path LIKE '/site/%' AND path != '/site/' "
+            "GROUP BY path"
+        )
+        for path, visitors in rows:
+            if visitors < HUMAN_TRAFFIC_MIN_VISITORS:
+                continue
+            slug = (path or "").split("/site/", 1)[-1].split("?", 1)[0].split("#", 1)[0].strip("/")
+            host = search_indexing.bare_host(slug)
+            if host:
+                hosts.add(host)
+    except Exception:
+        hosts = set(_traffic_hosts_cache["hosts"])
+    _traffic_hosts_cache.update(at=now, hosts=frozenset(hosts))
+    search_indexing.set_human_traffic_hosts(hosts)
+    return _traffic_hosts_cache["hosts"]
+
+
 def site_is_indexable(domain):
-    """Index a /site/ page only for the top INDEX_MAX_RANK tracked sites or a watchlist (sector) domain.
-    Decided by tracker/study rank, never by a live scan (otherwise any visitor could mint an indexed page)."""
+    """Index a /site/ page only when the allow-list (notable institutions, human traffic, or a top reference rank) says so.
+    Decided by tracker/study rank and lists, never by a live scan (otherwise any visitor could mint an indexed page)."""
+    refresh_site_human_traffic()
     conn = db()
     for cand in _domain_candidates(domain):
         weekly = adoption.latest_for(conn, cand)
@@ -2451,7 +2541,7 @@ def site_page(domain):
     response = make_response(render_template(
         "site_page.html", domain=domain, site_seo_title=site_seo_title, meta_description=meta_description, summary=summary, source=source, verdict=verdict, history=history,
         related=related, network=network, snippets=badge_snippets(domain) if summary else None, jsonld=jsonld,
-        country=country, indexing_excluded=indexing_excluded, subs=subs,
+        country=country, indexing_excluded=indexing_excluded, seo_noindex=indexing_excluded, subs=subs,
         fix_guides=site_fix_guides(network, summary["pq"], current_lang()) if summary else []),
         200 if summary else 404)  # نطاق لا نعرفه (مثل wp-login.php من الماسحات) ليس صفحة حقيقية
     if indexing_excluded:
@@ -4005,8 +4095,8 @@ def _sitemap_pages():
     pages.append(("/compare", _template_day("compare.html"), site_langs))
     pages.append(("/agents", agent_discovery.UPDATED, site_langs))
     pages.append(("/transparency", _template_day("transparency.html"), site_langs))
-    pages.append(("/exposure", _template_day("exposure_index.html"), de_langs))
-    pages.append(("/data-license", _template_day("data_license.html"), de_langs))
+    pages.append(("/exposure", _template_day("exposure_index.html"), site_langs))
+    pages.append(("/data-license", _template_day("data_license.html"), site_langs))
     if dach_hosting.load(BASE_DIR):
         pages.append(("/adoption/dach-hosting", dach_hosting.updated(BASE_DIR), de_langs))
     mea = _mea_summary()
@@ -4021,6 +4111,7 @@ def _sitemap_pages():
 
 def _sitemap_domains():
     """كل النطاقات التي لها صفحة /site/ مفهرسة: المتتبّع الأسبوعي (بتاريخ فحصها) ثم ما تبقى من الدراسة."""
+    refresh_site_human_traffic()
     weekly = adoption.site_domains(db())
     known = {d for d, _, _, _ in weekly}
     rows = [(d, day) for d, day, rank, sector in weekly if search_indexing.is_indexable(d, rank, sector)]
@@ -4444,10 +4535,16 @@ def _security_headers(response):
     return response
 
 
+def _html_error(status, message):
+    response = make_response(render_template("error.html", message=message, seo_noindex=True), status)
+    response.headers["X-Robots-Tag"] = "noindex, follow"
+    return response
+
+
 def _error(status, key):
     if is_api_request():
         return jsonify(error=key), status
-    return render_template("error.html", message=texts()[key]), status
+    return _html_error(status, texts()[key])
 
 
 TRAILING_LINK_JUNK = "`'\").,;:!>]}*/"
@@ -4490,14 +4587,14 @@ def _rate_limited(e):
 def _bad_request(_e):
     if is_api_request():
         return jsonify(error='invalid_request', message='Expected a JSON object.'), 400
-    return render_template('error.html', message=texts()['errors']['invalid_domain']), 400
+    return _html_error(400, texts()['errors']['invalid_domain'])
 
 
 @bp.app_errorhandler(413)
 def _too_large(_e):
     if is_api_request():
         return jsonify(error='request_too_large'), 413
-    return render_template('error.html', message=texts()['errors']['invalid_domain']), 413
+    return _html_error(413, texts()['errors']['invalid_domain'])
 
 
 @bp.app_errorhandler(500)

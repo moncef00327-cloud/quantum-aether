@@ -45,6 +45,7 @@ TEXTS = {
         "hero_title": "هل موقعك جاهز لعصر الحواسيب الكمومية؟",
         "hero_sub": "فحص حقيقي لاتصال HTTPS: هل يتفق خادمك مع المتصفحات على المفاتيح عبر X25519MLKEM768 "
                     "(المعيار ML-KEM / FIPS 203) الذي تستخدمه Chrome وFirefox اليوم؟ وما حال شهادتك أمام خوارزمية Shor؟",
+        "home_meta": "الأثير الكمومي (كوانتوم أثير): فحص مجاني هل يتفق خادمك على X25519MLKEM768؟",
         "domain_label": "اسم النطاق",
         "scan_button": "افحص مجاناً",
         "scanning": "أُرسل الفحص… بانتظار استجابة الخادم",
@@ -216,6 +217,7 @@ TEXTS = {
         "hero_title": "Is your website ready for quantum computers?",
         "hero_sub": "A real HTTPS check: does your server agree keys with browsers using X25519MLKEM768 "
                     "(ML-KEM / FIPS 203), as Chrome and Firefox do today? And how does your certificate fare against Shor's algorithm?",
+        "home_meta": "Free post-quantum TLS check: see whether your HTTPS server negotiates X25519MLKEM768 like Chrome and Firefox.",
         "domain_label": "Domain name",
         "scan_button": "Scan for free",
         "scanning": "Scan submitted… waiting for the server response",
@@ -707,7 +709,7 @@ TEXTS["ar"].update({
     "nav_compare": "قارن",
     "site_title": "جاهزية TLS لما بعد الكم",
     "home_title": "فحص مجاني لـ TLS المقاوم للحوسبة الكمومية",
-    "home_meta": "الأثير الكمومي (كوانتوم أثير / Quantum Aether): افحص مجاناً ودون حساب هل يتفق خادمك مع المتصفحات على X25519MLKEM768 (ML-KEM)، مع الدرجة وخطوات الإصلاح، ومتتبّع أسبوعي لأكبر 1000 موقع.",
+    "home_meta": "الأثير الكمومي (كوانتوم أثير): فحص مجاني هل يتفق خادمك على X25519MLKEM768؟",
     "research_meta": "تجارب كمومية حقيقية على حواسيب IBM: حالات Bell وGHZ ونتائجها الخام.",
     "sample_meta": "مثال حقيقي للتقرير الكامل لـ github.com: تبادل المفاتيح، الشهادة، النتائج وخطوات الإصلاح بالأوامر.",
     "site_question": "هل يستخدم {domain} تشفير TLS المقاوم للحوسبة الكمومية؟",
@@ -866,6 +868,7 @@ TEXTS["de"].update({
     "hero_title": "Ist Ihre Website bereit für Quantencomputer?",
     "hero_sub": "Eine echte HTTPS-Prüfung: Vereinbart Ihr Server die Schlüssel mit Browsern über X25519MLKEM768 "
                 "(ML-KEM / FIPS 203), wie es Chrome und Firefox heute tun? Und wie steht Ihr Zertifikat gegenüber dem Shor-Algorithmus da?",
+    "home_meta": "Kostenloser Post-Quanten-TLS-Check: prüft, ob Ihr Server X25519MLKEM768 aushandelt, wie Chrome und Firefox.",
     "domain_label": "Domainname",
     "scan_button": "Kostenlos prüfen",
     "scanning": "Prüfung gesendet… Warten auf die Serverantwort",
@@ -1063,6 +1066,7 @@ TEXTS["en"].update({
     "adoption_lead": "Every Monday we re-scan the Tranco top 10,000 and watchlists for Germany, Austria and Switzerland; "
                      "once a month the top 100,000. Week {week} (from {date}): {pq} of the {reachable} top-1,000 sites that "
                      "answered ({pct}%) negotiate the hybrid X25519MLKEM768 key exchange.",
+    "adoption_meta": "Weekly post-quantum TLS tracker: how many of the Tranco top 10,000 and DACH watchlists negotiate X25519MLKEM768.",
     "adoption_stat_pct": "Top sites with post-quantum key exchange",
     "adoption_stat_delta": "Change vs previous week",
     "adoption_stat_switched": "Switched this week",
@@ -1122,6 +1126,7 @@ TEXTS["ar"].update({
     "adoption_lead": "كل يوم اثنين نعيد فحص أكبر 10,000 نطاق في قائمة Tranco وقوائم مراقبة لألمانيا والنمسا وسويسرا، "
                      "وكل شهر أكبر 100,000. الأسبوع {week} (من {date}): {pq} من أصل {reachable} موقعاً من الأكبر 1000 أجاب "
                      "({pct}%) تتفق على تبادل المفاتيح الهجين X25519MLKEM768.",
+    "adoption_meta": "متتبّع أسبوعي لتبنّي TLS المقاوم للكم: كم من أكبر 10,000 نطاق في Tranco وقوائم DACH تتفق على X25519MLKEM768.",
     "adoption_stat_pct": "المواقع الكبرى بتبادل مفاتيح مقاوم للكم",
     "adoption_stat_delta": "التغيّر عن الأسبوع السابق",
     "adoption_stat_switched": "انتقلت هذا الأسبوع",
@@ -1180,6 +1185,7 @@ TEXTS["de"].update({
                      "Deutschland, Österreich und die Schweiz erneut, einmal im Monat die 100.000 größten. Woche {week} "
                      "(ab {date}): {pq} der {reachable} erreichbaren Top-1.000-Websites ({pct} %) vereinbaren den hybriden "
                      "Schlüsselaustausch X25519MLKEM768.",
+    "adoption_meta": "Wöchentlicher Post-Quanten-TLS-Tracker: Wie viele der Tranco-Top-10.000 und DACH-Listen X25519MLKEM768 aushandeln.",
     "adoption_stat_pct": "Top-Websites mit Post-Quanten-Schlüsselaustausch",
     "adoption_stat_delta": "Veränderung zur Vorwoche",
     "adoption_stat_switched": "Diese Woche umgestellt",
@@ -2016,9 +2022,9 @@ TEXTS["de"].update({"hist_title": "Prüfverlauf", "hist_sub": "Jede tägliche un
 # ---------------------------------------------------------------- عنوان ووصف /monitoring في نتائج البحث
 TEXTS["en"].update({"mon_seo_title": "Post-quantum TLS monitoring: 14-day free trial",
                     "mon_seo_desc": "Daily post-quantum TLS checks of every server of your domains, alerts on changes, audit-ready CSV history. Free for 14 days, no card."})
-TEXTS["ar"].update({"mon_seo_title": "مراقبة TLS المقاوم للكم: تجربة مجانية 14 يوماً",
+TEXTS["ar"].update({"mon_seo_title": "مراقبة TLS لما بعد الكم: 14 يوماً",
                     "mon_seo_desc": "فحص يومي لكل عناوين خوادم نطاقاتك، وتنبيه عند فقدان التبادل المقاوم للكم أو اختلاف الخوادم، وسجل CSV جاهز للتدقيق. مجاناً 14 يوماً وبلا بطاقة."})
-TEXTS["de"].update({"mon_seo_title": "Post-Quanten-TLS-Überwachung: 14 Tage kostenlos testen",
+TEXTS["de"].update({"mon_seo_title": "Post-Quanten-TLS: 14 Tage testen", "site_seo_title": "Post-Quanten-TLS: {domain}",
                     "mon_seo_desc": "Tägliche Post-Quanten-TLS-Prüfung jedes Servers Ihrer Domains, Warnung bei Änderungen, prüfbarer CSV-Verlauf. 14 Tage kostenlos, ohne Karte."})
 
 # ---------------------------------------------------------------- جرد الأصول في لوحة المراقبة
@@ -2285,7 +2291,9 @@ TEXTS["ar"].update({
     "trial_button_nocard": "ابدأ مراقبة 14 يوماً مجاناً، بلا بطاقة",
     "trial_fold_line": "14 يوماً مجاناً، بلا بطاقة.",
 })
-DE_ENDPOINTS |= {"site.scan_page", "site.site_page"}
+DE_ENDPOINTS |= {"site.scan_page"}
+# /site/ is only partially translated (nav/labels; titles and tables often stay English).
+# Do not advertise ?lang=de there; untranslated German URLs 301 to English.
 
 # Nginx guide next-step CTA (2026-11-14)
 TEXTS["en"].update({
