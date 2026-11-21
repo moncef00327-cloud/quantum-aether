@@ -13,9 +13,10 @@ import glob
 import io
 import json
 import os
+import time
 from collections import OrderedDict
 
-from flask import Response, abort, redirect, render_template, request, url_for
+from flask import Response, abort, current_app, redirect, render_template, request, url_for
 
 import dach_hosting
 
@@ -314,13 +315,28 @@ def register(bp, deps):
         marked = deps["watermark"](deps["db"](), rows, export, data["meta"]["edition"])
         return data, finish_marked(marked, {r["host"] for r in data["results"]})
 
+    linked_cache = {}
+
+    def linked_hosts(data, v):
+        """Hosts with a /site/ page (one DB lookup per host, ~0.6 s for the whole table): cached for 10 minutes."""
+        if not deps.get("site_known"):
+            return set()
+        key = data["meta"]["edition"]
+        hit = linked_cache.get(key)
+        if hit and time.monotonic() - hit[0] < 600 and not current_app.testing:
+            return hit[1]
+        out = deps["site_known"]([r["host"] for r in v["rows"]])
+        linked_cache.clear()
+        linked_cache[key] = (time.monotonic(), out)
+        return out
+
     @bp.get("/index")
     def pq_index_page():
         data = load(deps["base_dir"]) or abort(404)
         lang = deps["lang"]()
         d = T.get(lang, T["en"])
         v = view(data)
-        linked = deps["site_known"]([r["host"] for r in v["rows"]]) if deps.get("site_known") else set()
+        linked = linked_hosts(data, v)
         return render_template("pq_index.html", linked=linked, d=d, v=v, m=data["meta"], ci=LANG_IDX.get(lang, 0), country=COUNTRY,
                                lang_code=lang, page_url=deps["base"]() + url_for(ENDPOINT),
                                inst=[(r["host"], r["name"]) for r in v["rows"]], fallback_email=dach_hosting.FALLBACK_EMAIL,
