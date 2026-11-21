@@ -14,6 +14,7 @@
 <meta property="og:description" content="{{ t.home_meta }}"><meta property="og:type" content="website">
 <meta property="og:url" content="{{ metadata_url(lang) }}"><meta property="og:image" content="{{ abs_url('site.og_default') }}">
 <link rel="service-desc" type="application/json" href="{{ abs_url('site.agent_service_manifest') }}">
+<link rel="alternate" type="text/plain" title="llms.txt" href="{{ abs_url('site.llms_txt') }}">
 <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
 {# Arabic font (362 KB) is preloaded only for the Arabic page (2026-11-21, speed): on English it was the largest download
    and competed with the CSS for the first paint; any Arabic glyph on English pages still loads it on demand. #}

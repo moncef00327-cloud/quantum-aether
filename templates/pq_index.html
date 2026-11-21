@@ -72,7 +72,7 @@ pre.pqi-cite{white-space:pre-wrap;padding:.6rem;border-radius:.5rem;background:r
   <div class="pqi-scroll"><table class="data pqi-table">
     <tr><th>{{ d.col_inst }}</th><th>{{ d.col_country }}</th><th>{{ d.col_sector }}</th><th>{{ d.col_host }}</th><th>{{ d.col_result }}</th><th>{{ d.col_tls }}</th><th>{{ d.col_network }}</th></tr>
     {% for r in v.rows %}<tr><td><bdi>{{ r.name }}</bdi></td><td>{{ country[r.country_code][ci] }}</td><td>{{ d.sector[r.sector] }}</td>
-      <td><bdi dir="ltr"><a href="{{ url_for('site.site_page', domain=r.host, lang=lang) }}">{{ r.host }}</a></bdi></td>
+      <td><bdi dir="ltr">{% if r.host in linked %}<a href="{{ url_for('site.site_page', domain=r.host, lang=lang) }}">{{ r.host }}</a>{% else %}{{ r.host }}{% endif %}</bdi></td>
       <td class="{{ 'pqi-pq' if r.status == 'pq_hybrid' else ('pqi-cl' if r.status == 'classical' else 'pqi-nm') }}">{{ d.status[r.status] }}</td>
       <td><bdi dir="ltr">{{ (r.tls_version or '').replace('TLSv', '') }}</bdi></td><td class="small"><bdi>{{ r.network or '' }}</bdi></td></tr>{% endfor %}
   </table></div>

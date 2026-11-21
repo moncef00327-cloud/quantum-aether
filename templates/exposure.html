@@ -2,7 +2,7 @@
 {% from "_trial_cta.html" import trial_cta with context %}
 {% block title %}{{ x.title.format(domain=domain) }}{% endblock %}
 {% block description %}{{ meta or x.unknown.format(domain=domain) }}{% endblock %}
-{% block head %}{% if not indexable %}<meta name="robots" content="noindex, follow">{% endif %}
+{% block head %}
 {% if w %}<script type="application/ld+json">{{ {"@context": "https://schema.org", "@type": "Dataset",
   "name": domain ~ " — post-quantum key exchange exposure window",
   "description": meta, "url": metadata_url(lang), "inLanguage": lang,
@@ -93,7 +93,7 @@
   <p class="small">{{ x.verify_body.format(domain=domain) }}</p>
   <p class="small" dir="ltr">domain key: <span class="exp-hash">{{ domain_key }}</span></p>
   <p class="small"><a href="{{ url_for('site.exposure_api', domain=domain) }}" rel="nofollow">JSON</a> ·
-    <a href="{{ url_for('site.site_page', domain=domain, lang=lang) }}">{{ x.related_site }}</a> ·
+    {% if site_known %}<a href="{{ url_for('site.site_page', domain=domain, lang=lang) }}">{{ x.related_site }}</a> ·{% endif %}
     <a href="{{ url_for('site.exposure_index', lang=lang) }}">{{ x.related_registry }}</a> ·
     <a href="{{ url_for('site.data_license', lang=lang) }}">{{ x.terms_link }}</a></p>
   {% if w.history_truncated %}<p class="muted small">{{ x.truncated.format(n=w.public_weeks) }}</p>{% endif %}

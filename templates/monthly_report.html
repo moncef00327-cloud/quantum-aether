@@ -14,7 +14,7 @@
 
   <h2>{{ t.rep_charts }}</h2>
   {% for c in charts %}
-  <figure><img src="{{ url_for('site.report_chart', report_id=r.id, name=c) }}" alt="{{ t.rep_chart_alt[c] }}" style="max-width:100%;height:auto;border-radius:6px" loading="lazy">
+  <figure><img src="{{ url_for('site.report_chart', report_id=r.id, name=c) }}" alt="{{ t.rep_chart_alt[c] }}" style="max-width:100%;height:auto;border-radius:6px"{% if not loop.first %} loading="lazy"{% endif %}>
     <figcaption class="muted small"><a href="{{ url_for('site.report_chart', report_id=r.id, name=c) }}" download>{{ t.rep_download }} (SVG)</a></figcaption></figure>
   {% endfor %}
 

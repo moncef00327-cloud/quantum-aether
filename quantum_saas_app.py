@@ -182,6 +182,7 @@ def create_app(overrides=None, scanner=None, paypal=None, mailer=None, chain=Non
                                                      fallback_sender=app.config["MAIL_FROM_FALLBACK"],
                                                      site_url=app.config["PUBLIC_URL"])
     app.register_blueprint(bp)
+    app.jinja_env.globals["url_for"] = template_url_for
     import crawler_log  # عدّاد زيارات الزواحف (بلا IP)، للملخص الأسبوعي
     crawler_log.register(app, lambda: app.config["DATA_DIR"])
     return app
@@ -213,6 +214,23 @@ def german_allowed():
     if request.endpoint == "site.legal_page":
         return True
     return request.endpoint in i18n.DE_ENDPOINTS or guide_has_german()
+
+
+def german_endpoint(endpoint, values):
+    """Same rule as german_allowed(), for a link target instead of the current request."""
+    if endpoint.startswith("."):
+        endpoint = "site" + endpoint
+    if endpoint == "site.legal_page" or endpoint in i18n.DE_ENDPOINTS:
+        return True
+    return endpoint == "site.guide" and "de" in guides.GUIDES.get(values.get("slug"), {})
+
+
+def template_url_for(endpoint, **values):
+    """url_for for templates: lang=de on an endpoint without German becomes lang=en, so links go straight to the
+    page instead of through the 301 in _redirect_untranslated_german (SEOmator audit 2026-11-21)."""
+    if values.get("lang") == "de" and not german_endpoint(endpoint, values):
+        values["lang"] = "en"
+    return url_for(endpoint, **values)
 
 
 def current_lang():
@@ -1128,7 +1146,8 @@ def guides_index():
               "mainEntity": {"@type": "ItemList", "itemListElement": [
                   {"@type": "ListItem", "position": i, "item": {
                       "@type": "TechArticle", "headline": page["title"], "description": page.get("description", ""),
-                      "url": base + url_for(".guide", slug=slug, lang=lang), "dateModified": guides.GUIDES[slug]["updated"]}}
+                      "url": base + url_for(".guide", slug=slug, lang=lang), "dateModified": guides.GUIDES[slug]["updated"],
+                      "author": org_jsonld(False)}}
                   for i, (slug, page) in enumerate(items, 1)]}}
     return render_template("guides_index.html", items=items, jsonld=jsonld)
 
@@ -1953,7 +1972,8 @@ def alerts_stop(token):
 def deadlines_page():
     d = deadlines.TEXT[current_lang()]
     jsonld = {"@context": "https://schema.org", "@type": "Article", "headline": d["title"], "description": d["description"],
-              "inLanguage": current_lang(), "dateModified": deadlines.UPDATED, "url": public_base() + url_for(".deadlines_page"),
+              "inLanguage": current_lang(), "datePublished": deadlines.PUBLISHED, "dateModified": deadlines.UPDATED,
+              "url": public_base() + url_for(".deadlines_page"), "publisher": org_jsonld(),
               "author": {"@type": "Organization", "name": "Quantum Aether"},
               "citation": [url for _, _, url in deadlines.TIMELINE]}
     return render_template("deadlines.html", d=d, timeline=deadlines.TIMELINE, milestones=deadlines.MILESTONES,
@@ -2519,6 +2539,27 @@ def site_fix_guides(network, pq, lang):
         if g and slug not in [o["slug"] for o in out]:
             out.append({"slug": slug, "title": (g.get(lang) or g["en"])["title"]})
     return out[:3]
+
+
+def site_pages_known(domains):
+    """Which of these hosts have a /site/<host> page (a known result, not excluded): /site/ answers 404/410 otherwise,
+    so pages only link the ones that exist (SEOmator audit 2026-11-21 found 48 such dead links on /index)."""
+    out = set()
+    optout = None
+    for d in domains:
+        try:
+            nd = quantum_vuln_scanner.normalize_domain(d)
+        except quantum_vuln_scanner.ScanError:
+            continue
+        if search_indexing.is_excluded(nd):
+            continue
+        if optout is None:
+            optout = adoption.load_optout(conn=db())
+        if adoption.opted_out(nd, optout):
+            continue
+        if known_result_for(nd)[0]:
+            out.add(d)
+    return out
 
 
 @bp.get("/site/<domain>")
@@ -4683,14 +4724,14 @@ import mea_hosting  # noqa: E402  Arab world + Africa hosting study page (2026-1
 mea_hosting.register(bp, {"base_dir": BASE_DIR, "db": db, "lang": current_lang, "client_hash": client_hash})
 
 import pq_index  # noqa: E402  PQ-TLS Index /index (2026-11-21, self-contained module)
-pq_index.register(bp, {"base_dir": BASE_DIR, "db": db, "lang": current_lang, "client_hash": client_hash,
+pq_index.register(bp, {"base_dir": BASE_DIR, "db": db, "lang": current_lang, "client_hash": client_hash, "site_known": site_pages_known,
                        "de_pages": DE_PAGES, "de_endpoints": i18n.DE_ENDPOINTS, "base": public_base, "open_data": _open_data,
                        "watermark": lambda conn, rows, export, week: exposure_web.watermark_export(
                            conn, rows, export, week, current_app.config["HASH_SALT"], client_hash(),
                            request.headers.get("User-Agent"))})
 
 import exposure_web  # noqa: E402  Quantum Exposure Registry (/exposure, self-contained module)
-exposure_web.register(bp, {"db": db, "lang": current_lang, "base": public_base, "de_pages": DE_PAGES,
+exposure_web.register(bp, {"db": db, "lang": current_lang, "base": public_base, "de_pages": DE_PAGES, "site_known": site_pages_known,
                            "de_endpoints": i18n.DE_ENDPOINTS, "data_dir": lambda: current_app.config["DATA_DIR"],
                            "salt": lambda: current_app.config["HASH_SALT"]})
 

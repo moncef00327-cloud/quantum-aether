@@ -320,7 +320,8 @@ def register(bp, deps):
         lang = deps["lang"]()
         d = T.get(lang, T["en"])
         v = view(data)
-        return render_template("pq_index.html", d=d, v=v, m=data["meta"], ci=LANG_IDX.get(lang, 0), country=COUNTRY,
+        linked = deps["site_known"]([r["host"] for r in v["rows"]]) if deps.get("site_known") else set()
+        return render_template("pq_index.html", linked=linked, d=d, v=v, m=data["meta"], ci=LANG_IDX.get(lang, 0), country=COUNTRY,
                                lang_code=lang, page_url=deps["base"]() + url_for(ENDPOINT),
                                inst=[(r["host"], r["name"]) for r in v["rows"]], fallback_email=dach_hosting.FALLBACK_EMAIL,
                                sent=request.args.get("sent") == "1", error=d["err"].get(request.args.get("error", "")))

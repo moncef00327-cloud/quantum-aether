@@ -13,7 +13,7 @@
   <p>{{ t.home_target }}</p>
   <p><a class="button-link" href="#trial" data-ev="trial_cta">{{ t.trial_button }}</a> <span class="muted small">{{ t.trial_after }} <bdi dir="ltr" data-trial-price>{{ '%g'|format(starter_price|float) }} {{ '€' if sub_currency == 'EUR' else sub_currency }}</bdi> {{ t.mon_per_month }}</span></p>
   </div>
-  <div class="scanner-panel">
+  <div class="scanner-panel" id="scanner">
   <div class="panel-heading"><span class="scanner-symbol" aria-hidden="true">⌁</span><div><h2>{{ 'ابدأ بفحص موقعك' if lang == 'ar' else ('Website jetzt prüfen' if lang == 'de' else 'Start with your website') }}</h2><p>{{ 'فحص مجاني · دون إنشاء حساب' if lang == 'ar' else ('Kostenlos · Ohne Anmeldung' if lang == 'de' else 'Free check · No account needed') }}</p></div><span class="tag">TLS</span></div>
   <form class="scan-form" method="post" action="{{ url_for('site.scan_form', lang=lang) }}" data-busy="{{ t.scanning }}" data-async-scan data-errors="{{ t.errors | tojson | forceescape }}" data-waiting="{{ sx.waiting }}" data-slow="{{ sx.slow }}" data-invalid="{{ sx.invalid }}" data-network="{{ sx.network }}" data-rate="{{ sx.rate }}" data-failed="{{ sx.failed }}" data-retry="{{ sx.retry }}">
     <input type="hidden" name="src" value="home">

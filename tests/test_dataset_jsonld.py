@@ -95,7 +95,9 @@ class DatasetJsonLdTests(unittest.TestCase):
             for doc in docs:
                 self.assertFalse(any(obj.get('@type')=='Dataset' for obj in objects(doc)))
                 self.assertNotIn('license',doc)
-        self.assertEqual(self.documents('/sample-report?lang=en'),[])
+        sample=self.documents('/sample-report?lang=en')  # generic WebPage node only (SEOmator fixes 2026-11-21)
+        self.assertEqual([d['@type'] for d in sample],['WebPage'])
+        self.assertNotIn('license',sample[0])
 
     def test_normal_domain_page_stays_indexable_and_crawlable(self):
         response=self.client.get('/site/alpha.test?lang=en')

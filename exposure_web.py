@@ -279,7 +279,8 @@ def register(bp, deps):
         data = exposure.window(conn, domain, data_dir=deps["data_dir"]())
         x = copy()
         if not data:
-            resp = make_response(render_template("exposure.html", x=x, domain=domain, w=None, indexable=False), 404)
+            resp = make_response(render_template("exposure.html", x=x, domain=domain, w=None, indexable=False, seo_noindex=True,
+                                                 site_known=False), 404)
             resp.headers["X-Robots-Tag"] = "noindex, follow"
             return resp
         claimed = exposure.claim_of(conn, data["domain"])
@@ -288,6 +289,8 @@ def register(bp, deps):
         msg = {"ok": x["claim_ok"], "fail": x["claim_fail"], "wait": x["claim_wait"]}.get(request.args.get("claim", ""))
         resp = make_response(render_template(
             "exposure.html", x=x, domain=data["domain"], w=data, indexable=data["indexable"], meta=meta,
+            seo_noindex=not data["indexable"],
+            site_known=bool(deps["site_known"]([data["domain"]])) if deps.get("site_known") else True,
             claimed=claimed, claim_msg=msg, claim_record=f"{exposure.CLAIM_PREFIX}.{data['domain']}",
             claim_token=exposure.claim_token(data["domain"], deps["salt"]()), domain_key=exposure.domain_key(data["domain"])))
         if not data["indexable"]:
