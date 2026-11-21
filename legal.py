@@ -58,7 +58,7 @@ PAGES = {
 <p>Die Website läuft auf einem Server der The Constant Company, LLC („Vultr“, USA) im Rechenzentrum London, Vereinigtes Königreich. Für das Vereinigte Königreich besteht ein Angemessenheitsbeschluss der EU-Kommission. Auftragsverarbeitungsvertrag nach Art. 28 DSGVO: {P.format("bitte bestätigen, dass der Vultr-AVV/DPA akzeptiert wurde")}.</p>
 
 <h2>3. Server-Protokolle</h2>
-<p>Bei jedem Aufruf speichert der Server IP-Adresse, Datum und Uhrzeit, aufgerufene Adresse, Referrer und Browserkennung. Zweck: Betrieb und Sicherheit der Website. Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO. Löschung spätestens nach {P.format("Speicherdauer der Server-Protokolle, z. B. 14 Tage")}.</p>
+<p>Bei jedem Aufruf speichert der Server IP-Adresse, Datum und Uhrzeit, aufgerufene Adresse, Referrer und Browserkennung. Zweck: Betrieb und Sicherheit der Website. Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO. Löschung spätestens nach 14 Tagen.</p>
 
 <h2>4. TLS-Prüfung</h2>
 <p>Wenn Sie eine Domain prüfen, speichern wir den Domainnamen und das Prüfergebnis. Ihre IP-Adresse speichern wir nicht im Klartext, sondern nur als verschlüsselten Hashwert (HMAC), um Missbrauch durch zu viele Anfragen zu begrenzen. Die Zählung der Anfragen wird nach 24 Stunden gelöscht. Rechtsgrundlage: Art. 6 Abs. 1 lit. b und f DSGVO.</p>
@@ -83,7 +83,7 @@ PAGES = {
 <p>Kostenlose Änderungsbenachrichtigung: Wenn Sie auf einer Ergebnisseite „Benachrichtigen“ wählen, speichern wir Ihre E-Mail-Adresse und die Domain, um diese wöchentlich zu prüfen und Sie bei Änderungen zu informieren. Rechtsgrundlage: Ihre Einwilligung (Art. 6 Abs. 1 lit. a DSGVO), bestätigt per Link (Double-Opt-in). Unbestätigte Anfragen löschen wir nach 7 Tagen. Sie können die Einwilligung jederzeit über den Link in jeder E-Mail widerrufen; Ihre Adresse wird dann sofort gelöscht.</p>
 
 <h2>9. E-Mail-Versand</h2>
-<p>E-Mails (Zugangslink, Benachrichtigungen) versenden wir über Resend, Inc., USA. Dabei werden E-Mail-Adresse und Nachrichteninhalt übermittelt. Grundlage der Übermittlung in die USA: {P.format("bitte prüfen: Zertifizierung nach dem EU-US Data Privacy Framework oder Standardvertragsklauseln")}.</p>
+<p>E-Mails (Zugangslink, Benachrichtigungen) versenden wir über Resend, Inc., USA. Dabei werden E-Mail-Adresse und Nachrichteninhalt übermittelt. Grundlage der Übermittlung in die USA: Standardvertragsklauseln der EU-Kommission (Durchführungsbeschluss (EU) 2021/914, Modul 2) im Auftragsverarbeitungsvertrag von Resend.</p>
 
 <h2>10. Ihre Rechte</h2>
 <p>Sie haben das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit und Widerspruch. Schreiben Sie dazu an {EMAIL}. Sie können sich außerdem bei der Österreichischen Datenschutzbehörde beschweren: Barichgasse 40-42, 1030 Wien, <a href="https://www.dsb.gv.at" rel="nofollow">www.dsb.gv.at</a>.</p>
@@ -101,7 +101,7 @@ PAGES = {
 <p>The website runs on a server of The Constant Company, LLC ("Vultr", USA) in a London data centre, United Kingdom. The United Kingdom is covered by an EU Commission adequacy decision. Data processing agreement under Art. 28 GDPR: {P.format("please confirm the Vultr DPA has been accepted")}.</p>
 
 <h2>3. Server logs</h2>
-<p>For every request the server stores the IP address, date and time, requested address, referrer and browser identifier. Purpose: operating and securing the website. Legal basis: Art. 6(1)(f) GDPR. Deleted after at most {P.format("server log retention, e.g. 14 days")}.</p>
+<p>For every request the server stores the IP address, date and time, requested address, referrer and browser identifier. Purpose: operating and securing the website. Legal basis: Art. 6(1)(f) GDPR. Deleted after at most 14 days.</p>
 
 <h2>4. TLS scan</h2>
 <p>When you scan a domain we store the domain name and the result. We do not store your IP address in clear text, only a keyed hash (HMAC) used to limit abuse through excessive requests. The request count is deleted after 24 hours. Legal basis: Art. 6(1)(b) and (f) GDPR.</p>
@@ -126,7 +126,7 @@ PAGES = {
 <p>Free change alert: if you choose "Notify me" on a result page, we store your email address and the domain to check it weekly and tell you about changes. Legal basis: your consent (Art. 6(1)(a) GDPR), confirmed by a link (double opt-in). Unconfirmed requests are deleted after 7 days. You can withdraw consent at any time with the link in every email; your address is then deleted immediately.</p>
 
 <h2>9. Email delivery</h2>
-<p>Emails (access link, alerts) are sent through Resend, Inc., USA, which receives the email address and message content. Basis for the transfer to the USA: {P.format("please verify: EU-US Data Privacy Framework certification or standard contractual clauses")}.</p>
+<p>Emails (access link, alerts) are sent through Resend, Inc., USA, which receives the email address and message content. Basis for the transfer to the USA: the EU Commission's standard contractual clauses (Implementing Decision (EU) 2021/914, Module 2) in Resend's data processing addendum.</p>
 
 <h2>10. Your rights</h2>
 <p>You have the right of access, rectification, erasure, restriction of processing, data portability and objection. Write to {EMAIL}. You may also lodge a complaint with the Austrian Data Protection Authority: Barichgasse 40-42, 1030 Vienna, <a href="https://www.dsb.gv.at" rel="nofollow">www.dsb.gv.at</a>.</p>
