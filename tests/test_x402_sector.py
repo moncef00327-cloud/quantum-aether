@@ -62,6 +62,7 @@ class SectorX402Tests(unittest.TestCase):
         self.assertIn("x402", t["description"])
         self.assertIn("$0.50 USDC", t["description"])
         self.assertIn(KEY, t["inputSchema"]["properties"]["sector"]["enum"])
+        self.assertIn(KEY, t["inputSchema"]["properties"]["sector"]["examples"])
         self.assertNotIn("get_sector_snapshot", agent_discovery.SECURITY_COPILOT_TOOLS)
 
     def test_call_without_payment_returns_challenge_and_never_charges(self):
