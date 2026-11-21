@@ -132,6 +132,7 @@ def _config_from_env():
         "MAIL_FROM_FALLBACK": env("QS_MAIL_FROM_FALLBACK", ""),
         "OWNER_EMAIL": env("QS_OWNER_EMAIL", ""),
         "REPLY_TO": env("QS_REPLY_TO", ""),
+        "RESEND_WEBHOOK_SECRET": env("QS_RESEND_WEBHOOK_SECRET", ""),
         "USDT_POLYGON_ADDR": env("QS_USDT_POLYGON_ADDR", ""),
         "USDC_ARBITRUM_ADDR": env("QS_USDC_ARBITRUM_ADDR", ""),
         "USDC_BASE_ADDR": env("QS_USDC_BASE_ADDR", ""),
@@ -377,6 +378,7 @@ def _remember_owner_client():
 
 
 INTERNAL_UA_MARKER = "quantumaether-internal"
+QA_TEST_UA_MARKER = "qa-trial-test"  # browser QA runs (2026-11-21): counted as tests, never as visitors or customers
 # عناوين السيرفر نفسه (تُضبط في /etc/quantum_saas.env)؛ لا افتراضي لأن عميل الاختبار يأتي من 127.0.0.1.
 INTERNAL_IPS = frozenset(ip.strip() for ip in os.environ.get("QS_INTERNAL_IPS", "").split(",") if ip.strip())
 
@@ -384,7 +386,8 @@ INTERNAL_IPS = frozenset(ip.strip() for ip in os.environ.get("QS_INTERNAL_IPS", 
 def is_internal_request():
     """طلب من السيرفر نفسه (curl/سكربتاتنا) أو بهوية الفحص الداخلي — ليس زائراً حقيقياً."""
     ua = (request.headers.get("User-Agent") or "").lower()
-    return INTERNAL_UA_MARKER in ua or (request.remote_addr or "") in INTERNAL_IPS
+    return (INTERNAL_UA_MARKER in ua or QA_TEST_UA_MARKER in ua
+            or (request.remote_addr or "") in INTERNAL_IPS)
 
 
 def is_test_request():
@@ -448,7 +451,7 @@ def is_api_request():
     return request.path.startswith("/api/")
 
 
-SCAN_SOURCES = {"home", "example", "site", "scanbox", "compare", "api", "mcp", "deadlines", "pack"}
+SCAN_SOURCES = {"home", "example", "site", "scanbox", "compare", "api", "mcp", "deadlines", "pack", "site_own"}
 
 
 def _recent_scan(conn, raw_domain, seconds):
@@ -2571,6 +2574,8 @@ def admin():
                            conversion_funnel=analytics_db.conversion_funnel_by_variant(
                                conn, (dt.date.today() - dt.timedelta(days=27)).isoformat()),
                            scan_errors=analytics_db.error_details(conn, (dt.date.today() - dt.timedelta(days=13)).isoformat()),
+                           trial_reasons=analytics_db.trial_reasons(conn, (dt.date.today() - dt.timedelta(days=13)).isoformat()),
+                           inbound_mail=inbound_mail.recent(conn),
                            by_source=sales_db.funnel_by_source(conn, (dt.date.today() - dt.timedelta(days=30)).isoformat()),
                            free_alert_counts=dict(conn.execute("SELECT status, COUNT(*) FROM free_alerts GROUP BY status").fetchall()),
                            audit_orders=audit_checkout.recent(conn), prooflab_stats=prooflab.counts(conn), billing_records=company_billing.recent(conn), audit_msg=request.args.get("audit_msg", "")[:40]))
@@ -3225,7 +3230,7 @@ def monitor_trial():
         # Visible failure reason (journalctl -u quantum_saas | grep "trial rejected"). Domain only, never the address.
         log_domain = re.sub(r"[^a-z0-9.\-]", "", (domain or raw or email.rpartition("@")[2]).lower())[:80] or "-"
         log.warning("trial rejected: reason=%s domain=%s lang=%s", state, log_domain, current_lang())
-        record_conversion_event("trial_failed", detail=src)
+        record_conversion_event("trial_failed", detail=analytics_db.trial_detail(src, state))
     return render_template("trial.html", state=state, email=email, domain=domain or raw), status
 
 
@@ -4516,6 +4521,11 @@ import partners  # noqa: E402  Partner (affiliate) programme: /partners, consent
 partners.register(bp, {"db": db, "lang": current_lang, "client_hash": client_hash})
 i18n.DE_ENDPOINTS.add("site.partners_page")
 DE_PAGES.add("site.partners_page")
+
+import inbound_mail  # noqa: E402  Replies to reply@/outreach@mail.ather-quantum.com via Resend webhook (2026-11-21)
+inbound_mail.register(bp, {"db": db, "mailer": lambda: current_app.extensions["mailer"],
+                           "owner": lambda: current_app.config["OWNER_EMAIL"],
+                           "secret": lambda: current_app.config.get("RESEND_WEBHOOK_SECRET", "")})
 
 import mea_hosting  # noqa: E402  Arab world + Africa hosting study page (2026-11-21, self-contained module)
 mea_hosting.register(bp, {"base_dir": BASE_DIR, "db": db, "lang": current_lang, "client_hash": client_hash})

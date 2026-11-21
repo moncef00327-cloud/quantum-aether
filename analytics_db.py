@@ -163,13 +163,63 @@ def init_events(conn):
     if "variant" not in {row[1] for row in conn.execute("PRAGMA table_info(events)")}:
         with conn:
             conn.execute("ALTER TABLE events ADD COLUMN variant TEXT")
+    normalize_trial_details(conn)
 
 
-DETAIL_RE = re.compile(r"[^a-z0-9_.:\-]")
+# 2026-11-21: trial_invalid / trial_failed detail is "source|reason" (reason may carry ":kind", e.g. bad_email:domain_only).
+# Browser reasons (static/trial-form.js) and server states (monitor_trial) share one vocabulary.
+TRIAL_REASONS = ("empty_email", "bad_email", "email_typo", "need_domain", "consent_missing", "bad_domain",
+                 "rate_limited", "unavailable", "unknown")
+_REASON_RE = "|".join(sorted(TRIAL_REASONS, key=len, reverse=True))
+_GLUED_RE = re.compile(r"^([a-z0-9_.\-]*?)[:]?(" + _REASON_RE + r")((?::[a-z0-9_.\-]+)?)$")
+
+
+def trial_detail(source, reason):
+    """The detail value for a trial_invalid/trial_failed event."""
+    return clean_detail(f"{clean_detail(source).replace('|', '') or 'none'}|{reason or 'unknown'}")
+
+
+def _source_from_page(page):
+    slug = (page or "").strip("/").split("/")[0]
+    return {"scan": "scan_result", "site": "site_result"}.get(slug, slug) or "none"
+
+
+def normalize_trial_details(conn):
+    """Rewrite older trial_invalid/trial_failed rows into "source|reason" (idempotent, keeps every row):
+    "scan_resultbad_email" -> "scan_result|bad_email" (the pipe used to be stripped), "empty_email" on /pricing ->
+    "pricing|empty_email", a bare source "monitoring" -> "monitoring|unknown"."""
+    rows = conn.execute("SELECT rowid, page, detail FROM events WHERE name IN ('trial_invalid', 'trial_failed') "
+                        "AND detail NOT LIKE '%|%'").fetchall()
+    if not rows:
+        return 0
+    with conn:
+        for rowid, page, detail in rows:
+            m = _GLUED_RE.match(detail or "")
+            if m:
+                source, reason = (m.group(1) or _source_from_page(page)), m.group(2) + m.group(3)
+            else:
+                source, reason = (detail or _source_from_page(page)), "unknown"
+            conn.execute("UPDATE events SET detail = ? WHERE rowid = ?", (trial_detail(source, reason), rowid))
+    return len(rows)
+
+
+def trial_reasons(conn, since_day, limit=40):
+    """Why trial forms did not go through (humans only): (event, source, reason, visitor-days, last day)."""
+    rows = conn.execute("SELECT name, detail, COUNT(DISTINCT visitor || day) AS n, MAX(day) AS last_day FROM events "
+                        "WHERE name IN ('trial_invalid', 'trial_failed') AND is_bot = 0 AND is_test = 0 AND day >= ? "
+                        "GROUP BY name, detail ORDER BY n DESC, last_day DESC LIMIT ?", (since_day, limit)).fetchall()
+    out = []
+    for name, detail, n, last_day in rows:
+        source, _, reason = (detail or "").partition("|")
+        out.append({"event": name, "source": source or "none", "reason": reason or "unknown", "n": n, "last": last_day})
+    return out
+
+
+DETAIL_RE = re.compile(r"[^a-z0-9_.:|\-]")  # "|" separates source|reason in trial events (2026-11-21)
 
 
 def clean_detail(value):
-    """Lower-case code/domain text only (letters, digits, _ . : -), at most 120 characters."""
+    """Lower-case code/domain text only (letters, digits, _ . : | -), at most 120 characters."""
     return DETAIL_RE.sub("", str(value or "").lower())[:120]
 
 

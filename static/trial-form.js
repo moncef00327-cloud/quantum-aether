@@ -140,8 +140,10 @@
     try {
       var src = "";
       if (form) src = form.getAttribute("data-trial-source") || ((form.querySelector('[name="src"]') || {}).value) || "";
-      var detail = src || "";
-      if (reason) detail = src ? (src + ":" + reason) : reason;
+      // Pages without an explicit source (e.g. /pricing, /business) are named after the page.
+      if (!src) src = (location.pathname.replace(/^\/+/, "").split("/")[0] || "home").toLowerCase();
+      // "source|reason" (2026-11-21): the server keeps "|" in event details, so the two parts stay separable.
+      var detail = reason ? (src + "|" + reason) : src;
       var body = JSON.stringify({ name: name, page: location.pathname, lang: document.documentElement.lang, detail: detail });
       if (navigator.sendBeacon) navigator.sendBeacon("/api/ev", body);
       else fetch("/api/ev", { method: "POST", body: body, keepalive: true });
@@ -150,15 +152,22 @@
   function isTrial(form) {
     return !!(form && form.getAttribute && /\/monitoring\/trial/.test(form.getAttribute("action") || ""));
   }
-  function box(form, isGuide) {
+  function box(form, isGuide, field) {
     var el = form.querySelector(".trial-error");
     if (!el) {
       el = document.createElement("p");
       el.className = "trial-error";
+      el.id = (form.id || ("trial-form-" + Math.random().toString(36).slice(2, 8))) + "-msg";
       form.insertBefore(el, form.firstChild);
     }
+    // Missing email: show the message right under the email box (not above the label), so it is seen with the field.
+    if (isGuide && field && field.name === "email") {
+      var row = field.closest(".scan-row") || field;
+      if (row.nextSibling !== el) row.parentNode.insertBefore(el, row.nextSibling);
+      field.setAttribute("aria-describedby", el.id);
+    }
     el.classList.toggle("form-error", !isGuide);
-    el.setAttribute("role", isGuide ? "status" : "alert");
+    el.setAttribute("role", "alert");
     el.style.cssText = isGuide
       ? "color:#67e8f9;background:rgba(103,232,249,.1);border:1px solid rgba(103,232,249,.35);padding:8px 12px;border-radius:10px;font-weight:600;margin:0 0 .7rem"
       : "color:#ff6b6b;font-weight:600;margin:0 0 .6rem";
@@ -196,7 +205,7 @@
     if (problem) {
       e.preventDefault();
       var isGuide = problem === "empty";
-      var el = box(f, isGuide);
+      var el = box(f, isGuide, field);
       var text = (isGuide && domVal) ? MSG.emptyDom.replace("{domain}", function () { return domVal; }) : MSG[problem];
       if (problem === "domainOnly") {
         var d0 = v.replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0];
@@ -210,7 +219,7 @@
       el.hidden = false;
       if (field) {
         if (!isGuide) field.setAttribute("aria-invalid", "true");
-        if (isGuide) { field.style.outline = "2px solid #67e8f9"; field.style.outlineOffset = "2px"; }
+        if (isGuide) { field.setAttribute("aria-invalid", "true"); field.style.outline = "2px solid #67e8f9"; field.style.outlineOffset = "2px"; }
         try { field.focus({ preventScroll: true }); } catch (x) { field.focus(); }
         (field.closest("label, p, div") || field).scrollIntoView({ block: "center", behavior: "smooth" });
         if (problem === "consent") {
@@ -225,6 +234,26 @@
     if (old) old.hidden = true;
     ev("trial_submit", f);
   }, true);
+  // "Start free trial" links only scroll to the form; put the cursor in the email box so the next click is not empty.
+  function focusTrialEmail(hash) {
+    var target = hash && hash.length > 1 ? document.getElementById(hash.slice(1)) : null;
+    var form = target && (target.matches && target.matches("form") ? target : target.querySelector && target.querySelector("form"));
+    if (!isTrial(form)) return;
+    var email = form.querySelector('[name="email"]');
+    if (email && !email.value) { try { email.focus({ preventScroll: true }); } catch (x) { email.focus(); } }
+  }
+  document.addEventListener("click", function (e) {
+    var a = e.target && e.target.closest ? e.target.closest('a[href*="#"]') : null;
+    if (!a) return;
+    var url = a.getAttribute("href") || "";
+    var path = url.split("#")[0].split("?")[0];
+    if (path && path !== location.pathname) return;
+    setTimeout(function () { focusTrialEmail("#" + url.split("#").pop()); }, 350);
+  });
+  if (location.hash) {
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { focusTrialEmail(location.hash); });
+    else focusTrialEmail(location.hash);
+  }
   document.addEventListener("input", function (e) {
     var t = e.target;
     if (t && (t.name === "email" || t.name === "domain") && isTrial(t.form)) {

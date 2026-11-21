@@ -24,6 +24,14 @@
   <div class="admin-table-scroll"><table class="data"><tr><th>Variant</th><th>Offer views</th><th>Trial CTA</th><th>Trial created</th><th>Paid subscription</th></tr>
     {% for arm in ("control", "treatment") %}<tr><td>{{ arm }}</td><td>{{ conversion_funnel[arm].offer_impression }}</td><td>{{ conversion_funnel[arm].trial_cta_clicked }}</td><td>{{ conversion_funnel[arm].signup_completed }}</td><td>{{ conversion_funnel[arm].subscription_completed }}</td></tr>{% endfor %}
   </table></div>
+  {% if trial_reasons %}<h3>Why trial forms did not go through, last 14 days (source|reason)</h3>
+  <div class="admin-table-scroll"><table class="data"><tr><th>event</th><th>source</th><th>reason</th><th>visitor-days</th><th>last</th></tr>
+  {% for r in trial_reasons %}<tr><td>{{ 'blocked in browser' if r.event == 'trial_invalid' else 'rejected by server' }}</td><td><code>{{ r.source }}</code></td><td><code>{{ r.reason }}</code></td><td>{{ r.n }}</td><td>{{ r.last }}</td></tr>{% endfor %}
+  </table></div>{% endif %}
+  <h3>Replies received (reply@ / outreach@mail.ather-quantum.com)</h3>
+  {% if inbound_mail %}<div class="admin-table-scroll"><table class="data"><tr><th>received (UTC)</th><th>from</th><th>to</th><th>subject</th></tr>
+  {% for m in inbound_mail %}<tr><td>{{ m.received_at }}</td><td dir="ltr">{{ m.from_addr }}</td><td dir="ltr">{{ m.to_addr }}</td><td>{{ m.subject }}</td></tr>{% endfor %}
+  </table></div><p class="muted small">Full text: Resend dashboard → Emails → Receiving.</p>{% else %}<p class="muted small">No replies stored yet.</p>{% endif %}
   {% if scan_errors %}<h3>Scan errors, last 14 days (code:domain)</h3>
   <div class="admin-table-scroll"><table class="data"><tr><th>error</th><th>visitor-days</th><th>last</th></tr>
   {% for row in scan_errors %}<tr><td dir="ltr"><code>{{ row[0] }}</code></td><td>{{ row[1] }}</td><td>{{ row[2] }}</td></tr>{% endfor %}

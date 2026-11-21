@@ -24,6 +24,8 @@ import packs
 import prooflab
 import assets
 import monitor_db
+import dach_hosting
+import inbound_mail
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS scans (
@@ -64,7 +66,7 @@ CREATE TABLE IF NOT EXISTS owner_clients (
 
 
 _SCHEMA_MODULES = (monitor_db, assets, free_alerts, discovery, scan_insights, audit, audit_checkout, company_billing,
-                   packs, analytics_db, adoption, access_links, prooflab)
+                   packs, analytics_db, adoption, access_links, prooflab, dach_hosting, inbound_mail)
 
 
 def _schema_version():
@@ -129,6 +131,8 @@ def initialize(conn):
     adoption.init(conn)
     access_links.init(conn)
     prooflab.init(conn)
+    dach_hosting._init(conn)  # 2026-11-21: correction-request table exists before the first request (review job reads it)
+    inbound_mail.init(conn)
     _migrate(conn)
 
 
