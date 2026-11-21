@@ -14,7 +14,7 @@ from flask import abort, redirect, render_template, request, url_for
 
 ENDPOINT = "site.dach_hosting"
 CORRECTION_ENDPOINT = "site.dach_hosting_correction"
-FALLBACK_EMAIL = "sajad.vip56@gmail.com"
+FALLBACK_EMAIL = "contact@mail.ather-quantum.com"  # receives via Resend inbound (the apex has no MX)
 VIENNA = ZoneInfo("Europe/Vienna")
 PER_CLIENT_PER_DAY, GLOBAL_PER_DAY = 3, 100
 EMAIL_RE = re.compile(r"^[^@\s<>\"']{1,64}@[A-Za-z0-9.-]{1,190}\.[A-Za-z]{2,24}$")

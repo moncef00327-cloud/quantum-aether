@@ -189,7 +189,7 @@ def register(bp, services):
    'description_for_model':'Use get_tls_evidence or /api/v1/badge/{domain} to read stored TLS evidence without scanning. Use scan_tls or /api/v1/scan?domain={domain} only when the user requests a new public HTTPS probe on port 443. Inspect observation_status and methodology before making security claims.',
    'auth':{'type':'none'},'api':{'type':'openapi','url':b+'/openapi.yaml','is_user_authenticated':False},
    'mcp':{'type':'streamable-http','url':b+'/mcp'},
-   'logo_url':b+'/static/favicon.svg','contact_email':'alerts@ather-quantum.com','legal_info_url':b+'/agb?lang=en'})
+   'logo_url':b+'/static/favicon.svg','contact_email':'contact@mail.ather-quantum.com','legal_info_url':b+'/agb?lang=en'})
 
  def rpc_error(code,message,request_id=None,status=400):
   return jsonify(jsonrpc='2.0',id=request_id,error={'code':code,'message':message}),status

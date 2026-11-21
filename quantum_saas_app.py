@@ -262,10 +262,15 @@ def conversion_variant():
     return "treatment" if bucket >= 128 else "control"
 
 
+PUBLIC_CONTACT_EMAIL = "contact@mail.ather-quantum.com"
+
+
 def contact_email_address():
-    address = parseaddr(current_app.config.get("MAIL_FROM") or current_app.config.get("REPLY_TO")
-                        or current_app.config.get("OWNER_EMAIL") or "")[1]
-    return address if "@" in address else "sajad.vip56@gmail.com"
+    """The address shown for contact (Impressum, footer, privacy policy). It must receive mail: only the subdomain
+    mail.ather-quantum.com has an MX (Resend inbound -> /hooks/resend/inbound); the apex has none, so the sender
+    address alerts@ather-quantum.com bounces. QS_CONTACT_EMAIL overrides it."""
+    configured = parseaddr(os.environ.get("QS_CONTACT_EMAIL") or current_app.config.get("CONTACT_EMAIL") or "")[1]
+    return configured if "@" in configured else PUBLIC_CONTACT_EMAIL
 
 
 def dual_price_label(amount, currency):
@@ -587,7 +592,7 @@ def org_jsonld(full=True):
     if full:
         ref.update({"alternateName": ["الأثير الكمومي", "كوانتوم أثير", "أثير كوانتوم", "Ather Quantum"],
                     "logo": base + "/static/favicon.svg", "sameAs": list(SAME_AS),
-                    "email": current_app.config.get("CONTACT_EMAIL") or None})
+                    "email": contact_email_address()})
         ref = {k: v for k, v in ref.items() if v}
     return ref
 
