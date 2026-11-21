@@ -111,8 +111,9 @@ class AgentDiscoveryTests(unittest.TestCase):
    source=quantum_saas_app.db().execute('SELECT source FROM scans WHERE id=?',(data['scan_id'],)).fetchone()['source']
   self.assertEqual(source,'mcp')
   second=self.rpc('tools/call',{'name':'scan_tls','arguments':{'domain':'example.com'}})
-  self.assertTrue(second.json['result']['isError'])
+  self.assertFalse(second.json['result']['isError'])  # useful answer, not an empty refusal
   self.assertEqual(second.json['result']['structuredContent']['http_status'],429)
+  self.assertEqual(second.json['result']['structuredContent']['stored_evidence']['domain'],'example.com')
   api=self.client.post('/api/scan',json={'domain':'example.com'});self.assertEqual(api.status_code,429)
   self.scanner.assert_called_once_with('example.com')
 

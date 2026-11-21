@@ -167,8 +167,9 @@ def register(bp, services, version):
                                                                    {"error": exc.code}, ctx))
         except HTTPException as exc:
             if exc.code == 429:
+                stored = dict(badge_evidence.for_domain(services["db"](), domain), verification_url=b + "/verify/" + domain)
                 return jsonify(jsonrpc="2.0", id=rid, result=_message(
-                    "Scan rate limit reached; try again in an hour or read stored evidence instead.",
-                    {"error": "rate_limited", "retry_after_seconds": 3600}, ctx))
+                    "Scan rate limit reached; returning the latest stored evidence instead (no new probe was made).",
+                    {"error": "rate_limited", "retry_after_seconds": 3600, "stored_evidence": stored}, ctx))
             raise
         return jsonify(jsonrpc="2.0", id=rid, result=_message(text, data, ctx))

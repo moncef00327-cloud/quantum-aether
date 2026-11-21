@@ -297,7 +297,13 @@ def register(bp, services):
    except HTTPException as exc:
     value={'error':'rate_limited' if exc.code==429 else 'request_failed','http_status':exc.code}
     if exc.code==429:value['retry_after_seconds']=3600
-    result={'content':[{'type':'text','text':json.dumps(value)}],'structuredContent':value,'isError':True}
+    is_error=True
+    if exc.code==429 and name=='scan_tls':
+     # Reviewer/UX: never an empty refusal. Return the latest stored evidence (no new probe) with the limit note.
+     value.update(message='Scan limit reached; returning the latest stored evidence instead (no new probe was made).',
+                  stored_evidence=dict(badge_evidence.for_domain(services['db'](),domain),verification_url=base()+'/verify/'+domain))
+     is_error=False
+    result={'content':[{'type':'text','text':json.dumps(value)}],'structuredContent':value,'isError':is_error}
    except Exception:
     current_app.logger.exception('Remote MCP tool failed')
     return rpc_error(-32603,'Internal tool error',request_id,500)
