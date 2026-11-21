@@ -5,18 +5,18 @@
 (function () {
   var lang = (document.documentElement.lang || "en").slice(0, 2);
   var ALL = {
-    en: { empty: "Enter your work email to receive your monitoring activation link.",
-          emptyDom: "Enter your work email to receive your monitoring activation link for {domain}.",
+    en: { empty: "Email required: enter your work email to receive your monitoring activation link.",
+          emptyDom: "Email required: enter your work email to receive your monitoring activation link for {domain}.",
           email: "Please enter a valid email address, for example security@company.com.",
           domain: "Personal mailboxes are welcome: please also enter the domain to monitor (for example company.com).",
           consent: "Accept the Terms and Privacy Policy to start your free trial." },
-    de: { empty: "Geben Sie Ihre geschäftliche E-Mail-Adresse ein, um den Aktivierungslink für die Überwachung zu erhalten.",
-          emptyDom: "Geben Sie Ihre geschäftliche E-Mail-Adresse ein, um den Aktivierungslink für die Überwachung von {domain} zu erhalten.",
+    de: { empty: "E-Mail-Adresse fehlt: Geben Sie Ihre geschäftliche E-Mail-Adresse ein, um den Aktivierungslink für die Überwachung zu erhalten.",
+          emptyDom: "E-Mail-Adresse fehlt: Geben Sie Ihre geschäftliche E-Mail-Adresse ein, um den Aktivierungslink für die Überwachung von {domain} zu erhalten.",
           email: "Bitte geben Sie eine gültige E-Mail-Adresse ein, z. B. security@firma.at.",
           domain: "Private Adressen sind willkommen: Bitte geben Sie zusätzlich die zu überwachende Domain ein (z. B. firma.at).",
           consent: "Bestätigen Sie die AGB und die Datenschutzerklärung, um den kostenlosen Test zu starten." },
-    ar: { empty: "أدخل بريد العمل لإرسال رابط تفعيل المراقبة.",
-          emptyDom: "أدخل بريد العمل لإرسال رابط تفعيل المراقبة لـ {domain}.",
+    ar: { empty: "البريد مطلوب: أدخل بريد العمل لإرسال رابط تفعيل المراقبة.",
+          emptyDom: "البريد مطلوب: أدخل بريد العمل لإرسال رابط تفعيل المراقبة لـ {domain}.",
           email: "اكتب بريداً صحيحاً، مثل security@company.com.",
           domain: "البريد الشخصي مقبول: اكتب أيضاً النطاق المراد مراقبته (مثل company.com).",
           consent: "وافق على الشروط وسياسة الخصوصية لبدء التجربة المجانية." }
@@ -168,8 +168,10 @@
     }
     el.classList.toggle("form-error", !isGuide);
     el.setAttribute("role", "alert");
+    // Missing email (2026-11-21): a clear error box under the field, not a soft cyan hint (6 empty submits that day,
+    // 5 of them on /pricing, and nobody retried).
     el.style.cssText = isGuide
-      ? "color:#67e8f9;background:rgba(103,232,249,.1);border:1px solid rgba(103,232,249,.35);padding:8px 12px;border-radius:10px;font-weight:600;margin:0 0 .7rem"
+      ? "color:#fecaca;background:rgba(255,107,107,.14);border:1px solid rgba(255,107,107,.6);padding:8px 12px;border-radius:10px;font-weight:600;margin:.4rem 0 .7rem"
       : "color:#ff6b6b;font-weight:600;margin:0 0 .6rem";
     return el;
   }
@@ -214,12 +216,12 @@
         var at = v.split("@");
         text = text.replace("{fix}", function () { return at[0] + "@" + TYPO[at[1]]; });
       }
-      el.textContent = text;
+      el.textContent = (isGuide ? "\u26A0 " : "") + text;
       el.setAttribute("data-trial-problem", problem);
       el.hidden = false;
       if (field) {
         if (!isGuide) field.setAttribute("aria-invalid", "true");
-        if (isGuide) { field.setAttribute("aria-invalid", "true"); field.style.outline = "2px solid #67e8f9"; field.style.outlineOffset = "2px"; }
+        if (isGuide) { field.setAttribute("aria-invalid", "true"); field.style.outline = "2px solid #ff6b6b"; field.style.outlineOffset = "2px"; }
         try { field.focus({ preventScroll: true }); } catch (x) { field.focus(); }
         (field.closest("label, p, div") || field).scrollIntoView({ block: "center", behavior: "smooth" });
         if (problem === "consent") {

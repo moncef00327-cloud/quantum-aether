@@ -7,7 +7,8 @@
 {% if state in fixable %}
 {# Fixable input problem: show the form again, filled in, with the reason next to it (no "Back" round trip). #}
 {{ trial_cta('trial-retry', title=t.trial_title, compact=true, prefill=domain, email=email,
-             error=t.trial_states[state].format(email=email, domain=domain), focus=fixable[state]) }}
+             error=(t.trial_email_required if state == 'bad_email' and not email else t.trial_states[state].format(email=email, domain=domain)),
+             focus=fixable[state]) }}
 {% else %}
 <section class="card">
   <h1>{{ t.trial_title }}</h1>

@@ -226,6 +226,16 @@ def current_lang():
 
 
 @bp.after_app_request
+def _vary_on_negotiated_language(response):
+    """Pages without ?lang= pick the language from Accept-Language (/ serves ar or de to those browsers, with that
+    language's canonical). Say so, so no cache hands one language's HTML to another browser (2026-11-21)."""
+    if request.method in ("GET", "HEAD") and request.args.get("lang") not in ("en", "ar", "de") \
+            and response.mimetype == "text/html":
+        response.vary.add("Accept-Language")
+    return response
+
+
+@bp.after_app_request
 def _redirect_untranslated_german(response):
     """Stop advertising untranslated German: /guides?lang=de and similar 301 to English.
 

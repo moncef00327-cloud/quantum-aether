@@ -19,7 +19,10 @@ BOT_RE = re.compile(r"bot|crawl|spider|slurp|curl|wget|python|httpclient|go-http
 TRACKED_PREFIXES = ("/", "/monitoring", "/guides", "/study", "/research", "/scan/", "/deadlines", "/site/", "/adoption", "/compare",
                     "/pricing", "/business", "/agency", "/sample-report", "/audit", "/prooflab", "/banks", "/reports", "/analytics",
                     "/exposure", "/gravity", "/tools", "/agents", "/press", "/transparency", "/scanning", "/data-license",
-                    "/executive-brief/", "/verify/")
+                    "/executive-brief/", "/verify/", "/partners")
+# Exact pages that cannot be prefixes: "/index" would also match /index.csv, /index.json and /index/panel.csv
+# (downloads, not pages). The PQ-TLS Index /index (en/ar/de via ?lang=) was not counted before 2026-11-21.
+TRACKED_EXACT = frozenset({"/index"})
 
 
 def init(conn):
@@ -34,7 +37,7 @@ def normalize_path(path):
         return "/scan/*"
     if path == "/scan":  # the result of a failed scan form (POST /scan) is rendered here
         return "/scan"
-    if path == "/" or path.startswith(TRACKED_PREFIXES[1:]):
+    if path == "/" or path in TRACKED_EXACT or path.startswith(TRACKED_PREFIXES[1:]):
         return path
     return None
 
