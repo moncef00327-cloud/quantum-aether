@@ -40,6 +40,29 @@
   <p class="notice">{{ t.mon_disabled }}</p>
   {% endif %}
 </section>
+
+<section class="card no-print" id="feedback">
+  <h2>{{ t.fb_title }}</h2>
+  {% if feedback %}<p class="muted small" role="status">{{ t.fb_received }}</p>{% endif %}
+  <p class="muted">{{ t.fb_sub }}</p>
+  <form method="post" action="{{ url_for('site.monitor_feedback', token=token, lang=lang) }}">
+    <fieldset>
+      <legend>{{ t.fb_liked_q }}</legend>
+      {% for v in ("yes", "partly", "no") %}
+      <label><input type="radio" name="liked" value="{{ v }}" required> {{ t.fb_liked[v] }}</label>
+      {% endfor %}
+    </fieldset>
+    <fieldset>
+      <legend>{{ t.fb_subscribe_q }}</legend>
+      {% for v in ("yes", "maybe", "no") %}
+      <label><input type="radio" name="subscribe" value="{{ v }}" required> {{ t.fb_subscribe[v] }}</label>
+      {% endfor %}
+    </fieldset>
+    <label for="fb-note">{{ t.fb_note }}</label>
+    <textarea id="fb-note" name="note" rows="3" maxlength="2000"></textarea>
+    <button type="submit">{{ t.fb_send }}</button>
+  </form>
+</section>
 {% endif %}
 
 {% macro measurement(c) %}

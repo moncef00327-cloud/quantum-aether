@@ -7,6 +7,7 @@ import monitor
 import sales_db
 import scorecard
 import weekly_banks
+import weekly_insurers
 from mailer import Mailer
 
 
@@ -24,6 +25,10 @@ def main():
         text += "\n\n" + weekly_banks.as_text(weekly_banks.build(conn))
     except Exception as exc:
         text += f"\n\nWeekly bank tracker unavailable: {exc}"
+    try:  # weekly DACH insurer tracker + German/English LinkedIn posts (same Monday sector scan)
+        text += "\n\n" + weekly_insurers.as_text(weekly_insurers.build(conn))
+    except Exception as exc:
+        text += f"\n\nWeekly insurer tracker unavailable: {exc}"
     print(text)
     mailer = Mailer(os.environ.get("RESEND_API_KEY", ""), os.environ.get("QS_MAIL_FROM", ""),
                     fallback_sender=os.environ.get("QS_MAIL_FROM_FALLBACK", ""),

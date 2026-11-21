@@ -44,17 +44,21 @@ class ExposureTests(unittest.TestCase):
         self.assertIsNone(exposure.window(c2, "nothing.example"))
 
     def test_indexing_rule(self):
-        self.assertTrue(exposure.is_indexable("x.example", 1000, 1))
-        self.assertFalse(exposure.is_indexable("x.example", 1001, 3))
+        self.assertTrue(exposure.is_indexable("x.example", 100, 1))
+        self.assertFalse(exposure.is_indexable("x.example", 101, 3))
+        self.assertFalse(exposure.is_indexable("x.example", 500, 10))  # was indexable before 2026-11-20 (top 1000)
         self.assertFalse(exposure.is_indexable("x.example", 5000, 4))
         self.assertTrue(exposure.is_indexable("x.example", 5000, 4, sector="banks-mena"))
-        self.assertTrue(exposure.is_indexable("x.example", None, 4))
+        self.assertFalse(exposure.is_indexable("x.example", 5000, 3, sector="banks-mena"))  # 4 real weeks first
+        self.assertFalse(exposure.is_indexable("x.example", None, 10, sector="government-worldwide"))  # not a buyer
+        self.assertFalse(exposure.is_indexable("x.example", None, 4))
         self.assertFalse(exposure.is_indexable("w4nkr.com", 10, 10))
         self.assertFalse(exposure.is_indexable("googleapis.com", 5, 10))
         rows = ([(f"2026-W{w}", "long.example", 1, 0, None) for w in (44, 45, 46, 47)]
                 + [(f"2026-W{w}", "tail.example", 1, 0, 5000) for w in (44, 45, 46, 47)]
                 + [("2026-W47", "short.example", 1, 0, None)])
-        self.assertEqual([d for d, _ in exposure.sitemap_domains(conn_with(rows))], ["long.example"])
+        # since 2026-11-20 four measured weeks alone are not enough: no rank <= 100 and no buyer sector -> not listed
+        self.assertEqual([d for d, _ in exposure.sitemap_domains(conn_with(rows))], [])
 
     def test_manifest_is_deterministic_and_hides_names(self):
         c = conn_with([("2026-W45", "a.example", 1, 1, 1), ("2026-W45", "b.example", 0, 0, 2)])

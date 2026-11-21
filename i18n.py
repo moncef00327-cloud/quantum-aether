@@ -2439,3 +2439,40 @@ TEXTS["de"].update({
         "migrate": "Post-Quanten-Schlüsselaustausch wurde an allen gemessenen Endpunkten beobachtet.",
     },
 })
+
+# ---------------------------------------------------------------- رأي مستخدم التجربة (لوحة المراقبة)
+_FB = {
+    "en": {"fb_title": "How is the trial going?",
+           "fb_sub": "Two quick answers help us a lot. They go straight to the team, so this works even if our emails don't reach you.",
+           "fb_liked_q": "Is the monitoring useful to you?", "fb_liked": {"yes": "Yes", "partly": "Partly", "no": "No"},
+           "fb_subscribe_q": "Would you like to subscribe after the trial?",
+           "fb_subscribe": {"yes": "Yes", "maybe": "Maybe", "no": "No"},
+           "fb_note": "What is missing or should change? (optional; add a contact if you want a reply)",
+           "fb_send": "Send feedback", "fb_received": "Thanks, we received your feedback. You can send more anytime."},
+    "ar": {"fb_title": "كيف تجدون التجربة؟",
+           "fb_sub": "إجابتان سريعتان تفيداننا كثيراً، وتصلان مباشرة إلى الفريق حتى لو لم تصلكم رسائلنا بالبريد.",
+           "fb_liked_q": "هل أفادتكم المراقبة؟", "fb_liked": {"yes": "نعم", "partly": "إلى حد ما", "no": "لا"},
+           "fb_subscribe_q": "هل ترغبون بالاشتراك بعد التجربة؟",
+           "fb_subscribe": {"yes": "نعم", "maybe": "ربما", "no": "لا"},
+           "fb_note": "ما الذي ينقص أو يحتاج تغييراً؟ (اختياري؛ اكتبوا وسيلة تواصل إن أردتم رداً)",
+           "fb_send": "أرسل الرأي", "fb_received": "شكراً، وصلنا رأيكم. يمكنكم الإرسال مجدداً في أي وقت."},
+    "de": {"fb_title": "Wie läuft der Test?",
+           "fb_sub": "Zwei kurze Antworten helfen uns sehr. Sie gehen direkt an das Team, auch wenn unsere E-Mails Sie nicht erreichen.",
+           "fb_liked_q": "Ist die Überwachung für Sie nützlich?", "fb_liked": {"yes": "Ja", "partly": "Teilweise", "no": "Nein"},
+           "fb_subscribe_q": "Möchten Sie nach dem Test abonnieren?",
+           "fb_subscribe": {"yes": "Ja", "maybe": "Vielleicht", "no": "Nein"},
+           "fb_note": "Was fehlt oder sollte sich ändern? (optional; Kontakt angeben, wenn Sie eine Antwort möchten)",
+           "fb_send": "Feedback senden", "fb_received": "Danke, Ihr Feedback ist angekommen. Sie können jederzeit mehr senden."},
+}
+_FB_NOTICES = {
+    "en": {"feedback_thanks": "Thank you! Your feedback reached the team.", "feedback_invalid": "Please answer both questions.",
+           "feedback_limit": "Thanks, we already have your feedback for today."},
+    "ar": {"feedback_thanks": "شكراً لكم! وصل رأيكم إلى الفريق.", "feedback_invalid": "يرجى الإجابة عن السؤالين.",
+           "feedback_limit": "شكراً، وصلنا رأيكم لهذا اليوم."},
+    "de": {"feedback_thanks": "Danke! Ihr Feedback ist beim Team angekommen.", "feedback_invalid": "Bitte beantworten Sie beide Fragen.",
+           "feedback_limit": "Danke, Ihr Feedback für heute liegt uns bereits vor."},
+}
+for _l in ("en", "ar", "de"):
+    TEXTS[_l].update(_FB[_l])
+    if "dash_notices" in TEXTS[_l]:
+        TEXTS[_l]["dash_notices"] = dict(TEXTS[_l]["dash_notices"], **_FB_NOTICES[_l])

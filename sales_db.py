@@ -379,7 +379,8 @@ def scans_per_day(conn, since_day):
 
 
 def recent_scans(conn, limit=50):
-    rows = conn.execute("SELECT id, domain, grade, created_at, is_test FROM scans ORDER BY created_at DESC LIMIT ?",
+    rows = conn.execute("SELECT id, domain, grade, created_at, is_test FROM scans WHERE is_test = 0 "
+                        "ORDER BY created_at DESC LIMIT ?",
                         (limit,)).fetchall()
     return [dict(r) for r in rows]
 

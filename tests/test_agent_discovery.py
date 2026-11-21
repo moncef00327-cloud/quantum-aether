@@ -65,6 +65,8 @@ class AgentDiscoveryTests(unittest.TestCase):
   robots=RobotFileParser();robots.parse(self.client.get('/robots.txt').text.splitlines())
   for path in ['/agents','/.well-known/agent-service.json','/mcp']:
    self.assertTrue(robots.can_fetch('Googlebot','https://ather-quantum.com'+path))
+  self.assertFalse(robots.can_fetch('Googlebot','https://ather-quantum.com/badge/example.com.svg'))  # crawl budget
+  self.assertTrue(robots.can_fetch('Googlebot','https://ather-quantum.com/guides'))
   self.scanner.assert_not_called()
 
  def test_initialize_negotiates_supported_protocol_without_payment(self):

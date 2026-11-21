@@ -12,13 +12,13 @@ import sales_db
 
 
 def seed(conn):
-    # Ranks inside search_indexing.INDEX_MAX_RANK (1000): only those /site/ pages are indexed and listed (2026-11-10).
+    # Ranks inside search_indexing.INDEX_MAX_RANK (100 since 2026-11-20): only those /site/ pages are indexed and listed.
     rows = [
-        ("2026-W44", "alpha.test", 501, 1, "B", "X25519", "TLSv1.3", 0, 0, "CLOUDFLARENET", "2026-10-27T01:00:00Z"),
-        ("2026-W45", "alpha.test", 501, 1, "A", "X25519MLKEM768", "TLSv1.3", 1, 0, "CLOUDFLARENET", "2026-11-02T01:00:00Z"),
-        ("2026-W45", "beta.test", 502, 1, "B", "X25519", "TLSv1.3", 0, 0, "CLOUDFLARENET", "2026-11-02T01:00:00Z"),
-        ("2026-W45", "gamma.test", 503, 1, "B", None, "TLSv1.3", 0, 1, "AMAZON-02", "2026-11-02T01:00:00Z"),
-        ("2026-W45", "down.test", 504, 0, None, None, None, 0, 0, None, "2026-11-02T01:00:00Z"),
+        ("2026-W44", "alpha.test", 51, 1, "B", "X25519", "TLSv1.3", 0, 0, "CLOUDFLARENET", "2026-10-27T01:00:00Z"),
+        ("2026-W45", "alpha.test", 51, 1, "A", "X25519MLKEM768", "TLSv1.3", 1, 0, "CLOUDFLARENET", "2026-11-02T01:00:00Z"),
+        ("2026-W45", "beta.test", 52, 1, "B", "X25519", "TLSv1.3", 0, 0, "CLOUDFLARENET", "2026-11-02T01:00:00Z"),
+        ("2026-W45", "gamma.test", 53, 1, "B", None, "TLSv1.3", 0, 1, "AMAZON-02", "2026-11-02T01:00:00Z"),
+        ("2026-W45", "down.test", 54, 0, None, None, None, 0, 0, None, "2026-11-02T01:00:00Z"),
     ]
     with conn:
         conn.executemany("INSERT INTO adoption_results (week, domain, rank, ok, grade, grp, tls, pq, unsure, as_name, scanned_at) "

@@ -14,7 +14,7 @@ import adoption
 import badge_evidence
 import search_indexing
 
-INDEX_MAX_RANK = 1000          # قاعدة المالك: أكبر 1000 ...
+INDEX_MAX_RANK = search_indexing.INDEX_MAX_RANK  # نفس سياسة /site/ (100 منذ 2026-11-20؛ كانت 1000)
 PUBLIC_WEEKS = 26            # الصفحات العامة والواجهة بلا مفتاح: آخر 26 أسبوعاً (مثل /site/)؛ التاريخ الكامل بمفتاح API
 INDEX_MIN_WEEKS = 4            # ... أو نطاق له 4 قياسات أسبوعية حقيقية على الأقل؛ ما عداه noindex وخارج خريطة الموقع
 MANIFEST_HEADER = "quantum-aether-weekly-anchor-v1"
@@ -221,7 +221,8 @@ def is_indexable(domain, rank, measured_weeks, sector=None):
         return False
     if rank is not None and rank <= INDEX_MAX_RANK:
         return True
-    return (rank is None or bool(sector)) and measured_weeks >= INDEX_MIN_WEEKS
+    # قطاعات المشترين فقط، وبعد 4 قياسات حقيقية (لا صفحات رقيقة لنطاقات أُضيفت للتو)
+    return sector in search_indexing.PRIORITY_SECTORS and measured_weeks >= INDEX_MIN_WEEKS
 
 
 def window(conn, domain, data_dir=None, peers=True, max_weeks=PUBLIC_WEEKS):

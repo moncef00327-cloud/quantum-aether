@@ -5,18 +5,51 @@
 (function () {
   var lang = (document.documentElement.lang || "en").slice(0, 2);
   var ALL = {
-    en: { email: "Please enter a valid email address, for example security@company.com.",
+    en: { empty: "Enter your work email to receive your monitoring activation link.",
+          emptyDom: "Enter your work email to receive your monitoring activation link for {domain}.",
+          email: "Please enter a valid email address, for example security@company.com.",
           domain: "Personal mailboxes are welcome: please also enter the domain to monitor (for example company.com).",
-          consent: "Almost done: please tick the box to accept the Terms and the Privacy Policy, then press the button again." },
-    de: { email: "Bitte geben Sie eine gültige E-Mail-Adresse ein, z. B. security@firma.at.",
+          consent: "Accept the Terms and Privacy Policy to start your free trial." },
+    de: { empty: "Geben Sie Ihre geschäftliche E-Mail-Adresse ein, um den Aktivierungslink für die Überwachung zu erhalten.",
+          emptyDom: "Geben Sie Ihre geschäftliche E-Mail-Adresse ein, um den Aktivierungslink für die Überwachung von {domain} zu erhalten.",
+          email: "Bitte geben Sie eine gültige E-Mail-Adresse ein, z. B. security@firma.at.",
           domain: "Private Adressen sind willkommen: Bitte geben Sie zusätzlich die zu überwachende Domain ein (z. B. firma.at).",
-          consent: "Fast geschafft: Bitte bestätigen Sie die AGB und die Datenschutzerklärung (Kästchen anhaken) und klicken Sie erneut." },
-    ar: { email: "اكتب بريداً صحيحاً، مثل security@company.com.",
+          consent: "Bestätigen Sie die AGB und die Datenschutzerklärung, um den kostenlosen Test zu starten." },
+    ar: { empty: "أدخل بريد العمل لإرسال رابط تفعيل المراقبة.",
+          emptyDom: "أدخل بريد العمل لإرسال رابط تفعيل المراقبة لـ {domain}.",
+          email: "اكتب بريداً صحيحاً، مثل security@company.com.",
           domain: "البريد الشخصي مقبول: اكتب أيضاً النطاق المراد مراقبته (مثل company.com).",
-          consent: "بقيت خطوة: ضع علامة الموافقة على الشروط وسياسة الخصوصية، ثم اضغط الزر مرة أخرى." }
+          consent: "وافق على الشروط وسياسة الخصوصية لبدء التجربة المجانية." }
+  };
+  var EXTRA = {
+    en: { domainOnly: "That looks like a domain. Enter an email address at it, for example {example}.",
+          typo: "Did you mean {fix}? Correct it, or press the button again to send it as typed." },
+    de: { domainOnly: "Das sieht nach einer Domain aus. Geben Sie eine E-Mail-Adresse dort ein, z. B. {example}.",
+          typo: "Meinten Sie {fix}? Korrigieren Sie die Adresse oder klicken Sie erneut, um sie so zu senden." },
+    ar: { domainOnly: "هذا يبدو نطاقاً لا بريداً. اكتب بريداً عليه، مثل {example}.",
+          typo: "هل تقصد {fix}؟ صحّحه، أو اضغط الزر مرة أخرى للإرسال كما هو." }
   };
   var MSG = ALL[lang] || ALL.en;
-  var REASON = { email: "bad_email", domain: "need_domain", consent: "consent_missing" };
+  var MORE = EXTRA[lang] || EXTRA.en;
+  MSG.domainOnly = MORE.domainOnly; MSG.typo = MORE.typo;
+  var REASON = { empty: "empty_email", email: "bad_email", domainOnly: "bad_email", typo: "email_typo",
+                 domain: "need_domain", consent: "consent_missing" };
+  var TYPO = { "gmial.com": "gmail.com", "gamil.com": "gmail.com", "gmai.com": "gmail.com", "gmail.co": "gmail.com",
+               "gmail.con": "gmail.com", "gnail.com": "gmail.com", "hotmial.com": "hotmail.com", "hotmai.com": "hotmail.com",
+               "hotmail.co": "hotmail.com", "outlok.com": "outlook.com", "outlook.co": "outlook.com", "yahooo.com": "yahoo.com",
+               "yaho.com": "yahoo.com", "icloud.co": "icloud.com", "iclod.com": "icloud.com" };
+  // Same clean-up as the server (quantum_saas_app.clean_email): bidi marks and spaces from RTL pages, full-width @.
+  function clean(s) {
+    return String(s).replace(/[​-‏‪-‮⁦-⁩﻿\s]/g, "").replace(/＠/g, "@")
+      .replace(/^mailto:/i, "").replace(/^[<"']+|[>"'.,;:]+$/g, "").toLowerCase();
+  }
+  // Shape of a rejected address for analytics, never the address itself.
+  function shape(s) {
+    if (s.indexOf("@") < 0) return /^(https?:\/\/)?[a-z0-9-]+(\.[a-z0-9-]+)+\/?/.test(s) ? "domain_only" : "no_at";
+    if (s.split("@").length > 2) return "two_at";
+    if (s.split("@").pop().indexOf(".") < 0) return "no_dot";
+    return "other";
+  }
   var FREE = ("gmail.com googlemail.com outlook.com hotmail.com hotmail.de live.com live.de msn.com yahoo.com yahoo.de " +
     "ymail.com icloud.com me.com mac.com aol.com gmx.at gmx.de gmx.net gmx.ch web.de t-online.de freenet.de aon.at " +
     "chello.at a1.net bluewin.ch proton.me protonmail.com pm.me mail.com mail.ru yandex.com yandex.ru zoho.com " +
@@ -108,7 +141,7 @@
       var src = "";
       if (form) src = form.getAttribute("data-trial-source") || ((form.querySelector('[name="src"]') || {}).value) || "";
       var detail = src || "";
-      if (reason) detail = src ? (src + "|" + reason) : reason;
+      if (reason) detail = src ? (src + ":" + reason) : reason;
       var body = JSON.stringify({ name: name, page: location.pathname, lang: document.documentElement.lang, detail: detail });
       if (navigator.sendBeacon) navigator.sendBeacon("/api/ev", body);
       else fetch("/api/ev", { method: "POST", body: body, keepalive: true });
@@ -117,15 +150,18 @@
   function isTrial(form) {
     return !!(form && form.getAttribute && /\/monitoring\/trial/.test(form.getAttribute("action") || ""));
   }
-  function box(form) {
+  function box(form, isGuide) {
     var el = form.querySelector(".trial-error");
     if (!el) {
       el = document.createElement("p");
-      el.className = "form-error trial-error";
-      el.setAttribute("role", "alert");
+      el.className = "trial-error";
       form.insertBefore(el, form.firstChild);
     }
-    el.style.cssText = "color:#ff6b6b;font-weight:600;margin:0 0 .6rem";
+    el.classList.toggle("form-error", !isGuide);
+    el.setAttribute("role", isGuide ? "status" : "alert");
+    el.style.cssText = isGuide
+      ? "color:#67e8f9;background:rgba(103,232,249,.1);border:1px solid rgba(103,232,249,.35);padding:8px 12px;border-radius:10px;font-weight:600;margin:0 0 .7rem"
+      : "color:#ff6b6b;font-weight:600;margin:0 0 .6rem";
     return el;
   }
   // Take over validation only for trial forms: set before the browser runs its own check on this click/Enter.
@@ -140,18 +176,41 @@
     if (!isTrial(f)) return;
     var email = f.querySelector('[name="email"]'), domain = f.querySelector('[name="domain"]'),
         consent = f.querySelector('input[type="checkbox"][name="consent"]');
-    var v = ((email && email.value) || "").trim().toLowerCase(), problem = null, field = null;
-    if (!EMAIL.test(v)) { problem = "email"; field = email; }
-    else if (domain && domain.type !== "hidden" && !domain.value.trim() && FREE.indexOf(v.split("@").pop()) >= 0) { problem = "domain"; field = domain; }
+    var v = clean((email && email.value) || ""), problem = null, field = null, kind = "";
+    if (email && email.value !== v) email.value = v;  // pasted RTL marks, spaces, full-width @, mailto:
+    var domVal = ((domain && domain.value) || "").trim();
+    if (!v) { problem = "empty"; field = email; }
+    else if (!EMAIL.test(v)) {
+      kind = shape(v);
+      var asDomain = v.replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0];
+      if (kind === "domain_only" && domain && domain.type !== "hidden" && !domVal) domain.value = asDomain;
+      problem = kind === "domain_only" ? "domainOnly" : "email"; field = email;
+    }
+    else if (TYPO[v.split("@").pop()] && !f.getAttribute("data-typo-ok")) {
+      kind = "typo"; problem = "typo"; field = email;
+      f.setAttribute("data-typo-ok", "1");  // second click sends as typed
+    }
+    else if (domain && domain.type !== "hidden" && !domVal && FREE.indexOf(v.split("@").pop()) >= 0) { problem = "domain"; field = domain; }
     else if (consent && !consent.checked) { problem = "consent"; field = consent; }
-    [email, domain, consent].forEach(function (x) { if (x) x.removeAttribute("aria-invalid"); });
+    [email, domain, consent].forEach(function (x) { if (x) { x.removeAttribute("aria-invalid"); x.style.outline = ""; } });
     if (problem) {
       e.preventDefault();
-      var el = box(f);
-      el.textContent = MSG[problem];
+      var isGuide = problem === "empty";
+      var el = box(f, isGuide);
+      var text = (isGuide && domVal) ? MSG.emptyDom.replace("{domain}", function () { return domVal; }) : MSG[problem];
+      if (problem === "domainOnly") {
+        var d0 = v.replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0];
+        text = text.replace("{example}", function () { return "security@" + d0; });
+      } else if (problem === "typo") {
+        var at = v.split("@");
+        text = text.replace("{fix}", function () { return at[0] + "@" + TYPO[at[1]]; });
+      }
+      el.textContent = text;
+      el.setAttribute("data-trial-problem", problem);
       el.hidden = false;
       if (field) {
-        field.setAttribute("aria-invalid", "true");
+        if (!isGuide) field.setAttribute("aria-invalid", "true");
+        if (isGuide) { field.style.outline = "2px solid #67e8f9"; field.style.outlineOffset = "2px"; }
         try { field.focus({ preventScroll: true }); } catch (x) { field.focus(); }
         (field.closest("label, p, div") || field).scrollIntoView({ block: "center", behavior: "smooth" });
         if (problem === "consent") {
@@ -159,12 +218,24 @@
           label.style.outline = "2px solid #ff6b6b"; label.style.outlineOffset = "4px"; label.style.borderRadius = "4px";
         }
       }
-      ev("trial_invalid", f, REASON[problem] || problem);
+      ev("trial_invalid", f, (REASON[problem] || problem) + (kind ? ":" + kind : ""));
       return;
     }
     var old = f.querySelector(".trial-error");
     if (old) old.hidden = true;
     ev("trial_submit", f);
+  }, true);
+  document.addEventListener("input", function (e) {
+    var t = e.target;
+    if (t && (t.name === "email" || t.name === "domain") && isTrial(t.form)) {
+      t.style.outline = "";
+      t.removeAttribute("aria-invalid");
+      if (t.value.trim()) {
+        var message = t.form.querySelector('.trial-error[data-trial-problem="' +
+          (t.name === "email" ? "empty" : "domain") + '"]');
+        if (message) message.hidden = true;
+      }
+    }
   }, true);
   document.addEventListener("change", function (e) {
     var t = e.target;
@@ -172,6 +243,8 @@
       var label = t.closest("label") || t.parentNode;
       label.style.outline = "";
       t.removeAttribute("aria-invalid");
+      var message = t.form.querySelector('.trial-error[data-trial-problem="consent"]');
+      if (message) message.hidden = true;
     }
   }, true);
 })();

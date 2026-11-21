@@ -332,17 +332,20 @@ def trial_reminder_email(account, days_left, login_url):
                "تنتهي تجربة المراقبة المجانية خلال {k} أيام. بعدها نتوقف عن فحص نطاقاتكم يومياً ولن تصلكم تنبيهات التراجع.\n\n"
                "للاستمرار، افتحوا لوحة التحكم واختاروا خطة (Starter بـ 29 € أو Business بـ 99 € شهرياً). "
                "نطاقاتكم وسجلّ التنبيهات يبقيان كما هما.\n\n"
-               "إن لم يكن رابط اللوحة عندكم، اطلبوه هنا:\n{url}"),
+               "إن لم يكن رابط اللوحة عندكم، اطلبوه هنا:\n{url}\n\n"
+               "سؤال واحد: هل أفادتكم التجربة، وهل ترغبون بالاشتراك؟ ردّوا على هذه الرسالة بسطر واحد، فرأيكم يحدد ما نحسّنه."),
         "de": ("Quantum Aether: Ihr kostenloser Test endet in {k} Tagen",
                "Ihr kostenloser Überwachungstest endet in {k} Tagen. Danach prüfen wir Ihre Domains nicht mehr täglich und Sie erhalten keine Warnungen.\n\n"
                "Um fortzufahren, öffnen Sie Ihr Dashboard und wählen Sie einen Tarif (Starter 29 € oder Business 99 € pro Monat). "
                "Ihre Domains und der Warnverlauf bleiben erhalten.\n\n"
-               "Dashboard-Link nicht zur Hand? Hier anfordern:\n{url}"),
+               "Dashboard-Link nicht zur Hand? Hier anfordern:\n{url}\n\n"
+               "Eine Frage: War der Test nützlich, und möchten Sie abonnieren? Antworten Sie einfach mit einer Zeile auf diese E-Mail."),
         "en": ("Quantum Aether: your free trial ends in {k} days",
                "Your free monitoring trial ends in {k} days. After that we stop scanning your domains daily and you won't get regression alerts.\n\n"
                "To keep it running, open your dashboard and pick a plan (Starter €29 or Business €99 per month). "
                "Your domains and alert history stay as they are.\n\n"
-               "Don't have the dashboard link at hand? Request it here:\n{url}"),
+               "Don't have the dashboard link at hand? Request it here:\n{url}\n\n"
+               "One question: was the trial useful, and would you like to subscribe? Just reply to this email with one line."),
     }
     subject, body = bodies[_lang(account)]
     return subject.format(k=days_left), body.format(k=days_left, url=login_url)
@@ -353,15 +356,18 @@ def trial_ended_email(account, login_url):
         "ar": ("الأثير الكمومي: انتهت تجربتكم المجانية وتوقفت المراقبة",
                "انتهت تجربة المراقبة المجانية، وتوقف الفحص اليومي لنطاقاتكم.\n\n"
                "نطاقاتكم وآخر النتائج محفوظة. لاستئناف المراقبة اشتركوا من لوحة التحكم (Starter بـ 29 € أو Business بـ 99 € شهرياً).\n\n"
-               "اطلبوا رابط اللوحة من هنا:\n{url}\n\nشكراً لتجربتكم الأثير الكمومي."),
+               "اطلبوا رابط اللوحة من هنا:\n{url}\n\n"
+               "ما الذي أعجبكم وما الذي نقصكم؟ ردّوا على هذه الرسالة بسطر واحد.\n\nشكراً لتجربتكم الأثير الكمومي."),
         "de": ("Quantum Aether: Ihr kostenloser Test ist beendet",
                "Ihr kostenloser Überwachungstest ist beendet; die tägliche Prüfung Ihrer Domains ist pausiert.\n\n"
                "Ihre Domains und die letzten Ergebnisse sind gespeichert. Abonnieren Sie im Dashboard, um fortzufahren (Starter 29 € oder Business 99 € pro Monat).\n\n"
-               "Dashboard-Link anfordern:\n{url}\n\nDanke, dass Sie Quantum Aether getestet haben."),
+               "Dashboard-Link anfordern:\n{url}\n\n"
+               "Was hat gefallen, was hat gefehlt? Antworten Sie mit einer Zeile auf diese E-Mail.\n\nDanke, dass Sie Quantum Aether getestet haben."),
         "en": ("Quantum Aether: your free trial has ended",
                "Your free monitoring trial has ended and daily scanning of your domains is paused.\n\n"
                "Your domains and latest results are saved. Subscribe from the dashboard to resume (Starter €29 or Business €99 per month).\n\n"
-               "Request your dashboard link here:\n{url}\n\nThanks for trying Quantum Aether."),
+               "Request your dashboard link here:\n{url}\n\n"
+               "What worked for you and what was missing? Reply to this email with one line.\n\nThanks for trying Quantum Aether."),
     }
     subject, body = bodies[_lang(account)]
     return subject, body.format(url=login_url)

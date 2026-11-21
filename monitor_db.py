@@ -49,6 +49,16 @@ CREATE TABLE IF NOT EXISTS monitor_alerts (
 );
 CREATE INDEX IF NOT EXISTS monitor_alerts_account ON monitor_alerts (account_id, created_at);
 
+-- رأي مستخدم التجربة من اللوحة (هل أفادته، هل ينوي الاشتراك، ملاحظة حرة). يُحذف مع الحساب.
+CREATE TABLE IF NOT EXISTS trial_feedback (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    account_id  TEXT NOT NULL REFERENCES monitor_accounts (id) ON DELETE CASCADE,
+    liked       TEXT NOT NULL,
+    subscribe   TEXT NOT NULL,
+    note        TEXT NOT NULL DEFAULT '',
+    created_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+);
+
 -- سجل كل فحص (دليل مؤرَّخ للمدققين). اسم النطاق محفوظ نصاً فيبقى السجل بعد حذف النطاق من اللوحة.
 CREATE TABLE IF NOT EXISTS monitor_checks (
     id               INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -138,11 +148,32 @@ def purge_ended_trials(conn, before_iso):
     with conn:
         for account_id in ids:
             conn.execute("DELETE FROM monitor_alerts WHERE account_id = ?", (account_id,))
+            conn.execute("DELETE FROM trial_feedback WHERE account_id = ?", (account_id,))
             conn.execute("DELETE FROM monitor_checks WHERE account_id = ?", (account_id,))
             conn.execute("DELETE FROM monitor_seeds WHERE account_id = ?", (account_id,))
             conn.execute("DELETE FROM monitor_domains WHERE account_id = ?", (account_id,))
             conn.execute("DELETE FROM monitor_accounts WHERE id = ?", (account_id,))
     return len(ids)
+
+
+FEEDBACK_PER_DAY = 3
+
+
+def add_feedback(conn, account_id, liked, subscribe, note):
+    """يعيد False إن تجاوز الحساب حد الرسائل اليومي (حماية بريد صاحب الموقع من الإغراق)."""
+    recent = conn.execute("SELECT COUNT(*) FROM trial_feedback WHERE account_id = ? AND created_at >= strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1 day')",
+                          (account_id,)).fetchone()[0]
+    if recent >= FEEDBACK_PER_DAY:
+        return False
+    with conn:
+        conn.execute("INSERT INTO trial_feedback (account_id, liked, subscribe, note) VALUES (?, ?, ?, ?)",
+                     (account_id, liked, subscribe, note))
+    return True
+
+
+def last_feedback(conn, account_id):
+    row = conn.execute("SELECT * FROM trial_feedback WHERE account_id = ? ORDER BY id DESC LIMIT 1", (account_id,)).fetchone()
+    return dict(row) if row else None
 
 
 def mark_trial_notice(conn, account_id):

@@ -43,7 +43,7 @@ class SearchIndexingTests(unittest.TestCase):
                 self.conn.execute('INSERT INTO adoption_results (week,domain,rank,ok,grade,grp,tls,pq,unsure,as_name,scanned_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
                     ('2026-W45',domain,4998+i,1,'B','X25519','TLSv1.3',0,0,'CLOUDFLARENET','2026-11-02T01:00:00Z'))
         with self.conn:
-            self.conn.execute("UPDATE adoption_results SET sector='review-fixture'")
+            self.conn.execute("UPDATE adoption_results SET sector='banks-europe'")  # a buyer sector always wins
     def tearDown(self):self.conn.close();self.tmp.cleanup()
 
     def test_every_excluded_host_is_gone_for_every_client(self):

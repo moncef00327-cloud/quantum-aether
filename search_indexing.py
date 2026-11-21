@@ -67,15 +67,23 @@ def is_infrastructure(domain):
     return host is not None and host in infrastructure_hosts()
 
 
-INDEX_MAX_RANK = 1000  # same scope as the study; long-tail /site/ pages only attracted unrelated navigational queries
+# 2026-11-20: was 1000 and "every watch-list sector". ~6,700 thin per-domain URLs on a days-old domain made Google
+# rate the whole site low (crawl fell 444 -> 6/day; Google landings were unrelated sites such as gambling or news).
+# Keep only reference brands plus the sectors that can buy (banks, insurers, finance, DACH companies).
+INDEX_MAX_RANK = 100
+PRIORITY_SECTORS = frozenset({
+    "banks-mena", "banks-europe", "banks-dach", "banks-americas-apac",
+    "health-insurance-dach", "global-insurance-healthcare",
+    "finance-worldwide", "payments-fintech", "companies-dach",
+})
 
 
 def is_indexable(domain, rank=None, sector=None):
-    """Should /site/<domain> appear in search results? Reviewed exclusions never; watch-list (sector) domains always;
-    else top ranks, minus infrastructure endpoints nobody looks up (they only drew unrelated queries)."""
+    """Should /site/<domain> appear in search results? Reviewed exclusions never; buyer-sector domains always;
+    else the top INDEX_MAX_RANK sites, minus infrastructure endpoints nobody looks up."""
     if is_excluded(domain) or family_dns_blocked(domain):
         return False
-    if sector:
+    if sector in PRIORITY_SECTORS:
         return True
     if is_infrastructure(domain):
         return False

@@ -20,7 +20,7 @@ class InfrastructurePolicyTests(unittest.TestCase):
         hosts = policy['hosts']
         self.assertEqual(len(hosts), len(set(hosts)))
         self.assertTrue(all(h == h.lower().strip() and h for h in hosts))
-        top = {d for _, d in adoption.load_tranco(search_indexing.INDEX_MAX_RANK)}
+        top = {d for _, d in adoption.load_tranco(1000)}  # list was reviewed against the top 1000 (rule before 2026-11-20)
         self.assertEqual(set(hosts) - top, set())
 
     def test_no_overlap_with_exclusions_or_watchlists(self):
@@ -37,7 +37,7 @@ class InfrastructurePolicyTests(unittest.TestCase):
         for host in ['google.com', 'cloudflare.com', 'github.com', 'tencent.com']:
             with self.subTest(host=host):
                 self.assertTrue(search_indexing.is_indexable(host, 5))
-        self.assertTrue(search_indexing.is_indexable('googleapis.com', None, 'review-fixture'))  # a sector always wins
+        self.assertTrue(search_indexing.is_indexable('googleapis.com', None, 'banks-europe'))  # a buyer sector always wins
 
     def test_infrastructure_stays_in_the_weekly_sample(self):
         targets = {t['domain'] for t in adoption.load_targets()}

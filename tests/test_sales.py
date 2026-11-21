@@ -73,6 +73,13 @@ class SalesBatchTest(unittest.TestCase):
         funnel = {r["source"]: r["scans"] for r in sales_db.funnel_by_source(self.conn(), "2000-01-01")}
         self.assertEqual(funnel["example"], 1)
 
+    def test_internal_scans_are_test_and_hidden_from_admin_list(self):
+        self.client.get("/api/v1/scan?domain=real.test")
+        self.client.get("/api/v1/scan?domain=ours.test", headers={"User-Agent": "QuantumAether-internal-check"})
+        rows = dict(self.conn().execute("SELECT domain, is_test FROM scans").fetchall())
+        self.assertEqual(rows, {"real.test": 0, "ours.test": 1})
+        self.assertEqual([s["domain"] for s in sales_db.recent_scans(self.conn())], ["real.test"])
+
     # نبّهني مجاناً
     def test_double_opt_in_flow(self):
         self.scan()

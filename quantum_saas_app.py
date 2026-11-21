@@ -48,6 +48,7 @@ import audit_checkout
 import company_billing
 import bank_report
 import weekly_banks
+import weekly_insurers
 import discovery
 import config_gen
 import reports
@@ -260,11 +261,13 @@ def public_price_labels():
 DE_PAGES = {"site.monthly_report", "site.press_page", "site.pq_config", "site.pq_config_server", "site.index", "site.study", "site.monitoring", "site.adoption_page", "site.analytics_page", "site.scanning_page", "site.deadlines_page",
             "site.business_page", "site.pricing_page", "site.agency_page", "site.audit_page", "site.audit_request", "site.countries_page", "site.country_page",
             "site.scan_page", "site.site_page", "site.prooflab_page", "site.prooflab_join",
-            "site.weekly_banks_latest", "site.weekly_banks_page"}
+            "site.weekly_banks_latest", "site.weekly_banks_page",
+            "site.weekly_insurers_latest", "site.weekly_insurers_page"}
 # /analytics has full German texts and is advertised as de in hreflang + sitemap; serve it in German too
 # (before 2026-11-18 ?lang=de silently fell back to English with an en canonical).
 i18n.DE_ENDPOINTS.add("site.analytics_page")
 i18n.DE_ENDPOINTS.update({"site.weekly_banks_latest", "site.weekly_banks_page"})  # weekly_banks.COPY has de
+i18n.DE_ENDPOINTS.update({"site.weekly_insurers_latest", "site.weekly_insurers_page"})  # weekly_insurers.COPY has de
 
 
 def texts():
@@ -372,9 +375,21 @@ def _remember_owner_client():
         log.exception("could not remember owner client")
 
 
+INTERNAL_UA_MARKER = "quantumaether-internal"
+# عناوين السيرفر نفسه (تُضبط في /etc/quantum_saas.env)؛ لا افتراضي لأن عميل الاختبار يأتي من 127.0.0.1.
+INTERNAL_IPS = frozenset(ip.strip() for ip in os.environ.get("QS_INTERNAL_IPS", "").split(",") if ip.strip())
+
+
+def is_internal_request():
+    """طلب من السيرفر نفسه (curl/سكربتاتنا) أو بهوية الفحص الداخلي — ليس زائراً حقيقياً."""
+    ua = (request.headers.get("User-Agent") or "").lower()
+    return INTERNAL_UA_MARKER in ua or (request.remote_addr or "") in INTERNAL_IPS
+
+
 def is_test_request():
-    """طلب من المالك: كوكي المدير، أو اتصال استعمل الكوكي خلال آخر 24 ساعة (أدوات بلا متصفح)."""
-    if is_admin_visitor():
+    """طلب من المالك: كوكي المدير، أو اتصال استعمل الكوكي خلال آخر 24 ساعة (أدوات بلا متصفح)،
+    أو طلب داخلي من السيرفر نفسه."""
+    if is_admin_visitor() or is_internal_request():
         return True
     try:
         return sales_db.is_owner_client(db(), client_hash(), OWNER_CLIENT_HOURS)
@@ -962,6 +977,31 @@ def weekly_banks_json(week):
     rep = _weekly_banks_or_404(week)
     response = jsonify(dict(rep, license="CC BY 4.0",
                             source=public_base() + url_for(".weekly_banks_page", week=rep["week"])))
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    return response
+
+
+def _weekly_insurers_or_404(week=None):
+    return weekly_insurers.build(db(), week) or abort(404)
+
+
+@bp.get("/insurers/weekly")
+def weekly_insurers_latest():
+    rep = _weekly_insurers_or_404()
+    return render_template("weekly_insurers.html", rep=rep, c=weekly_insurers.COPY[current_lang()])
+
+
+@bp.get("/insurers/weekly/<week>")
+def weekly_insurers_page(week):
+    rep = _weekly_insurers_or_404(week)
+    return render_template("weekly_insurers.html", rep=rep, c=weekly_insurers.COPY[current_lang()])
+
+
+@bp.get("/insurers/weekly/<week>.json")
+def weekly_insurers_json(week):
+    rep = _weekly_insurers_or_404(week)
+    response = jsonify(dict(rep, license="CC BY 4.0",
+                            source=public_base() + url_for(".weekly_insurers_page", week=rep["week"])))
     response.headers["Access-Control-Allow-Origin"] = "*"
     return response
 
@@ -1842,7 +1882,15 @@ def deadlines_page():
 
 @bp.get("/guides/<slug>")
 def guide(slug):
-    g = guides.GUIDES.get(slug) or abort(404)
+    g = guides.GUIDES.get(slug)
+    if g is None:
+        # Links cut off when shared (Reddit/X previews: /guides/enable-x25519ml) still reach the guide when the
+        # prefix names exactly one guide. Junk after a valid slug ("](https://…") is cut off the same way.
+        head = re.split(r"[\]\[)(<>\"' ]", slug, maxsplit=1)[0].rstrip("-")
+        matches = [s for s in guides.GUIDES if s.startswith(head)] if len(head) >= 8 else []
+        if len(matches) != 1:
+            abort(404)
+        return redirect(url_for(".guide", slug=matches[0], **({"lang": request.args["lang"]} if "lang" in request.args else {})), code=301)
     page = g[current_lang()]
     return render_template("guide.html", slug=slug, page=page, updated=g["updated"])
 
@@ -2960,6 +3008,17 @@ def favicon():
 # ---------------------------------------------------------------- اشتراك المراقبة الشهري
 
 EMAIL_RE = re.compile(r"^[^@\s]{1,64}@[A-Za-z0-9.-]{1,253}\.[A-Za-z]{2,}$")
+_EMAIL_NOISE = re.compile("[​-‏‪-‮⁦-⁩﻿\\s]")
+
+
+def clean_email(raw):
+    """Addresses pasted on RTL pages carry bidi marks and spaces; some keyboards type a full-width @.
+    Same clean-up as static/trial-form.js, so what the browser accepts the server accepts too."""
+    value = _EMAIL_NOISE.sub("", raw or "").replace("＠", "@")
+    value = re.sub(r"^mailto:", "", value, flags=re.I).lstrip("<\"'").rstrip(">\"'.,;:")
+    return value.lower()[:254]
+
+
 MANUAL_SCAN_INTERVAL = dt.timedelta(hours=1)
 
 
@@ -3082,7 +3141,7 @@ def send_dashboard_link(conn, account):
 @bp.post("/monitoring/trial")
 def monitor_trial():
     """تجربة مجانية 14 يوماً بلا دفع: البريد + نطاق الشركة. رابط اللوحة يصل بالبريد فقط (إثبات ملكية البريد)."""
-    email = (request.form.get("email") or "").strip().lower()[:254]
+    email = clean_email(request.form.get("email"))
     raw = (request.form.get("domain") or "").strip()
     src = analytics_db.clean_detail(request.form.get("src") or "")
     variant = request.form.get("variant")
@@ -3342,7 +3401,8 @@ def monitor_dashboard(token):
     g.paypal_csp = trial and subscriptions_enabled()
     domains = monitor_db.list_domains(conn, account["id"])
     domain_checks = monitor_db.recent_domain_checks(conn, account["id"])
-    return render_template("monitor_dashboard.html", account=account, token=token,
+    feedback = monitor_db.last_feedback(conn, account["id"]) if trial else None
+    return render_template("monitor_dashboard.html", account=account, token=token, feedback=feedback,
                            domains=domains, alerts=alerts, priorities=monitor.migration_priorities(domains),
                            domain_checks=domain_checks, resolved=monitor.verified_remediations(domain_checks),
                            plan=monitor.PLANS[account["plan"]], notice=request.args.get("n"),
@@ -3491,6 +3551,31 @@ def monitor_scan_now(token):
     monitor_db.mark_manual_scan(conn, account["id"], now.isoformat(timespec="seconds"))
     monitor.check_account(conn, account, scanner=current_app.extensions["scanner"])
     return _back(token, "scanned")
+
+
+FEEDBACK_LIKED = ("yes", "partly", "no")
+FEEDBACK_SUBSCRIBE = ("yes", "maybe", "no")
+
+
+@bp.post("/monitor/<token>/feedback")
+def monitor_feedback(token):
+    """رأي مستخدم التجربة من اللوحة: يُحفظ ويصل لصاحب الموقع بالبريد، فلا يعتمد على صحة بريد المستخدم."""
+    account = account_or_404(token)
+    if account["status"] not in ("TRIAL", "TRIAL_ENDED"):
+        return _back(token, "inactive")
+    liked = request.form.get("liked")
+    subscribe = request.form.get("subscribe")
+    note = re.sub(r"[\x00-\x08\x0b-\x1f\x7f]", "", request.form.get("note") or "").strip()[:2000]
+    if liked not in FEEDBACK_LIKED or subscribe not in FEEDBACK_SUBSCRIBE:
+        return _back(token, "feedback_invalid")
+    conn = db()
+    if not monitor_db.add_feedback(conn, account["id"], liked, subscribe, note):
+        return _back(token, "feedback_limit")
+    record_conversion_event("trial_feedback", "/monitor", detail=f"{liked}/{subscribe}")
+    if not is_test_request():
+        monitor.notify_owner(current_app.extensions["mailer"], current_app.config["OWNER_EMAIL"],
+                             f"Trial feedback: liked={liked}, subscribe={subscribe}", account, f"Note: {note or '-'}")
+    return _back(token, "feedback_thanks")
 
 
 @bp.post("/monitor/<token>/cancel")
@@ -3827,7 +3912,9 @@ def robots():
     audit_agent = ("User-agent: OpenSEO-Audit\nDisallow: /admin\nDisallow: /report/\n"
                    "Disallow: /api/paypal/\nDisallow: /monitor/\nDisallow: /api/monitor/\n"
                    "Disallow: /site/\nDisallow: /exposure/\n" + bank_detail_rules + "\n")
-    body = (agents + "Disallow: /admin\nDisallow: /report/\nDisallow: /api/paypal/\nDisallow: /monitor/\nDisallow: /api/monitor/\n\n"
+    # /badge/<domain>.svg: embeddable images, no search value; they took ~25% of Googlebot hits (2026-11-16..20).
+    body = (agents + "Disallow: /admin\nDisallow: /report/\nDisallow: /api/paypal/\nDisallow: /monitor/\nDisallow: /api/monitor/\n"
+            "Disallow: /badge/\n\n"
             + audit_agent
             + f"Sitemap: {public_base()}/sitemap.xml\n"
             f"# AI agents: machine-readable summary and API at {public_base()}/llms.txt\n"
@@ -3874,6 +3961,10 @@ def _sitemap_pages():
     if bank_weeks:
         pages.append(("/banks/weekly", adoption.week_monday(bank_weeks[-1]).isoformat(), de_langs))
         pages += [(f"/banks/weekly/{w}", adoption.week_monday(w).isoformat(), de_langs) for w in bank_weeks]
+    insurer_weeks = weekly_insurers.weeks(db())
+    if insurer_weeks:
+        pages.append(("/insurers/weekly", adoption.week_monday(insurer_weeks[-1]).isoformat(), de_langs))
+        pages += [(f"/insurers/weekly/{w}", adoption.week_monday(w).isoformat(), de_langs) for w in insurer_weeks]
     board = countries.leaderboard(db())
     if board:
         week_day = adoption.week_monday(board["week"]).isoformat()
