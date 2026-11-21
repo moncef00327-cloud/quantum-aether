@@ -55,7 +55,7 @@ PAGES = {
 <p>{OWNER}, {ADDRESS}, E-Mail: {EMAIL}</p>
 
 <h2>2. Hosting</h2>
-<p>Die Website läuft auf einem Server der The Constant Company, LLC („Vultr“, USA) im Rechenzentrum London, Vereinigtes Königreich. Für das Vereinigte Königreich besteht ein Angemessenheitsbeschluss der EU-Kommission. Auftragsverarbeitungsvertrag nach Art. 28 DSGVO: {P.format("bitte bestätigen, dass der Vultr-AVV/DPA akzeptiert wurde")}.</p>
+<p>Die Website läuft auf einem Server der The Constant Company, LLC („Vultr“, USA) im Rechenzentrum London, Vereinigtes Königreich. Für das Vereinigte Königreich besteht ein Angemessenheitsbeschluss der EU-Kommission. Auftragsverarbeitungsvertrag nach Art. 28 DSGVO: abgeschlossen (Data Processing Agreement von Vultr).</p>
 
 <h2>3. Server-Protokolle</h2>
 <p>Bei jedem Aufruf speichert der Server IP-Adresse, Datum und Uhrzeit, aufgerufene Adresse, Referrer und Browserkennung. Zweck: Betrieb und Sicherheit der Website. Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO. Löschung spätestens nach 14 Tagen.</p>
@@ -98,7 +98,7 @@ PAGES = {
 <p>{OWNER}, {ADDRESS_EN}, email: {EMAIL}</p>
 
 <h2>2. Hosting</h2>
-<p>The website runs on a server of The Constant Company, LLC ("Vultr", USA) in a London data centre, United Kingdom. The United Kingdom is covered by an EU Commission adequacy decision. Data processing agreement under Art. 28 GDPR: {P.format("please confirm the Vultr DPA has been accepted")}.</p>
+<p>The website runs on a server of The Constant Company, LLC ("Vultr", USA) in a London data centre, United Kingdom. The United Kingdom is covered by an EU Commission adequacy decision. Data processing agreement under Art. 28 GDPR: in place (Vultr Data Processing Agreement).</p>
 
 <h2>3. Server logs</h2>
 <p>For every request the server stores the IP address, date and time, requested address, referrer and browser identifier. Purpose: operating and securing the website. Legal basis: Art. 6(1)(f) GDPR. Deleted after at most 14 days.</p>
