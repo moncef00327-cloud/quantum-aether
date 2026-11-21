@@ -4108,6 +4108,9 @@ def _sitemap_pages():
     if mea:
         pages.append(("/adoption/arab-africa-hosting", mea["updated"], site_langs))
     pages.append(("/partners", "2026-11-21", de_langs))
+    pq_index_data = pq_index.load(BASE_DIR)
+    if pq_index_data:
+        pages.append(("/index", pq_index.updated(pq_index_data), de_langs))
     legal_date = os.path.getmtime(os.path.join(BASE_DIR, "legal.py"))
     legal_day = dt.datetime.fromtimestamp(legal_date, dt.timezone.utc).date().isoformat()
     pages += [(f"/{slug}", legal_day, legal_langs) for slug in legal.PAGES]
@@ -4631,6 +4634,13 @@ inbound_mail.register(bp, {"db": db, "mailer": lambda: current_app.extensions["m
 
 import mea_hosting  # noqa: E402  Arab world + Africa hosting study page (2026-11-21, self-contained module)
 mea_hosting.register(bp, {"base_dir": BASE_DIR, "db": db, "lang": current_lang, "client_hash": client_hash})
+
+import pq_index  # noqa: E402  PQ-TLS Index /index (2026-11-21, self-contained module)
+pq_index.register(bp, {"base_dir": BASE_DIR, "db": db, "lang": current_lang, "client_hash": client_hash,
+                       "de_pages": DE_PAGES, "de_endpoints": i18n.DE_ENDPOINTS, "base": public_base, "open_data": _open_data,
+                       "watermark": lambda conn, rows, export, week: exposure_web.watermark_export(
+                           conn, rows, export, week, current_app.config["HASH_SALT"], client_hash(),
+                           request.headers.get("User-Agent"))})
 
 import exposure_web  # noqa: E402  Quantum Exposure Registry (/exposure, self-contained module)
 exposure_web.register(bp, {"db": db, "lang": current_lang, "base": public_base, "de_pages": DE_PAGES,

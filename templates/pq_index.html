@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% set o = v.overall %}
+{% block title %}{{ d.title }} · {{ t.brand }}{% endblock %}
+{% block description %}{{ d.meta.format(pq=o.pq, n=o.n, pct=o.pct, edition=m.edition) }}{% endblock %}
+{% block head %}<style>
+.pqi-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(11rem,1fr));gap:.75rem;margin:1rem 0}
+.pqi-kpi{border:1px solid rgba(127,127,127,.3);border-radius:.75rem;padding:.8rem}.pqi-kpi b{display:block;font-size:1.7rem;line-height:1.2}
+.pqi-table td.n,.pqi-table th.n{white-space:nowrap;text-align:end}.pqi-table th,.pqi-table td{overflow-wrap:normal;word-break:normal}
+.pqi-bar{display:inline-block;width:5rem;height:.45rem;border-radius:.3rem;background:rgba(127,127,127,.25);vertical-align:middle}.pqi-bar i{display:block;height:100%;border-radius:.3rem;background:#1f9d6b}
+.pqi-scroll{overflow-x:auto}.pqi-pq{color:#1f9d6b;font-weight:600}.pqi-cl{color:#b26b00}.pqi-nm{opacity:.7}
+.pqi-note{border-inline-start:4px solid #f5a623;padding:.6rem .9rem;background:rgba(245,166,35,.08);border-radius:.4rem}
+.dach-form{display:grid;gap:.6rem;max-width:40rem}.dach-form label{display:grid;gap:.25rem;font-weight:500}
+.dach-form input,.dach-form select,.dach-form textarea{font:inherit;padding:.5rem .6rem;border-radius:.5rem;border:1px solid rgba(127,127,127,.4);background:transparent;color:inherit}
+.dach-form .dach-check{display:flex;gap:.5rem;align-items:center;font-weight:400}.dach-hp{position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden}
+pre.pqi-cite{white-space:pre-wrap;padding:.6rem;border-radius:.5rem;background:rgba(127,127,127,.12)}
+</style>
+<link rel="alternate" type="text/csv" href="{{ url_for('site.pq_index_csv') }}"><link rel="alternate" type="application/json" href="{{ url_for('site.pq_index_json') }}">
+<script type="application/ld+json">{{ {"@context": "https://schema.org", "@type": "Dataset", "name": "Quantum Aether PQ-TLS Index " ~ m.edition, "description": d.meta.format(pq=o.pq, n=o.n, pct=o.pct, edition=m.edition), "url": page_url, "isAccessibleForFree": true, "license": "https://creativecommons.org/licenses/by/4.0/", "creator": {"@type": "Organization", "name": "Quantum Aether"}, "temporalCoverage": m.scan_started_utc ~ "/" ~ m.scan_finished_utc, "spatialCoverage": "SA, AE, QA, KW, BH, OM, EG, MA, TN, DZ, DE, AT, CH", "measurementTechnique": "TLS 1.3 handshake on port 443 offering X25519MLKEM768", "distribution": [{"@type": "DataDownload", "encodingFormat": "text/csv", "contentUrl": page_url ~ ".csv"}, {"@type": "DataDownload", "encodingFormat": "application/json", "contentUrl": page_url ~ ".json"}]} | tojson }}</script>{% endblock %}
+{% macro share(c) %}{% if c.n %}<bdi dir="ltr">{{ d.pct_fmt.format(pq=c.pq, n=c.n, pct=c.pct) }}</bdi>{% else %}<span class="muted">—</span>{% endif %}{% endmacro %}
+{% macro bar(c) %}<span class="pqi-bar" aria-hidden="true"><i style="width:{{ c.pct or 0 }}%"></i></span>{% endmacro %}
+{% block content %}
+<section class="card">
+  <p class="muted small">{{ d.kicker.format(edition=m.edition) }}</p>
+  <h1>{{ d.title }}</h1>
+  <p class="lead">{{ d.lead.format(total=v.core_total) }}</p>
+  <p class="muted small"><bdi>{{ d.scanned.format(start=m.scan_started_utc[:16].replace('T', ' '), end=m.scan_finished_utc[11:16], version=m.scanner_version, vantage=m.vantage) }}</bdi></p>
+  <div class="pqi-kpis">
+    <div class="pqi-kpi"><b><bdi dir="ltr">{{ o.pct }}%</bdi></b>{{ d.k_overall.format(pq=o.pq, n=o.n) }}</div>
+    <div class="pqi-kpi"><b><bdi dir="ltr">{{ v.regions[3][1].pct }}%</bdi></b>{{ d.k_regions.format(gcc=v.regions[0][1].pct) }}</div>
+    <div class="pqi-kpi"><b><bdi dir="ltr">{{ v.cdn_pct }}%</bdi></b>{{ d.k_cdn }}</div>
+    <div class="pqi-kpi"><b>{{ v.tls12 }}</b>{{ d.k_tls12 }}</div>
+    <div class="pqi-kpi"><b>{{ o.not_measured }}</b>{{ d.k_nm }}</div>
+  </div>
+  <p><a href="{{ url_for('site.index', lang=lang) }}#scan">{{ d.cta }}</a> · <a href="#data">CSV / JSON</a> · <a href="#correction">{{ d.correction_title }}</a></p>
+</section>
+
+<section class="card pqi-note" id="cdn">
+  <h2>{{ d.cdn_title }}</h2>
+  <p>{{ d.cdn.format(cdn_pct=v.cdn_pct, cdn=v.cdn, pq=v.pq_all) }}</p>
+</section>
+
+<section class="card" id="regions">
+  <h2>{{ d.regions }}</h2>
+  <div class="pqi-scroll"><table class="data pqi-table">
+    <tr><th>{{ d.col_group }}</th><th class="n">{{ d.col_pq }}</th><th></th><th class="n">{{ d.col_classical }}</th><th class="n">{{ d.col_nm }}</th></tr>
+    {% for g, c in v.regions %}<tr><td>{{ d.region[g] }}</td><td class="n">{{ share(c) }}</td><td>{{ bar(c) }}</td><td class="n">{{ c.classical }}</td><td class="n">{{ c.not_measured }}</td></tr>{% endfor %}
+    <tr><td><strong>{{ d.region['GCC'] }} + {{ d.region['Egypt'] }} + {{ d.region['Maghreb'] }} + DACH</strong></td><td class="n"><strong>{{ share(o) }}</strong></td><td>{{ bar(o) }}</td><td class="n">{{ o.classical }}</td><td class="n">{{ o.not_measured }}</td></tr>
+    <tr class="muted"><td>{{ d.reference }}</td><td class="n">{{ share(v.reference) }}</td><td></td><td class="n">{{ v.reference.classical }}</td><td class="n">{{ v.reference.not_measured }}</td></tr>
+  </table></div>
+  <h2 id="sectors">{{ d.sectors }}</h2>
+  <div class="pqi-scroll"><table class="data pqi-table">
+    <tr><th>{{ d.col_sector }}</th><th class="n">{{ d.col_pq }}</th><th></th><th class="n">{{ d.col_classical }}</th><th class="n">{{ d.col_nm }}</th></tr>
+    {% for s, c in v.sectors %}<tr><td>{{ d.sector[s] }}</td><td class="n">{{ share(c) }}</td><td>{{ bar(c) }}</td><td class="n">{{ c.classical }}</td><td class="n">{{ c.not_measured }}</td></tr>{% endfor %}
+  </table></div>
+  <h2 id="countries">{{ d.countries }}</h2>
+  <div class="pqi-scroll"><table class="data pqi-table">
+    <tr><th>{{ d.col_country }}</th><th class="n">{{ d.col_pq }}</th><th></th><th class="n">{{ d.col_nm }}</th></tr>
+    {% for code, c in v.countries.items() %}<tr><td>{{ country[code][ci] }}</td><td class="n">{{ share(c) }}</td><td>{{ bar(c) }}</td><td class="n">{{ c.not_measured }}</td></tr>{% endfor %}
+  </table></div>
+  <p class="muted small">{{ d.changes.format(edition=m.edition) }}</p>
+</section>
+
+<section class="card" id="compliance">
+  <h2>{{ d.comp_title }}</h2>
+  <table class="data pqi-table">{% for k, txt in d.comp %}<tr><th scope="row">{{ k }}</th><td>{{ txt }}</td></tr>{% endfor %}</table>
+  <p class="muted small">{{ d.comp_note }}</p>
+</section>
+
+<section class="card" id="institutions">
+  <h2>{{ d.rows_title }}</h2>
+  <p class="muted small">{{ d.rows_intro }}</p>
+  <div class="pqi-scroll"><table class="data pqi-table">
+    <tr><th>{{ d.col_inst }}</th><th>{{ d.col_country }}</th><th>{{ d.col_sector }}</th><th>{{ d.col_host }}</th><th>{{ d.col_result }}</th><th>{{ d.col_tls }}</th><th>{{ d.col_network }}</th></tr>
+    {% for r in v.rows %}<tr><td><bdi>{{ r.name }}</bdi></td><td>{{ country[r.country_code][ci] }}</td><td>{{ d.sector[r.sector] }}</td>
+      <td><bdi dir="ltr"><a href="{{ url_for('site.site_page', domain=r.host, lang=lang) }}">{{ r.host }}</a></bdi></td>
+      <td class="{{ 'pqi-pq' if r.status == 'pq_hybrid' else ('pqi-cl' if r.status == 'classical' else 'pqi-nm') }}">{{ d.status[r.status] }}</td>
+      <td><bdi dir="ltr">{{ (r.tls_version or '').replace('TLSv', '') }}</bdi></td><td class="small"><bdi>{{ r.network or '' }}</bdi></td></tr>{% endfor %}
+  </table></div>
+</section>
+
+<section class="card" id="method">
+  <h2>{{ d.method_title }}</h2>
+  {% for para in d.method %}<p>{{ para.format(total=v.total) }}</p>{% endfor %}
+</section>
+
+<section class="card" id="data">
+  <h2>{{ d.data_title }}</h2>
+  <p>{{ d.data }}</p>
+  <p><a href="{{ url_for('site.pq_index_csv') }}" dir="ltr">pq-tls-index-{{ m.edition }}.csv</a> · <a href="{{ url_for('site.pq_index_json') }}" dir="ltr">pq-tls-index-{{ m.edition }}.json</a> · <a href="{{ url_for('site.pq_index_panel') }}" dir="ltr">pq-tls-index-panel.csv</a> · <a href="{{ url_for('site.data_license', lang=lang) }}">CC BY 4.0</a></p>
+  <pre class="pqi-cite" dir="ltr">{{ d.cite.format(edition=m.edition, url=page_url) }}</pre>
+</section>
+
+<section class="card" id="correction">
+  <h2>{{ d.correction_title }}</h2>
+  <p>{{ d.correction_intro }}</p>
+  {% if sent %}<p class="notice" role="status">{{ d.sent }}</p>{% endif %}
+  {% if error %}<p class="notice" role="alert">{{ error }}</p>{% endif %}
+  <form method="post" action="{{ url_for('site.pq_index_correction') }}" class="dach-form">
+    <input type="hidden" name="lang" value="{{ lang }}">
+    <label>{{ d.f_inst }}<select name="institution" required>{% for host, name in inst %}<option value="{{ host }}">{{ name }} ({{ host }})</option>{% endfor %}</select></label>
+    <label>{{ d.f_name }}<input name="name" maxlength="120" required autocomplete="name"></label>
+    <label>{{ d.f_email }}<input name="email" type="email" maxlength="254" dir="ltr" required autocomplete="email"></label>
+    <label>{{ d.f_role }}<input name="role" maxlength="200" autocomplete="organization"></label>
+    <label>{{ d.f_domains }}<input name="domains" maxlength="1000" dir="ltr" placeholder="www.example.com"></label>
+    <label>{{ d.f_message }}<textarea name="message" rows="5" minlength="5" maxlength="4000" required></textarea></label>
+    <label class="dach-check"><input type="checkbox" name="rescan" value="1" checked> {{ d.f_rescan }}</label>
+    <div class="dach-hp" aria-hidden="true"><label>Website<input name="website" tabindex="-1" autocomplete="off"></label></div>
+    <p class="muted small">{{ d.f_privacy }} <a href="{{ url_for('site.legal_page', slug='datenschutz', lang=legal_lang) }}">{{ t.legal_privacy }}</a></p>
+    <div><button type="submit">{{ d.f_submit }}</button></div>
+  </form>
+  <p class="muted small">{{ d.f_alt }} <a href="mailto:{{ fallback_email }}?subject={{ 'PQ-TLS Index: correction' | urlencode }}" dir="ltr">{{ fallback_email }}</a></p>
+  <p class="muted small">— {{ d.signature }}</p>
+</section>
+{% endblock %}

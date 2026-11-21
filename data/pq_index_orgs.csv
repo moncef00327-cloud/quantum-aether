@@ -1,0 +1,197 @@
+org_id,country_code,country,region,sector,role,name,host,selection_reason
+SA-cb-001,SA,Saudi Arabia,GCC,central-bank,cb,Saudi Central Bank (SAMA),www.sama.gov.sa,Central bank (one per country)
+SA-bank-002,SA,Saudi Arabia,GCC,banking,bank,Saudi National Bank (SNB),www.alahli.com,Top domestic bank by total assets (largest 4-6 per country)
+SA-bank-003,SA,Saudi Arabia,GCC,banking,bank,Al Rajhi Bank,www.alrajhibank.com.sa,Top domestic bank by total assets (largest 4-6 per country)
+SA-bank-004,SA,Saudi Arabia,GCC,banking,bank,Riyad Bank,www.riyadbank.com,Top domestic bank by total assets (largest 4-6 per country)
+SA-bank-005,SA,Saudi Arabia,GCC,banking,bank,Saudi Awwal Bank (SAB),www.sab.com,Top domestic bank by total assets (largest 4-6 per country)
+SA-bank-006,SA,Saudi Arabia,GCC,banking,bank,Banque Saudi Fransi,www.bsf.sa,Top domestic bank by total assets (largest 4-6 per country)
+SA-bank-007,SA,Saudi Arabia,GCC,banking,bank,Alinma Bank,www.alinma.com,Top domestic bank by total assets (largest 4-6 per country)
+SA-reg-008,SA,Saudi Arabia,GCC,regulator,reg,Capital Market Authority,www.cma.org.sa,Financial/telecom supervisor or regulator
+SA-mno-009,SA,Saudi Arabia,GCC,telecom,mno,stc,www.stc.com.sa,Licensed mobile network operator
+SA-mno-010,SA,Saudi Arabia,GCC,telecom,mno,Mobily,www.mobily.com.sa,Licensed mobile network operator
+SA-mno-011,SA,Saudi Arabia,GCC,telecom,mno,Zain KSA,www.sa.zain.com,Licensed mobile network operator
+SA-portal-012,SA,Saudi Arabia,GCC,government,portal,Saudi national portal (my.gov.sa),www.my.gov.sa,National e-government portal
+SA-cyber-013,SA,Saudi Arabia,GCC,government,cyber,National Cybersecurity Authority (NCA),nca.gov.sa,National cybersecurity authority / CERT
+SA-reg-014,SA,Saudi Arabia,GCC,regulator,reg,"Communications, Space & Technology Commission",www.cst.gov.sa,Financial/telecom supervisor or regulator
+SA-mof-015,SA,Saudi Arabia,GCC,government,mof,Ministry of Finance,www.mof.gov.sa,Ministry of finance
+SA-min-016,SA,Saudi Arabia,GCC,government,min,Digital Government Authority,www.dga.gov.sa,Core ministry or federal government site
+AE-cb-017,AE,United Arab Emirates,GCC,central-bank,cb,Central Bank of the UAE (CBUAE),www.centralbank.ae,Central bank (one per country)
+AE-bank-018,AE,United Arab Emirates,GCC,banking,bank,First Abu Dhabi Bank,www.bankfab.com,Top domestic bank by total assets (largest 4-6 per country)
+AE-bank-019,AE,United Arab Emirates,GCC,banking,bank,Emirates NBD,www.emiratesnbd.com,Top domestic bank by total assets (largest 4-6 per country)
+AE-bank-020,AE,United Arab Emirates,GCC,banking,bank,Abu Dhabi Commercial Bank,www.adcb.com,Top domestic bank by total assets (largest 4-6 per country)
+AE-bank-021,AE,United Arab Emirates,GCC,banking,bank,Dubai Islamic Bank,www.dib.ae,Top domestic bank by total assets (largest 4-6 per country)
+AE-bank-022,AE,United Arab Emirates,GCC,banking,bank,Abu Dhabi Islamic Bank,www.adib.ae,Top domestic bank by total assets (largest 4-6 per country)
+AE-bank-023,AE,United Arab Emirates,GCC,banking,bank,Mashreq,www.mashreq.com,Top domestic bank by total assets (largest 4-6 per country)
+AE-reg-024,AE,United Arab Emirates,GCC,regulator,reg,Securities and Commodities Authority,www.sca.gov.ae,Financial/telecom supervisor or regulator
+AE-mno-025,AE,United Arab Emirates,GCC,telecom,mno,e& (Etisalat UAE),www.etisalat.ae,Licensed mobile network operator
+AE-mno-026,AE,United Arab Emirates,GCC,telecom,mno,du,www.du.ae,Licensed mobile network operator
+AE-portal-027,AE,United Arab Emirates,GCC,government,portal,UAE government portal (u.ae),u.ae,National e-government portal
+AE-cyber-028,AE,United Arab Emirates,GCC,government,cyber,UAE Cyber Security Council,csc.gov.ae,National cybersecurity authority / CERT
+AE-reg-029,AE,United Arab Emirates,GCC,regulator,reg,Telecommunications and Digital Government Regulatory Authority,tdra.gov.ae,Financial/telecom supervisor or regulator
+AE-mof-030,AE,United Arab Emirates,GCC,government,mof,Ministry of Finance,www.mof.gov.ae,Ministry of finance
+QA-cb-031,QA,Qatar,GCC,central-bank,cb,Qatar Central Bank,www.qcb.gov.qa,Central bank (one per country)
+QA-bank-032,QA,Qatar,GCC,banking,bank,QNB,www.qnb.com,Top domestic bank by total assets (largest 4-6 per country)
+QA-bank-033,QA,Qatar,GCC,banking,bank,Qatar Islamic Bank,www.qib.com.qa,Top domestic bank by total assets (largest 4-6 per country)
+QA-bank-034,QA,Qatar,GCC,banking,bank,Commercial Bank of Qatar,www.cbq.qa,Top domestic bank by total assets (largest 4-6 per country)
+QA-bank-035,QA,Qatar,GCC,banking,bank,Masraf Al Rayan,www.masrafalrayan.com,Top domestic bank by total assets (largest 4-6 per country)
+QA-bank-036,QA,Qatar,GCC,banking,bank,Doha Bank,www.dohabank.qa,Top domestic bank by total assets (largest 4-6 per country)
+QA-mno-037,QA,Qatar,GCC,telecom,mno,Ooredoo Qatar,www.ooredoo.qa,Licensed mobile network operator
+QA-mno-038,QA,Qatar,GCC,telecom,mno,Vodafone Qatar,www.vodafone.qa,Licensed mobile network operator
+QA-portal-039,QA,Qatar,GCC,government,portal,Hukoomi,hukoomi.gov.qa,National e-government portal
+QA-cyber-040,QA,Qatar,GCC,government,cyber,National Cyber Security Agency,www.ncsa.gov.qa,National cybersecurity authority / CERT
+QA-reg-041,QA,Qatar,GCC,regulator,reg,Communications Regulatory Authority,www.cra.gov.qa,Financial/telecom supervisor or regulator
+QA-mof-042,QA,Qatar,GCC,government,mof,Ministry of Finance,www.mof.gov.qa,Ministry of finance
+KW-cb-043,KW,Kuwait,GCC,central-bank,cb,Central Bank of Kuwait,www.cbk.gov.kw,Central bank (one per country)
+KW-bank-044,KW,Kuwait,GCC,banking,bank,National Bank of Kuwait,www.nbk.com,Top domestic bank by total assets (largest 4-6 per country)
+KW-bank-045,KW,Kuwait,GCC,banking,bank,Kuwait Finance House,www.kfh.com,Top domestic bank by total assets (largest 4-6 per country)
+KW-bank-046,KW,Kuwait,GCC,banking,bank,Boubyan Bank,www.boubyan.com,Top domestic bank by total assets (largest 4-6 per country)
+KW-bank-047,KW,Kuwait,GCC,banking,bank,Gulf Bank,www.gulfbank.com.kw,Top domestic bank by total assets (largest 4-6 per country)
+KW-bank-048,KW,Kuwait,GCC,banking,bank,Burgan Bank,www.burgan.com,Top domestic bank by total assets (largest 4-6 per country)
+KW-mno-049,KW,Kuwait,GCC,telecom,mno,Zain Kuwait,www.kw.zain.com,Licensed mobile network operator
+KW-mno-050,KW,Kuwait,GCC,telecom,mno,Ooredoo Kuwait,www.ooredoo.com.kw,Licensed mobile network operator
+KW-mno-051,KW,Kuwait,GCC,telecom,mno,stc Kuwait,www.stc.com.kw,Licensed mobile network operator
+KW-portal-052,KW,Kuwait,GCC,government,portal,Kuwait e-government portal,www.e.gov.kw,National e-government portal
+KW-cyber-053,KW,Kuwait,GCC,government,cyber,National Cyber Security Center (Kuwait),www.ncsc.gov.kw,National cybersecurity authority / CERT
+KW-reg-054,KW,Kuwait,GCC,regulator,reg,Communication and IT Regulatory Authority,www.citra.gov.kw,Financial/telecom supervisor or regulator
+KW-mof-055,KW,Kuwait,GCC,government,mof,Ministry of Finance,www.mof.gov.kw,Ministry of finance
+BH-cb-056,BH,Bahrain,GCC,central-bank,cb,Central Bank of Bahrain,www.cbb.gov.bh,Central bank (one per country)
+BH-bank-057,BH,Bahrain,GCC,banking,bank,Bank of Bahrain and Kuwait,www.bbk.com,Top domestic bank by total assets (largest 4-6 per country)
+BH-bank-058,BH,Bahrain,GCC,banking,bank,National Bank of Bahrain,www.nbbonline.com,Top domestic bank by total assets (largest 4-6 per country)
+BH-bank-059,BH,Bahrain,GCC,banking,bank,Bahrain Islamic Bank,www.bisb.com,Top domestic bank by total assets (largest 4-6 per country)
+BH-bank-060,BH,Bahrain,GCC,banking,bank,Al Salam Bank,www.alsalambank.com,Top domestic bank by total assets (largest 4-6 per country)
+BH-bank-061,BH,Bahrain,GCC,banking,bank,Bank ABC,www.bank-abc.com,Top domestic bank by total assets (largest 4-6 per country)
+BH-mno-062,BH,Bahrain,GCC,telecom,mno,Batelco (Beyon),www.batelco.com,Licensed mobile network operator
+BH-mno-063,BH,Bahrain,GCC,telecom,mno,Zain Bahrain,www.bh.zain.com,Licensed mobile network operator
+BH-mno-064,BH,Bahrain,GCC,telecom,mno,stc Bahrain,www.stc.com.bh,Licensed mobile network operator
+BH-portal-065,BH,Bahrain,GCC,government,portal,Bahrain national portal,www.bahrain.bh,National e-government portal
+BH-cyber-066,BH,Bahrain,GCC,government,cyber,National Cyber Security Center,www.ncsc.gov.bh,National cybersecurity authority / CERT
+BH-min-067,BH,Bahrain,GCC,government,min,Information & eGovernment Authority,www.iga.gov.bh,Core ministry or federal government site
+BH-mof-068,BH,Bahrain,GCC,government,mof,Ministry of Finance and National Economy,www.mofne.gov.bh,Ministry of finance
+OM-cb-069,OM,Oman,GCC,central-bank,cb,Central Bank of Oman,www.cbo.gov.om,Central bank (one per country)
+OM-bank-070,OM,Oman,GCC,banking,bank,Bank Muscat,www.bankmuscat.com,Top domestic bank by total assets (largest 4-6 per country)
+OM-bank-071,OM,Oman,GCC,banking,bank,Bank Dhofar,www.bankdhofar.com,Top domestic bank by total assets (largest 4-6 per country)
+OM-bank-072,OM,Oman,GCC,banking,bank,National Bank of Oman,www.nbo.om,Top domestic bank by total assets (largest 4-6 per country)
+OM-bank-073,OM,Oman,GCC,banking,bank,Sohar International,www.soharinternational.com,Top domestic bank by total assets (largest 4-6 per country)
+OM-bank-074,OM,Oman,GCC,banking,bank,Oman Arab Bank,www.oman-arabbank.com,Top domestic bank by total assets (largest 4-6 per country)
+OM-mno-075,OM,Oman,GCC,telecom,mno,Omantel,www.omantel.om,Licensed mobile network operator
+OM-mno-076,OM,Oman,GCC,telecom,mno,Ooredoo Oman,www.ooredoo.om,Licensed mobile network operator
+OM-portal-077,OM,Oman,GCC,government,portal,Oman government portal,www.oman.om,National e-government portal
+OM-min-078,OM,Oman,GCC,government,min,"Ministry of Transport, Communications and IT",www.mtcit.gov.om,Core ministry or federal government site
+OM-mof-079,OM,Oman,GCC,government,mof,Ministry of Finance,www.mof.gov.om,Ministry of finance
+OM-reg-080,OM,Oman,GCC,regulator,reg,Telecommunications Regulatory Authority,www.tra.gov.om,Financial/telecom supervisor or regulator
+EG-cb-081,EG,Egypt,Egypt,central-bank,cb,Central Bank of Egypt,www.cbe.org.eg,Central bank (one per country)
+EG-bank-082,EG,Egypt,Egypt,banking,bank,National Bank of Egypt,www.nbe.com.eg,Top domestic bank by total assets (largest 4-6 per country)
+EG-bank-083,EG,Egypt,Egypt,banking,bank,Banque Misr,www.banquemisr.com,Top domestic bank by total assets (largest 4-6 per country)
+EG-bank-084,EG,Egypt,Egypt,banking,bank,Commercial International Bank (CIB),www.cibeg.com,Top domestic bank by total assets (largest 4-6 per country)
+EG-bank-085,EG,Egypt,Egypt,banking,bank,QNB Egypt,www.qnbalahli.com,Top domestic bank by total assets (largest 4-6 per country)
+EG-bank-086,EG,Egypt,Egypt,banking,bank,Arab African International Bank,www.aaib.com,Top domestic bank by total assets (largest 4-6 per country)
+EG-bank-087,EG,Egypt,Egypt,banking,bank,Banque du Caire,www.bdc.com.eg,Top domestic bank by total assets (largest 4-6 per country)
+EG-reg-088,EG,Egypt,Egypt,regulator,reg,Financial Regulatory Authority,fra.gov.eg,Financial/telecom supervisor or regulator
+EG-fixed-089,EG,Egypt,Egypt,telecom,fixed,Telecom Egypt (WE),www.te.eg,Incumbent fixed-line operator
+EG-mno-090,EG,Egypt,Egypt,telecom,mno,Vodafone Egypt,web.vodafone.com.eg,Licensed mobile network operator
+EG-mno-091,EG,Egypt,Egypt,telecom,mno,Orange Egypt,www.orange.eg,Licensed mobile network operator
+EG-mno-092,EG,Egypt,Egypt,telecom,mno,e& Egypt,www.etisalat.eg,Licensed mobile network operator
+EG-portal-093,EG,Egypt,Egypt,government,portal,Egypt digital government portal,www.egypt.gov.eg,National e-government portal
+EG-cyber-094,EG,Egypt,Egypt,government,cyber,EG-CERT,www.egcert.eg,National cybersecurity authority / CERT
+EG-reg-095,EG,Egypt,Egypt,regulator,reg,National Telecom Regulatory Authority,www.ntra.gov.eg,Financial/telecom supervisor or regulator
+EG-min-096,EG,Egypt,Egypt,government,min,Ministry of Communications and IT,www.mcit.gov.eg,Core ministry or federal government site
+EG-mof-097,EG,Egypt,Egypt,government,mof,Ministry of Finance,www.mof.gov.eg,Ministry of finance
+MA-cb-098,MA,Morocco,Maghreb,central-bank,cb,Bank Al-Maghrib,www.bkam.ma,Central bank (one per country)
+MA-bank-099,MA,Morocco,Maghreb,banking,bank,Attijariwafa bank,www.attijariwafabank.com,Top domestic bank by total assets (largest 4-6 per country)
+MA-bank-100,MA,Morocco,Maghreb,banking,bank,Banque Populaire (Groupe BCP),www.groupebcp.com,Top domestic bank by total assets (largest 4-6 per country)
+MA-bank-101,MA,Morocco,Maghreb,banking,bank,Bank of Africa,www.bankofafrica.ma,Top domestic bank by total assets (largest 4-6 per country)
+MA-bank-102,MA,Morocco,Maghreb,banking,bank,Crédit Agricole du Maroc,www.creditagricole.ma,Top domestic bank by total assets (largest 4-6 per country)
+MA-bank-103,MA,Morocco,Maghreb,banking,bank,CIH Bank,www.cihbank.ma,Top domestic bank by total assets (largest 4-6 per country)
+MA-reg-104,MA,Morocco,Maghreb,regulator,reg,Autorité Marocaine du Marché des Capitaux (AMMC),www.ammc.ma,Financial/telecom supervisor or regulator
+MA-fixed-105,MA,Morocco,Maghreb,telecom,fixed,Maroc Telecom (IAM),www.iam.ma,Incumbent fixed-line operator
+MA-mno-106,MA,Morocco,Maghreb,telecom,mno,Orange Maroc,www.orange.ma,Licensed mobile network operator
+MA-mno-107,MA,Morocco,Maghreb,telecom,mno,inwi,www.inwi.ma,Licensed mobile network operator
+MA-portal-108,MA,Morocco,Maghreb,government,portal,Portail national du Maroc,www.maroc.ma,National e-government portal
+MA-cyber-109,MA,Morocco,Maghreb,government,cyber,DGSSI / maCERT,www.dgssi.gov.ma,National cybersecurity authority / CERT
+MA-reg-110,MA,Morocco,Maghreb,regulator,reg,ANRT,www.anrt.ma,Financial/telecom supervisor or regulator
+MA-mof-111,MA,Morocco,Maghreb,government,mof,Ministère de l'Économie et des Finances,www.finances.gov.ma,Ministry of finance
+TN-cb-112,TN,Tunisia,Maghreb,central-bank,cb,Banque Centrale de Tunisie,www.bct.gov.tn,Central bank (one per country)
+TN-bank-113,TN,Tunisia,Maghreb,banking,bank,BIAT,www.biat.com.tn,Top domestic bank by total assets (largest 4-6 per country)
+TN-bank-114,TN,Tunisia,Maghreb,banking,bank,Société Tunisienne de Banque,www.stb.com.tn,Top domestic bank by total assets (largest 4-6 per country)
+TN-bank-115,TN,Tunisia,Maghreb,banking,bank,Banque Nationale Agricole,www.bna.tn,Top domestic bank by total assets (largest 4-6 per country)
+TN-bank-116,TN,Tunisia,Maghreb,banking,bank,Amen Bank,www.amenbank.com.tn,Top domestic bank by total assets (largest 4-6 per country)
+TN-bank-117,TN,Tunisia,Maghreb,banking,bank,Attijari bank Tunisie,www.attijaribank.com.tn,Top domestic bank by total assets (largest 4-6 per country)
+TN-fixed-118,TN,Tunisia,Maghreb,telecom,fixed,Tunisie Telecom,www.tunisietelecom.tn,Incumbent fixed-line operator
+TN-mno-119,TN,Tunisia,Maghreb,telecom,mno,Ooredoo Tunisie,www.ooredoo.tn,Licensed mobile network operator
+TN-mno-120,TN,Tunisia,Maghreb,telecom,mno,Orange Tunisie,www.orange.tn,Licensed mobile network operator
+TN-cyber-121,TN,Tunisia,Maghreb,government,cyber,Agence Nationale de la Cybersécurité (ANCS),www.ancs.tn,National cybersecurity authority / CERT
+TN-reg-122,TN,Tunisia,Maghreb,regulator,reg,Instance Nationale des Télécommunications,www.intt.tn,Financial/telecom supervisor or regulator
+TN-mof-123,TN,Tunisia,Maghreb,government,mof,Ministère des Finances,www.finances.gov.tn,Ministry of finance
+TN-reg-124,TN,Tunisia,Maghreb,regulator,reg,Conseil du Marché Financier,www.cmf.tn,Financial/telecom supervisor or regulator
+DZ-cb-125,DZ,Algeria,Maghreb,central-bank,cb,Banque d'Algérie,www.bank-of-algeria.dz,Central bank (one per country)
+DZ-bank-126,DZ,Algeria,Maghreb,banking,bank,Banque Nationale d'Algérie,www.bna.dz,Top domestic bank by total assets (largest 4-6 per country)
+DZ-bank-127,DZ,Algeria,Maghreb,banking,bank,Banque Extérieure d'Algérie,www.bea.dz,Top domestic bank by total assets (largest 4-6 per country)
+DZ-bank-128,DZ,Algeria,Maghreb,banking,bank,Crédit Populaire d'Algérie,www.cpa-bank.dz,Top domestic bank by total assets (largest 4-6 per country)
+DZ-bank-129,DZ,Algeria,Maghreb,banking,bank,BADR,www.badr-bank.net,Top domestic bank by total assets (largest 4-6 per country)
+DZ-bank-130,DZ,Algeria,Maghreb,banking,bank,CNEP Banque,www.cnepbanque.dz,Top domestic bank by total assets (largest 4-6 per country)
+DZ-fixed-131,DZ,Algeria,Maghreb,telecom,fixed,Algérie Télécom,www.algerietelecom.dz,Incumbent fixed-line operator
+DZ-mno-132,DZ,Algeria,Maghreb,telecom,mno,Mobilis,www.mobilis.dz,Licensed mobile network operator
+DZ-mno-133,DZ,Algeria,Maghreb,telecom,mno,Djezzy,www.djezzy.dz,Licensed mobile network operator
+DZ-mno-134,DZ,Algeria,Maghreb,telecom,mno,Ooredoo Algérie,www.ooredoo.dz,Licensed mobile network operator
+DZ-reg-135,DZ,Algeria,Maghreb,regulator,reg,ARPCE,www.arpce.dz,Financial/telecom supervisor or regulator
+DZ-mof-136,DZ,Algeria,Maghreb,government,mof,Ministère des Finances,www.mf.gov.dz,Ministry of finance
+DZ-min-137,DZ,Algeria,Maghreb,government,min,Ministère de la Poste et des Télécommunications,www.mpt.gov.dz,Core ministry or federal government site
+DE-cb-138,DE,Germany,DACH,central-bank,cb,Deutsche Bundesbank,www.bundesbank.de,Central bank (one per country)
+DE-reg-139,DE,Germany,DACH,regulator,reg,BaFin,www.bafin.de,Financial/telecom supervisor or regulator
+DE-bank-140,DE,Germany,DACH,banking,bank,Deutsche Bank,www.deutsche-bank.de,Top domestic bank by total assets (largest 4-6 per country)
+DE-bank-141,DE,Germany,DACH,banking,bank,Commerzbank,www.commerzbank.de,Top domestic bank by total assets (largest 4-6 per country)
+DE-bank-142,DE,Germany,DACH,banking,bank,DZ BANK,www.dzbank.de,Top domestic bank by total assets (largest 4-6 per country)
+DE-bank-143,DE,Germany,DACH,banking,bank,KfW,www.kfw.de,Top domestic bank by total assets (largest 4-6 per country)
+DE-bank-144,DE,Germany,DACH,banking,bank,LBBW,www.lbbw.de,Top domestic bank by total assets (largest 4-6 per country)
+DE-bank-145,DE,Germany,DACH,banking,bank,ING Deutschland,www.ing.de,Top domestic bank by total assets (largest 4-6 per country)
+DE-bank-146,DE,Germany,DACH,banking,bank,DKB,www.dkb.de,Top domestic bank by total assets (largest 4-6 per country)
+DE-bank-147,DE,Germany,DACH,banking,bank,Sparkassen (portal),www.sparkasse.de,Top domestic bank by total assets (largest 4-6 per country)
+DE-fixed-148,DE,Germany,DACH,telecom,fixed,Deutsche Telekom,www.telekom.de,Incumbent fixed-line operator
+DE-mno-149,DE,Germany,DACH,telecom,mno,Vodafone Deutschland,www.vodafone.de,Licensed mobile network operator
+DE-mno-150,DE,Germany,DACH,telecom,mno,Telefónica Deutschland (O2),www.o2online.de,Licensed mobile network operator
+DE-mno-151,DE,Germany,DACH,telecom,mno,1&1,www.1und1.de,Licensed mobile network operator
+DE-portal-152,DE,Germany,DACH,government,portal,bund.de,www.bund.de,National e-government portal
+DE-min-153,DE,Germany,DACH,government,min,Bundesregierung,www.bundesregierung.de,Core ministry or federal government site
+DE-cyber-154,DE,Germany,DACH,government,cyber,BSI,www.bsi.bund.de,National cybersecurity authority / CERT
+DE-reg-155,DE,Germany,DACH,regulator,reg,Bundesnetzagentur,www.bnetza.de,Financial/telecom supervisor or regulator
+DE-mof-156,DE,Germany,DACH,government,mof,Bundesministerium der Finanzen,www.bundesfinanzministerium.de,Ministry of finance
+DE-min-157,DE,Germany,DACH,government,min,Bundesministerium des Innern,www.bmi.bund.de,Core ministry or federal government site
+AT-cb-158,AT,Austria,DACH,central-bank,cb,Oesterreichische Nationalbank,www.oenb.at,Central bank (one per country)
+AT-reg-159,AT,Austria,DACH,regulator,reg,Finanzmarktaufsicht (FMA),www.fma.gv.at,Financial/telecom supervisor or regulator
+AT-bank-160,AT,Austria,DACH,banking,bank,Erste Group,www.erstegroup.com,Top domestic bank by total assets (largest 4-6 per country)
+AT-bank-161,AT,Austria,DACH,banking,bank,Raiffeisen Bank International,www.rbinternational.com,Top domestic bank by total assets (largest 4-6 per country)
+AT-bank-162,AT,Austria,DACH,banking,bank,UniCredit Bank Austria,www.bankaustria.at,Top domestic bank by total assets (largest 4-6 per country)
+AT-bank-163,AT,Austria,DACH,banking,bank,BAWAG,www.bawag.at,Top domestic bank by total assets (largest 4-6 per country)
+AT-bank-164,AT,Austria,DACH,banking,bank,Raiffeisen (Austria portal),www.raiffeisen.at,Top domestic bank by total assets (largest 4-6 per country)
+AT-bank-165,AT,Austria,DACH,banking,bank,Oberbank,www.oberbank.at,Top domestic bank by total assets (largest 4-6 per country)
+AT-mno-166,AT,Austria,DACH,telecom,mno,A1 Telekom Austria,www.a1.net,Licensed mobile network operator
+AT-mno-167,AT,Austria,DACH,telecom,mno,Magenta Telekom,www.magenta.at,Licensed mobile network operator
+AT-mno-168,AT,Austria,DACH,telecom,mno,Drei (Hutchison),www.drei.at,Licensed mobile network operator
+AT-portal-169,AT,Austria,DACH,government,portal,oesterreich.gv.at,www.oesterreich.gv.at,National e-government portal
+AT-min-170,AT,Austria,DACH,government,min,Bundeskanzleramt,www.bundeskanzleramt.gv.at,Core ministry or federal government site
+AT-cyber-171,AT,Austria,DACH,government,cyber,CERT.at,www.cert.at,National cybersecurity authority / CERT
+AT-reg-172,AT,Austria,DACH,regulator,reg,RTR,www.rtr.at,Financial/telecom supervisor or regulator
+AT-mof-173,AT,Austria,DACH,government,mof,Bundesministerium für Finanzen,www.bmf.gv.at,Ministry of finance
+AT-min-174,AT,Austria,DACH,government,min,Bundesministerium für Inneres,www.bmi.gv.at,Core ministry or federal government site
+CH-cb-175,CH,Switzerland,DACH,central-bank,cb,Swiss National Bank,www.snb.ch,Central bank (one per country)
+CH-reg-176,CH,Switzerland,DACH,regulator,reg,FINMA,www.finma.ch,Financial/telecom supervisor or regulator
+CH-bank-177,CH,Switzerland,DACH,banking,bank,UBS,www.ubs.com,Top domestic bank by total assets (largest 4-6 per country)
+CH-bank-178,CH,Switzerland,DACH,banking,bank,Raiffeisen Schweiz,www.raiffeisen.ch,Top domestic bank by total assets (largest 4-6 per country)
+CH-bank-179,CH,Switzerland,DACH,banking,bank,Zürcher Kantonalbank,www.zkb.ch,Top domestic bank by total assets (largest 4-6 per country)
+CH-bank-180,CH,Switzerland,DACH,banking,bank,PostFinance,www.postfinance.ch,Top domestic bank by total assets (largest 4-6 per country)
+CH-bank-181,CH,Switzerland,DACH,banking,bank,Julius Bär,www.juliusbaer.com,Top domestic bank by total assets (largest 4-6 per country)
+CH-bank-182,CH,Switzerland,DACH,banking,bank,Banque Cantonale Vaudoise,www.bcv.ch,Top domestic bank by total assets (largest 4-6 per country)
+CH-mno-183,CH,Switzerland,DACH,telecom,mno,Swisscom,www.swisscom.ch,Licensed mobile network operator
+CH-mno-184,CH,Switzerland,DACH,telecom,mno,Sunrise,www.sunrise.ch,Licensed mobile network operator
+CH-mno-185,CH,Switzerland,DACH,telecom,mno,Salt,www.salt.ch,Licensed mobile network operator
+CH-portal-186,CH,Switzerland,DACH,government,portal,admin.ch,www.admin.ch,National e-government portal
+CH-portal-187,CH,Switzerland,DACH,government,portal,ch.ch,www.ch.ch,National e-government portal
+CH-cyber-188,CH,Switzerland,DACH,government,cyber,Bundesamt für Cybersicherheit (BACS/NCSC),www.ncsc.admin.ch,National cybersecurity authority / CERT
+CH-reg-189,CH,Switzerland,DACH,regulator,reg,BAKOM,www.bakom.admin.ch,Financial/telecom supervisor or regulator
+CH-mof-190,CH,Switzerland,DACH,government,mof,Eidg. Finanzdepartement (EFD),www.efd.admin.ch,Ministry of finance
+EU-eu-191,EU,European Union,EU institutions,regulator,eu,European Central Bank,www.ecb.europa.eu,"EU body setting/supervising NIS2, DORA or monetary policy"
+EU-eu-192,EU,European Union,EU institutions,regulator,eu,European Banking Authority,www.eba.europa.eu,"EU body setting/supervising NIS2, DORA or monetary policy"
+EU-eu-193,EU,European Union,EU institutions,regulator,eu,ENISA,www.enisa.europa.eu,"EU body setting/supervising NIS2, DORA or monetary policy"
+EU-eu-194,EU,European Union,EU institutions,regulator,eu,ESMA,www.esma.europa.eu,"EU body setting/supervising NIS2, DORA or monetary policy"
+EU-eu-195,EU,European Union,EU institutions,regulator,eu,EIOPA,www.eiopa.europa.eu,"EU body setting/supervising NIS2, DORA or monetary policy"
+EU-eu-196,EU,European Union,EU institutions,regulator,eu,European Commission,commission.europa.eu,"EU body setting/supervising NIS2, DORA or monetary policy"
