@@ -112,12 +112,25 @@ def register(bp, services):
    body=response.get_json(silent=True) or {}
    return (response.status_code,body,dict(response.headers)) if include_headers else (response.status_code,body)
 
+ def sector_bazaar(key):
+  # x402 v2 bazaar discovery extension (coinbase/x402 specs/extensions/bazaar.md): dynamic route with a path parameter.
+  example={'sector':key,'label':'...','week':'2026-W47','summary':{'listed':102,'measured':102,'determined':90,'post_quantum':41,'post_quantum_pct':45.6},
+           'domains':[{'domain':'www.example.gov','reachable':True,'grade':'A','group':'X25519MLKEM768','tls':'TLSv1.3','post_quantum':True,'undetermined':False}]}
+  return {'info':{'input':{'type':'http','method':'GET','pathParams':{'sector':key}},'output':{'type':'json','example':example}},
+          'routeTemplate':'/api/v1/agent/sector/:sector',
+          'schema':{'$schema':'https://json-schema.org/draft/2020-12/schema','type':'object','properties':{
+            'input':{'type':'object','properties':{'type':{'type':'string','const':'http'},'method':{'type':'string','enum':['GET']},
+              'pathParams':{'type':'object','properties':{'sector':{'type':'string','enum':SECTOR_KEYS,'examples':[sector_snapshot.DEFAULT_SECTOR]}},'required':['sector']},
+              'headers':{'type':'object','additionalProperties':{'type':'string'}}},'required':['type','method','pathParams'],'additionalProperties':False},
+            'output':{'type':'object','properties':{'type':{'type':'string'},'example':{'type':'object'}},'required':['type']}},'required':['input']}}
+
  def sector_view(key):
   conn=services['db']()
   x402_pay.init(conn)  # CREATE TABLE IF NOT EXISTS: cheap, and correct per database
   if key not in SECTOR_KEYS:return jsonify(error='unknown_sector',sectors=SECTOR_KEYS),404
   if not sector_snapshot.latest_week(conn):return jsonify(error='no_measurement_yet'),404
-  return x402_pay.paywall(conn,sector_price_usd(),f'Quantum Aether weekly post-quantum TLS snapshot of sector {key} (latest week). Read-only data; see license field.',lambda:sector_snapshot.build(conn,key))
+  return x402_pay.paywall(conn,sector_price_usd(),f'Quantum Aether weekly post-quantum TLS snapshot of sector {key} (latest week). Read-only data; see license field.',lambda:sector_snapshot.build(conn,key),
+   discovery=sector_bazaar(key),resource_extra={'serviceName':'Quantum Aether','tags':['post-quantum','tls','security','dataset'],'iconUrl':base()+'/static/favicon.svg'})
 
  @bp.route('/api/v1/agent/sector/<key>',methods=['GET','POST'])
  def agent_sector(key):

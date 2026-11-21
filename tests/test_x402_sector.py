@@ -74,7 +74,8 @@ class SectorX402Tests(unittest.TestCase):
         self.assertEqual(ch["accepts"][0]["network"], "eip155:8453")
         self.assertTrue(ch["resource"]["url"].endswith(f"/api/v1/agent/sector/{KEY}"))
         self.assertEqual(self.calls, [])
-        self.assertNotIn("domains", json.dumps(ch))
+        for d in self.domains:  # the price challenge never leaks real data (bazaar example uses example.gov)
+            self.assertNotIn(d, json.dumps(ch))
 
     def test_paid_call_returns_snapshot_once_per_transaction(self):
         ch = self.rpc("tools/call", {"name": "get_sector_snapshot", "arguments": {"sector": KEY}}).json["result"]["structuredContent"]
@@ -106,6 +107,16 @@ class SectorX402Tests(unittest.TestCase):
         r = self.client.get(f"/api/v1/agent/sector/{KEY}")
         self.assertEqual(r.status_code, 402)
         self.assertEqual(json.loads(base64.b64decode(r.headers["PAYMENT-REQUIRED"]))["accepts"][0]["amount"], "500000")
+
+    def test_challenge_declares_bazaar_discovery(self):
+        r = self.client.get(f"/api/v1/agent/sector/{KEY}")
+        ch = json.loads(base64.b64decode(r.headers["PAYMENT-REQUIRED"]))
+        bz = ch["extensions"]["bazaar"]
+        self.assertEqual(bz["info"]["input"], {"type": "http", "method": "GET", "pathParams": {"sector": KEY}})
+        self.assertEqual(bz["routeTemplate"], "/api/v1/agent/sector/:sector")
+        self.assertIn("pathParams", bz["schema"]["properties"]["input"]["properties"])
+        self.assertEqual(ch["resource"]["serviceName"], "Quantum Aether")
+        self.assertTrue(ch["resource"]["url"].endswith(f"/api/v1/agent/sector/{KEY}"))
 
     def test_unavailable_without_receiver(self):
         self.app.config["USDC_BASE_ADDR"] = ""

@@ -56,9 +56,11 @@ def _post(path, body, timeout):
     return r.json()
 
 
-def paywall(conn, price_usd, description, deliver, mime="application/json"):
+def paywall(conn, price_usd, description, deliver, mime="application/json", discovery=None, resource_extra=None):
     """Return a Flask response: 402 challenge, an error, or deliver() once the payment settled.
 
+    discovery: optional x402 v2 "bazaar" extension (specs/extensions/bazaar.md) so facilitators such as PayAI list the
+    resource for agents after the first paid call; resource_extra: serviceName / tags / iconUrl for the resource object.
     deliver() -> dict must be read-only. It runs after verification and BEFORE settlement, so a failure while building
     the data never charges the buyer."""
     address = receiver()
@@ -69,10 +71,12 @@ def paywall(conn, price_usd, description, deliver, mime="application/json"):
         else request.base_url
     requirements = {"scheme": "exact", "network": NETWORK, "amount": amount, "asset": ASSET, "payTo": address,
                     "maxTimeoutSeconds": 60, "extra": {"assetTransferMethod": "eip3009", "name": "USD Coin", "version": "2"}}
-    resource = {"url": url, "description": description, "mimeType": mime}
+    resource = {"url": url, "description": description, "mimeType": mime, **(resource_extra or {})}
 
     def payment_required(error=None):
         challenge = {"x402Version": 2, "resource": resource, "accepts": [requirements]}
+        if discovery:
+            challenge["extensions"] = {"bazaar": discovery}
         if error:
             challenge["error"] = error
         resp = jsonify(error="payment_required", currency="USDC", network="Base", amount_usd=str(price_usd))
