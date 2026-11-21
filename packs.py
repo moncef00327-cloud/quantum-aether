@@ -44,6 +44,7 @@ def create(conn, pack_id, order_id, credits, amount, currency, lang, consent_at,
         conn.execute("INSERT INTO packs (id, order_id, credits, amount, currency, lang, consent_at, is_test) "
                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                      (pack_id, order_id, credits, amount, currency, lang, consent_at, int(is_test)))
+    import partners; partners.attribute(conn, 'pack', pack_id)  # partner referral (2026-11-21)
 
 
 def by_order(conn, order_id):

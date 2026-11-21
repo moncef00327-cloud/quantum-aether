@@ -533,10 +533,10 @@ class AdminExclusionAndSeoTest(unittest.TestCase):
         self.assertIn('xmlns:xhtml="http://www.w3.org/1999/xhtml"', body)
         self.assertIn('<xhtml:link rel="alternate" hreflang="x-default" href="https://ather-quantum.com/guides?lang=en"/>', body)
         self.assertIn("https://ather-quantum.com/impressum?lang=de", body)
-        # Pages sitemap (2026-11-21): 34 trilingual paths (incl. analytics, vendor questionnaire guide) + 48 bilingual paths (incl. /gravity, Gulf banks guide, Arab+Africa hosting study) + bare "/". Update when pages are added; every <loc> must stay unique.
+        # Pages sitemap (2026-11-21): 35 trilingual paths (incl. analytics, vendor questionnaire guide, /partners) + 48 bilingual paths (incl. /gravity, Gulf banks guide, Arab+Africa hosting study) + bare "/". Update when pages are added; every <loc> must stay unique.
         locs = re.findall(r"<loc>([^<]+)</loc>", body)
         self.assertEqual(len(locs), len(set(locs)))
-        self.assertEqual(body.count("<url>"), 34 * 3 + 48 * 2 + 1)
+        self.assertEqual(body.count("<url>"), 35 * 3 + 48 * 2 + 1)
         self.assertIn("https://ather-quantum.com/compare?lang=en", body)
         import quantum_saas_app
         sites_xml = client.get("/sitemap-sites-1.xml").get_data(as_text=True)

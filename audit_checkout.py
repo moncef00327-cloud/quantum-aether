@@ -97,6 +97,7 @@ def create(conn, *, audit_id, order_id, email, name, org, billing_address, domai
             (audit_id, order_id, email, name, org, billing_address, domain, lang, amount, currency, paypal_env,
              agb_consent_at, contact_consent_at, client_hash, agb_consent_at, int(is_test)),
         )
+    import partners; partners.attribute(conn, 'audit', audit_id)  # partner referral (2026-11-21)
 
 
 def by_order(conn, order_id):

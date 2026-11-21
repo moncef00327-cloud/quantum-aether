@@ -1,0 +1,10 @@
+{# Partner referral consent bar (partners.py): shown only to visitors arriving via ?ref=CODE. Nothing is stored unless they click yes. #}
+{% if ref_bar %}
+<div class="ref-bar" id="ref-bar" role="dialog" aria-live="polite" data-code="{{ ref_bar.code }}"
+     style="position:fixed;inset-inline:12px;bottom:12px;z-index:50;max-width:44rem;margin-inline:auto;padding:.8rem 1rem;border-radius:.7rem;background:#261e39;color:#efeef4;border:1px solid #8a7ead;box-shadow:0 6px 24px rgba(0,0,0,.4)">
+  <p style="margin:0 0 .6rem">{{ ref_bar.bar.format(code=ref_bar.code) }}</p>
+  <button type="button" class="ref-yes">{{ ref_bar.bar_yes }}</button>
+  <button type="button" class="ref-no" style="background:transparent;color:inherit;border:1px solid #8a7ead">{{ ref_bar.bar_no }}</button>
+</div>
+<script src="{{ url_for('static', filename='ref.js') }}?v=20261121" defer></script>
+{% endif %}

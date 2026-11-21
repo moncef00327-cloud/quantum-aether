@@ -107,6 +107,7 @@ def create_account(conn, email, plan, lang, consent_at=None, acquisition_variant
         conn.execute("INSERT INTO monitor_accounts (id, email, plan, status, token_hash, lang, consent_at, acquisition_variant)"
                      " VALUES (?, ?, ?, 'PENDING', ?, ?, ?, ?)",
                      (account_id, email, plan, hash_token(token), lang, consent_at, acquisition_variant))
+    import partners; partners.attribute(conn, 'monitor', account_id)  # partner referral (2026-11-21)
     return account_id, token
 
 
@@ -117,6 +118,7 @@ def create_trial(conn, email, lang, consent_at, client_hash, trial_ends_at, plan
         conn.execute("INSERT INTO monitor_accounts (id, email, plan, status, token_hash, lang, consent_at, client_hash, trial_ends_at, acquisition_variant)"
                      " VALUES (?, ?, ?, 'TRIAL', ?, ?, ?, ?, ?, ?)",
                      (account_id, email, plan, hash_token(token), lang, consent_at, client_hash, trial_ends_at, acquisition_variant))
+    import partners; partners.attribute(conn, 'monitor', account_id)  # partner referral (2026-11-21)
     return account_id, token
 
 

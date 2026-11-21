@@ -4007,6 +4007,7 @@ def _sitemap_pages():
     mea = _mea_summary()
     if mea:
         pages.append(("/adoption/arab-africa-hosting", mea["updated"], site_langs))
+    pages.append(("/partners", "2026-11-21", de_langs))
     legal_date = os.path.getmtime(os.path.join(BASE_DIR, "legal.py"))
     legal_day = dt.datetime.fromtimestamp(legal_date, dt.timezone.utc).date().isoformat()
     pages += [(f"/{slug}", legal_day, legal_langs) for slug in legal.PAGES]
@@ -4510,6 +4511,11 @@ gravity_web.register(bp, db)
 import dach_hosting  # noqa: E402  DACH hosting study page (self-contained module)
 dach_hosting.register(bp, {"base_dir": BASE_DIR, "db": db, "lang": current_lang, "client_hash": client_hash,
                            "de_pages": DE_PAGES, "de_endpoints": i18n.DE_ENDPOINTS})
+
+import partners  # noqa: E402  Partner (affiliate) programme: /partners, consented ?ref= cookie, attribution (2026-11-21)
+partners.register(bp, {"db": db, "lang": current_lang, "client_hash": client_hash})
+i18n.DE_ENDPOINTS.add("site.partners_page")
+DE_PAGES.add("site.partners_page")
 
 import mea_hosting  # noqa: E402  Arab world + Africa hosting study page (2026-11-21, self-contained module)
 mea_hosting.register(bp, {"base_dir": BASE_DIR, "db": db, "lang": current_lang, "client_hash": client_hash})

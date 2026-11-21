@@ -1,0 +1,284 @@
+"""Partner (affiliate) programme, 2026-11-21.
+
+Terms (owner decision): 30% of monitoring payments for 12 months from the customer's start, 20% of one-time reports,
+packs and audits; paid monthly (PayPal or USDC) after a 30-day refund period; minimum payout USD 50.
+
+Attribution: a partner link ?ref=CODE shows a consent bar ONLY to that visitor. If the visitor agrees, a first-party
+cookie qa_ref=CODE is set for 60 days (ePrivacy/§ 165 TKG 2021: not strictly necessary, so consent first). Without
+consent nothing is stored except an anonymous click counter per code and day. Conversions created while the cookie is
+present (report order, pack, audit, monitoring trial/subscription) are recorded in `referrals` by the DB helpers via
+attribute(). Last partner link the visitor consented to wins. Self-referrals and test orders earn nothing.
+"""
+import datetime as dt
+import re
+import secrets
+import sqlite3
+
+from flask import abort, g, has_request_context, jsonify, make_response, redirect, render_template, request, url_for
+
+COOKIE = "qa_ref"
+COOKIE_DAYS = 60
+CODE_RE = re.compile(r"^[A-Z0-9]{3,20}$")
+EMAIL_RE = re.compile(r"^[^@\s<>\"']{1,64}@[A-Za-z0-9.-]{1,190}\.[A-Za-z]{2,24}$")
+SUB_RATE, ONE_TIME_RATE, SUB_MONTHS, MIN_PAYOUT, HOLD_DAYS = 0.30, 0.20, 12, 50, 30
+PLAN_PRICE = {"starter": 29.0, "business": 99.0}
+
+SCHEMA = """
+CREATE TABLE IF NOT EXISTS partners (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    code          TEXT UNIQUE,
+    name          TEXT NOT NULL,
+    email         TEXT NOT NULL,
+    channel       TEXT NOT NULL,
+    website       TEXT,
+    payout        TEXT NOT NULL,
+    lang          TEXT NOT NULL DEFAULT 'en',
+    status        TEXT NOT NULL DEFAULT 'PENDING',   -- PENDING / ACTIVE / REJECTED / ENDED
+    client_hash   TEXT,
+    consent_at    TEXT NOT NULL,
+    created_at    TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
+    approved_at   TEXT
+);
+CREATE TABLE IF NOT EXISTS referrals (
+    kind        TEXT NOT NULL,          -- report / pack / audit / monitor
+    ref_id      TEXT NOT NULL,          -- orders.order_id / packs.id / audit_orders.id / monitor_accounts.id
+    code        TEXT NOT NULL,
+    created_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
+    PRIMARY KEY (kind, ref_id)
+);
+CREATE TABLE IF NOT EXISTS partner_clicks (
+    code  TEXT NOT NULL,
+    day   TEXT NOT NULL,
+    n     INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (code, day)
+);
+"""
+
+T = {
+"en": {
+  "title": "Partner programme: earn 30% recommending post-quantum TLS monitoring",
+  "meta": "Marketers, security consultants and agencies earn 30% of monitoring payments for 12 months and 20% of reports and audits for customers they refer to Quantum Aether.",
+  "lead": "Recommend Quantum Aether to companies that need post-quantum TLS evidence (banks' vendors, fintech, SaaS, hosting customers) and earn a share of every payment they make.",
+  "terms_title": "Terms in short",
+  "terms": [
+    "30% of every monitoring payment (Starter $29/month, Business $99/month) for the first 12 months of each customer you refer.",
+    "20% of one-time purchases: full report ($49), agency pack, and the small-company audit (€490).",
+    "Attribution: your link ?ref=YOURCODE. Visitors who agree are credited to you for 60 days (last partner link wins). Visitors who decline are not tracked.",
+    "Payout monthly by PayPal or USDC, for payments older than 30 days (refund period), from USD 50. Refunded or charged-back payments are deducted.",
+    "No spam, no cold e-mail without the recipient's consent, no ads on our brand name, no misleading security claims (we sell an external observation, not a certification). Self-referrals earn nothing.",
+    "Either side can end the partnership at any time; earned commission for payments already made is still paid. Austrian law applies.",
+  ],
+  "who_title": "Who it is for",
+  "who": ["Security and compliance consultants", "Web and hosting agencies, MSPs", "Tech and security content creators, newsletter writers", "Anyone with a network in fintech, SaaS or banking IT"],
+  "form_title": "Apply",
+  "f_name": "Name", "f_email": "E-mail", "f_channel": "How will you promote us? (audience, channels, size)",
+  "f_website": "Website or profile (optional)", "f_payout": "Payout method", "f_payout_opts": {"paypal": "PayPal", "usdc": "USDC (Base or Arbitrum)"},
+  "f_consent": "I accept the partner terms above and agree that my data is stored to run the partnership.",
+  "f_submit": "Send application", "sent": "Thank you. We review applications within 3 working days and e-mail you your partner link.",
+  "err": {"invalid": "Please fill in name, a valid e-mail, how you will promote us, and accept the terms.", "rate_limited": "Too many applications from your connection today. Please try again tomorrow."},
+  "bar": "You arrived via a link from our partner {code}. May we store a cookie for 60 days so they are credited if you become a customer?",
+  "bar_yes": "Yes, credit them", "bar_no": "No",
+},
+"de": {
+  "title": "Partnerprogramm: 30 % für Empfehlungen zur Post-Quanten-TLS-Überwachung",
+  "meta": "Marketer, Sicherheitsberater und Agenturen erhalten 30 % der Überwachungszahlungen für 12 Monate und 20 % von Berichten und Audits für vermittelte Kunden.",
+  "lead": "Empfehlen Sie Quantum Aether Unternehmen, die Nachweise zu Post-Quanten-TLS brauchen (Lieferanten von Banken, Fintech, SaaS, Hosting-Kunden), und erhalten Sie einen Anteil an jeder Zahlung.",
+  "terms_title": "Bedingungen in Kürze",
+  "terms": [
+    "30 % jeder Überwachungszahlung (Starter 29 $/Monat, Business 99 $/Monat) in den ersten 12 Monaten jedes vermittelten Kunden.",
+    "20 % von Einmalkäufen: vollständiger Bericht (49 $), Agenturpaket und Audit für kleine Unternehmen (490 €).",
+    "Zuordnung: Ihr Link ?ref=IHRCODE. Besucher, die zustimmen, werden Ihnen 60 Tage zugeordnet (letzter Partnerlink zählt). Wer ablehnt, wird nicht erfasst.",
+    "Auszahlung monatlich per PayPal oder USDC für Zahlungen, die älter als 30 Tage sind (Rückerstattungsfrist), ab 50 USD. Erstattete oder zurückgebuchte Zahlungen werden abgezogen.",
+    "Kein Spam, keine unverlangten E-Mails ohne Einwilligung, keine Anzeigen auf unseren Markennamen, keine irreführenden Sicherheitsversprechen (wir verkaufen eine externe Beobachtung, keine Zertifizierung). Eigenvermittlungen sind ausgeschlossen.",
+    "Beide Seiten können die Partnerschaft jederzeit beenden; Provision für bereits geleistete Zahlungen wird weiter ausgezahlt. Es gilt österreichisches Recht.",
+  ],
+  "who_title": "Für wen",
+  "who": ["Sicherheits- und Compliance-Berater", "Web- und Hosting-Agenturen, MSPs", "Tech- und Security-Creator, Newsletter-Autoren", "Alle mit Netzwerk in Fintech, SaaS oder Bank-IT"],
+  "form_title": "Bewerben",
+  "f_name": "Name", "f_email": "E-Mail", "f_channel": "Wie werden Sie uns empfehlen? (Zielgruppe, Kanäle, Reichweite)",
+  "f_website": "Website oder Profil (optional)", "f_payout": "Auszahlung", "f_payout_opts": {"paypal": "PayPal", "usdc": "USDC (Base oder Arbitrum)"},
+  "f_consent": "Ich akzeptiere die obigen Partnerbedingungen und stimme zu, dass meine Daten zur Durchführung der Partnerschaft gespeichert werden.",
+  "f_submit": "Bewerbung senden", "sent": "Danke. Wir prüfen Bewerbungen innerhalb von 3 Werktagen und mailen Ihnen Ihren Partnerlink.",
+  "err": {"invalid": "Bitte Name, gültige E-Mail und Empfehlungsweg angeben und die Bedingungen akzeptieren.", "rate_limited": "Zu viele Bewerbungen heute von Ihrer Verbindung. Bitte morgen erneut."},
+  "bar": "Sie kommen über einen Link unseres Partners {code}. Dürfen wir 60 Tage lang ein Cookie speichern, damit er bei einem Kauf berücksichtigt wird?",
+  "bar_yes": "Ja, zuordnen", "bar_no": "Nein",
+},
+"ar": {
+  "title": "برنامج الشركاء: اربح 30% من توصيات مراقبة TLS ما بعد الكمّي",
+  "meta": "المسوّقون ومستشارو الأمن والوكالات يربحون 30% من مدفوعات المراقبة لمدة 12 شهراً و20% من التقارير والتدقيقات للعملاء الذين يجلبونهم.",
+  "lead": "رشّح Quantum Aether للشركات التي تحتاج أدلة على جاهزية TLS لما بعد الكم (موردو البنوك، والتقنية المالية، وSaaS، وعملاء الاستضافة)، واربح حصة من كل دفعة يدفعونها.",
+  "terms_title": "الشروط باختصار",
+  "terms": [
+    "30% من كل دفعة مراقبة (Starter بـ 29$ شهرياً، Business بـ 99$ شهرياً) خلال أول 12 شهراً لكل عميل تجلبه.",
+    "20% من المشتريات لمرة واحدة: التقرير الكامل (49$)، وباقة الوكالات، وتدقيق الشركات الصغيرة (490€).",
+    "النسبة: رابطك ‎?ref=رمزك. الزائر الذي يوافق يُنسب إليك 60 يوماً (آخر رابط شريك هو المعتمد). ومن يرفض لا يُتتبَّع.",
+    "الدفع شهرياً عبر PayPal أو USDC، للمدفوعات التي مضى عليها 30 يوماً (فترة الاسترداد)، بحد أدنى 50 دولاراً. المدفوعات المستردة تُخصم.",
+    "ممنوع: الرسائل المزعجة، والإيميل البارد بلا موافقة المستلم، والإعلان على اسم علامتنا، والوعود الأمنية المضلِّلة (نبيع رصداً خارجياً لا شهادة). لا عمولة على الإحالة الذاتية.",
+    "لأي طرف إنهاء الشراكة متى شاء، وتُدفع العمولة المستحقة عن المدفوعات السابقة. يسري القانون النمساوي.",
+  ],
+  "who_title": "لمن البرنامج",
+  "who": ["مستشارو الأمن والامتثال", "وكالات الويب والاستضافة ومزوّدو الخدمات المُدارة", "صنّاع المحتوى التقني والأمني وكتّاب النشرات", "كل من لديه شبكة علاقات في التقنية المالية أو SaaS أو تقنية البنوك"],
+  "form_title": "قدّم طلبك",
+  "f_name": "الاسم", "f_email": "البريد", "f_channel": "كيف ستسوّق لنا؟ (الجمهور، القنوات، الحجم)",
+  "f_website": "الموقع أو الحساب (اختياري)", "f_payout": "طريقة الدفع", "f_payout_opts": {"paypal": "PayPal", "usdc": "USDC (على Base أو Arbitrum)"},
+  "f_consent": "أوافق على شروط الشراكة أعلاه وعلى حفظ بياناتي لإدارة الشراكة.",
+  "f_submit": "إرسال الطلب", "sent": "شكراً. نراجع الطلبات خلال 3 أيام عمل ونرسل لك رابط الشريك بالبريد.",
+  "err": {"invalid": "املأ الاسم وبريداً صحيحاً وطريقة التسويق، ووافق على الشروط.", "rate_limited": "طلبات كثيرة اليوم من اتصالك. حاول غداً."},
+  "bar": "وصلت عبر رابط شريكنا {code}. هل نحفظ ملف تعريف ارتباط (cookie) لمدة 60 يوماً لتُنسب إليه إن أصبحت عميلاً؟",
+  "bar_yes": "نعم، انسبها إليه", "bar_no": "لا",
+},
+}
+
+
+def init(conn):
+    with conn:
+        conn.executescript(SCHEMA)
+
+
+def active_code(conn, code):
+    code = (code or "").strip().upper()
+    if not CODE_RE.match(code):
+        return None
+    try:
+        row = conn.execute("SELECT code FROM partners WHERE code = ? AND status = 'ACTIVE'", (code,)).fetchone()
+    except sqlite3.Error:
+        return None
+    return row[0] if row else None
+
+
+def attribute(conn, kind, ref_id):
+    """Record a conversion for the partner whose consented cookie is present. Never raises."""
+    try:
+        if not has_request_context():
+            return
+        code = g.get("partner_code")
+        if not code:
+            return
+        init(conn)
+        with conn:
+            conn.execute("INSERT OR IGNORE INTO referrals (kind, ref_id, code) VALUES (?, ?, ?)", (kind, str(ref_id), code))
+    except Exception:  # attribution must never break a checkout
+        pass
+
+
+def new_code(conn, name):
+    base = re.sub(r"[^A-Z]", "", (name or "").upper())[:8] or "PARTNER"
+    for _ in range(20):
+        code = f"{base}{secrets.randbelow(90) + 10}"
+        if not conn.execute("SELECT 1 FROM partners WHERE code = ?", (code,)).fetchone():
+            return code
+    return "P" + secrets.token_hex(4).upper()
+
+
+def commissions(conn, now=None):
+    """-> {code: {"items": [...], "due": float, "pending": float}} from referrals joined with real payments."""
+    now = now or dt.datetime.now(dt.timezone.utc)
+    hold = (now - dt.timedelta(days=HOLD_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    out = {}
+
+    def add(code, item, amount, paid_at):
+        d = out.setdefault(code, {"items": [], "due": 0.0, "pending": 0.0})
+        due = bool(paid_at) and paid_at <= hold
+        d["items"].append(dict(item, commission=round(amount, 2), paid_at=paid_at, due=due))
+        d["due" if due else "pending"] += amount
+
+    init(conn)
+    for kind, ref_id, code, created in conn.execute("SELECT kind, ref_id, code, created_at FROM referrals"):
+        if kind == "report":
+            r = conn.execute("SELECT amount, currency, status, is_test, created_at FROM orders WHERE order_id = ?", (ref_id,)).fetchone()
+            if r and r[2] == "COMPLETED" and not r[3]:
+                add(code, {"kind": kind, "ref": ref_id, "currency": r[1]}, float(r[0]) * ONE_TIME_RATE, r[4])
+        elif kind == "pack":
+            r = conn.execute("SELECT amount, currency, status, is_test, paid_at FROM packs WHERE id = ?", (ref_id,)).fetchone()
+            if r and r[2] == "COMPLETED" and not r[3]:
+                add(code, {"kind": kind, "ref": ref_id, "currency": r[1]}, float(r[0]) * ONE_TIME_RATE, r[4])
+        elif kind == "audit":
+            r = conn.execute("SELECT amount, currency, status, is_test, paid_at, refund_id FROM audit_orders WHERE id = ?", (ref_id,)).fetchone()
+            if r and r[2] == "COMPLETED" and not r[3] and not r[5]:
+                add(code, {"kind": kind, "ref": ref_id, "currency": r[1]}, float(r[0]) * ONE_TIME_RATE, r[4])
+        elif kind == "monitor":
+            r = conn.execute("SELECT plan, status, subscription_id, updated_at FROM monitor_accounts WHERE id = ?", (ref_id,)).fetchone()
+            if r and r[2] and r[1] in ("ACTIVE", "CANCELLED", "SUSPENDED", "EXPIRED"):
+                start = r[3] or created
+                months = 1
+                try:
+                    s = dt.datetime.fromisoformat(start.replace("Z", "+00:00"))
+                    end = now if r[1] == "ACTIVE" else dt.datetime.fromisoformat((r[3] or start).replace("Z", "+00:00"))
+                    months = max(1, min(SUB_MONTHS, (end.year - s.year) * 12 + end.month - s.month + 1))
+                except ValueError:
+                    pass
+                add(code, {"kind": kind, "ref": ref_id, "currency": "USD", "plan": r[0], "months_estimate": months,
+                           "note": "verify payments in PayPal"}, PLAN_PRICE.get(r[0], 29.0) * SUB_RATE * months, start)
+    return out
+
+
+def register(bp, deps):
+    """deps: db, lang, client_hash."""
+
+    @bp.before_app_request
+    def _partner_ref():
+        g.partner_code = None
+        g.ref_offer = None
+        cookie = request.cookies.get(COOKIE)
+        if not cookie and not request.args.get("ref"):
+            return  # the common case: no database access at all
+        try:
+            conn = deps["db"]()
+            if cookie:
+                g.partner_code = active_code(conn, cookie)
+            ref = request.args.get("ref")
+            if ref and request.method == "GET":
+                code = active_code(conn, ref)
+                if code:
+                    with conn:
+                        conn.execute("INSERT INTO partner_clicks (code, day, n) VALUES (?, date('now'), 1) "
+                                     "ON CONFLICT(code, day) DO UPDATE SET n = n + 1", (code,))
+                    if code != g.partner_code:
+                        g.ref_offer = code
+        except Exception:
+            pass
+
+    @bp.app_context_processor
+    def _ref_bar():
+        if not g.get("ref_offer"):
+            return {}
+        lang = deps["lang"]()
+        return {"ref_bar": dict(T.get(lang, T["en"]), code=g.ref_offer)}
+
+    @bp.post("/partners/consent")
+    def partner_consent():
+        code = active_code(deps["db"](), (request.get_json(silent=True) or {}).get("code"))
+        if not code:
+            return jsonify(error="unknown_code"), 400
+        resp = make_response(jsonify(ok=True))
+        resp.set_cookie(COOKIE, code, max_age=COOKIE_DAYS * 86400, secure=True, httponly=True, samesite="Lax")
+        return resp
+
+    @bp.get("/partners")
+    def partners_page():
+        lang = deps["lang"]()
+        d = T.get(lang, T["en"])
+        return render_template("partners.html", d=d, sent=request.args.get("sent") == "1",
+                               error=d["err"].get(request.args.get("error", "")))
+
+    @bp.post("/partners/apply")
+    def partners_apply():
+        lang = request.form.get("lang") if request.form.get("lang") in T else "en"
+        back = lambda **kw: redirect(url_for("site.partners_page", lang=lang, **kw) + "#apply", code=303)
+        if request.form.get("website2"):  # honeypot
+            return back(sent="1")
+        f = {k: (request.form.get(k) or "").strip() for k in ("name", "email", "channel", "website", "payout")}
+        if (not 1 <= len(f["name"]) <= 120 or not EMAIL_RE.match(f["email"]) or not 10 <= len(f["channel"]) <= 2000
+                or len(f["website"]) > 300 or f["payout"] not in ("paypal", "usdc") or not request.form.get("consent")):
+            return back(error="invalid")
+        conn, client = deps["db"](), deps["client_hash"]()
+        init(conn)
+        n = conn.execute("SELECT COUNT(*) FROM partners WHERE client_hash = ? AND created_at >= ?",
+                         (client, (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ"))).fetchone()[0]
+        if n >= 3:
+            return back(error="rate_limited")
+        with conn:
+            conn.execute("INSERT INTO partners (name, email, channel, website, payout, lang, client_hash, consent_at) "
+                         "VALUES (?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))",
+                         (f["name"], f["email"], f["channel"], f["website"] or None, f["payout"], lang, client))
+        return back(sent="1")

@@ -263,6 +263,7 @@ def create_order(conn, order_id, scan_id, amount, currency, consent_at=None, is_
         conn.execute("INSERT INTO orders (order_id, scan_id, status, amount, currency, consent_at, is_test, email)"
                      " VALUES (?, ?, 'CREATED', ?, ?, ?, ?, ?)",
                      (order_id, scan_id, amount, currency, consent_at, int(is_test), email))
+    import partners; partners.attribute(conn, 'report', order_id)  # partner referral (2026-11-21)
 
 
 def get_order(conn, order_id):
@@ -305,6 +306,7 @@ def create_crypto_order(conn, order_id, scan_id, price, currency, consent_at=Non
                      " VALUES (?, ?, 'CREATED', ?, ?, ?, ?, ?)",
                      (order_id, scan_id, amount, currency, consent_at, int(is_test), email))
         conn.commit()
+        import partners; partners.attribute(conn, "report", order_id)  # partner referral (2026-11-21)
         return amount
     except BaseException:
         conn.rollback()
