@@ -128,6 +128,7 @@ EVENT_NAMES = ("focus", "type", "example", "submit", "result", "lang", "monitori
                "subscription_completed",  # مسار التحويل وقياس تجربة العرض
                "trial_created", "subscription_start", "subscription_active",
                "checkout_start", "purchase_complete",  # أحداث الخادم بعد إنشاء الطلب أو تأكيد الدفع
+               "qes_buy", "buy_cta_top", "cbom_download", "cbom_sample",  # درجة التعرّض وعرض التقرير (2026-11-21)
                "agency_start", "agency_paid",  # تحويلات باقة تقارير العملاء لمقدمي الخدمات
                "history_csv", "evidence_pdf", "fix_copy",  # تنزيل سجل الفحوص من لوحة المراقبة
                "seed_add",  # إضافة نطاق أساسي لجرد الأصول

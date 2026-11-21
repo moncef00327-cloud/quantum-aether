@@ -1,3 +1,14 @@
+// 2026-11-21: links to #buy open the (collapsed) purchase card before scrolling to it.
+document.addEventListener("click", function (e) {
+  var a = e.target.closest && e.target.closest('a[href="#buy"]');
+  var buy = document.getElementById("buy");
+  if (!a || !buy) return;
+  e.preventDefault();
+  buy.open = true;
+  buy.scrollIntoView({ behavior: "smooth", block: "start" });
+  var box = document.getElementById("consent");
+  if (box) setTimeout(function () { box.focus({ preventScroll: true }); }, 400);
+});
 // Result page (2026-11-14): one POST per page view; the server probes www/api/mail/auth/login once per scan and caches it.
 (function () {
   var box = document.getElementById("common-hosts");

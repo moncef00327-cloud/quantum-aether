@@ -2539,3 +2539,18 @@ _QES = {
 }
 for _l in ("en", "ar", "de"):
     TEXTS[_l].update(_QES[_l])
+
+# Report offer right under the exposure score (2026-11-21): the buy box was the last, collapsed card on the result
+# page; in 18 days 61 visitors saw a result and 1 clicked buy. Same facts as the buy card, placed where people look.
+_QES_OFFER = {
+    "en": {"qes_offer_title": "Fix plan for {domain}", "qes_offer_button": "Get the full report", "qes_offer_sample": "See a real sample report",
+           "paid_cbom_item": "Machine-readable CBOM (CycloneDX 1.6 JSON) for your security inventory"},
+    "ar": {"qes_offer_title": "خطة الإصلاح لـ {domain}", "qes_offer_button": "احصل على التقرير الكامل", "qes_offer_sample": "شاهد نموذج تقرير حقيقي",
+           "paid_cbom_item": "ملف CBOM قابل للقراءة آلياً (CycloneDX 1.6 JSON) لجرد الأمن لديك"},
+    "de": {"qes_offer_title": "Maßnahmenplan für {domain}", "qes_offer_button": "Vollständigen Bericht holen", "qes_offer_sample": "Echten Beispielbericht ansehen",
+           "paid_cbom_item": "Maschinenlesbare CBOM (CycloneDX 1.6 JSON) für Ihr Sicherheitsinventar"},
+}
+for _l in ("en", "ar", "de"):
+    TEXTS[_l].update({k: v for k, v in _QES_OFFER[_l].items() if k != "paid_cbom_item"})
+    if "paid_items" in TEXTS[_l] and _QES_OFFER[_l]["paid_cbom_item"] not in TEXTS[_l]["paid_items"]:
+        TEXTS[_l]["paid_items"] = list(TEXTS[_l]["paid_items"]) + [_QES_OFFER[_l]["paid_cbom_item"]]

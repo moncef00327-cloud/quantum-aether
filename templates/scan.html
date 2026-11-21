@@ -17,6 +17,15 @@
   </div>
 </section>
 <section class="card qes" id="exposure">{% include "_exposure.html" %}</section>
+{% if not paid and observation == 'observed_classical' and (payments_enabled or crypto_networks) %}
+<section class="card highlight report-offer" id="report-offer">
+  <h2>{{ t.qes_offer_title.format(domain=r.domain) }}</h2>
+  <ul class="ticks">{% for item in t.paid_items[:2] + t.paid_items[-1:] %}<li>{{ item }}</li>{% endfor %}</ul>
+  <p><a class="button-link" href="#buy" data-ev="buy_cta_top">{{ t.qes_offer_button }} · <bdi>{{ price }} {{ currency }}</bdi></a>
+     <span class="muted small">{{ t.one_time }}</span></p>
+  <p class="small"><a href="{{ url_for('site.sample_report', lang=lang if lang != 'de' else 'en') }}" data-ev="sample_report">{{ t.qes_offer_sample }} →</a></p>
+</section>
+{% endif %}
 {% if not paid %}
 {% if conversion_variant == 'treatment' %}
 {% set offer_grade = 'unknown' if observation == 'undetermined' else r.grade|lower %}

@@ -97,6 +97,21 @@ class PageTests(AppTestCase):
             self.assertIn("<strong>70</strong>/100", html)
             self.assertIn('data-ev="qes_buy"', html)
 
+    def test_report_offer_near_top_for_classical_only(self):
+        sid = self.scan()["scan_id"]
+        html = self.client.get(f"/scan/{sid}?lang=en").get_data(as_text=True)
+        self.assertIn('id="report-offer"', html)
+        self.assertLess(html.index('id="report-offer"'), html.index('id="why"'))
+        self.assertIn("Fix plan for example.com", html)
+        self.assertIn("CycloneDX 1.6", html)
+        self.pay(sid)
+        self.assertNotIn('id="report-offer"', self.client.get(f"/scan/{sid}?lang=en").get_data(as_text=True))
+
+    def test_new_click_events_are_recorded(self):
+        import analytics_db
+        for name in ("qes_buy", "buy_cta_top", "cbom_download", "cbom_sample"):
+            self.assertIn(name, analytics_db.EVENT_NAMES)
+
     def test_insights_api_returns_rendered_score(self):
         sid = self.scan()["scan_id"]
         d = self.client.post(f"/api/scan/{sid}/insights?lang=en").get_json()
