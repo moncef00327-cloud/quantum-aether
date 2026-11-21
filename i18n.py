@@ -2015,11 +2015,11 @@ TEXTS["de"].update({"hist_title": "Prüfverlauf", "hist_sub": "Jede tägliche un
 
 # ---------------------------------------------------------------- عنوان ووصف /monitoring في نتائج البحث
 TEXTS["en"].update({"mon_seo_title": "Post-quantum TLS monitoring: 14-day free trial",
-                    "mon_seo_desc": "Daily checks of every server address of your domains, alerts when post-quantum key exchange is lost or servers disagree, and an audit-ready CSV history. Free for 14 days, no card."})
+                    "mon_seo_desc": "Daily post-quantum TLS checks of every server of your domains, alerts on changes, audit-ready CSV history. Free for 14 days, no card."})
 TEXTS["ar"].update({"mon_seo_title": "مراقبة TLS المقاوم للكم: تجربة مجانية 14 يوماً",
                     "mon_seo_desc": "فحص يومي لكل عناوين خوادم نطاقاتك، وتنبيه عند فقدان التبادل المقاوم للكم أو اختلاف الخوادم، وسجل CSV جاهز للتدقيق. مجاناً 14 يوماً وبلا بطاقة."})
 TEXTS["de"].update({"mon_seo_title": "Post-Quanten-TLS-Überwachung: 14 Tage kostenlos testen",
-                    "mon_seo_desc": "Tägliche Prüfung jeder Serveradresse Ihrer Domains, Warnung bei Verlust des quantenresistenten Schlüsselaustauschs oder uneinheitlichen Servern, prüfbarer CSV-Verlauf. 14 Tage kostenlos, ohne Karte."})
+                    "mon_seo_desc": "Tägliche Post-Quanten-TLS-Prüfung jedes Servers Ihrer Domains, Warnung bei Änderungen, prüfbarer CSV-Verlauf. 14 Tage kostenlos, ohne Karte."})
 
 # ---------------------------------------------------------------- جرد الأصول في لوحة المراقبة
 _AS = {

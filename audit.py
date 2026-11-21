@@ -73,8 +73,7 @@ def owner_email(req_id, req, discovery_summary, base_url):
 COPY = {
     "en": dict(
         title="Post-quantum TLS audit for your whole domain",
-        meta="Every public subdomain of your organization checked for post-quantum key exchange (X25519MLKEM768), "
-             "with a prioritised fix plan and dated evidence for NIS2 and DORA reviews. One-time PayPal checkout for small companies; enterprise audits by quote.",
+        meta="Every public subdomain of your organization checked for post-quantum TLS (X25519MLKEM768): prioritised fix plan and dated NIS2/DORA evidence.",
         eyebrow="For security and compliance teams",
         lead="Your main website can pass while dozens of subdomains still use classical key exchange. "
              "We check them all and tell you which to fix first.",
@@ -127,8 +126,7 @@ COPY = {
     ),
     "ar": dict(
         title="تدقيق TLS المقاوم للحوسبة الكمومية لنطاقك كاملاً",
-        meta="نفحص كل النطاقات الفرعية العامة لمؤسستك بحثاً عن تبادل مفاتيح مقاوم للكم (X25519MLKEM768)، "
-             "مع خطة إصلاح مرتّبة وتقرير مؤرَّخ لمراجعات NIS2 وDORA. دفع فوري للشركات الصغيرة، وعرض سعر للمؤسسات.",
+        meta="نفحص كل النطاقات الفرعية لمؤسستك بحثاً عن TLS المقاوم للكم (X25519MLKEM768)، مع خطة إصلاح مرتّبة وتقرير مؤرَّخ لـ NIS2 وDORA.",
         eyebrow="لفرق الأمن والامتثال",
         lead="قد ينجح موقعك الرئيسي بينما تبقى عشرات النطاقات الفرعية على تبادل المفاتيح التقليدي. "
              "نفحصها كلها ونخبرك بما تبدأ بإصلاحه.",
@@ -181,9 +179,7 @@ COPY = {
     ),
     "de": dict(
         title="Post-Quanten-TLS-Audit für Ihre gesamte Domain",
-        meta="Alle öffentlichen Subdomains Ihrer Organisation auf Post-Quanten-Schlüsselaustausch (X25519MLKEM768) "
-             "geprüft, mit priorisiertem Maßnahmenplan und datiertem Nachweis für NIS2- und DORA-Prüfungen. "
-             "Sofortzahlung für kleine Unternehmen; Enterprise-Audits auf Anfrage.",
+        meta="Alle öffentlichen Subdomains auf Post-Quanten-TLS (X25519MLKEM768) geprüft: priorisierter Maßnahmenplan und datierter NIS2-/DORA-Nachweis.",
         eyebrow="Für Security- und Compliance-Teams",
         lead="Ihre Hauptwebsite kann bestehen, während Dutzende Subdomains noch klassischen Schlüsselaustausch "
              "nutzen. Wir prüfen alle und sagen Ihnen, was Sie zuerst beheben sollten.",

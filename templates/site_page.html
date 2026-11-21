@@ -15,6 +15,18 @@
   </div>
 </section>
 
+<section class="card own-scan" id="own-scan">
+  <form method="post" action="{{ url_for('site.scan_form', lang=lang) }}">
+    <input type="hidden" name="src" value="site_own">
+    <label for="own-domain"><strong>{{ 'وموقعك أنت: هل هو محمي من الحاسوب الكمّي؟' if lang == 'ar' else ('Und Ihre eigene Website: ist sie quantensicher?' if lang == 'de' else 'And your own website: is it quantum-safe?') }}</strong></label>
+    <div class="scan-row">
+      <input id="own-domain" name="domain" type="text" inputmode="url" autocomplete="url" dir="ltr" placeholder="example.com" required maxlength="4096" autocapitalize="none" spellcheck="false">
+      <button type="submit" data-ev="scan_cta">{{ 'افحص مجاناً' if lang == 'ar' else ('Kostenlos prüfen' if lang == 'de' else 'Check free') }}</button>
+    </div>
+    <p class="small muted">{{ 'نتيجة خلال ثوانٍ، بلا حساب.' if lang == 'ar' else ('Ergebnis in Sekunden, ohne Konto.' if lang == 'de' else 'Result in seconds, no account.') }}</p>
+  </form>
+</section>
+
 {% set cf_urgent = summary and not summary.unsure and summary.grade in ('C', 'F') %}
 {% set domain_cta_title = ('ابدأ مراقبة ' ~ domain ~ ' مجاناً') if lang == 'ar' else (('Überwachung von ' ~ domain ~ ' kostenlos starten') if lang == 'de' else ('Start monitoring ' ~ domain ~ ' free')) %}
 {% if conversion_variant == 'treatment' %}
