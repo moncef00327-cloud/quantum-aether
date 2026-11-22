@@ -30,8 +30,8 @@ DATA_DIR = os.environ.get("QS_DATA_DIR", "/var/lib/quantum_saas")
 DB_PATH = os.path.join(DATA_DIR, "quantum_saas.db")
 PAUSE_FILE = os.path.join(DATA_DIR, "growth.paused")
 SITE = "https://ather-quantum.com"
-DAILY_CAP = int(os.environ.get("QS_GROWTH_DAILY_CAP", "10"))
-PER_RUN = 2  # runs hourly 06-17 UTC, so the daily cap is spread over the working day
+DAILY_CAP = int(os.environ.get("QS_GROWTH_DAILY_CAP", "20"))
+PER_RUN = 2  # runs every hour round the clock (Asia and the Americas are in different time zones)
 BOUNCE_LIMIT = 0.05
 UA = "Mozilla/5.0 (compatible; QuantumAether-Growth/1.0; +https://ather-quantum.com/scanning)"
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -69,6 +69,8 @@ def connect(path=DB_PATH):
     conn.execute("""CREATE TABLE IF NOT EXISTS growth_prospects (
         domain TEXT PRIMARY KEY, host TEXT, rank INTEGER, email TEXT, source TEXT, probed_at TEXT,
         scanned_at TEXT, grade TEXT, grp TEXT, tls TEXT, pq INTEGER)""")
+    if "country" not in {r[1] for r in conn.execute("PRAGMA table_info(growth_prospects)")}:
+        conn.execute("ALTER TABLE growth_prospects ADD COLUMN country TEXT")
     return conn
 
 
@@ -140,15 +142,19 @@ def candidates(conn, skip):
                     "tls": r["tls"], "week": week, "reason": reason, "views": views.get(d, 0),
                     "sort": (prio, -views.get(d, 0), r["rank"] or 10 ** 9)})
     have = {c["domain"] for c in out}
-    for r in conn.execute("SELECT domain, host, grade, grp, tls, scanned_at, rank FROM growth_prospects "
+    for r in conn.execute("SELECT domain, host, grade, grp, tls, scanned_at, rank, country FROM growth_prospects "
                           "WHERE email IS NOT NULL AND pq = 0 AND scanned_at IS NOT NULL"):
         d = r["domain"]
         if d in skip or d in have or is_eu(d) or GOV.search(d) or d in CENTRAL_BANKS:
             continue
-        out.append({"domain": d, "host": r["host"], "sector": "discovered", "grade": r["grade"], "group": r["grp"],
+        if tld(d) in GENERIC_TLDS and (r["country"] or "") not in FOCUS_COUNTRIES:
+            continue
+        out.append({"domain": d, "host": r["host"], "sector": "discovered", "country": r["country"],
+                    "grade": r["grade"], "group": r["grp"],
                     "tls": r["tls"], "week": (r["scanned_at"] or "")[:10], "reason": "discovered", "views": views.get(d, 0),
                     "sort": (3, -views.get(d, 0), r["rank"] or 10 ** 9)})
-    return sorted(out, key=lambda c: c["sort"])
+    focus = lambda c: tld(c["domain"]) in FOCUS_TLDS or (c.get("country") or "") in FOCUS_COUNTRIES
+    return sorted(out, key=lambda c: (0 if focus(c) else 1,) + c["sort"])
 
 
 GENERIC_TLDS = {"com", "net", "org", "io", "co", "ai", "app", "dev", "tech", "cloud", "info", "biz", "xyz", "me", "global"}
@@ -160,10 +166,36 @@ ALLOWED_CCTLDS = ARABIC_TLDS | {"us", "ca", "au", "nz", "jp", "kr", "sg", "in", 
                                 "th", "ph", "vn", "cl", "ar", "pe", "uy", "tr", "il", "pk", "ng", "ke", "gh"}
 
 
+# Owner focus 2026-11-22: Asia and the Americas. Expansion probes only these; outreach sends them first.
+FOCUS_TLDS = {"us", "ca", "mx", "br", "ar", "cl", "pe", "uy",                       # Americas
+              "jp", "kr", "in", "sg", "hk", "tw", "my", "id", "th", "ph", "vn", "pk", "il"}  # Asia
+
+
+FOCUS_COUNTRIES = {t.upper() for t in FOCUS_TLDS}
+
+
 def auto_send_ok(c):
-    """Auto-send only where the org is known to be outside the EU: an allowed country TLD, or a regional sector.
-    A .com in a global sector can be European (commerzbank.com, spendesk.com): owner decides those (digest)."""
-    return tld(c["domain"]) in ALLOWED_CCTLDS or c["sector"] in KNOWN_REGION_SECTORS
+    """Auto-send only where the org is known to be outside the EU: an allowed country TLD, a regional sector, or
+    (for .com etc.) an organisation certificate whose subject country is in the focus (chase.com: C=US).
+    A .com without that proof can be European (commerzbank.com, spendesk.com): owner decides those (digest)."""
+    return (tld(c["domain"]) in ALLOWED_CCTLDS or c["sector"] in KNOWN_REGION_SECTORS
+            or (c.get("country") or "") in FOCUS_COUNTRIES)
+
+
+def cert_country(host, timeout=8):
+    """countryName of the site's certificate subject (present on OV/EV certificates only), or None."""
+    import socket, ssl
+    try:
+        ctx = ssl.create_default_context()
+        with socket.create_connection((host, 443), timeout=timeout) as sock:
+            with ctx.wrap_socket(sock, server_hostname=host) as tls:
+                for rdn in tls.getpeercert().get("subject", ()):
+                    for key, value in rdn:
+                        if key == "countryName":
+                            return value.upper()
+    except (OSError, ssl.SSLError, ValueError):
+        return None
+    return None
 
 
 def live_check(c, scanner=None):
@@ -337,29 +369,36 @@ def expansion_pool(conn, tranco_path=TRANCO, excluded_fn=None):
         for line in f:
             rank, _, dom = line.strip().partition(",")
             d = base_domain(dom)
-            if (d and tld(d) in ALLOWED_CCTLDS and d not in fresh and not is_eu(d) and not GOV.search(d)
+            if (d and (tld(d) in FOCUS_TLDS or tld(d) in GENERIC_TLDS) and d not in fresh and not is_eu(d) and not GOV.search(d)
                     and not UNIVERSITY.search(d)
                     and d not in CENTRAL_BANKS and not excluded_fn(d)):
                 pool.append((int(rank), d))
     return pool
 
 
-def expand(conn, batch=300, http=None, scanner=None, workers=16, tranco_path=TRANCO, excluded_fn=None):
+def expand(conn, batch=600, http=None, scanner=None, workers=32, tranco_path=TRANCO, excluded_fn=None, country_fn=None):
     """Find orgs that PUBLISH a security contact, then measure them once. Outreach picks the classical ones."""
     from concurrent.futures import ThreadPoolExecutor
     pool = expansion_pool(conn, tranco_path, excluded_fn)[:batch]
     with ThreadPoolExecutor(max_workers=workers) as ex:
         found = list(ex.map(lambda rd: (rd, published_contact(rd[1], http)), pool))
+    country_fn = country_fn or cert_country
+    generic = [d for (_, d), (email, _) in found if email and tld(d) in GENERIC_TLDS]
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        countries = dict(zip(generic, ex.map(country_fn, generic)))
     stats = {"probed": len(found), "published": 0, "scanned": 0, "classical": 0}
     for (rank, d), (email, source) in found:
-        conn.execute("INSERT INTO growth_prospects (domain, host, rank, email, source, probed_at) VALUES (?,?,?,?,?,?) "
+        if email and tld(d) in GENERIC_TLDS and countries.get(d) not in FOCUS_COUNTRIES:
+            email = None  # .com etc. without proof of an Asian/American organisation: never a prospect
+        conn.execute("INSERT INTO growth_prospects (domain, host, rank, email, source, probed_at, country) VALUES (?,?,?,?,?,?,?) "
                      "ON CONFLICT(domain) DO UPDATE SET email = excluded.email, source = excluded.source, "
-                     "probed_at = excluded.probed_at", (d, d, rank, email, source, now_iso()))
+                     "probed_at = excluded.probed_at, country = excluded.country",
+                     (d, d, rank, email, source, now_iso(), countries.get(d)))
         if email:
             stats["published"] += 1
     conn.commit()
     todo = conn.execute("SELECT domain FROM growth_prospects WHERE email IS NOT NULL AND scanned_at IS NULL "
-                        "ORDER BY rank LIMIT 40").fetchall()
+                        "ORDER BY rank LIMIT 80").fetchall()
     if scanner is None:
         import quantum_vuln_scanner
         scanner = quantum_vuln_scanner.scan
@@ -432,7 +471,8 @@ def outreach(conn, dry_run=False, http=None, history=None, pause_between=90, max
                 or email.startswith(("abuse@", "noc@", "postmaster@"))
                 # contact on a generic TLD of ANOTHER domain = parent company of unknown country (skyscanner.co.in ->
                 # skyscanner.net, a UK company): only the regional sectors may do that
-                or (tld(mail_dom) in GENERIC_TLDS and mail_dom != c["domain"] and c["sector"] not in KNOWN_REGION_SECTORS)):
+                or (tld(mail_dom) in GENERIC_TLDS and mail_dom != c["domain"] and c["sector"] not in KNOWN_REGION_SECTORS
+                    and (c.get("country") or "") not in FOCUS_COUNTRIES)):
             continue
         checked = live_check(c, scanner)
         if checked is None:
