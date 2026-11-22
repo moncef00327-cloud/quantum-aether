@@ -370,7 +370,7 @@ def expansion_pool(conn, tranco_path=TRANCO, excluded_fn=None):
         for line in f:
             rank, _, dom = line.strip().partition(",")
             d = base_domain(dom)
-            if (d and (tld(d) in FOCUS_TLDS or tld(d) in GENERIC_TLDS) and d not in fresh and not is_eu(d) and not GOV.search(d)
+            if (d and (tld(d) in FOCUS_TLDS or tld(d) in GENERIC_TLDS) and tld(d) not in BLOCKED_TLDS and d not in fresh and not is_eu(d) and not GOV.search(d)
                     and not UNIVERSITY.search(d)
                     and d not in CENTRAL_BANKS and not excluded_fn(d)):
                 pool.append((int(rank), d))
