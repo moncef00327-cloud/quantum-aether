@@ -162,6 +162,21 @@ def run_events(conn, ids, http):
     return bounced, complained
 
 
+def keep_db_owner(db):
+    """Run as root, SQLite may create -wal/-shm files owned by root, and the web service (user quantum) could then no
+    longer write the database. Give them back to the database file's owner."""
+    if not hasattr(os, "geteuid") or os.geteuid() != 0 or not os.path.exists(db):
+        return
+    st = os.stat(db)
+    for suffix in ("-wal", "-shm", "-journal"):
+        p = db + suffix
+        try:
+            if os.path.exists(p) and (os.stat(p).st_uid, os.stat(p).st_gid) != (st.st_uid, st.st_gid):
+                os.chown(p, st.st_uid, st.st_gid)
+        except OSError:
+            pass
+
+
 def read_targets(path):
     with open(path, newline="", encoding="utf-8") as f:
         return [r for r in csv.DictReader(f) if r.get("contact_email") and r.get("domain")]
@@ -202,6 +217,15 @@ def main(argv=None):
         conn = sqlite3.connect(a.db, timeout=30)
         osup.init(conn)
 
+    keep_db_owner(a.db)
+    try:
+        return _run(a, conn, secret)
+    finally:
+        conn.close()
+        keep_db_owner(a.db)
+
+
+def _run(a, conn, secret):
     import requests
     http = requests.Session()
     budget = min(a.limit, max(0, a.daily_cap - sent_last_24h(conn)))
@@ -247,6 +271,7 @@ def main(argv=None):
                          " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                          (email, domain, t.get("organization", ""), mail["lang"], obs["group"], obs["kex_class"],
                           mail["subject"], rid, now_iso()))
+        keep_db_owner(a.db)
         ids.append(rid)
         done += 1
         print(f"sent {domain} -> {email} ({obs['kex_class']}, {mail['lang']}) id={rid}")
