@@ -10,7 +10,9 @@ from mailer import Mailer  # noqa: E402
 
 
 def main():
-    mailer = Mailer(os.environ.get("RESEND_API_KEY", ""), os.environ.get("QS_MAIL_FROM", ""), os.environ.get("QS_REPLY_TO", ""))
+    mailer = Mailer(os.environ.get("RESEND_API_KEY", ""), os.environ.get("QS_MAIL_FROM", ""), os.environ.get("QS_REPLY_TO", ""),
+                    fallback_sender=os.environ.get("QS_MAIL_FROM_FALLBACK", ""),
+                    site_url=os.environ.get("QS_PUBLIC_URL", ""))
     to = os.environ.get("QS_OWNER_EMAIL", "")
     if not mailer.enabled or not to:
         print("Missing RESEND_API_KEY, QS_MAIL_FROM or QS_OWNER_EMAIL")
