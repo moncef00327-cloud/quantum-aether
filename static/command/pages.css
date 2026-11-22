@@ -160,3 +160,43 @@ article.card.is-plan-selected,.price-box.is-plan-selected{border-color:#67e8f9!i
 @media(max-width:600px){.service-content .result-head{gap:14px}.service-content .result-head>div:not(.grade){flex:1 1 100%;min-width:0}.service-content .domain{font-size:clamp(20px,6.5vw,30px);line-height:1.2}}
 
 /* qrisk exposure score 2026-11-21 */.qes-head{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}.qes-score{font-size:28px;line-height:1}.qes-score strong{font-size:40px}.qes-high{color:var(--qa-danger)}.qes-moderate{color:#f2c86b}.qes-low{color:#8fd9a8}.qes-items{padding-inline-start:18px}.qes-items li{margin:6px 0}
+
+/* Scan result, 2026-11-22: mobile/RTL layout of the discovery form, its CTAs and the one-time report. */
+.service-content #discovery .disc-request{margin-top:20px;padding-top:20px;border-top:1px solid var(--qa-glass-border,rgba(148,163,184,.2))}
+.service-content #discovery .disc-request h3{margin:0 0 8px}
+.service-content .disc-form{display:grid;gap:14px;margin:0}
+.service-content .disc-form>p{margin:0}
+.service-content .disc-form .consent label,.service-content #buy .consent label{display:grid!important;grid-template-columns:22px minmax(0,1fr);gap:12px;align-items:start;line-height:1.75;font-size:14px;text-align:start}
+.service-content .disc-form .consent input[type=checkbox],.service-content #buy .consent input[type=checkbox]{width:20px;height:20px;margin:3px 0 0;accent-color:var(--qa-accent,#c68efa)}
+.service-content .disc-form .consent span,.service-content #buy .consent span{min-width:0;overflow-wrap:anywhere}
+.service-content .stack-row{display:flex;gap:12px;align-items:stretch;flex-wrap:wrap}
+.service-content .stack-row input{flex:1 1 220px;min-width:0;min-height:48px}
+.service-content .stack-row button{flex:0 0 auto;min-height:48px}
+.service-content .disc-actions{display:grid;gap:12px;justify-items:center;margin-top:22px;padding-top:20px;border-top:1px solid var(--qa-glass-border,rgba(148,163,184,.2))}
+.service-content .disc-actions .cta-block{width:100%;max-width:560px;min-height:52px;padding:14px 22px!important;line-height:1.5;text-align:center;white-space:normal;text-wrap:balance;border-radius:18px!important}
+.service-content .disc-audit-link{display:inline-flex;gap:6px;align-items:center;padding:6px 4px;color:#8ae5f7;font-size:14px;text-align:center}
+.service-content .disc-audit-link:hover{text-decoration:underline}
+.service-content .report-jump{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 14px;align-items:center;margin:0 0 24px;padding:16px 20px;border:1px solid #f1c75b;border-radius:20px;background:linear-gradient(135deg,rgba(241,199,91,.14),rgba(198,142,250,.10));color:var(--qa-text,#efeef4);text-decoration:none;box-shadow:0 8px 22px rgba(0,0,0,.18)}
+.service-content .report-jump:hover{filter:brightness(1.08);text-decoration:none}
+.service-content .report-jump-title{font-size:16px;line-height:1.5}
+.service-content .report-jump-sub{grid-column:1;font-size:13px;color:var(--qa-text-muted,#bab3ce);line-height:1.6}
+.service-content .report-jump-arrow{grid-column:2;grid-row:1/span 2;display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:#f1c75b;color:#1b1430;font-weight:700}
+.service-content details#buy{border:1px solid #f1c75b}
+.service-content details#buy>summary{display:flex;align-items:center;gap:12px;min-height:48px;cursor:pointer;font-size:16px;line-height:1.5;list-style:none}
+.service-content details#buy>summary::-webkit-details-marker{display:none}
+.service-content details#buy>summary::after{content:"+";margin-inline-start:auto;flex:0 0 32px;display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:#f1c75b;color:#1b1430;font-weight:700}
+.service-content details#buy[open]>summary::after{content:"−"}
+.service-content #buy #paypal-button-container{margin:16px 0 8px}
+.service-content #buy .crypto-pay{display:grid;gap:12px;margin-top:20px;padding-top:20px;border-top:1px solid var(--qa-glass-border,rgba(148,163,184,.2))}
+.service-content #buy .crypto-pay>*{margin:0}
+.service-content #buy .crypto-pay label{display:grid;gap:6px}
+.service-content #buy .crypto-pay label br{display:none}
+.service-content #buy .crypto-pay :is(input,select){width:100%;min-height:48px;padding:0 16px}
+.service-content #buy .crypto-pay code.crypto-address{display:block;overflow-wrap:anywhere;margin:6px 0}
+@media(max-width:600px){
+.service-content .stack-row{flex-direction:column}
+.service-content .stack-row :is(input,button){width:100%;flex:none}
+.service-content .disc-actions .cta-block{max-width:none}
+.service-content #buy .crypto-pay button{width:100%}
+.service-content .report-jump{padding:14px 16px}
+}

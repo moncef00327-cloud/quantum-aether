@@ -36,8 +36,8 @@
   <link rel="alternate" type="text/plain" title="llms.txt" href="{{ abs_url('site.llms_txt') }}">
 <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-  <link rel="stylesheet" href="/static/command/app.css?v=20261117-domainwrap1">
-  <link rel="stylesheet" href="/static/command/pages.css?v=20261117-domainwrap1">
+  <link rel="stylesheet" href="/static/command/app.css?v=20261122-scanmobile1">
+  <link rel="stylesheet" href="/static/command/pages.css?v=20261122-scanmobile1">
   {% if false %}{% block head %}{% endblock %}{% endif %}{% set head_html = self.head() %}{{ head_html }}
   {% if not seo_noindex and "application/ld+json" not in head_html %}<script type="application/ld+json">{{ {"@context": "https://schema.org", "@type": "WebPage", "@id": metadata_url(lang) ~ "#webpage", "url": metadata_url(lang), "name": seo_title_text, "description": seo_description_text, "inLanguage": lang, "isPartOf": {"@type": "WebSite", "@id": abs_url('site.index') ~ "#website", "name": "Quantum Aether", "url": abs_url('site.index')}, "publisher": org_jsonld()} | tojson }}</script>{% endif %}
 </head>

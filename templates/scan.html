@@ -37,6 +37,14 @@
 {% else %}
 {{ trial_cta('scan-trial', title=t.trial_cta_title, prefill=dbase, editable_domain=true, source='scan_result') }}
 {% endif %}
+{% if observation != 'observed_classical' and (payments_enabled or crypto_networks) %}
+{# 2026-11-22: the paid report card stays at the bottom; this strip only points to it so it is easy to find on mobile. #}
+<a class="report-jump no-print" href="#buy" data-ev="buy_cta_top">
+  <span class="report-jump-title"><strong>{{ t.buy_title }}</strong> · <bdi>{{ price }} {{ currency }}</bdi></span>
+  <span class="report-jump-sub">{{ t.one_time }}{% if payments_enabled %} · <bdi dir="ltr">PayPal</bdi>{% endif %}{% for key, net in (crypto_networks or {}).items() %} · <bdi dir="ltr">{{ net.token }} {{ net.chain }}</bdi>{% endfor %}</span>
+  <span class="report-jump-arrow" aria-hidden="true">↓</span>
+</a>
+{% endif %}
 {% endif %}
 {% set glang = lang if lang in ("en", "ar") else "en" %}
 {% if observation != 'observed_pq' and t.ins_reasons.get(pq_reason) %}
@@ -121,17 +129,21 @@
   <div class="disc-request" hidden>
     <h3>{{ t.disc_list_title }}</h3>
     <p>{{ t.disc_list_sub.format(base=dbase) }}</p>
-    <form method="post" action="{{ url_for('site.discovery_request', lang=lang) }}" class="alert-form">
+    <form method="post" action="{{ url_for('site.discovery_request', lang=lang) }}" class="alert-form disc-form">
       <input type="hidden" name="scan_id" value="{{ scan.id }}">
-      <p><label><input type="checkbox" name="consent" value="1" required>
+      <p class="consent"><label><input type="checkbox" name="consent" value="1" required>
         <span>{{ t.disc_consent }} (<a href="{{ url_for('site.legal_page', slug='datenschutz', lang=legal_lang) }}" target="_blank">{{ t.legal_privacy }}</a>)</span></label></p>
-      <p><input type="email" name="email" required maxlength="254" placeholder="you@{{ dbase }}" dir="ltr"
-             aria-label="{{ t.disc_email_label.format(base=dbase) }}">
-        <button type="submit" data-ev="disc_email">{{ t.disc_list_button }}</button></p>
+      <div class="scan-row stack-row">
+        <input type="email" name="email" required maxlength="254" placeholder="you@{{ dbase }}" dir="ltr"
+               aria-label="{{ t.disc_email_label.format(base=dbase) }}">
+        <button type="submit" data-ev="disc_email">{{ t.disc_list_button }}</button>
+      </div>
     </form>
   </div>
-  <p><a class="button-link" href="{{ url_for('site.monitoring', domain=dbase, lang=lang) }}" data-ev="monitoring_cta">{{ t.disc_monitor_cta.format(base=dbase) }}</a></p>
-  <p><a href="{{ url_for('site.audit_page', domain=dbase, lang=lang) }}" data-ev="audit_cta">{{ audit_cta }} →</a></p>
+  <div class="disc-actions">
+    <a class="button-link cta-block" href="{{ url_for('site.monitoring', domain=dbase, lang=lang) }}" data-ev="monitoring_cta">{{ t.disc_monitor_cta.format(base=dbase)|replace(' ←', '')|replace(' →', '') }}</a>
+    <a class="disc-audit-link" href="{{ url_for('site.audit_page', domain=dbase, lang=lang) }}" data-ev="audit_cta">{{ audit_cta }} <span aria-hidden="true">{{ '←' if t.dir == 'rtl' else '→' }}</span></a>
+  </div>
 </section>
 
 {% set glang = lang if lang in ("en", "ar") else "en" %}
@@ -259,6 +271,8 @@
 <p><a class="button-link" href="{{ url_for('site.index', lang=lang) }}">{{ t.scan_again }}</a></p>
 {% endblock %}
 {% block scripts %}
+<script>(function(){var d=document.getElementById("buy");if(!d)return;function o(){if(location.hash==="#buy")d.open=true}
+document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest('a[href="#buy"]');if(a)d.open=true});o();window.addEventListener("hashchange",o)})();</script>
 <script src="{{ url_for('static', filename='discovery.js') }}" defer></script>
 <script src="{{ url_for('static', filename='insights.js') }}?v=20261121-q1" defer></script>
 {% if payments_enabled and not paid %}
