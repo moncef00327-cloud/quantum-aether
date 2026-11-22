@@ -26,6 +26,7 @@ import assets
 import monitor_db
 import dach_hosting
 import inbound_mail
+import outreach_suppress
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS scans (
@@ -66,7 +67,7 @@ CREATE TABLE IF NOT EXISTS owner_clients (
 
 
 _SCHEMA_MODULES = (monitor_db, assets, free_alerts, discovery, scan_insights, audit, audit_checkout, company_billing,
-                   packs, analytics_db, adoption, access_links, prooflab, dach_hosting, inbound_mail)
+                   packs, analytics_db, adoption, access_links, prooflab, dach_hosting, inbound_mail, outreach_suppress)
 
 
 def _schema_version():
@@ -133,6 +134,7 @@ def initialize(conn):
     prooflab.init(conn)
     dach_hosting._init(conn)  # 2026-11-21: correction-request table exists before the first request (review job reads it)
     inbound_mail.init(conn)
+    outreach_suppress.init(conn)  # 2026-11-23: outreach opt-outs + sent log (one-click unsubscribe)
     _migrate(conn)
 
 

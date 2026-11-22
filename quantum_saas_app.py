@@ -4737,6 +4737,9 @@ inbound_mail.register(bp, {"db": db, "mailer": lambda: current_app.extensions["m
                            "owner": lambda: current_app.config["OWNER_EMAIL"],
                            "secret": lambda: current_app.config.get("RESEND_WEBHOOK_SECRET", "")})
 
+import outreach_suppress  # noqa: E402  One-click unsubscribe for outreach: /u/<token> (RFC 8058), 2026-11-23
+outreach_suppress.register(bp, {"db": db, "secret": lambda: current_app.config["HASH_SALT"]})
+
 import mea_hosting  # noqa: E402  Arab world + Africa hosting study page (2026-11-21, self-contained module)
 mea_hosting.register(bp, {"base_dir": BASE_DIR, "db": db, "lang": current_lang, "client_hash": client_hash})
 

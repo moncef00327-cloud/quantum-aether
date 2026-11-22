@@ -110,6 +110,10 @@ def excluded(conn, history):
     out |= {base_domain(r[0]) for r in conn.execute("SELECT domain FROM contacted_orgs")}
     out |= {r[0] for r in conn.execute("SELECT domain FROM growth_outreach")}
     out |= {r[0] for r in conn.execute("SELECT domain FROM growth_suppress")}
+    try:  # one-click unsubscribe / reply-stop opt-outs (outreach_suppress.py, 2026-11-23)
+        out |= {base_domain(r[0]) for r in conn.execute("SELECT domain FROM outreach_suppress WHERE domain != ''")}
+    except sqlite3.Error:
+        pass
     try:
         out |= {base_domain(r[0]) for r in conn.execute("SELECT domain FROM adoption_optout")}
     except sqlite3.Error:

@@ -13,9 +13,12 @@ import hashlib
 import hmac
 import json
 import logging
+import re
 import time
 
 from flask import request
+
+import outreach_suppress
 
 log = logging.getLogger("quantum_saas.inbound")
 
@@ -31,6 +34,8 @@ CREATE INDEX IF NOT EXISTS inbound_mail_created ON inbound_mail (created_at);
 TOLERANCE_SECONDS = 300
 OWN_DOMAINS = ("ather-quantum.com", "mail.ather-quantum.com", "ather-quatum.cloud")
 TEST_MARK = "[qa-test]"
+# A reply whose subject says stop/unsubscribe suppresses the sender for all outreach (same words as growth_agent.STOP_RE).
+STOP_RE = re.compile(r"\b(stop|unsubscribe|remove me|opt[- ]?out)\b|إيقاف|الغاء|إلغاء", re.I)
 
 
 def init(conn):
@@ -149,6 +154,11 @@ def register(bp, deps):
         if row is None:
             return {"ok": True, "duplicate": True}
         log.info("inbound mail stored: id=%s test=%s", row["id"], row["is_test"])
+        if not row["is_test"] and not is_own_mail(row["from_addr"]) and STOP_RE.search(row["subject"] or ""):
+            try:
+                outreach_suppress.suppress(conn, row["from_addr"], "reply-stop")
+            except Exception:  # never lose the reply because of the opt-out write
+                log.exception("inbound mail: could not record reply-stop")
         owner = deps["owner"]()
         if not row["is_test"] and owner and not is_own_mail(row["from_addr"]):
             subject, text = owner_notice(row)
