@@ -4135,12 +4135,13 @@ def robots():
     bank_detail_rules = "".join(f"Disallow: /banks/{report_id}/\n" for report_id in bank_report.ids())
     audit_agent = ("User-agent: OpenSEO-Audit\nDisallow: /admin\nDisallow: /report/\n"
                    "Disallow: /api/paypal/\nDisallow: /monitor/\nDisallow: /api/monitor/\n"
-                   "Disallow: /compare?\nDisallow: /site/\nDisallow: /exposure/\n" + bank_detail_rules + "\n")
+                   "Disallow: /compare?a=\nDisallow: /compare?b=\nDisallow: /compare?*&a=\nDisallow: /compare?*&b=\nDisallow: /site/\nDisallow: /exposure/\n" + bank_detail_rules + "\n")
     # /badge/<domain>.svg: embeddable images, no search value; they took ~25% of Googlebot hits (2026-11-16..20).
     # /compare?a=…: one URL per domain, always noindex + canonical to /compare; ~10% of crawler hits
-    # (2026-11-22). /compare itself stays crawlable.
+    # (2026-11-22). Only URLs naming a domain (a=/b=) are blocked; /compare?lang=… is the
+    # canonical listed in the sitemap and stays crawlable.
     body = (agents + "Disallow: /admin\nDisallow: /report/\nDisallow: /api/paypal/\nDisallow: /monitor/\nDisallow: /api/monitor/\n"
-            "Disallow: /badge/\nDisallow: /compare?\n\n"
+            "Disallow: /badge/\nDisallow: /compare?a=\nDisallow: /compare?b=\nDisallow: /compare?*&a=\nDisallow: /compare?*&b=\n\n"
             + audit_agent
             + f"Sitemap: {public_base()}/sitemap.xml\n"
             f"# AI agents: machine-readable summary and API at {public_base()}/llms.txt\n"

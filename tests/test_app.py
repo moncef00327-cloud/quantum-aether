@@ -162,8 +162,11 @@ class ApiTests(AppTestCase):
             self.assertIn(f"User-agent: {agent}\n", group)
         self.assertIn("Disallow: /admin", group)
         rules = group.splitlines()
-        self.assertIn("Disallow: /compare?", rules)  # noindex parameter pages
-        self.assertNotIn("Disallow: /compare", rules)  # the /compare page stays crawlable
+        for rule in ("/compare?a=", "/compare?b=", "/compare?*&a=", "/compare?*&b="):
+            self.assertIn(f"Disallow: {rule}", rules)  # noindex per-domain pages
+        # /compare?lang=… is the canonical, listed in the sitemap: it must stay crawlable.
+        self.assertNotIn("Disallow: /compare", rules)
+        self.assertNotIn("Disallow: /compare?", rules)
 
     def test_rate_limit_counts_failed_attempts(self):
         self.client.post("/api/scan", json={"domain": "localhost"})
