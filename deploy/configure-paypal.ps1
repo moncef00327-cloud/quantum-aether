@@ -2,7 +2,7 @@
 # نافذة Windows لإدخال سر PayPal وكلمة مرور لوحة الإدارة بدل خانات Terminal المخفية.
 # القيم تُرسل إلى الخادم عبر SSH (مشفّرة) إلى deploy/configure.sh --stdin، ولا تُحفظ على هذا الجهاز.
 # التشغيل:  pwsh -File deploy\configure-paypal.ps1
-param([string]$Server = 'root@95.179.195.150')
+param([string]$Server = 'root@80.211.34.89')
 
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing

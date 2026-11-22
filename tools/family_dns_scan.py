@@ -47,6 +47,12 @@ def main():
         for r in ex.map(blocked, ds):
             if r:
                 hits.append(r)
+    # Merge, never replace: the database may not hold every listed host (server move), and a failed lookup is no all-clear.
+    try:
+        with open(OUT, encoding="utf-8") as f:
+            hits.extend(json.load(f).get("hosts", []))
+    except FileNotFoundError:
+        pass
     hits = sorted(set(hits))
     json.dump({"hosts": hits, "updated": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
                "checked": len(ds),

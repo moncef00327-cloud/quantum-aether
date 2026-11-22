@@ -202,7 +202,7 @@ class TrackerTests(unittest.TestCase):
     def test_scanning_page(self):
         for lang in ("en", "ar", "de"):
             body = self.client.get(f"/scanning?lang={lang}").get_data(as_text=True)
-            self.assertIn("95.179.195.150", body)
+            self.assertIn("80.211.34.89", body)
             self.assertIn("mailto:", body)
         self.assertIn("/scanning", self.client.get("/adoption?lang=en").get_data(as_text=True))
 

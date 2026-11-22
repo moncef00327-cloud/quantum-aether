@@ -1,7 +1,7 @@
 """/bot: the page QuantumAetherBot links to from its User-Agent, for admins who see it in their logs."""
 
 UA = "Mozilla/5.0 (compatible; QuantumAetherBot/1.0; +https://ather-quantum.com/bot)"
-SOURCE_IP = "95.179.195.150"
+SOURCE_IP = "80.211.34.89"
 
 COPY = {
     "en": {
