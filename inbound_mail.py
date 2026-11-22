@@ -84,6 +84,12 @@ def is_test_mail(from_addr, subject):
     return TEST_MARK in (subject or "").lower() and sender.rpartition("@")[2] in OWN_DOMAINS
 
 
+def is_own_mail(from_addr):
+    """Our own notices and reports can land in this inbox: notifying about them would loop forever."""
+    sender = from_addr.rsplit("<", 1)[-1].rstrip(">").strip().lower()
+    return sender.rpartition("@")[2] in OWN_DOMAINS
+
+
 def store(conn, webhook_id, data):
     """Insert once per webhook delivery id; returns the row dict, or None if it was already stored."""
     row = {"webhook_id": webhook_id, "email_id": str(data.get("email_id") or data.get("id") or "")[:80],
@@ -144,7 +150,7 @@ def register(bp, deps):
             return {"ok": True, "duplicate": True}
         log.info("inbound mail stored: id=%s test=%s", row["id"], row["is_test"])
         owner = deps["owner"]()
-        if not row["is_test"] and owner:
+        if not row["is_test"] and owner and not is_own_mail(row["from_addr"]):
             subject, text = owner_notice(row)
             if deps["mailer"]().send(owner, subject, text):
                 with conn:
