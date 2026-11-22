@@ -166,9 +166,10 @@ ALLOWED_CCTLDS = ARABIC_TLDS | {"us", "ca", "au", "nz", "jp", "kr", "sg", "in", 
                                 "th", "ph", "vn", "cl", "ar", "pe", "uy", "tr", "il", "pk", "ng", "ke", "gh"}
 
 
-# Owner focus 2026-11-22: Asia and the Americas. Expansion probes only these; outreach sends them first.
+# Owner focus 2026-11-22: Asia, the Americas and the Arab world. Expansion probes only these; outreach sends them first.
 FOCUS_TLDS = {"us", "ca", "mx", "br", "ar", "cl", "pe", "uy",                       # Americas
               "jp", "kr", "in", "sg", "hk", "tw", "my", "id", "th", "ph", "vn", "pk", "il"}  # Asia
+FOCUS_TLDS |= ARABIC_TLDS  # Arab world added by the owner the same day
 
 
 FOCUS_COUNTRIES = {t.upper() for t in FOCUS_TLDS}
