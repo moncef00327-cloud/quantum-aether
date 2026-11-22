@@ -161,6 +161,9 @@ class ApiTests(AppTestCase):
         for agent in ("GPTBot", "ClaudeBot", "PerplexityBot", "*"):
             self.assertIn(f"User-agent: {agent}\n", group)
         self.assertIn("Disallow: /admin", group)
+        rules = group.splitlines()
+        self.assertIn("Disallow: /compare?", rules)  # noindex parameter pages
+        self.assertNotIn("Disallow: /compare", rules)  # the /compare page stays crawlable
 
     def test_rate_limit_counts_failed_attempts(self):
         self.client.post("/api/scan", json={"domain": "localhost"})
