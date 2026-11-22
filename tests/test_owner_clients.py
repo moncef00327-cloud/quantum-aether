@@ -46,6 +46,12 @@ class OwnerClientTest(unittest.TestCase):
             conn.execute("UPDATE owner_clients SET last_seen = '2020-01-01T00:00:00Z'")
         self.assertEqual(self.api_scan("203.0.113.7", "later.test"), 0)
 
+    def test_synthetic_monitor_scans_are_tests(self):
+        res = self.app.test_client().get("/api/v1/scan?domain=monitor.test", environ_base={"REMOTE_ADDR": "34.96.45.183"},
+                                         headers={"User-Agent": "SealKeeperBot/1.0 (+https://sealkeeper.run/checks)"})
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(self.conn().execute("SELECT is_test FROM scans WHERE domain = 'monitor.test'").fetchone()[0], 1)
+
     def test_no_cookie_no_record(self):
         self.app.test_client().get("/", environ_base={"REMOTE_ADDR": "203.0.113.7"})
         self.assertEqual(self.conn().execute("SELECT COUNT(*) FROM owner_clients").fetchone()[0], 0)

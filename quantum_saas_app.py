@@ -446,6 +446,8 @@ def _remember_owner_client():
 
 INTERNAL_UA_MARKER = "quantumaether-internal"
 QA_TEST_UA_MARKER = "qa-trial-test"  # browser QA runs (2026-11-21): counted as tests, never as visitors or customers
+# Synthetic uptime/registry checkers that scan example.com every few hours: tests, not visitors (2026-11-22).
+MONITOR_UA_MARKERS = ("sealkeeperbot",)
 # عناوين السيرفر نفسه (تُضبط في /etc/quantum_saas.env)؛ لا افتراضي لأن عميل الاختبار يأتي من 127.0.0.1.
 INTERNAL_IPS = frozenset(ip.strip() for ip in os.environ.get("QS_INTERNAL_IPS", "").split(",") if ip.strip())
 
@@ -453,7 +455,7 @@ INTERNAL_IPS = frozenset(ip.strip() for ip in os.environ.get("QS_INTERNAL_IPS", 
 def is_internal_request():
     """طلب من السيرفر نفسه (curl/سكربتاتنا) أو بهوية الفحص الداخلي — ليس زائراً حقيقياً."""
     ua = (request.headers.get("User-Agent") or "").lower()
-    return (INTERNAL_UA_MARKER in ua or QA_TEST_UA_MARKER in ua
+    return (INTERNAL_UA_MARKER in ua or QA_TEST_UA_MARKER in ua or any(m in ua for m in MONITOR_UA_MARKERS)
             or (request.remote_addr or "") in INTERNAL_IPS)
 
 
