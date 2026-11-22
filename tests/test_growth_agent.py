@@ -125,11 +125,12 @@ class GrowthAgentTests(unittest.TestCase):
     def test_one_mail_per_address_and_no_blocked_contact(self):
         c = sqlite3.connect(self.db)
         c.execute("DELETE FROM adoption_results")
-        for d in ("a.com.au", "b.com.au", "yandex.com.tr", "ubc.ca"):
+        for d in ("a.com.au", "b.com.au", "yandex.com.tr", "ubc.ca", "skyscanner.co.in", "ucalgary.ca"):
             c.execute("INSERT INTO adoption_results VALUES ('2026-W47', ?, 1, 'telecom', 1, 'B', 'x25519', 'TLSv1.3', 0, '', 0)", (d,))
         c.commit(); c.close()
         http = FakeHttp({"a.com.au": "sec@group.com.au", "b.com.au": "sec@group.com.au", "yandex.com.tr": "s@yandex-team.ru",
-                         "ubc.ca": "security@ubc.ca"})
+                         "ubc.ca": "security@ubc.ca", "skyscanner.co.in": "security@skyscanner.net",
+                         "ucalgary.ca": "abuse@ucalgary.ca"})
         sent = [s["domain"] for s in self.run_once(http)["sent"]]
         self.assertEqual(sent, ["a.com.au"])
 

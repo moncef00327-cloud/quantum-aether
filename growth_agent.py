@@ -52,7 +52,8 @@ CENTRAL_BANKS = {"cbi.iq", "boj.or.jp", "bok.or.kr", "banxico.org.mx", "centralb
 BLOCKED_TLDS = {"ru", "by", "ir", "cn", "kp", "sy", "cu"}
 # Universities are not buyers (their sector was never targeted); catch the ones on plain country TLDs.
 UNIVERSITY = re.compile(r"(^|[.-])(univ|university|universidad|universidade|college|uwaterloo|ubc|utoronto|mcgill|unsw|"
-                        r"unimelb|monash|usp|unicamp|nus|ntu)([.-]|$)")
+                        r"unimelb|monash|usp|unicamp|nus|ntu|ucalgary|ualberta|uottawa|usask|umanitoba|queensu|yorku|sfu|uvic|dal|"
+                        r"anu|uq|uwa|adelaide|sydney|auckland|otago|iitb|iitd|iisc|kaist|snu|keio|waseda|u-tokyo|kyoto-u)([.-]|$)")
 GOV = re.compile(r"(^|\.)(gov|gob|gouv|govt|mil|edu|ac)(\.|$)")
 DOMAIN_RE = re.compile(r"\b([a-z0-9-]+(?:\.[a-z0-9-]+)+\.[a-z]{2,}|[a-z0-9-]+\.[a-z]{2,})\b")
 STOP_RE = re.compile(r"\b(stop|unsubscribe|remove me|opt[- ]?out)\b|إيقاف|الغاء|إلغاء", re.I)
@@ -427,7 +428,11 @@ def outreach(conn, dry_run=False, http=None, history=None, pause_between=90, max
         email, source = published_contact(c["domain"], http)
         mail_dom = base_domain(email.split("@")[1]) if email else ""
         if (not email or email in used_emails or mail_dom in skip or mail_dom.startswith("lists.") or is_eu(mail_dom)
-                or tld(mail_dom) in BLOCKED_TLDS or UNIVERSITY.search(c["domain"])):
+                or tld(mail_dom) in BLOCKED_TLDS or UNIVERSITY.search(c["domain"]) or UNIVERSITY.search(mail_dom)
+                or email.startswith(("abuse@", "noc@", "postmaster@"))
+                # contact on a generic TLD of ANOTHER domain = parent company of unknown country (skyscanner.co.in ->
+                # skyscanner.net, a UK company): only the regional sectors may do that
+                or (tld(mail_dom) in GENERIC_TLDS and mail_dom != c["domain"] and c["sector"] not in KNOWN_REGION_SECTORS)):
             continue
         checked = live_check(c, scanner)
         if checked is None:
