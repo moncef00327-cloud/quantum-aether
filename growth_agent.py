@@ -146,6 +146,24 @@ def auto_send_ok(c):
     return tld(c["domain"]) not in GENERIC_TLDS or c["sector"] in KNOWN_REGION_SECTORS
 
 
+def live_check(c, scanner=None):
+    """Re-measure right before sending; the weekly row can be stale or hit another backend (zoom.us: W47 row
+    secp256r1, live 2026-11-22 X25519MLKEM768). Returns the candidate updated with the live result, or None
+    when the host is post-quantum now or the measurement is not clear."""
+    if scanner is None:
+        import quantum_vuln_scanner
+        scanner = quantum_vuln_scanner.scan
+    try:
+        r = scanner(c["host"])
+    except Exception:
+        return None
+    kx = r.get("key_exchange") or {}
+    if kx.get("error") or not kx.get("negotiation_observed") or kx.get("pq") is not False or not kx.get("group"):
+        return None
+    day = (r.get("scanned_at") or now_iso())[:10]
+    return dict(c, group=kx["group"], tls=kx.get("version") or c["tls"], grade=r.get("grade") or c["grade"], week=day)
+
+
 def parse_security_txt(text):
     """First Contact: mailto: address (RFC 9116), or None."""
     for line in text.splitlines():
@@ -176,7 +194,7 @@ def message(c, lang):
     if lang == "ar":
         subject = f"{c['domain']}: تبادل المفاتيح في TLS ما زال تقليديًا (قياس {c['week']})"
         lines = [f"مرحبًا فريق أمن {c['domain']}،", "",
-                 f"في قياسنا الأسبوعي العام ({c['week']}) تفاوض {c['host']} على {c['tls'] or 'TLS'} مع تبادل مفاتيح {group}، "
+                 f"في قياسنا العام بتاريخ {c['week']} تفاوض {c['host']} على {c['tls'] or 'TLS'} مع تبادل مفاتيح {group}، "
                  "من دون المجموعة الهجينة المقاومة للحوسبة الكمومية X25519MLKEM768 التي تعرضها Chrome وFirefox وSafari افتراضيًا.",
                  "هذا يعني أن الحركة المسجلة اليوم يمكن فك تشفيرها لاحقًا («احفظ الآن، فُكّ لاحقًا»).", "",
                  f"النتيجة الكاملة وطريقة الإصلاح (مجانًا، دون تسجيل): {site}", "",
@@ -185,7 +203,7 @@ def message(c, lang):
     else:
         subject = f"{c['domain']}: TLS key exchange is still classical (measured {c['week']})"
         lines = [f"Hello {c['domain']} security team,", "",
-                 f"In our weekly public measurement ({c['week']}), {c['host']} negotiated {c['tls'] or 'TLS'} with {group} key "
+                 f"In our public measurement on {c['week']}, {c['host']} negotiated {c['tls'] or 'TLS'} with {group} key "
                  "exchange, without the hybrid post-quantum group X25519MLKEM768 that Chrome, Firefox and Safari offer by default.",
                  "Traffic recorded today can therefore be decrypted later (\"harvest now, decrypt later\").", "",
                  f"Full result and how to fix it (free, no sign-up): {site}", "",
@@ -300,7 +318,7 @@ def sent_today(conn):
     return conn.execute("SELECT COUNT(*) FROM growth_outreach WHERE sent_at LIKE ?", (day + "%",)).fetchone()[0]
 
 
-def outreach(conn, dry_run=False, http=None, history=None, pause_between=90, max_lookups=80):
+def outreach(conn, dry_run=False, http=None, history=None, pause_between=90, max_lookups=80, scanner=None):
     if os.path.exists(PAUSE_FILE):
         return {"paused": open(PAUSE_FILE, encoding="utf-8").read().strip(), "sent": []}
     health = refresh_events(conn, http) if not dry_run else {"n": 0, "bounced": 0, "complained": 0}
@@ -324,6 +342,10 @@ def outreach(conn, dry_run=False, http=None, history=None, pause_between=90, max
         mail_dom = base_domain(email.split("@")[1]) if email else ""
         if not email or mail_dom in skip or mail_dom.startswith("lists.") or is_eu(mail_dom):
             continue
+        checked = live_check(c, scanner)
+        if checked is None:
+            continue
+        c = checked
         lang = "ar" if tld(c["domain"]) in ARABIC_TLDS or c["sector"] == "banks-mena" else "en"
         subject, text = message(c, lang)
         if dry_run:

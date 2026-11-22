@@ -45,7 +45,7 @@ UNIT
   printf '[Unit]\nDescription=Growth daily digest (07:00 UTC)\n\n[Timer]\nOnCalendar=*-*-* 07:00:00 UTC\nPersistent=true\n\n[Install]\nWantedBy=timers.target\n' > /etc/systemd/system/quantum_growth_digest.timer
   systemctl daemon-reload
   systemctl enable --now quantum_growth_outreach.timer quantum_growth_leads.timer quantum_growth_digest.timer
-  sudo -u quantum env $(grep -v '^#' /etc/quantum_saas.env | xargs -d '\n') $PY $LIVE/growth_agent.py status
+  systemctl start quantum_growth_leads.service && journalctl -u quantum_growth_leads.service -n 3 --no-pager
   systemctl list-timers --no-pager | grep growth
   ;;
 stop)  touch $PAUSE && chown quantum:quantum $PAUSE && echo "growth agents PAUSED (nothing will be sent)";;

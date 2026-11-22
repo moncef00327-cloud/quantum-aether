@@ -46,7 +46,8 @@ class GrowthAgentTests(unittest.TestCase):
           CREATE TABLE scans (created_at, is_test); CREATE TABLE monitor_accounts (created_at, status);""")
         rows = [("bank.com.sa", "banks-mena", 0), ("commerzbank.com", "finance-worldwide", 0), ("bank.de", "banks-mena", 0),
                 ("cbi.iq", "banks-mena", 0), ("tax.gov.ae", "banks-mena", 0), ("pq.ae", "banks-mena", 1),
-                ("old.com.sa", "banks-mena", 0), ("nolist.qa", "banks-mena", 0), ("other.qa", "banks-mena", 0)]
+                ("old.com.sa", "banks-mena", 0), ("nolist.qa", "banks-mena", 0), ("nowpq.com.sa", "banks-mena", 0),
+                ("other.qa", "banks-mena", 0)]
         for d, sec, pq in rows:
             c.execute("INSERT INTO adoption_results VALUES ('2026-W47', ?, 1, ?, 1, 'B', 'x25519', 'TLSv1.3', ?, '', 0)", (d, sec, pq))
         c.execute("INSERT INTO contacted_orgs VALUES ('old.com.sa', '', '')")
@@ -62,7 +63,14 @@ class GrowthAgentTests(unittest.TestCase):
         self.env.stop(); self.pause.stop(); self.tmp.cleanup()
 
     def run_once(self, http):
-        return g.outreach(g.connect(self.db), http=http, history=set(), pause_between=0)
+        return g.outreach(g.connect(self.db), http=http, history=set(), pause_between=0, scanner=self.scanner)
+
+    @staticmethod
+    def scanner(host):
+        pq = host.startswith("nowpq")
+        return {"grade": "A" if pq else "B", "scanned_at": "2026-11-22T06:00:00Z",
+                "key_exchange": {"negotiation_observed": True, "pq": pq, "group": "X25519MLKEM768" if pq else "x25519",
+                                 "version": "TLSv1.3", "error": None}}
 
     def test_only_published_non_eu_non_gov_new_orgs(self):
         http = FakeHttp(self.contacts)
@@ -73,7 +81,7 @@ class GrowthAgentTests(unittest.TestCase):
             self.assertIn("إيقاف", p["text"])
         again = [s["domain"] for s in self.run_once(FakeHttp(self.contacts))["sent"]]
         self.assertNotIn("bank.com.sa", again)
-        for bad in ("commerzbank.com", "bank.de", "cbi.iq", "tax.gov.ae", "pq.ae", "old.com.sa", "nolist.qa"):
+        for bad in ("nowpq.com.sa", "commerzbank.com", "bank.de", "cbi.iq", "tax.gov.ae", "pq.ae", "old.com.sa", "nolist.qa"):
             self.assertNotIn(bad, sent + again)
 
     def test_pause_file_stops_everything(self):
