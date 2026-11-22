@@ -118,10 +118,10 @@ class GrowthAgentTests(unittest.TestCase):
         conn = g.connect(self.db)
         stats = g.expand(conn, http=http, scanner=self.scanner, workers=2, tranco_path=tranco,
                          excluded_fn=lambda d: d.startswith("casino"),
-                         country_fn=lambda d: {"usbank.com": "US", "eubank.com": "DE"}.get(d))
+                         country_fn=lambda d: {"usbank.com": "US", "eubank.com": "DE"}.get(d), bots=set())
         # br, jp(nomail), jp(nowpq), usbank.com (C=US); eubank.com (C=DE) probed but never a prospect
-        self.assertEqual(stats, {"probed": 5, "published": 3, "scanned": 3, "classical": 2})
-        self.assertEqual(g.expansion_pool(conn, tranco, lambda d: False), [(6, "casino.us")])  # probed ones wait 30 days
+        self.assertEqual(stats, {"probed": 15, "published": 3, "scanned": 3, "classical": 2})  # +10 tracker domains (trace)
+        self.assertEqual(g.expansion_pool(conn, tranco, lambda d: False, bots=set()), [(6, "casino.us")])  # probed ones wait 30 days
         conn.execute("DELETE FROM adoption_results"); conn.commit()
         sent = [s["domain"] for s in self.run_once(FakeHttp({"shop.com.br": "sec@shop.com.br", "usbank.com": "sec@usbank.com"}))["sent"]]
         self.assertEqual(sorted(sent), ["shop.com.br", "usbank.com"])
@@ -137,6 +137,20 @@ class GrowthAgentTests(unittest.TestCase):
                          "ucalgary.ca": "abuse@ucalgary.ca"})
         sent = [s["domain"] for s in self.run_once(http)["sent"]]
         self.assertEqual(sent, ["a.com.au"])
+
+    def test_related_domains_get_the_trace_first(self):
+        c = sqlite3.connect(self.db)
+        c.execute("INSERT INTO pageviews VALUES ('2026-11-22', '/site/viewed.de', '', 'v', 0, 0)")
+        c.execute("INSERT INTO pageviews VALUES ('2026-11-22', '/', 'blog.partner.io', 'v', 0, 0)")
+        c.commit(); c.close()
+        tranco = os.path.join(self.tmp.name, "t.csv"); open(tranco, "w").write("1,shop.com.br\n")
+        pool = g.expansion_pool(g.connect(self.db), tranco, lambda d: False, bots={"sealkeeper.run", "ather-quantum.com"})
+        related = {d for r, d in pool if r == 0}
+        self.assertTrue({"viewed.de", "blog.partner.io", "sealkeeper.run", "bank.com.sa", "bank.de"} <= related)
+        self.assertNotIn("ather-quantum.com", related)
+        self.assertEqual(pool[-1], (1, "shop.com.br"))
+        self.assertIn("QuantumAetherBot", g.UA)
+        self.assertIn("/bot", g.UA)
 
     def test_security_txt_parse(self):
         self.assertEqual(g.parse_security_txt("# x\nContact: https://x/form\nContact: mailto:Sec@Ex.com\n"), "sec@ex.com")

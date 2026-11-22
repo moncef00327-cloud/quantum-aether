@@ -39,6 +39,7 @@ import analytics_db
 import assets
 import guides
 import guide_faq
+import bot_page
 import legal
 import monitor
 import countries
@@ -2294,6 +2295,14 @@ def countries_json():
                 method="Country = country-code top-level domain of each Tranco top-10,000 hostname (generic-use ccTLDs such as "
                        ".io, .ai, .tv, .co, .me excluded). pct = share of measured hostnames that negotiated X25519MLKEM768.")
     return _open_data(current_app.response_class(json.dumps(body, ensure_ascii=False), mimetype="application/json"))
+
+
+@bp.get("/bot")
+def bot_page_view():
+    """For admins who see QuantumAetherBot (growth agent) in their logs: what it did, their result, opt-out."""
+    lang = current_lang()
+    return render_template("bot.html", copy=bot_page.COPY.get(lang, bot_page.COPY["en"]), ua=bot_page.UA,
+                           source_ip=bot_page.SOURCE_IP)
 
 
 @bp.get("/scanning")

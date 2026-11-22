@@ -33,7 +33,7 @@ SITE = "https://ather-quantum.com"
 DAILY_CAP = int(os.environ.get("QS_GROWTH_DAILY_CAP", "20"))
 PER_RUN = 2  # runs every hour round the clock (Asia and the Americas are in different time zones)
 BOUNCE_LIMIT = 0.05
-UA = "Mozilla/5.0 (compatible; QuantumAether-Growth/1.0; +https://ather-quantum.com/scanning)"
+UA = "Mozilla/5.0 (compatible; QuantumAetherBot/1.0; +https://ather-quantum.com/bot)"  # = bot_page.UA
 HERE = os.path.dirname(os.path.abspath(__file__))
 # Old logs that hold already-contacted domains (any domain-looking token in them is excluded).
 HISTORY_GLOBS = [os.path.join(DATA_DIR, "growth_history.txt"), "data/outreach_*sent*.json", "data/bounced_suppress.txt", "send_arab_batch*.py",
@@ -355,8 +355,36 @@ TRANCO = os.path.join(HERE, "data", "tranco_GQ38K_top100k.csv")
 REPROBE_DAYS = 30
 
 
-def expansion_pool(conn, tranco_path=TRANCO, excluded_fn=None):
-    """Tranco domains on allowed country TLDs, not yet probed (or probed > REPROBE_DAYS ago), best rank first."""
+OWN_DOMAINS = {"ather-quantum.com", "ather-quatum.cloud", "example.com", "example.org", "example.net", "localhost"}
+UA_URL = re.compile(r"\+?https?://([a-z0-9.-]+\.[a-z]{2,})", re.I)
+
+
+def bot_domains(since="-7d"):
+    """Domains named in the User-Agent of bots that visited us (\"+https://sealkeeper.run/checks\")."""
+    import subprocess
+    try:
+        out = subprocess.run(["journalctl", "-u", "quantum_saas", "--since", since, "--no-pager", "-o", "cat"],
+                             capture_output=True, text=True, timeout=120).stdout
+    except (OSError, subprocess.SubprocessError):
+        return set()
+    return {base_domain(m) for m in UA_URL.findall(out)}
+
+
+def related_domains(conn, bots=None):
+    """Every domain we have a relation with: tracker targets (we visit them), domains whose result page people
+    opened, sites that send us visitors, and bots that visit us. Each gets the same honest trace (UA + /bot)."""
+    found = {base_domain(r[0]) for r in conn.execute("SELECT DISTINCT domain FROM adoption_results")}
+    for (path,) in conn.execute("SELECT DISTINCT path FROM pageviews WHERE path LIKE '/site/%' AND is_bot = 0"):
+        found.add(base_domain(path[6:]))
+    for (ref,) in conn.execute("SELECT DISTINCT referrer FROM pageviews WHERE referrer LIKE '%.%' AND referrer NOT LIKE 'utm:%'"):
+        found.add(base_domain(ref.split("/")[0]))
+    found |= bot_domains() if bots is None else bots
+    return {d for d in found if d and "." in d and DOMAIN_RE.fullmatch(d) and d not in OWN_DOMAINS}
+
+
+def expansion_pool(conn, tranco_path=TRANCO, excluded_fn=None, bots=None):
+    """Domains we are related to first (rank 0), then Tranco domains on focus TLDs; skip anything probed in the
+    last REPROBE_DAYS. Related domains are probed everywhere (a trace only); outreach filters stay as they are."""
     if excluded_fn is None:
         try:
             import search_indexing
@@ -365,22 +393,26 @@ def expansion_pool(conn, tranco_path=TRANCO, excluded_fn=None):
             excluded_fn = lambda d: False
     cutoff = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=REPROBE_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
     fresh = {r[0] for r in conn.execute("SELECT domain FROM growth_prospects WHERE probed_at >= ?", (cutoff,))}
-    pool = []
+    pool, seen = [], set()
+    for d in sorted(related_domains(conn, bots)):
+        if d not in fresh and tld(d) not in BLOCKED_TLDS and not excluded_fn(d):
+            pool.append((0, d)); seen.add(d)
     with open(tranco_path, encoding="utf-8") as f:
         for line in f:
             rank, _, dom = line.strip().partition(",")
             d = base_domain(dom)
             if (d and (tld(d) in FOCUS_TLDS or tld(d) in GENERIC_TLDS) and tld(d) not in BLOCKED_TLDS and d not in fresh and not is_eu(d) and not GOV.search(d)
                     and not UNIVERSITY.search(d)
-                    and d not in CENTRAL_BANKS and not excluded_fn(d)):
+                    and d not in CENTRAL_BANKS and d not in seen and not excluded_fn(d)):
                 pool.append((int(rank), d))
     return pool
 
 
-def expand(conn, batch=600, http=None, scanner=None, workers=32, tranco_path=TRANCO, excluded_fn=None, country_fn=None):
+def expand(conn, batch=600, http=None, scanner=None, workers=32, tranco_path=TRANCO, excluded_fn=None, country_fn=None,
+           bots=None):
     """Find orgs that PUBLISH a security contact, then measure them once. Outreach picks the classical ones."""
     from concurrent.futures import ThreadPoolExecutor
-    pool = expansion_pool(conn, tranco_path, excluded_fn)[:batch]
+    pool = expansion_pool(conn, tranco_path, excluded_fn, bots)[:batch]
     with ThreadPoolExecutor(max_workers=workers) as ex:
         found = list(ex.map(lambda rd: (rd, published_contact(rd[1], http)), pool))
     country_fn = country_fn or cert_country

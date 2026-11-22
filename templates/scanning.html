@@ -8,7 +8,7 @@
   <h2>{{ t.scanning_what_title }}</h2>
   <ul>{% for item in t.scanning_what %}<li>{{ item }}</li>{% endfor %}</ul>
   <h2>{{ t.scanning_optout_title }}</h2>
-  <p>{{ t.scanning_optout }} <a href="mailto:sajad.vip56@gmail.com?subject=Opt-out%20from%20Quantum%20Aether%20scans">sajad.vip56@gmail.com</a></p>
+  <p>{{ t.scanning_optout }} <span dir="ltr">{{ contact_email }}</span></p>
   <h3>{{ t.scanning_dns_title }}</h3>
   <p>{{ t.scanning_dns_body }}</p>
   <pre dir="ltr"><code>_ather-optout.example.com. IN TXT "verify-optout"</code></pre>

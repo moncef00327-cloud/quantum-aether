@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% set c = copy %}
+{% block title %}{{ c.title }} · {{ t.brand }}{% endblock %}
+{% block description %}{{ c.meta }}{% endblock %}
+{% block content %}
+<article class="card prose">
+  <h1>{{ c.title }}</h1>
+  <p class="lead">{{ c.lead }}</p>
+  <p class="muted small" dir="ltr"><code>{{ ua }}</code></p>
+  <h2>{{ c.did_title }}</h2>
+  <ol>{% for item in c.did %}<li>{{ item }}</li>{% endfor %}</ol>
+  <h2>{{ c.not_title }}</h2>
+  <p>{{ c.not }}</p>
+  <h2 id="result">{{ c.result_title }}</h2>
+  <p>{{ c.result }}</p>
+</article>
+{% with box_id='domain-box-bot', box_src='bot' %}{% include "_scan_box.html" %}{% endwith %}
+<section class="card prose" id="optout">
+  <h2>{{ c.optout_title }}</h2>
+  <p>{{ c.optout }} <span dir="ltr">{{ contact_email }}</span>. <a href="{{ url_for('site.scanning_page', lang=lang) }}">{{ c.optout_link }} →</a></p>
+  <p class="muted small">{{ c.source }} <code dir="ltr">{{ source_ip }}</code></p>
+</section>
+{% endblock %}

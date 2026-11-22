@@ -41,6 +41,8 @@ ProtectHome=true
 ReadWritePaths=$DATA
 UNIT
   done
+  # expand reads the app log for bots that name their site in their User-Agent (trace for "who visits us")
+  sed -i 's/^Group=quantum$/Group=quantum\nSupplementaryGroups=systemd-journal/' /etc/systemd/system/quantum_growth_expand.service
   printf '[Unit]\nDescription=Growth outreach (hourly, round the clock: Asia + Americas)\n\n[Timer]\nOnCalendar=*-*-* *:05:00 UTC\nPersistent=false\n\n[Install]\nWantedBy=timers.target\n' > /etc/systemd/system/quantum_growth_outreach.timer
   printf '[Unit]\nDescription=Growth leads check (every 15 min)\n\n[Timer]\nOnCalendar=*:0/15\n\n[Install]\nWantedBy=timers.target\n' > /etc/systemd/system/quantum_growth_leads.timer
   printf '[Unit]\nDescription=Growth expansion: find orgs publishing security.txt (hourly)\n\n[Timer]\nOnCalendar=*-*-* *:35:00 UTC\n\n[Install]\nWantedBy=timers.target\n' > /etc/systemd/system/quantum_growth_expand.timer
