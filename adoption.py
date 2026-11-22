@@ -123,9 +123,10 @@ def _udp_dns_txt_query(fqdn, nameserver="1.1.1.1", timeout=3.0):
     """استعلام DNS TXT خالص عبر UDP (RFC 1035) لا يحتاج حزماً خارجية."""
     import random, socket, struct
     txid = random.randint(1, 65534)
-    header = struct.pack("!HHHHHH", txid, 0x0100, 1, 0, 0, 0)
+    header = struct.pack("!HHHHHH", txid, 0x0100, 1, 0, 0, 1)
     qname = b"".join(len(lbl.encode("idna")).to_bytes(1, "big") + lbl.encode("idna") for lbl in fqdn.strip(".").split(".")) + b"\x00"
-    packet = header + qname + struct.pack("!HH", 16, 1)  # QTYPE=16 (TXT), QCLASS=1 (IN)
+    edns = b"\x00" + struct.pack("!HHIH", 41, 4096, 0, 0)  # EDNS0: without it answers over 512 bytes arrive empty
+    packet = header + qname + struct.pack("!HH", 16, 1) + edns  # QTYPE=16 (TXT), QCLASS=1 (IN)
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
         s.settimeout(timeout)
         s.sendto(packet, (nameserver, 53))
