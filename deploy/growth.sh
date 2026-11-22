@@ -3,6 +3,7 @@
 #   outreach  hourly 06:05-17:05 UTC, max 2 per run / 10 per day, published security.txt contacts only
 #   leads     every 15 min: a reply from a contacted org -> owner email with a DRAFT (never auto-replies)
 #   digest    daily 07:00 UTC to the owner
+#   expand    every 2 h: 300 Tranco domains on allowed country TLDs -> security.txt contact -> one scan
 set -e
 LIVE=/var/www/quantum_saas
 DATA=/var/lib/quantum_saas
@@ -17,7 +18,7 @@ install)
   cat data/outreach_*sent*.json data/bounced_suppress.txt send_arab_batch*.py /root/outreach-*.csv 2>/dev/null \
     | grep -oiE '[a-z0-9.-]+\.[a-z]{2,}' | sort -u > $DATA/growth_history.txt
   chown quantum:quantum $DATA/growth_history.txt
-  for job in outreach leads digest; do
+  for job in outreach leads digest expand; do
     cat > /etc/systemd/system/quantum_growth_$job.service <<UNIT
 [Unit]
 Description=Quantum Aether growth agent: $job
@@ -42,9 +43,10 @@ UNIT
   done
   printf '[Unit]\nDescription=Growth outreach (hourly, working hours UTC)\n\n[Timer]\nOnCalendar=*-*-* 06..17:05:00 UTC\nPersistent=false\n\n[Install]\nWantedBy=timers.target\n' > /etc/systemd/system/quantum_growth_outreach.timer
   printf '[Unit]\nDescription=Growth leads check (every 15 min)\n\n[Timer]\nOnCalendar=*:0/15\n\n[Install]\nWantedBy=timers.target\n' > /etc/systemd/system/quantum_growth_leads.timer
+  printf '[Unit]\nDescription=Growth expansion: find orgs publishing security.txt (every 2 h)\n\n[Timer]\nOnCalendar=*-*-* 0/2:35:00 UTC\n\n[Install]\nWantedBy=timers.target\n' > /etc/systemd/system/quantum_growth_expand.timer
   printf '[Unit]\nDescription=Growth daily digest (07:00 UTC)\n\n[Timer]\nOnCalendar=*-*-* 07:00:00 UTC\nPersistent=true\n\n[Install]\nWantedBy=timers.target\n' > /etc/systemd/system/quantum_growth_digest.timer
   systemctl daemon-reload
-  systemctl enable --now quantum_growth_outreach.timer quantum_growth_leads.timer quantum_growth_digest.timer
+  systemctl enable --now quantum_growth_outreach.timer quantum_growth_leads.timer quantum_growth_digest.timer quantum_growth_expand.timer
   systemctl start quantum_growth_leads.service && journalctl -u quantum_growth_leads.service -n 3 --no-pager
   systemctl list-timers --no-pager | grep growth
   ;;
@@ -52,6 +54,6 @@ stop)  touch $PAUSE && chown quantum:quantum $PAUSE && echo "growth agents PAUSE
 start) rm -f $PAUSE && echo "growth agents RUNNING";;
 status) [ -f $PAUSE ] && echo "PAUSED: $(cat $PAUSE)" || echo running; systemctl list-timers --no-pager | grep growth || true;;
 uninstall)
-  systemctl disable --now quantum_growth_outreach.timer quantum_growth_leads.timer quantum_growth_digest.timer || true
+  systemctl disable --now quantum_growth_outreach.timer quantum_growth_leads.timer quantum_growth_digest.timer quantum_growth_expand.timer || true
   rm -f /etc/systemd/system/quantum_growth_*.{service,timer}; systemctl daemon-reload; echo removed;;
 esac

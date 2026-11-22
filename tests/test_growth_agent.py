@@ -108,6 +108,31 @@ class GrowthAgentTests(unittest.TestCase):
         self.assertIn("NOT sent", http.posts[0]["text"])
         self.assertEqual(g.check_leads(g.connect(self.db), http), [])  # notified once
 
+    def test_expand_finds_published_contacts_and_feeds_outreach(self):
+        tranco = os.path.join(self.tmp.name, "t.csv")
+        open(tranco, "w").write("1,shop.com.br\n2,news.de\n3,site.online\n4,bank.ru\n5,nomail.jp\n6,casino.us\n7,nowpq.jp\n")
+        http = FakeHttp({"shop.com.br": "sec@shop.com.br", "news.de": "s@news.de", "bank.ru": "s@bank.ru",
+                         "casino.us": "s@casino.us", "nowpq.jp": "s@nowpq.jp"})
+        conn = g.connect(self.db)
+        stats = g.expand(conn, http=http, scanner=self.scanner, workers=2, tranco_path=tranco,
+                         excluded_fn=lambda d: d.startswith("casino"))
+        self.assertEqual(stats, {"probed": 3, "published": 2, "scanned": 2, "classical": 1})  # br, jp(nomail), jp(nowpq)
+        self.assertEqual(g.expansion_pool(conn, tranco, lambda d: False), [(6, "casino.us")])  # probed ones wait 30 days
+        conn.execute("DELETE FROM adoption_results"); conn.commit()
+        sent = [s["domain"] for s in self.run_once(FakeHttp({"shop.com.br": "sec@shop.com.br"}))["sent"]]
+        self.assertEqual(sent, ["shop.com.br"])
+
+    def test_one_mail_per_address_and_no_blocked_contact(self):
+        c = sqlite3.connect(self.db)
+        c.execute("DELETE FROM adoption_results")
+        for d in ("a.com.au", "b.com.au", "yandex.com.tr", "ubc.ca"):
+            c.execute("INSERT INTO adoption_results VALUES ('2026-W47', ?, 1, 'telecom', 1, 'B', 'x25519', 'TLSv1.3', 0, '', 0)", (d,))
+        c.commit(); c.close()
+        http = FakeHttp({"a.com.au": "sec@group.com.au", "b.com.au": "sec@group.com.au", "yandex.com.tr": "s@yandex-team.ru",
+                         "ubc.ca": "security@ubc.ca"})
+        sent = [s["domain"] for s in self.run_once(http)["sent"]]
+        self.assertEqual(sent, ["a.com.au"])
+
     def test_security_txt_parse(self):
         self.assertEqual(g.parse_security_txt("# x\nContact: https://x/form\nContact: mailto:Sec@Ex.com\n"), "sec@ex.com")
         self.assertIsNone(g.parse_security_txt("Contact: https://x/form\n"))

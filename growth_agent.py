@@ -49,6 +49,10 @@ ARABIC_TLDS = {"sa", "ae", "qa", "kw", "bh", "om", "eg", "jo", "lb", "ma", "dz",
 CENTRAL_BANKS = {"cbi.iq", "boj.or.jp", "bok.or.kr", "banxico.org.mx", "centralbank.ae", "cbk.gov.kw", "cbe.org.eg",
                  "sama.gov.sa", "cbb.gov.bh", "cbo.gov.om", "qcb.gov.qa", "bkam.ma", "bct.gov.tn", "cbj.gov.jo",
                  "bdl.gov.lb", "bank-of-algeria.dz", "federalreserve.gov", "ecb.europa.eu", "bis.org", "imf.org"}
+BLOCKED_TLDS = {"ru", "by", "ir", "cn", "kp", "sy", "cu"}
+# Universities are not buyers (their sector was never targeted); catch the ones on plain country TLDs.
+UNIVERSITY = re.compile(r"(^|[.-])(univ|university|universidad|universidade|college|uwaterloo|ubc|utoronto|mcgill|unsw|"
+                        r"unimelb|monash|usp|unicamp|nus|ntu)([.-]|$)")
 GOV = re.compile(r"(^|\.)(gov|gob|gouv|govt|mil|edu|ac)(\.|$)")
 DOMAIN_RE = re.compile(r"\b([a-z0-9-]+(?:\.[a-z0-9-]+)+\.[a-z]{2,}|[a-z0-9-]+\.[a-z]{2,})\b")
 STOP_RE = re.compile(r"\b(stop|unsubscribe|remove me|opt[- ]?out)\b|إيقاف|الغاء|إلغاء", re.I)
@@ -61,6 +65,9 @@ def connect(path=DB_PATH):
         domain TEXT PRIMARY KEY, email TEXT NOT NULL, lang TEXT, reason TEXT, resend_id TEXT,
         sent_at TEXT NOT NULL, last_event TEXT, checked_at TEXT)""")
     conn.execute("CREATE TABLE IF NOT EXISTS growth_suppress (domain TEXT PRIMARY KEY, added_at TEXT, reason TEXT)")
+    conn.execute("""CREATE TABLE IF NOT EXISTS growth_prospects (
+        domain TEXT PRIMARY KEY, host TEXT, rank INTEGER, email TEXT, source TEXT, probed_at TEXT,
+        scanned_at TEXT, grade TEXT, grp TEXT, tls TEXT, pq INTEGER)""")
     return conn
 
 
@@ -111,8 +118,6 @@ def candidates(conn, skip):
     """Latest tracker week, target sectors, not post-quantum, not EU/gov. Regressions first, then orgs whose
     /site/ page people looked at, then the rest by Tranco rank."""
     week = conn.execute("SELECT MAX(week) FROM adoption_results WHERE sector IS NOT NULL").fetchone()[0]
-    if not week:
-        return []
     prev = conn.execute("SELECT MAX(week) FROM adoption_results WHERE week < ? AND sector IS NOT NULL", (week,)).fetchone()[0]
     rows = conn.execute("SELECT domain, sector, grade, grp, tls, pq, rank FROM adoption_results "
                         "WHERE week = ? AND ok = 1 AND COALESCE(unsure, 0) = 0", (week,)).fetchall()
@@ -133,6 +138,15 @@ def candidates(conn, skip):
         out.append({"domain": d, "host": r["domain"], "sector": r["sector"], "grade": r["grade"], "group": r["grp"],
                     "tls": r["tls"], "week": week, "reason": reason, "views": views.get(d, 0),
                     "sort": (prio, -views.get(d, 0), r["rank"] or 10 ** 9)})
+    have = {c["domain"] for c in out}
+    for r in conn.execute("SELECT domain, host, grade, grp, tls, scanned_at, rank FROM growth_prospects "
+                          "WHERE email IS NOT NULL AND pq = 0 AND scanned_at IS NOT NULL"):
+        d = r["domain"]
+        if d in skip or d in have or is_eu(d) or GOV.search(d) or d in CENTRAL_BANKS:
+            continue
+        out.append({"domain": d, "host": r["host"], "sector": "discovered", "grade": r["grade"], "group": r["grp"],
+                    "tls": r["tls"], "week": (r["scanned_at"] or "")[:10], "reason": "discovered", "views": views.get(d, 0),
+                    "sort": (3, -views.get(d, 0), r["rank"] or 10 ** 9)})
     return sorted(out, key=lambda c: c["sort"])
 
 
@@ -140,10 +154,15 @@ GENERIC_TLDS = {"com", "net", "org", "io", "co", "ai", "app", "dev", "tech", "cl
 KNOWN_REGION_SECTORS = {"banks-mena", "banks-americas-apac"}  # rows there are Arab, Americas or APAC institutions
 
 
+# Country TLDs we may write to: outside the EU/EEA/UK/CH, and where business is possible (no RU/BY/IR/CN/KP/SY/CU).
+ALLOWED_CCTLDS = ARABIC_TLDS | {"us", "ca", "au", "nz", "jp", "kr", "sg", "in", "br", "mx", "za", "hk", "tw", "my", "id",
+                                "th", "ph", "vn", "cl", "ar", "pe", "uy", "tr", "il", "pk", "ng", "ke", "gh"}
+
+
 def auto_send_ok(c):
-    """Auto-send only where the org is known to be outside the EU: a non-EU country TLD, or a regional sector.
+    """Auto-send only where the org is known to be outside the EU: an allowed country TLD, or a regional sector.
     A .com in a global sector can be European (commerzbank.com, spendesk.com): owner decides those (digest)."""
-    return tld(c["domain"]) not in GENERIC_TLDS or c["sector"] in KNOWN_REGION_SECTORS
+    return tld(c["domain"]) in ALLOWED_CCTLDS or c["sector"] in KNOWN_REGION_SECTORS
 
 
 def live_check(c, scanner=None):
@@ -298,6 +317,71 @@ def check_leads(conn, http=None):
     return new
 
 
+TRANCO = os.path.join(HERE, "data", "tranco_GQ38K_top100k.csv")
+REPROBE_DAYS = 30
+
+
+def expansion_pool(conn, tranco_path=TRANCO, excluded_fn=None):
+    """Tranco domains on allowed country TLDs, not yet probed (or probed > REPROBE_DAYS ago), best rank first."""
+    if excluded_fn is None:
+        try:
+            import search_indexing
+            excluded_fn = search_indexing.is_excluded  # adult / gambling exclusions (owner decision 2026-11-10)
+        except Exception:
+            excluded_fn = lambda d: False
+    cutoff = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=REPROBE_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    fresh = {r[0] for r in conn.execute("SELECT domain FROM growth_prospects WHERE probed_at >= ?", (cutoff,))}
+    pool = []
+    with open(tranco_path, encoding="utf-8") as f:
+        for line in f:
+            rank, _, dom = line.strip().partition(",")
+            d = base_domain(dom)
+            if (d and tld(d) in ALLOWED_CCTLDS and d not in fresh and not is_eu(d) and not GOV.search(d)
+                    and not UNIVERSITY.search(d)
+                    and d not in CENTRAL_BANKS and not excluded_fn(d)):
+                pool.append((int(rank), d))
+    return pool
+
+
+def expand(conn, batch=300, http=None, scanner=None, workers=16, tranco_path=TRANCO, excluded_fn=None):
+    """Find orgs that PUBLISH a security contact, then measure them once. Outreach picks the classical ones."""
+    from concurrent.futures import ThreadPoolExecutor
+    pool = expansion_pool(conn, tranco_path, excluded_fn)[:batch]
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        found = list(ex.map(lambda rd: (rd, published_contact(rd[1], http)), pool))
+    stats = {"probed": len(found), "published": 0, "scanned": 0, "classical": 0}
+    for (rank, d), (email, source) in found:
+        conn.execute("INSERT INTO growth_prospects (domain, host, rank, email, source, probed_at) VALUES (?,?,?,?,?,?) "
+                     "ON CONFLICT(domain) DO UPDATE SET email = excluded.email, source = excluded.source, "
+                     "probed_at = excluded.probed_at", (d, d, rank, email, source, now_iso()))
+        if email:
+            stats["published"] += 1
+    conn.commit()
+    todo = conn.execute("SELECT domain FROM growth_prospects WHERE email IS NOT NULL AND scanned_at IS NULL "
+                        "ORDER BY rank LIMIT 40").fetchall()
+    if scanner is None:
+        import quantum_vuln_scanner
+        scanner = quantum_vuln_scanner.scan
+    for (d,) in todo:
+        for host in (d, "www." + d):
+            try:
+                r = scanner(host)
+            except Exception:
+                continue
+            kx = r.get("key_exchange") or {}
+            if kx.get("negotiation_observed") and not kx.get("error"):
+                conn.execute("UPDATE growth_prospects SET host = ?, scanned_at = ?, grade = ?, grp = ?, tls = ?, pq = ? "
+                             "WHERE domain = ?", (host, now_iso(), r.get("grade"), kx.get("group"), kx.get("version"),
+                                                  1 if kx.get("pq") else 0, d))
+                stats["scanned"] += 1
+                stats["classical"] += 0 if kx.get("pq") else 1
+                break
+        else:
+            conn.execute("UPDATE growth_prospects SET scanned_at = ?, pq = NULL WHERE domain = ?", (now_iso(), d))
+    conn.commit()
+    return stats
+
+
 def pause(reason):
     with open(PAUSE_FILE, "w", encoding="utf-8") as f:
         f.write(f"{now_iso()} {reason}\n")
@@ -332,6 +416,8 @@ def outreach(conn, dry_run=False, http=None, history=None, pause_between=90, max
     budget = max(0, min(PER_RUN, DAILY_CAP - sent_today(conn)))
     skip = excluded(conn, history_domains() if history is None else history)
     sent, looked = [], 0
+    # one mail per published address, ever: several domains of one group share it (google.*, nine.com.au/smh.com.au)
+    used_emails = {r[0] for r in conn.execute("SELECT email FROM growth_outreach")}
     for c in candidates(conn, skip):
         if len(sent) >= budget or looked >= max_lookups:
             break
@@ -340,7 +426,8 @@ def outreach(conn, dry_run=False, http=None, history=None, pause_between=90, max
         looked += 1
         email, source = published_contact(c["domain"], http)
         mail_dom = base_domain(email.split("@")[1]) if email else ""
-        if not email or mail_dom in skip or mail_dom.startswith("lists.") or is_eu(mail_dom):
+        if (not email or email in used_emails or mail_dom in skip or mail_dom.startswith("lists.") or is_eu(mail_dom)
+                or tld(mail_dom) in BLOCKED_TLDS or UNIVERSITY.search(c["domain"])):
             continue
         checked = live_check(c, scanner)
         if checked is None:
@@ -350,6 +437,7 @@ def outreach(conn, dry_run=False, http=None, history=None, pause_between=90, max
         subject, text = message(c, lang)
         if dry_run:
             sent.append({"domain": c["domain"], "email": email, "reason": c["reason"], "source": source, "subject": subject})
+            used_emails.add(email)
             continue
         try:
             rid = resend_send(email, subject, text, http)
@@ -362,6 +450,7 @@ def outreach(conn, dry_run=False, http=None, history=None, pause_between=90, max
                      (c["domain"], now_iso().replace("T", " ")[:19]))
         conn.commit()
         sent.append({"domain": c["domain"], "email": email, "reason": c["reason"], "id": rid})
+        used_emails.add(email)
         if pause_between:
             time.sleep(pause_between)
     return {"paused": None, "sent": sent, "looked_up": looked, "budget": budget}
@@ -383,6 +472,8 @@ def digest_text(conn, day=None):
              f"Real scans: {scans} · New trials: {trials}",
              f"Outreach sent: {len(sent)} (total since start: {total})"]
     lines += [f"  - {r['domain']} → {r['email']} [{r['reason']}] {r['last_event'] or ''}" for r in sent]
+    pr = conn.execute("SELECT COUNT(*), SUM(email IS NOT NULL), SUM(pq = 0) FROM growth_prospects").fetchone()
+    lines.append(f"Expansion: {pr[0] or 0} domains probed, {pr[1] or 0} publish a contact, {pr[2] or 0} classical (outreach pool)")
     lines += ["", f"Replies from contacted orgs (all time): {len(leads)}"]
     lines += [f"  - {l['at']} {l['from']}: {l['subject']}" for l in leads[-5:]]
     if stops:
@@ -400,6 +491,8 @@ def main(argv):
     conn = connect()
     if cmd == "outreach":
         print(json.dumps(outreach(conn, dry_run="--dry-run" in argv), ensure_ascii=False, indent=1))
+    elif cmd == "expand":
+        print(json.dumps(expand(conn), ensure_ascii=False))
     elif cmd == "leads":
         print(json.dumps(check_leads(conn), ensure_ascii=False))
     elif cmd == "digest":
