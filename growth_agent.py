@@ -25,6 +25,7 @@ import sys
 import time
 
 import requests
+from mailer import with_team_from
 
 DATA_DIR = os.environ.get("QS_DATA_DIR", "/var/lib/quantum_saas")
 DB_PATH = os.path.join(DATA_DIR, "quantum_saas.db")
@@ -471,7 +472,7 @@ def notify_owner(subject, text, http=None):
     http = http or requests
     http.post("https://api.resend.com/emails", timeout=20,
               headers={"Authorization": f"Bearer {os.environ['RESEND_API_KEY']}", "User-Agent": UA},
-              json={"from": os.environ.get("QS_MAIL_FROM"), "to": [owner], "subject": subject, "text": text})
+              json={"from": with_team_from(os.environ.get("QS_MAIL_FROM", "")), "to": [owner], "subject": subject, "text": text})
 
 
 def sent_today(conn):

@@ -26,7 +26,8 @@ class McpCoreTest(unittest.TestCase):
         self.assertIn("Problem:", msg)
         self.assertIn("Solution:", msg)
         self.assertIn("$49", msg)
-        self.assertIn("$29/month", msg)
+        self.assertIn("29 €/month", msg)
+        self.assertNotIn("$29", msg)
         self.assertIn("scan/y", msg)
 
     def test_describe_handles_scan_error(self):

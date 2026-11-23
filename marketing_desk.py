@@ -17,25 +17,13 @@ import sys
 
 import crawler_log
 import generate_pqc_news
-from mailer import Mailer
+from mailer import Mailer, with_team_from
 
 log = logging.getLogger("quantum_saas.marketing_desk")
 
 SITE = "https://ather-quantum.com"
 
-TEAM_FROM_NAME = "Quantum Aether Team"
-
-
-def mail_from_with_team_name(raw: str) -> str:
-    """Keep the address from QS_MAIL_FROM; set the display name to Quantum Aether Team."""
-    raw = (raw or "").strip()
-    if not raw:
-        return ""
-    if "<" in raw and ">" in raw:
-        addr = raw.split("<", 1)[1].rsplit(">", 1)[0].strip()
-    else:
-        addr = raw
-    return f"{TEAM_FROM_NAME} <{addr}>" if addr else ""
+mail_from_with_team_name = with_team_from
 
 
 PAY_SECTORS = (

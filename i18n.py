@@ -2571,3 +2571,4 @@ _TRIAL_EMAIL_REQUIRED = {
 }
 for _l in ("en", "ar", "de"):
     TEXTS[_l]["trial_email_required"] = _TRIAL_EMAIL_REQUIRED[_l]
+    TEXTS[_l]["trial_states"] = dict(TEXTS[_l]["trial_states"], empty_email=_TRIAL_EMAIL_REQUIRED[_l])

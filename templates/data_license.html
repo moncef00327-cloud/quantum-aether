@@ -15,7 +15,7 @@
 <section class="card highlight" id="self-serve">
   <h2>{{ 'الوصول الفوري والباقات المدفوعة' if lang == 'ar' else ('Sofortzugang & kostenpflichtige Zugänge' if lang == 'de' else 'Self-Serve Paid Access & Subscriptions') }}</h2>
   <ul>
-    <li><strong><a href="{{ url_for('site.monitoring', lang=lang) }}">{{ 'المراقبة اليومية المستمرة (14 يوماً مجاناً ثم 29–99$/شهر)' if lang == 'ar' else ('Tägliche Domain-Überwachung (14 Tage kostenlos, danach 29–99 $/Monat)' if lang == 'de' else 'Daily Domain Monitoring (14-day free trial, then $29–$99/mo)') }}</a></strong></li>
+    <li><strong><a href="{{ url_for('site.monitoring', lang=lang) }}">{{ 'المراقبة اليومية المستمرة (14 يوماً مجاناً ثم 29 € / 99 € شهرياً)' if lang == 'ar' else ('Tägliche Domain-Überwachung (14 Tage kostenlos, danach 29 € / 99 € pro Monat)' if lang == 'de' else 'Daily Domain Monitoring (14-day free trial, then 29 € / 99 € per month)') }}</a></strong></li>
     <li><strong><a href="{{ url_for('site.agents_page', lang=lang) }}">{{ 'بيانات القطاعات الفورية للوكلاء عبر MCP وx402 (USDC على Base)' if lang == 'ar' else ('Sofortige Branchendaten für KI-Agenten via MCP & x402 (Base USDC)' if lang == 'de' else 'Instant Sector Datasets for AI Agents via MCP & x402 (Base USDC)') }}</a></strong></li>
     <li><strong><a href="{{ url_for('site.audit_page', lang=lang) }}">{{ 'تقرير التدقيق والامتثال الكامل (DORA / NIS2 / SAMA)' if lang == 'ar' else ('Vollständiger Compliance-Audit-Bericht (DORA / NIS2)' if lang == 'de' else 'Full Subdomain & Compliance Audit Report (DORA / NIS2 / SAMA)') }}</a></strong></li>
   </ul>

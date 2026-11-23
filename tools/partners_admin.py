@@ -14,6 +14,7 @@ import sys
 import urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from mailer import with_team_from  # noqa: E402
 import partners  # noqa: E402
 
 DB = os.environ.get("QS_DB", "/var/lib/quantum_saas/quantum_saas.db")
@@ -39,7 +40,7 @@ def send(to, subject, text):
     if not api or not raw:
         print("  (no RESEND env: e-mail not sent; send the link manually)")
         return
-    sender = raw if "<" in raw else f"Quantum Aether <{raw}>"
+    sender = with_team_from(raw)
     m = re.search(r"<([^>]+)>", raw)
     body = {"from": sender, "to": [to], "subject": subject, "text": text,
             "reply_to": os.environ.get("QS_REPLY_TO") or (m.group(1) if m else raw)}

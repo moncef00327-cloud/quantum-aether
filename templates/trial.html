@@ -3,11 +3,11 @@
 {% block title %}{{ t.trial_title }} · {{ t.brand }}{% endblock %}
 {% block head %}<meta name="robots" content="noindex">{% endblock %}
 {% block content %}
-{% set fixable = {'consent_missing': 'consent', 'bad_email': 'email', 'need_domain': 'domain', 'bad_domain': 'domain'} %}
+{% set fixable = {'consent_missing': 'consent', 'bad_email': 'email', 'empty_email': 'email', 'need_domain': 'domain', 'bad_domain': 'domain'} %}
 {% if state in fixable %}
 {# Fixable input problem: show the form again, filled in, with the reason next to it (no "Back" round trip). #}
 {{ trial_cta('trial-retry', title=t.trial_title, compact=true, prefill=domain, email=email,
-             error=(t.trial_email_required if state == 'bad_email' and not email else t.trial_states[state].format(email=email, domain=domain)),
+             error=(t.trial_email_required if state == 'empty_email' or (state == 'bad_email' and not email) else t.trial_states[state].format(email=email, domain=domain)),
              focus=fixable[state]) }}
 {% else %}
 <section class="card">

@@ -66,8 +66,8 @@ def buy_full_report(scan_id: str, consent_immediate_delivery: bool = False) -> d
 
 @mcp.tool(annotations=_ACTION)
 def start_monitoring(email: str, plan: str = "starter", consent: bool = False) -> dict:
-    """Start a daily monitoring subscription (plan "starter" = $29/mo up to 10 domains,
-    "business" = $99/mo up to 100 domains). Returns the PayPal plan id to complete the subscription.
+    """Start a daily monitoring subscription (plan "starter" = 29 €/mo up to 10 domains,
+    "business" = 99 €/mo up to 100 domains). Returns the PayPal plan id to complete the subscription.
     Set consent to true ONLY after the customer agreed to email processing and immediate start.
 
     Args:

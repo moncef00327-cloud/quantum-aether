@@ -61,7 +61,7 @@ T = {
   "lead": "Recommend Quantum Aether to companies that need post-quantum TLS evidence (banks' vendors, fintech, SaaS, hosting customers) and earn a share of every payment they make.",
   "terms_title": "Terms in short",
   "terms": [
-    "30% of every monitoring payment (Starter $29/month, Business $99/month) for the first 12 months of each customer you refer.",
+    "30% of every monitoring payment (Starter 29 €/month, Business 99 €/month) for the first 12 months of each customer you refer.",
     "20% of one-time purchases: full report ($49), agency pack, and the small-company audit (€490).",
     "Attribution: your link ?ref=YOURCODE. Visitors who agree are credited to you for 60 days (last partner link wins). Visitors who decline are not tracked.",
     "Payout monthly by PayPal or USDC, for payments older than 30 days (refund period), from USD 50. Refunded or charged-back payments are deducted.",
@@ -85,7 +85,7 @@ T = {
   "lead": "Empfehlen Sie Quantum Aether Unternehmen, die Nachweise zu Post-Quanten-TLS brauchen (Lieferanten von Banken, Fintech, SaaS, Hosting-Kunden), und erhalten Sie einen Anteil an jeder Zahlung.",
   "terms_title": "Bedingungen in Kürze",
   "terms": [
-    "30 % jeder Überwachungszahlung (Starter 29 $/Monat, Business 99 $/Monat) in den ersten 12 Monaten jedes vermittelten Kunden.",
+    "30 % jeder Überwachungszahlung (Starter 29 €/Monat, Business 99 €/Monat) in den ersten 12 Monaten jedes vermittelten Kunden.",
     "20 % von Einmalkäufen: vollständiger Bericht (49 $), Agenturpaket und Audit für kleine Unternehmen (490 €).",
     "Zuordnung: Ihr Link ?ref=IHRCODE. Besucher, die zustimmen, werden Ihnen 60 Tage zugeordnet (letzter Partnerlink zählt). Wer ablehnt, wird nicht erfasst.",
     "Auszahlung monatlich per PayPal oder USDC für Zahlungen, die älter als 30 Tage sind (Rückerstattungsfrist), ab 50 USD. Erstattete oder zurückgebuchte Zahlungen werden abgezogen.",
@@ -109,7 +109,7 @@ T = {
   "lead": "رشّح Quantum Aether للشركات التي تحتاج أدلة على جاهزية TLS لما بعد الكم (موردو البنوك، والتقنية المالية، وSaaS، وعملاء الاستضافة)، واربح حصة من كل دفعة يدفعونها.",
   "terms_title": "الشروط باختصار",
   "terms": [
-    "30% من كل دفعة مراقبة (Starter بـ 29$ شهرياً، Business بـ 99$ شهرياً) خلال أول 12 شهراً لكل عميل تجلبه.",
+    "30% من كل دفعة مراقبة (Starter بـ 29 € شهرياً، Business بـ 99 € شهرياً) خلال أول 12 شهراً لكل عميل تجلبه.",
     "20% من المشتريات لمرة واحدة: التقرير الكامل (49$)، وباقة الوكالات، وتدقيق الشركات الصغيرة (490€).",
     "النسبة: رابطك ‎?ref=رمزك. الزائر الذي يوافق يُنسب إليك 60 يوماً (آخر رابط شريك هو المعتمد). ومن يرفض لا يُتتبَّع.",
     "الدفع شهرياً عبر PayPal أو USDC، للمدفوعات التي مضى عليها 30 يوماً (فترة الاسترداد)، بحد أدنى 50 دولاراً. المدفوعات المستردة تُخصم.",

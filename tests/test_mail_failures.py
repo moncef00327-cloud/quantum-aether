@@ -33,19 +33,32 @@ class MailerFallbackTests(unittest.TestCase):
         s = _Session([403, 200])
         m = mailer_mod.Mailer("k", "a@new.example", session=s, fallback_sender="a@old.example")
         self.assertTrue(m.send("x@y.z", "s", "t"))
-        self.assertEqual(s.calls, ["a@new.example", "a@old.example"])
+        self.assertEqual(s.calls, ["Quantum Aether Team <a@new.example>", "Quantum Aether Team <a@old.example>"])
 
     def test_server_error_does_not_switch_sender(self):
         s = _Session([500])
         m = mailer_mod.Mailer("k", "a@new.example", session=s, fallback_sender="a@old.example")
         self.assertFalse(m.send("x@y.z", "s", "t"))
-        self.assertEqual(s.calls, ["a@new.example"])
+        self.assertEqual(s.calls, ["Quantum Aether Team <a@new.example>"])
         self.assertIn("500", m.last_error)
 
     def test_no_fallback_reports_error(self):
         m = mailer_mod.Mailer("k", "a@new.example", session=_Session([403]))
         self.assertFalse(m.send("x@y.z", "s", "t"))
         self.assertIn("not verified", m.last_error)
+
+    def test_display_name_is_team_and_address_is_kept(self):
+        self.assertEqual(mailer_mod.with_team_from("Quantum Aether <a@example.com>"),
+                         "Quantum Aether Team <a@example.com>")
+        self.assertEqual(mailer_mod.with_team_from("a@example.com"),
+                         "Quantum Aether Team <a@example.com>")
+        self.assertEqual(mailer_mod.with_team_from(""), "")
+        s = _Session([200])
+        m = mailer_mod.Mailer("k", "Quantum Aether <a@new.example>", session=s,
+                              fallback_sender="Old Name <a@old.example>")
+        self.assertTrue(m.send("x@y.z", "s", "t"))
+        self.assertEqual(s.calls, ["Quantum Aether Team <a@new.example>"])
+        self.assertEqual(m.fallback_sender, "Quantum Aether Team <a@old.example>")
 
 
 class MailHealthTests(unittest.TestCase):

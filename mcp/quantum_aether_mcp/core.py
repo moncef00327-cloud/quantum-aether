@@ -76,7 +76,7 @@ def describe(result):
         "Traffic captured today could be decrypted years from now, once "
         "quantum computers mature (\"harvest now, decrypt later\").\n"
         f"Solution: choose the published guide for the infrastructure you actually operate, then rescan. "
-        f"A full report (${price}) and daily monitoring ($29/month) are available. "
+        f"A full report (${price}) and daily monitoring (29 €/month) are available. "
         "Server software and origin configuration cannot be inferred from this measurement.\n"
         f"Details and free summary: {scan_url}"
     )
@@ -92,7 +92,7 @@ def prepare_report_purchase(scan_id, consent_immediate_delivery):
 
 
 def start_monitoring(email, plan, consent):
-    """يبدأ اشتراك مراقبة يومية ($29 starter / $99 business). يعيد خطة PayPal للمتابعة."""
+    """يبدأ اشتراك مراقبة يومية (29 € starter / 99 € business). يعيد خطة PayPal للمتابعة."""
     if consent is not True:
         return {"error": "consent_required",
                 "message": "Set consent to true only after the customer agreed to processing their email and to "

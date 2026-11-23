@@ -8,15 +8,31 @@ import re
 
 import requests
 
+
 log = logging.getLogger("quantum_saas.mail")
+
+
+TEAM_FROM_NAME = "Quantum Aether Team"
+
+
+def with_team_from(raw):
+    """Keep the address from QS_MAIL_FROM (or a fallback); set the display name to Quantum Aether Team."""
+    raw = (raw or "").strip()
+    if not raw:
+        return ""
+    if "<" in raw and ">" in raw:
+        addr = raw.split("<", 1)[1].rsplit(">", 1)[0].strip()
+    else:
+        addr = raw
+    return f"{TEAM_FROM_NAME} <{addr}>" if addr else ""
 
 
 class Mailer:
     def __init__(self, api_key, sender, reply_to="", timeout=15, session=None, fallback_sender="", site_url=""):
         self.api_key = api_key
         self.site_url = (site_url or "").rstrip("/")  # إن وُجد: تُرسل نسخة HTML بشعار الموقع مع كل رسالة نصية
-        self.sender = sender
-        self.fallback_sender = fallback_sender  # نطاق موثّق ثانٍ: يُستخدم إن رفض Resend المرسل الأساسي (مثل نطاق غير موثّق)
+        self.sender = with_team_from(sender)
+        self.fallback_sender = with_team_from(fallback_sender)  # نطاق موثّق ثانٍ: يُستخدم إن رفض Resend المرسل الأساسي (مثل نطاق غير موثّق)
         self.last_error = ""
         self.reply_to = reply_to
         self.timeout = timeout

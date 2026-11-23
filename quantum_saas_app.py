@@ -3399,6 +3399,8 @@ def monitor_trial():
     conn = db()
     if not request.form.get("consent"):
         state, status = "consent_missing", 400
+    elif not email:
+        state, status = "empty_email", 400
     elif not EMAIL_RE.match(email):
         state, status = "bad_email", 400
     elif not raw:

@@ -153,7 +153,8 @@
     return !!(form && form.getAttribute && /\/monitoring\/trial/.test(form.getAttribute("action") || ""));
   }
   function box(form, isGuide, field) {
-    var el = form.querySelector(".trial-error");
+    var slot = form.querySelector("[data-trial-email-error]");
+    var el = (isGuide && slot) ? slot : (form.querySelector(".trial-error") || slot);
     if (!el) {
       el = document.createElement("p");
       el.className = "trial-error";
@@ -161,9 +162,10 @@
       form.insertBefore(el, form.firstChild);
     }
     // Missing email: show the message right under the email box (not above the label), so it is seen with the field.
+    // Prefer a reserved slot already under the field (survives React re-renders on the home app).
     if (isGuide && field && field.name === "email") {
-      var row = field.closest(".scan-row") || field;
-      if (row.nextSibling !== el) row.parentNode.insertBefore(el, row.nextSibling);
+      var row = field.closest(".scan-row, .qa-email-row") || field;
+      if (!el.hasAttribute("data-trial-email-error") && row.nextSibling !== el) row.parentNode.insertBefore(el, row.nextSibling);
       field.setAttribute("aria-describedby", el.id);
     }
     el.classList.toggle("form-error", !isGuide);
@@ -171,7 +173,7 @@
     // Missing email (2026-11-21): a clear error box under the field, not a soft cyan hint (6 empty submits that day,
     // 5 of them on /pricing, and nobody retried).
     el.style.cssText = isGuide
-      ? "color:#fecaca;background:rgba(255,107,107,.14);border:1px solid rgba(255,107,107,.6);padding:8px 12px;border-radius:10px;font-weight:600;margin:.4rem 0 .7rem"
+      ? "display:block;color:#fecaca;background:rgba(255,107,107,.14);border:1px solid rgba(255,107,107,.6);padding:8px 12px;border-radius:10px;font-weight:600;margin:.4rem 0 .7rem"
       : "color:#ff6b6b;font-weight:600;margin:0 0 .6rem";
     return el;
   }

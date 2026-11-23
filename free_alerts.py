@@ -169,17 +169,17 @@ _ALERT = {
     "en": ("{domain}: post-quantum TLS status changed",
            "Hello,\n\nour weekly check of {domain} found a change:\n\n{changes}\n\nCurrent result: {site_url}\n"
            "Fix steps for nginx, Apache, Caddy and Cloudflare: {guides_url}\n\n"
-           "Need this for more domains, every day, with certificate-expiry warnings? Monitoring starts at $29/month: {monitoring_url}\n\n"
+           "Need this for more domains, every day, with certificate-expiry warnings? Monitoring starts at 29 €/month: {monitoring_url}\n\n"
            "Stop these emails (one click, deletes your address): {stop_url}"),
     "ar": ("{domain}: تغيّر وضع TLS ما بعد الكمومي",
            "مرحباً،\n\nوجد فحصنا الأسبوعي لـ {domain} تغييراً:\n\n{changes}\n\nالنتيجة الحالية: {site_url}\n"
            "خطوات الإصلاح لـ nginx وApache وCaddy وCloudflare: {guides_url}\n\n"
-           "تحتاج هذا لنطاقات أكثر، يومياً، مع تحذير قبل انتهاء الشهادة؟ المراقبة من 29$ شهرياً: {monitoring_url}\n\n"
+           "تحتاج هذا لنطاقات أكثر، يومياً، مع تحذير قبل انتهاء الشهادة؟ المراقبة من 29 € شهرياً: {monitoring_url}\n\n"
            "أوقف هذه الرسائل (نقرة واحدة، يحذف بريدك): {stop_url}"),
     "de": ("{domain}: Post-Quanten-TLS-Status geändert",
            "Guten Tag,\n\nunsere wöchentliche Prüfung von {domain} hat eine Änderung festgestellt:\n\n{changes}\n\n"
            "Aktuelles Ergebnis: {site_url}\nAnleitungen für nginx, Apache, Caddy und Cloudflare: {guides_url}\n\n"
-           "Mehr Domains, täglich, mit Warnung vor Zertifikatsablauf? Überwachung ab 29 $/Monat: {monitoring_url}\n\n"
+           "Mehr Domains, täglich, mit Warnung vor Zertifikatsablauf? Überwachung ab 29 €/Monat: {monitoring_url}\n\n"
            "Diese E-Mails abbestellen (ein Klick, löscht Ihre Adresse): {stop_url}"),
 }
 

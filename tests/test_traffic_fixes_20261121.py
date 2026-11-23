@@ -132,7 +132,7 @@ class EmptyEmailTests(Base):
             self.assertIn(text, js)
         self.assertIn("row.parentNode.insertBefore(el, row.nextSibling)", js)
         for path in ("/pricing?lang=en", "/?lang=en", "/monitoring?lang=ar"):
-            self.assertIn("trial-form.js?v=20261121-email-required1", self.client.get(path).get_data(as_text=True), path)
+            self.assertIn("trial-form.js?v=20261123-email-required2", self.client.get(path).get_data(as_text=True), path)
 
     def test_pricing_email_field_is_required_with_visible_label(self):
         body = self.client.get("/pricing?lang=en").get_data(as_text=True)

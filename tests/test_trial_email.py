@@ -27,7 +27,7 @@ class TrialEmailSignupTest(TrialTest):
 
     def test_pages_load_the_new_form_script(self):
         body = self.client.get("/monitoring?lang=ar").get_data(as_text=True)
-        self.assertIn("trial-form.js?v=20261121-email-required1", body)
+        self.assertIn("trial-form.js?v=20261123-email-required2", body)
         js = self.client.get("/static/trial-form.js").get_data(as_text=True)
         for text in ("هذا يبدو نطاقاً لا بريداً", "That looks like a domain", "Meinten Sie", "domain_only"):
             self.assertIn(text, js)

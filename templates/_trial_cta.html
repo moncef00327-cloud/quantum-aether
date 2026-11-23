@@ -24,11 +24,12 @@
     <input type="hidden" name="plan" value="{{ sel_plan }}">
     <input type="hidden" name="variant" value="{{ conversion_variant }}">
     {% if source %}<input type="hidden" name="src" value="{{ source }}">{% endif %}
-    {% if error %}<p class="form-error trial-error" role="alert">{{ error }}</p>{% endif %}
+    {% if error and focus != 'email' %}<p class="form-error trial-error" role="alert">{{ error }}</p>{% endif %}
     <label for="{{ form_id }}-email">{{ t.trial_email_label }} <span class="trial-required" aria-hidden="true" style="color:#ff6b6b;font-weight:700">*</span></label>
-    <div class="scan-row">
+    <div class="scan-row qa-email-row">
       <input id="{{ form_id }}-email" name="email" type="email" autocomplete="email" dir="ltr" required aria-required="true" maxlength="254" placeholder="security@{{ domain or prefill or 'company.com' }}"{% if email %} value="{{ email }}"{% endif %}{% if focus == 'email' %} autofocus aria-invalid="true"{% endif %}>
     </div>
+    <p class="form-error trial-error" id="{{ form_id }}-email-msg" data-trial-email-error role="alert"{% if not (error and focus == 'email') %} hidden{% endif %}>{% if error and focus == 'email' %}{{ error }}{% endif %}</p>
     {% if not domain or editable_domain %}<p><label for="{{ form_id }}-domain" class="small">{{ t.trial_cta_domain }}</label><br>
       <input id="{{ form_id }}-domain" name="domain" type="text" dir="ltr" maxlength="253" inputmode="url" autocomplete="url" placeholder="company.com"{% if prefill %} value="{{ prefill }}"{% endif %}{% if focus == 'domain' %} autofocus aria-invalid="true"{% endif %} style="width:100%;box-sizing:border-box"></p>{% endif %}
     <p class="consent"><label><input type="checkbox" name="consent" value="1" required{% if focus == 'consent' %} autofocus aria-invalid="true"{% endif %}>

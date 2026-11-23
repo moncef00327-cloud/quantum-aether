@@ -36,3 +36,10 @@ button.trial-plan-pill .trial-plan-main{display:block;font-size:15px;font-weight
 button.trial-plan-pill .trial-plan-sub{display:block;font-size:12px;font-weight:500;white-space:nowrap;opacity:.85;color:inherit}
 .service-content button.trial-plan-pill.is-active,.qa-trial button.trial-plan-pill.is-active,button.trial-plan-pill[aria-pressed='true']{border:1.5px solid #67e8f9!important;background:rgba(103,232,249,.16)!important;color:#ffffff!important;box-shadow:0 0 16px rgba(103,232,249,.22),inset 0 1px 0 rgba(255,255,255,.15)!important}
 button.trial-plan-pill[aria-pressed='true'] .trial-plan-main::before{content:'✓ ';color:#67e8f9}
+
+/* Required email on the home trial form: visible in LTR and RTL, including mobile. */
+.qa-trial-inline .trial-required{color:#ff6b6b;font-weight:700;margin-inline-start:.2em}
+.qa-trial-inline .qa-field-label{display:block;margin:0 0 6px;font-size:13px;font-weight:600;color:#d9d4ef}
+.qa-trial-inline .qa-email-row,.qa-trial-inline .scan-row{display:block;width:100%}
+.qa-trial-inline .qa-field[aria-invalid="true"]{border-color:#ff6b6b!important;box-shadow:0 0 0 3px rgba(255,107,107,.25)!important}
+.qa-trial-inline .trial-error[data-trial-email-error]:not([hidden]){display:block;color:#fecaca;background:rgba(255,107,107,.14);border:1px solid rgba(255,107,107,.6);padding:8px 12px;border-radius:10px;font-weight:600;margin:.15rem 0 .7rem}
