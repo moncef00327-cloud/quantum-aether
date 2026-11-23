@@ -25,7 +25,7 @@
   <link rel="alternate" type="application/atom+xml" title="{{ t.brand }}" href="{{ url_for('site.feed') }}">
   {% block alternates %}
   {% if seo_noindex %}
-  <meta name="robots" content="noindex, follow">
+  <meta name="robots" content="{{ seo_robots or 'noindex, follow' }}">
   {% else %}
   <link rel="canonical" href="{{ metadata_url(lang) }}">
   {% for l in page_langs %}<link rel="alternate" hreflang="{{ l }}" href="{{ metadata_url(l) }}">

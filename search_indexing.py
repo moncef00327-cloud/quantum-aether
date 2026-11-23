@@ -9,6 +9,7 @@ from functools import lru_cache
 import csv
 import json
 from pathlib import Path
+import re
 
 CLASSIFICATIONS = frozenset({'confirmed_pornographic', 'confirmed_gambling'})
 POLICY_FILE = Path(__file__).resolve().parent / 'data' / 'indexing_exclusions.json'
@@ -86,6 +87,12 @@ def host_aliases(domain):
     return frozenset({host, bare, "www." + bare})
 
 
+# Reviewed hosts that a keyword would catch but are not adult/gambling.
+_KEYWORD_ALLOW_HOSTS = frozenset({
+    "cosmopolitan.com", "sofascore.com", "flashscore.com.br", "flashscore.fr", "livescore.in",
+    "playtika.com", "match.com", "jeuxvideo.com", "nflxvideo.net", "xxxlutz.de", "xxxlutz.at",
+})
+
 _family_cache = {'mtime': None, 'hosts': frozenset()}
 
 
@@ -112,6 +119,47 @@ def family_dns_blocked(domain):
 def is_excluded(domain):
     host = _normal(domain)
     return host is not None and host in reviewed_hosts()
+
+
+# Keyword backstop (2026-11-23): Search Console showed /site/<adult host> pages ranking for
+# porn queries. Reviewed exclusions (410) stay exact-host only; a keyword match never 410s and
+# never drops a host from statistics. It only keeps the page out of the index (noindex, nofollow),
+# out of the sitemap and out of internal /site/ links, so a false positive costs nothing visible.
+_SENSITIVE_KEYWORDS = re.compile(
+    r"porn|xxx|xvideo|xhamster|xnxx|hentai|redtube|youporn|brazzers|onlyfans|chaturbate|stripchat"
+    r"|camgirl|camsoda|bongacams|livejasmin|nsfw|milf|pussy|w4nk|wank|fap|nude|naked|boob|tits|bokep"
+    r"|javhd|javxxx|jav\d|sex|kamaveri|kahani|desi.?(?:sex|mms)|erotic|fetish|bdsm|escort"
+    r"|casino|1xbet|bet365|betwin|sportsbet|gambl|poker|roulette|blackjack|slotgacor|judi|togel")
+# Substrings that contain a keyword but are not adult/gambling (place names, words, brands).
+_KEYWORD_FALSE_POSITIVES = (
+    "essex", "sussex", "wessex", "middlesex", "sexton", "sextant", "unisex", "sextet",
+    "nflxvideo", "jeuxvideo", "xxxlutz", "naked-wines", "nakedwines", "fapesp", "faperj", "fapemig",
+    "fapeam", "fapesc", "fapergs", "fapemat", "fapeg", "fapespa", "fapepi", "fapitec",
+    "dnsexit", "saasex", "gambleaware", "gamblingcommission", "gamblingtherapy", "gamcare",
+)
+
+
+def _keyword_label(domain):
+    host = _normal(domain)
+    if not host:
+        return ''
+    label = host
+    for fp in _KEYWORD_FALSE_POSITIVES:
+        label = label.replace(fp, ' ')
+    return label
+
+
+def keyword_suspect(domain):
+    """Host name looks adult or gambling. Noindex-only signal: never a 410, never a stats filter."""
+    host = _normal(domain)
+    if not host or host in _KEYWORD_ALLOW_HOSTS:
+        return False
+    return bool(_SENSITIVE_KEYWORDS.search(_keyword_label(host)))
+
+
+def is_sensitive(domain):
+    """Adult, gambling or family-DNS-blocked host: never indexed, never followed, never linked."""
+    return is_excluded(domain) or family_dns_blocked(domain) or keyword_suspect(domain)
 
 
 def is_infrastructure(domain):
@@ -271,12 +319,13 @@ def is_human_traffic_host(domain):
 def is_indexable(domain, rank=None, sector=None, has_human_traffic=None):
     """Should /site/<domain> appear in search results?
 
-    Denied: reviewed exclusions, family-DNS blocked hosts, infrastructure endpoints.
+    Denied: reviewed exclusions, family-DNS blocked hosts, adult/gambling host-name keywords,
+    infrastructure endpoints.
     Allowed: notable institutions (DACH study, DACH watchlists, bank reports, orgs.csv),
     domains with real human /site/ traffic, or a Tranco rank at or below
     REFERENCE_MAX_RANK. A watchlist sector alone is no longer enough.
     """
-    if is_excluded(domain) or family_dns_blocked(domain):
+    if is_excluded(domain) or family_dns_blocked(domain) or keyword_suspect(domain):
         return False
     if is_infrastructure(domain):
         return False

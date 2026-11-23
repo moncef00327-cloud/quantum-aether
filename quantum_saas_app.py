@@ -2565,7 +2565,7 @@ def site_pages_known(domains):
             nd = quantum_vuln_scanner.normalize_domain(d)
         except quantum_vuln_scanner.ScanError:
             continue
-        if search_indexing.is_excluded(nd):
+        if search_indexing.is_sensitive(nd):  # adult/gambling/family-DNS: never linked from our pages
             continue
         if optout is None:
             optout = adoption.load_optout(conn=db())
@@ -2595,8 +2595,9 @@ def site_page(domain):
         if last:
             # Same hosting network only, and only pages we index. Tranco rank neighbours were removed: they put
             # unrelated (often adult) site names on our pages, so Google showed them for those sites' names.
-            related = [row for row in adoption.peers(conn, domain, network, last["week"], limit=40)
-                       if search_indexing.is_indexable(row["domain"], row["rank"], row["sector"])][:8]
+            related = [] if search_indexing.is_sensitive(domain) else \
+                [row for row in adoption.peers(conn, domain, network, last["week"], limit=40)
+                 if search_indexing.is_indexable(row["domain"], row["rank"], row["sector"])][:8]
         verdict = site_verdict(domain, summary)
         page_url = metadata_url(current_lang())
         pq = "yes" if summary["pq"] else ("undetermined" if summary.get("unsure") else "no")
@@ -2630,7 +2631,9 @@ def site_page(domain):
         entry = next((e for e in board["entries"] if e["code"] == code), None)
         if entry:
             country = dict(entry, name=countries.name(code, current_lang()), total=board["countries"])
-    indexing_excluded = not (summary and site_is_indexable(domain))
+    sensitive = search_indexing.is_sensitive(domain)
+    indexing_excluded = sensitive or not (summary and site_is_indexable(domain))
+    robots = 'noindex, nofollow' if sensitive else 'noindex, follow'
     t = i18n.TEXTS[current_lang()]
     title_domain = domain if len(domain) <= 35 else domain[:34].rstrip(".-") + "…"
     site_seo_title = t["site_seo_title"].format(domain=title_domain)
@@ -2647,11 +2650,11 @@ def site_page(domain):
     response = make_response(render_template(
         "site_page.html", domain=domain, site_seo_title=site_seo_title, meta_description=meta_description, summary=summary, source=source, verdict=verdict, history=history,
         related=related, network=network, snippets=badge_snippets(domain) if summary else None, jsonld=jsonld,
-        country=country, indexing_excluded=indexing_excluded, seo_noindex=indexing_excluded, subs=subs,
+        country=country, indexing_excluded=indexing_excluded, seo_noindex=indexing_excluded, seo_robots=robots, subs=subs,
         fix_guides=site_fix_guides(network, summary["pq"], current_lang()) if summary else []),
         200 if summary else 404)  # نطاق لا نعرفه (مثل wp-login.php من الماسحات) ليس صفحة حقيقية
     if indexing_excluded:
-        response.headers['X-Robots-Tag'] = 'noindex, follow'
+        response.headers['X-Robots-Tag'] = robots
         response.headers['Cache-Control'] = 'no-cache'
         # Always deliver the new directive instead of an old-data-date 304.
         return response
