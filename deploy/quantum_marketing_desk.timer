@@ -1,0 +1,10 @@
+[Unit]
+Description=Run Quantum Aether autonomous marketing desk daily (07:30)
+
+[Timer]
+OnCalendar=*-*-* 07:30:00
+RandomizedDelaySec=180
+Persistent=true
+
+[Install]
+WantedBy=timers.target

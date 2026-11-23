@@ -21,41 +21,55 @@ def one(c, sql, a=()):
 
 
 SITE = "https://ather-quantum.com"
-PAY_SECTORS = ("banks-europe", "banks-mena", "banks-dach", "finance-worldwide",
-               "payments-fintech", "crypto-exchanges", "health-insurance-dach", "telecom")
+PAY_SECTORS = ("banks-europe", "banks-mena", "banks-dach", "banks-americas-apac", "finance-worldwide",
+               "payments-fintech", "crypto-exchanges", "health-insurance-dach", "telecom",
+               "enterprise-saas-b2b", "companies-dach", "global-insurance-healthcare", "cloud-security")
 
 
 def prospects_today(c, day):
-    """عملاء محتملون: مؤسسة في قطاع يدفع، درجة C/F، زارت صفحتها عندنا أمس، ولم نراسلها."""
+    """عملاء محتملون: مؤسسة في قطاع يدفع، درجة B/C/F (غير جاهزة للكم)، أظهرت اهتماماً أمس (زيارة أو فحص)، ولم نراسلها."""
     try:
         wk = c.execute("SELECT MAX(week) FROM adoption_results").fetchone()[0]
-        contacted = {r[0] for r in c.execute("SELECT domain FROM contacted_orgs")}
     except Exception:
         return []
+    contacted = set()
+    for tbl in ("contacted_orgs", "outreach_sent"):
+        try:
+            contacted |= {r[0].lower() for r in c.execute(f"SELECT domain FROM {tbl}") if r[0]}
+        except Exception:
+            pass
 
     def grade_sector(dom):
         for dd in (dom, "www." + dom):
-            r = c.execute("SELECT grade,sector FROM adoption_results WHERE week=? AND domain=?", (wk, dd)).fetchone()
+            r = c.execute("SELECT grade,sector,pq FROM adoption_results WHERE week=? AND domain=?", (wk, dd)).fetchone()
             if r:
-                return r[0], r[1]
-        return None, None
+                return r[0], r[1], r[2]
+        return None, None, None
 
     views = {}
-    for path, n in c.execute("SELECT path,COUNT(*) FROM pageviews WHERE day=? AND is_bot=0 AND is_test=0 "
-                             "AND path LIKE '/site/%' GROUP BY path", (day,)):
-        dom = path.split("/site/", 1)[1].split("?")[0].strip("/").lower()
-        if dom.startswith("www."):
-            dom = dom[4:]
-        if dom and "." in dom:
-            views[dom] = views.get(dom, 0) + n
+    for prefix in ("/site/", "/exposure/", "/executive-brief/"):
+        for path, n in c.execute("SELECT path,COUNT(*) FROM pageviews WHERE day=? AND is_bot=0 AND is_test=0 "
+                                 "AND path LIKE ? GROUP BY path", (day, prefix + "%")):
+            dom = path.split(prefix, 1)[1].split("?")[0].strip("/").lower()
+            if dom.startswith("www."):
+                dom = dom[4:]
+            if dom and "." in dom:
+                views[dom] = views.get(dom, 0) + n
+    for dom, n in c.execute("SELECT domain,COUNT(*) FROM scans WHERE substr(created_at,1,10)=? AND is_test=0 "
+                            "GROUP BY domain", (day,)):
+        d = (dom or "").strip().lower()
+        if d.startswith("www."):
+            d = d[4:]
+        if d and "." in d:
+            views[d] = views.get(d, 0) + n * 2
     out = []
     for dom, v in views.items():
         if dom in contacted or ".gov" in dom:
             continue
-        g, sec = grade_sector(dom)
-        if g in ("C", "F") and sec in PAY_SECTORS:
+        g, sec, pq = grade_sector(dom)
+        if g in ("B", "C", "F") and not pq and sec in PAY_SECTORS:
             out.append((v, g, dom, sec))
-    out.sort(key=lambda x: -x[0])
+    out.sort(key=lambda x: (0 if x[1] in ("F", "C") else 1, -x[0]))
     return out
 
 
@@ -65,31 +79,40 @@ def build(c, day):
 
     # 0) عملاء محتملون اليوم (الأهم)
     prospects = prospects_today(c, y)
-    L.append("🎯 عملاء محتملون اليوم (مؤسسة تدفع · C/F · أظهرت اهتماماً · لم نراسلها):")
+    L.append("🎯 عملاء محتملون اليوم (مؤسسة تدفع · B/C/F غير جاهزة · أظهرت اهتماماً · لم نراسلها):")
     if prospects:
         for v, g, dom, sec in prospects:
-            L.append(f"    [{g} · {sec} · {v} زيارة] {dom}  →  security@{dom}  ·  {SITE}/site/{dom}")
+            L.append(f"    [{g} · {sec} · {v} تفاعل] {dom}  →  security@{dom}  ·  {SITE}/site/{dom}")
         L.append("    العرض: ابدأ المراقبة الدائمة (14 يوماً مجاناً). راسِل security@ أو أرفق رابط النتيجة.")
     else:
         L.append("    لا عميل محتمل جديد ضمن المعايير أمس.")
     L.append("")
 
-    # 1) الزيارات والفحوصات
-    pv = one(c, "SELECT COUNT(*) FROM pageviews WHERE day=? AND is_bot=0 AND is_test=0", (y,))
-    uniq = one(c, "SELECT COUNT(DISTINCT visitor) FROM pageviews WHERE day=? AND is_bot=0 AND is_test=0", (y,))
+    # 1) الزيارات والفحوصات (مع فصل ضوضاء /scanning عن الزيارات البشرية الصافية)
+    pv_all = one(c, "SELECT COUNT(*) FROM pageviews WHERE day=? AND is_bot=0 AND is_test=0", (y,))
+    pv_scan_info = one(c, "SELECT COUNT(*) FROM pageviews WHERE day=? AND is_bot=0 AND is_test=0 AND path='/scanning'", (y,))
+    pv = pv_all - pv_scan_info
+    uniq = one(c, "SELECT COUNT(DISTINCT visitor) FROM pageviews WHERE day=? AND is_bot=0 AND is_test=0 AND path != '/scanning'", (y,))
     scans = one(c, "SELECT COUNT(*) FROM scans WHERE substr(created_at,1,10)=? AND is_test=0", (y,))
-    L += ["• الحركة:", f"    زيارات بشرية: {pv}  |  زوّار متفرّدون: {uniq}  |  فحوصات: {scans}"]
+    L += ["• الحركة:", f"    زيارات بشرية صافية: {pv}  |  زوّار متفرّدون: {uniq}  |  فحوصات: {scans}  (مستبعد /scanning: {pv_scan_info})"]
     grades = c.execute("SELECT grade,COUNT(*) n FROM scans WHERE substr(created_at,1,10)=? AND is_test=0 "
                        "AND grade IS NOT NULL GROUP BY grade ORDER BY grade", (y,)).fetchall()
     if grades:
         L.append("    حسب الدرجة: " + "  ".join(f"{r['grade']}={r['n']}" for r in grades))
     L.append("")
 
-    # 2) قمع التحويل
+    # 2) قمع التحويل والمدفوعات
     imp = one(c, "SELECT COUNT(*) FROM events WHERE day=? AND name='offer_impression' AND is_bot=0 AND is_test=0", (y,))
-    starts = one(c, "SELECT COUNT(*) FROM events WHERE day=? AND name IN ('trial_start','trial_cta_clicked') AND is_bot=0 AND is_test=0", (y,))
+    starts = one(c, "SELECT COUNT(*) FROM events WHERE day=? AND name IN ('trial_start','trial_cta_clicked','trial_created') AND is_bot=0 AND is_test=0", (y,))
     rate = f"{(starts / imp * 100):.0f}%" if imp else "—"
-    L += ["• قمع التحويل:", f"    انطباعات العرض: {imp}  →  بدء/نقر تجربة: {starts}  (معدّل: {rate})", ""]
+    paid_orders = one(c, "SELECT COUNT(*) FROM orders WHERE substr(created_at,1,10)=? AND is_test=0 AND status IN ('COMPLETED','PAID')", (y,))
+    try:
+        x402_n = one(c, "SELECT COUNT(*) FROM x402_payments WHERE substr(created_at,1,10)=?", (y,))
+    except Exception:
+        x402_n = 0
+    L += ["• قمع التحويل والمدفوعات:",
+          f"    انطباعات العرض: {imp}  →  بدء/نقر تجربة: {starts}  (معدّل: {rate})",
+          f"    طلبات مدفوعة مكتملة: {paid_orders}  |  مدفوعات x402: {x402_n}", ""]
 
     # 3) أثر حملات البريد (زيارات واردة من روابط البريد)
     em = c.execute("SELECT path,COUNT(*) n FROM pageviews WHERE day=? AND is_test=0 "

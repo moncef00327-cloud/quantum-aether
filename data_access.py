@@ -38,7 +38,7 @@ def bucket_for(path):
         return "data"
     if path.startswith("/api/v1/"):
         return "api"
-    if path.startswith("/exposure/") or path.startswith("/site/"):
+    if path.startswith(("/exposure/", "/site/", "/executive-brief/", "/verify/")):
         return "pages"
     return None
 

@@ -1,0 +1,19 @@
+[Unit]
+Description=Quantum Aether daily autonomous marketing desk (5 ethical marketing employees)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=quantum
+Group=quantum
+WorkingDirectory=/var/www/quantum_saas
+EnvironmentFile=/etc/quantum_saas.env
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/var/www/quantum_saas/.venv/bin/python3 marketing_desk.py
+TimeoutStartSec=5min
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/quantum_saas

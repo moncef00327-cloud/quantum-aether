@@ -12,9 +12,16 @@
   {% for p in paras %}<p>{{ p }}</p>{% endfor %}
 </section>
 {% endfor %}
-<section class="card">
+<section class="card highlight" id="self-serve">
+  <h2>{{ 'الوصول الفوري والباقات المدفوعة' if lang == 'ar' else ('Sofortzugang & kostenpflichtige Zugänge' if lang == 'de' else 'Self-Serve Paid Access & Subscriptions') }}</h2>
+  <ul>
+    <li><strong><a href="{{ url_for('site.monitoring', lang=lang) }}">{{ 'المراقبة اليومية المستمرة (14 يوماً مجاناً ثم 29–99$/شهر)' if lang == 'ar' else ('Tägliche Domain-Überwachung (14 Tage kostenlos, danach 29–99 $/Monat)' if lang == 'de' else 'Daily Domain Monitoring (14-day free trial, then $29–$99/mo)') }}</a></strong></li>
+    <li><strong><a href="{{ url_for('site.agents_page', lang=lang) }}">{{ 'بيانات القطاعات الفورية للوكلاء عبر MCP وx402 (USDC على Base)' if lang == 'ar' else ('Sofortige Branchendaten für KI-Agenten via MCP & x402 (Base USDC)' if lang == 'de' else 'Instant Sector Datasets for AI Agents via MCP & x402 (Base USDC)') }}</a></strong></li>
+    <li><strong><a href="{{ url_for('site.audit_page', lang=lang) }}">{{ 'تقرير التدقيق والامتثال الكامل (DORA / NIS2 / SAMA)' if lang == 'ar' else ('Vollständiger Compliance-Audit-Bericht (DORA / NIS2)' if lang == 'de' else 'Full Subdomain & Compliance Audit Report (DORA / NIS2 / SAMA)') }}</a></strong></li>
+  </ul>
   <p>{{ d.contact }} <a href="mailto:{{ contact_email }}?subject=Data%20licence" dir="ltr">{{ contact_email }}</a></p>
-  <p class="small"><a href="{{ url_for('site.exposure_index', lang=lang) }}#anchors">OpenTimestamps anchors</a> ·
+  <p class="small"><a href="{{ url_for('site.pricing_page', lang=lang) }}">{{ 'الأسعار والباقات' if lang == 'ar' else ('Preise' if lang == 'de' else 'Pricing') }}</a> ·
+    <a href="{{ url_for('site.exposure_index', lang=lang) }}#anchors">OpenTimestamps anchors</a> ·
     <a href="{{ url_for('site.adoption_page', lang=lang) }}">/adoption</a> ·
     <a href="https://creativecommons.org/licenses/by/4.0/" rel="nofollow">CC BY 4.0</a> ·
     <a href="https://eur-lex.europa.eu/eli/dir/1996/9/oj" rel="nofollow">Directive 96/9/EC</a></p>

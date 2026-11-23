@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 import threading
 import time
@@ -48,14 +49,21 @@ def load_feed(snapshot_path: str | Path | None = None):
         now = time.monotonic()
         if _CACHE["data"] is not None and now - _CACHE["checked_at"] < REFRESH_SECONDS:
             return _CACHE["data"]
-        snapshot = Path(snapshot_path or Path(__file__).resolve().parent / "analytics" / "news_feed.json")
+        candidates = [Path(snapshot_path) if snapshot_path else Path(__file__).resolve().parent / "analytics" / "news_feed.json"]
+        if not snapshot_path:
+            data_dir = os.environ.get("QS_DATA_DIR")
+            if data_dir:
+                candidates.append(Path(data_dir) / "news_feed.json")
+            elif Path("/var/lib/quantum_saas/news_feed.json").exists():
+                candidates.append(Path("/var/lib/quantum_saas/news_feed.json"))
         data = None
-        try:
-            candidate = json.loads(snapshot.read_text(encoding="utf-8"))
-            if _valid(candidate):
-                data = candidate
-        except (OSError, ValueError):
-            pass
+        for snap in candidates:
+            try:
+                candidate = json.loads(snap.read_text(encoding="utf-8"))
+                if _valid(candidate) and (not data or candidate.get("updated_at", "") >= data.get("updated_at", "")):
+                    data = candidate
+            except (OSError, ValueError):
+                pass
         remote = None
         try:
             request = Request(FEED_URL, headers={"User-Agent": "QuantumAether-Analytics/1.0"})

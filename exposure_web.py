@@ -154,25 +154,40 @@ def register(bp, deps):
         return g.qa_api_key
 
     def key_required():
+        base = deps["base"]()
         resp = jsonify(error="api_key_required",
-                       message="Full multi-week history and bulk exports need an API key (Authorization: Bearer <key>). "
-                               "See the data licence for terms.", terms_url=deps["base"]() + "/data-license")
+                       message="Full multi-week history and bulk exports need an API key (Authorization: Bearer <key>) "
+                               "or pay-per-call access via x402 (/api/v1/agent/sector/<sector>). "
+                               "See /data-license or /agents for instant access.",
+                       terms_url=base + "/data-license",
+                       agents_url=base + "/agents",
+                       monitoring_url=base + "/monitoring",
+                       x402_sector_url=base + "/api/v1/agent/sector/banks-mena")
         resp.status_code = 401
         resp.headers["WWW-Authenticate"] = 'Bearer realm="quantum-aether-data"'
+        resp.headers["Link"] = f'<{base}/data-license>; rel="license", <{base}/agents>; rel="service-desc"'
         return resp
 
     def too_many(bucket, retry):
         retry = max(1, int(retry))
+        base = deps["base"]()
         if bucket == "pages":
-            resp = make_response("Too many requests. Please slow down, or use the open data files (/adoption.csv) "
-                                 "or an API key. Terms: /data-license\n", 429)
+            resp = make_response(
+                "Too many requests. For automated or commercial access, use an API key (/data-license), "
+                "instant x402 sector endpoints (/agents, /mcp), or daily monitoring (/monitoring). "
+                "Open weekly snapshot: /adoption.csv\n", 429)
             resp.mimetype = "text/plain"
         else:
-            resp = jsonify(error="rate_limited", retry_after_seconds=retry, terms_url=deps["base"]() + "/data-license")
+            resp = jsonify(error="rate_limited", retry_after_seconds=retry,
+                           terms_url=base + "/data-license",
+                           agents_url=base + "/agents",
+                           monitoring_url=base + "/monitoring",
+                           x402_sector_url=base + "/api/v1/agent/sector/banks-mena")
             resp.status_code = 429
         resp.headers["Retry-After"] = str(retry)
         resp.headers["Cache-Control"] = "no-store"
         resp.headers["X-Robots-Tag"] = "noindex"
+        resp.headers["Link"] = f'<{base}/data-license>; rel="license", <{base}/agents>; rel="service-desc"'
         return resp
 
     @bp.before_app_request
