@@ -69,6 +69,7 @@ import qrisk
 import evidence
 import search_indexing
 import seo_meta
+import site_answers
 import badge_evidence
 import public_stats
 import pqc_news
@@ -2352,6 +2353,39 @@ def api_optout_verify():
     return jsonify(res), 200
 
 
+@bp.get("/api/v1/adoption/stats")
+def adoption_stats_api():
+    """One documented, public JSON summary of the adoption data for AI agents and directories (2026-11-23).
+    Reuses the weekly snapshot, the country board and the top-1,000 metrics; no per-customer data, never scans."""
+    base = public_base()
+    snap = cached_snapshot()
+    board = cached_countries()
+    body = {
+        "source": "Quantum Aether", "url": base + url_for(".adoption_page"), "license": "CC BY 4.0",
+        "attribution": "Quantum Aether (ather-quantum.com)",
+        "measurement": "TLS handshake on port 443 from one vantage point; post_quantum = the server negotiated "
+                       "X25519MLKEM768 with a Chrome-like ClientHello. External observation, not a security audit.",
+        "top1000": home_adoption_metrics(),
+        "top10k": (snap or {}).get("top10k"),
+        "week": (snap or {}).get("week"), "scanned_at": (snap or {}).get("scanned_at"),
+        "sectors": [{"key": sec["key"], "label": (sec.get("labels") or {}).get("en") or sec["key"],
+                     "reachable": sec["reachable"], "pq": sec["pq"],
+                     "pct": round(100.0 * sec["pq"] / sec["reachable"], 1) if sec["reachable"] else None}
+                    for sec in (snap or {}).get("sectors", [])],
+        "countries": [{k: e.get(k) for k in ("code", "iso", "rank", "measured", "pq", "pct", "delta_pp")}
+                      for e in (board or {}).get("entries", [])],
+        "datasets": {"adoption_json": base + "/adoption.json", "adoption_csv": base + "/adoption.csv",
+                     "countries_json": base + "/adoption/countries.json", "hosting_json": base + "/adoption/hosting.json",
+                     "pq_tls_index_json": base + "/index.json", "pq_tls_index_csv": base + "/index.csv",
+                     "study_top1000_json": base + "/study/top-1000-post-quantum-tls.json"},
+        "per_domain": base + "/site/{domain}",
+        "docs": base + "/llms.txt",
+    }
+    response = _open_data(current_app.response_class(json.dumps(body, ensure_ascii=False), mimetype="application/json"))
+    response.headers["X-Robots-Tag"] = "noindex"
+    return response
+
+
 @bp.get("/adoption.json")
 def adoption_json():
     snap = adoption_snapshot()
@@ -2546,6 +2580,64 @@ def site_is_indexable(domain):
     return False
 
 
+def site_cert_scan(domain):
+    """Last stored live scan of this host (any source) for certificate/cipher facts, at most CERT_MAX_AGE_DAYS old."""
+    since = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=site_answers.CERT_MAX_AGE_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    conn = db()
+    for cand in _domain_candidates(domain):
+        scan = sales_db.latest_scan_for_domain(conn, cand, since)
+        if scan:
+            return scan["result"]
+    return None
+
+
+def site_answer_extras(domain, summary, history, related, country, sensitive, verdict):
+    """'Is <domain> quantum-safe?' page parts (site_answers): localized verdict and FAQ, certificate facts,
+    comparison with all tracked / same-country / same-watchlist sites, related links in the same country and
+    watchlist (indexable, not sensitive, not opted out), and the plan prices. Never scans."""
+    lang = current_lang()
+    conn = db()
+    weekly_row = None
+    for cand in _domain_candidates(domain):
+        weekly_row = adoption.latest_for(conn, cand)
+        if weekly_row:
+            break
+    all_weeks = adoption.weeks(conn)
+    week = (history[-1]["week"] if history else None) or (all_weeks[-1] if all_weeks else None)
+    sector_key = (weekly_row or {}).get("sector")
+    cert = site_answers.cert_facts(site_cert_scan(domain))
+    compare_rows = site_answers.comparison(cached_snapshot(), country, sector_key, lang)
+    local_verdict = site_answers.verdict(domain, summary, lang, verdict)
+    rescan_url = public_base() + url_for(".site_page", domain=domain)
+    faq_items = site_answers.faq(domain, summary, lang, local_verdict, cert, compare_rows, rescan_url)
+    optout = adoption.load_optout(conn=conn)
+    seen = {domain} | {r["domain"] for r in related}
+
+    def pick(rows):
+        out = []
+        for row in rows:
+            d = row["domain"]
+            if d in seen or search_indexing.is_sensitive(d) or adoption.opted_out(d, optout) \
+                    or not search_indexing.is_indexable(d, row["rank"], row["sector"]):
+                continue
+            seen.add(d)
+            out.append(row)
+            if len(out) >= site_answers.RELATED_MAX:
+                break
+        return out
+
+    related_country = [] if sensitive else pick(site_answers.country_peers(conn, domain, countries.code_of(domain), week))
+    related_sector = [] if sensitive else pick(site_answers.sector_peers(conn, domain, sector_key, week))
+    sector_name = next((r["name"] for r in compare_rows if r["kind"] == "sector"), sector_key)
+    currency = subscription_currency()
+    h1_before, h1_after = site_answers.h1_parts(lang)
+    return {"sa": site_answers.texts(lang), "h1_before": h1_before, "h1_after": h1_after, "local_verdict": local_verdict,
+            "faq_items": faq_items, "cert": cert, "compare_rows": compare_rows, "related_country": related_country,
+            "related_sector": related_sector, "sector_name": sector_name,
+            "plan_prices": {"starter": site_answers.money(monitor.PLANS["starter"]["price"], currency),
+                            "business": site_answers.money(monitor.PLANS["business"]["price"], currency)}}
+
+
 def site_fix_guides(network, pq, lang):
     """Guides to link from /site/<domain>: the one for the site's hosting network first, then the general ones."""
     net = (network or "").lower()
@@ -2648,6 +2740,11 @@ def site_page(domain):
     t = i18n.TEXTS[current_lang()]
     title_domain = domain if len(domain) <= 35 else domain[:34].rstrip(".-") + "…"
     site_seo_title = t["site_seo_title"].format(domain=title_domain)
+    extras = {}
+    if summary:
+        site_seo_title = site_answers.title(title_domain, current_lang())
+        extras = site_answer_extras(domain, summary, history, related, country, sensitive, verdict)
+        jsonld[1] = site_answers.faq_jsonld(extras["faq_items"])
     meta_description = None
     if summary:
         answer = t["site_meta_unsure"] if summary.get("unsure") else t["site_meta_yes" if summary["pq"] else "site_meta_no"]
@@ -2662,7 +2759,7 @@ def site_page(domain):
         "site_page.html", domain=domain, site_seo_title=site_seo_title, meta_description=meta_description, summary=summary, source=source, verdict=verdict, history=history,
         related=related, network=network, snippets=badge_snippets(domain) if summary else None, jsonld=jsonld,
         country=country, indexing_excluded=indexing_excluded, seo_noindex=indexing_excluded, seo_robots=robots, subs=subs,
-        fix_guides=site_fix_guides(network, summary["pq"], current_lang()) if summary else []),
+        fix_guides=site_fix_guides(network, summary["pq"], current_lang()) if summary else [], **extras),
         200 if summary else 404)  # نطاق لا نعرفه (مثل wp-login.php من الماسحات) ليس صفحة حقيقية
     if indexing_excluded:
         response.headers['X-Robots-Tag'] = robots

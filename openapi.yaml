@@ -242,6 +242,28 @@ paths:
               schema: { $ref: "#/components/schemas/ScanSummary" }
         "404":
           description: Unknown scan.
+  /api/v1/adoption/stats:
+    get:
+      operationId: getAdoptionStats
+      summary: Public post-quantum TLS adoption summary (free, CC BY 4.0, never scans)
+      description: >
+        Top-1,000 and top-10,000 share of sites that negotiate X25519MLKEM768, per-sector watchlists,
+        per-country board (ccTLD) and links to every open dataset. Weekly data.
+      responses:
+        "200":
+          description: Adoption summary.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  week: { type: string, example: 2026-W48 }
+                  top1000: { type: object, nullable: true }
+                  top10k: { type: object, nullable: true }
+                  sectors: { type: array, items: { type: object } }
+                  countries: { type: array, items: { type: object } }
+                  datasets: { type: object }
+                  license: { type: string, example: CC BY 4.0 }
   /api/v1/badge/{domain}:
     get:
       summary: Verify stored TLS badge evidence without initiating a scan

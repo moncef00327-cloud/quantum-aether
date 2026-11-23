@@ -10,7 +10,8 @@
   {% if summary %}<div class="grade grade-{{ summary.grade }}">{{ summary.grade }}</div>{% endif %}
   <div>
     <p class="muted">{{ t.site_title }}</p>
-    <h1 dir="ltr" class="domain">{{ domain }}</h1>
+    {% if summary and sa %}<h1>{{ h1_before }}<bdi dir="ltr" class="domain">{{ domain }}</bdi>{{ h1_after }}</h1>
+    {% else %}<h1 dir="ltr" class="domain">{{ domain }}</h1>{% endif %}
     {% if summary %}<p class="grade-text">{{ t.grades[summary.grade] }}</p><p class="small"><a href="{{ grade_guide_url }}">{{ 'تعريف الدرجة' if lang == 'ar' else ('Grade definition' if lang == 'en' else 'Notendefinition') }}</a></p>{% endif %}
   </div>
 </section>
@@ -43,7 +44,7 @@
 {% if summary %}
 <section class="card">
   <h2>{{ t.site_answer }}</h2>
-  <p dir="ltr" class="verdict">{{ verdict }}</p>
+  <p dir="{{ 'rtl' if lang == 'ar' else 'ltr' }}" class="verdict">{{ local_verdict or verdict }}</p>
   {% if not summary.pq and not summary.unsure %}
   <p class="notice"><strong>{{ t.hndl_timeline_title }}:</strong> {{ t.hndl_timeline_body.format(domain=domain, group=summary.group or 'classical ECDHE') }} <a href="{{ url_for('site.deadlines_page', lang=lang) }}">{{ t.deadlines_link }} →</a></p>
   {% endif %}
@@ -55,6 +56,11 @@
     <tr><th>Key exchange</th><td>{{ summary.group or "—" }}</td></tr>
     <tr><th>Post-quantum</th><td>{{ "yes" if summary.pq else ("undetermined (probe blocked, rescan)" if summary.unsure else "no (classical)") }}</td></tr>
     <tr><th>TLS</th><td>{{ summary.tls or "—" }}</td></tr>
+    {% if cert and cert.cipher %}<tr><th>Cipher</th><td>{{ cert.cipher }}</td></tr>{% endif %}
+    {% if cert and cert.issuer %}<tr><th>Certificate issuer</th><td>{{ cert.issuer }}</td></tr>{% endif %}
+    {% if cert and cert.key %}<tr><th>Certificate key</th><td>{{ cert.key }}{% if cert.signature %} · {{ cert.signature }}{% endif %}</td></tr>{% endif %}
+    {% if cert and cert.expiry %}<tr><th>Certificate expires</th><td>{{ cert.expiry }}{% if cert.days_left is not none %} ({{ cert.days_left }} days){% endif %}</td></tr>{% endif %}
+    <tr><th>Last scanned</th><td>{{ summary.scanned_at[:10] }}</td></tr>
     {% if network %}<tr><th>{{ t.site_network }}</th><td>{{ network }}</td></tr>{% endif %}
     {% if summary.rank %}<tr><th>{{ t.site_rank }}</th><td>#{{ summary.rank }}</td></tr>{% endif %}
     {% if country %}<tr><th>{{ t.countries_col_country }}</th><td><a href="{{ url_for('site.country_page', code=country.code, lang=lang) }}">{{ country.flag }} {{ country.name }}: #{{ country.rank }}/{{ country.total }} ({{ country.pct }}%)</a></td></tr>{% endif %}
@@ -75,6 +81,28 @@
     {% for h in history|reverse %}<tr><td>{{ h.week }}</td><td>{{ h.grade or "—" }}</td><td>{{ h.grp or "—" }}</td>
       <td>{{ "—" if not h.ok else ("yes" if h.pq else ("undetermined" if h.unsure else "no")) }}</td></tr>{% endfor %}
   </table>
+</section>
+{% endif %}
+
+{% if compare_rows %}
+<section class="card" id="compare">
+  <h2>{{ sa.compare_title.format(domain=domain) }}</h2>
+  <table class="data">
+    <tr><th>{{ sa.col_scope }}</th><th>{{ sa.col_share }}</th></tr>
+    <tr><td><strong>{{ sa.this_site }}</strong> (<bdi dir="ltr">{{ domain }}</bdi>)</td>
+      <td><strong>{{ sa.pq_unsure if summary.unsure else (sa.pq_yes if summary.pq else sa.pq_no) }}</strong></td></tr>
+    {% for r in compare_rows %}<tr><td>{% if r.kind == 'country' %}<a href="{{ url_for('site.country_page', code=r.code, lang=lang) }}">{{ r.label }}</a>{% elif r.kind == 'global' %}<a href="{{ url_for('site.adoption_page', lang=lang) }}">{{ r.label }}</a>{% else %}{{ r.label }}{% endif %}</td>
+      <td dir="ltr">{{ r.pct }}% ({{ r.pq }}/{{ r.n }})</td></tr>{% endfor %}
+  </table>
+</section>
+{% endif %}
+
+{% if faq_items %}
+<section class="card" id="faq">
+  <h2>{{ sa.faq_title.format(domain=domain) }}</h2>
+  {% for item in faq_items %}<h3>{{ item.q }}</h3>
+  <p>{{ item.a }}</p>
+  {% endfor %}
 </section>
 {% endif %}
 
@@ -121,6 +149,32 @@
   <ul class="related" dir="ltr">
     {% for r in related %}<li><a href="{{ url_for('site.site_page', domain=r.domain) }}">{{ r.domain }}</a>
       <span class="muted">{{ r.grade }} · {{ "post-quantum" if r.pq else ("undetermined" if r.unsure else "classical") }}</span></li>{% endfor %}
+  </ul>
+</section>
+{% endif %}
+{% for group, heading in [(related_country, sa.related_country.format(country=country.name) if (sa and country) else ''), (related_sector, sa.related_sector.format(sector=sector_name) if sa else '')] %}{% if group and heading %}
+<section class="card">
+  <h2>{{ heading }}</h2>
+  <ul class="related" dir="ltr">
+    {% for r in group %}<li><a href="{{ url_for('site.site_page', domain=r.domain) }}">{{ r.domain }}</a>
+      <span class="muted">{{ r.grade }} · {{ "post-quantum" if r.pq else ("undetermined" if r.unsure else "classical") }}</span></li>{% endfor %}
+  </ul>
+</section>
+{% endif %}{% endfor %}
+{% if sa %}
+<section class="card" id="plans">
+  <h2>{{ sa.plans_title.format(domain=domain) }}</h2>
+  <p>{{ sa.plans_body.format(starter=plan_prices.starter, business=plan_prices.business) }}</p>
+  <p><a class="button-link" href="{{ url_for('site.monitoring', domain=domain, lang=lang) }}#trial" data-ev="trial_cta">{{ sa.trial_cta }}</a>
+    · <a href="{{ url_for('site.pricing_page', lang=lang) }}" data-ev="pricing_cta">{{ sa.plans_cta }} →</a></p>
+</section>
+<section class="card" id="explore">
+  <h2>{{ sa.explore_title }}</h2>
+  <ul class="related">
+    <li><a href="{{ url_for('site.pq_index_page', lang=lang) }}">{{ sa.link_index }}</a></li>
+    <li><a href="{{ url_for('site.adoption_page', lang=lang) }}">{{ sa.link_adoption }}</a></li>
+    {% if country %}<li><a href="{{ url_for('site.country_page', code=country.code, lang=lang) }}">{{ sa.link_country.format(country=country.name) }}</a></li>{% endif %}
+    <li><a href="{{ url_for('site.countries_page', lang=lang) }}">{{ sa.link_countries }}</a></li>
   </ul>
 </section>
 {% endif %}
