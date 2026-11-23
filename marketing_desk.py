@@ -22,6 +22,22 @@ from mailer import Mailer
 log = logging.getLogger("quantum_saas.marketing_desk")
 
 SITE = "https://ather-quantum.com"
+
+TEAM_FROM_NAME = "Quantum Aether Team"
+
+
+def mail_from_with_team_name(raw: str) -> str:
+    """Keep the address from QS_MAIL_FROM; set the display name to Quantum Aether Team."""
+    raw = (raw or "").strip()
+    if not raw:
+        return ""
+    if "<" in raw and ">" in raw:
+        addr = raw.split("<", 1)[1].rsplit(">", 1)[0].strip()
+    else:
+        addr = raw
+    return f"{TEAM_FROM_NAME} <{addr}>" if addr else ""
+
+
 PAY_SECTORS = (
     "banks-mena", "banks-dach", "banks-europe", "banks-americas-apac",
     "finance-worldwide", "payments-fintech", "crypto-exchanges",
@@ -435,6 +451,7 @@ def render_brief(day: str, radar_drafts: list[dict], dj: dict, badges: list[dict
     else:
         L.append("- **زواحف البحث/AI الموثّقة:** لا بيانات مسجّلة بعد.")
     L.append("")
+    L += ["—", "Quantum Aether Team", ""]
     return "\n".join(L)
 
 
@@ -468,8 +485,8 @@ def run(data_dir: str | None = None, refresh_news: bool = True, send_email: bool
         owner = os.environ.get("QS_OWNER_EMAIL", "")
         mailer = Mailer(
             os.environ.get("RESEND_API_KEY", ""),
-            os.environ.get("QS_MAIL_FROM", ""),
-            fallback_sender=os.environ.get("QS_MAIL_FROM_FALLBACK", ""),
+            mail_from_with_team_name(os.environ.get("QS_MAIL_FROM", "")),
+            fallback_sender=mail_from_with_team_name(os.environ.get("QS_MAIL_FROM_FALLBACK", "")),
             site_url=os.environ.get("QS_PUBLIC_URL", SITE),
         )
         if owner and mailer.enabled:

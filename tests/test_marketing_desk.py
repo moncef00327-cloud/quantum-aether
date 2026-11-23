@@ -84,6 +84,20 @@ class MarketingDeskTests(unittest.TestCase):
         # Employee 4: inbound hot lead bank7 included, already-contacted bank5 excluded
         self.assertIn("bank7.example.sa", brief)
         self.assertNotIn("bank5.example.sa", brief)
+        self.assertTrue(brief.rstrip().endswith("Quantum Aether Team"))
+
+
+    def test_mail_from_uses_team_display_name_and_keeps_address(self):
+        self.assertEqual(
+            marketing_desk.mail_from_with_team_name("Quantum Aether <contact@mail.ather-quantum.com>"),
+            "Quantum Aether Team <contact@mail.ather-quantum.com>",
+        )
+        self.assertEqual(
+            marketing_desk.mail_from_with_team_name("contact@mail.ather-quantum.com"),
+            "Quantum Aether Team <contact@mail.ather-quantum.com>",
+        )
+        self.assertEqual(marketing_desk.mail_from_with_team_name(""), "")
+        self.assertEqual(marketing_desk.mail_from_with_team_name("   "), "")
 
     def test_pqc_news_prefers_newer_data_dir_snapshot(self):
         feed = {
