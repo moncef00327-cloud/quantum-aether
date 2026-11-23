@@ -351,6 +351,124 @@ FAQ = {
             ],
         },
     },
+    "ssl-labs-post-quantum-tls-check": {
+        "en": {
+            "short": "<p><strong>Yes, Qualys SSL Labs now lists post-quantum key-exchange groups</strong>, but it is a slower one-off full TLS audit that can fail on PQ-only configurations and offers no regression alerts. Use SSL Labs for a deep cipher/certificate audit, and a dedicated check like Quantum Aether for instant X25519MLKEM768 verification, HelloRetryRequest handling, CI checks and daily silent-downgrade monitoring.</p>",
+            "faq": [
+                ("Does SSL Labs test X25519MLKEM768?",
+                 "<p>Yes, SSL Labs reports supported post-quantum named groups during its full TLS test, though F5 has documented cases where PQ-only configurations fail in SSL Labs. Dedicated probes also answer HelloRetryRequest once as browsers do.</p>"),
+                ("Why did SSL Labs and Quantum Aether show different results for my domain?",
+                 "<p>Usually because the two tests hit different IP addresses behind an anycast CDN or multiple DNS A/AAAA records, or a config changed between runs. Compare the IP shown in both results.</p>"),
+                ("Does an SSL Labs A+ grade mean my site is quantum-safe?",
+                 "<p>No. A site can score A+ on SSL Labs using only classical X25519 or P-256 key exchange, which remains exposed to harvest-now, decrypt-later interception.</p>"),
+            ],
+        },
+        "ar": {
+            "short": "<p><strong>نعم، يعرض Qualys SSL Labs الآن مجموعات تبادل المفاتيح المقاومة للكم</strong>، لكنه تدقيق شامل أبطأ لمرة واحدة وقد يفشل مع الخوادم المقاومة للكم فقط ولا يوفّر تنبيهات تراجع. استخدم SSL Labs لتدقيق الشهادات والتشفير بالكامل، وفحص Quantum Aether للتحقق الفوري من X25519MLKEM768 والمراقبة اليومية للتراجع الصامت.</p>",
+            "faq": [
+                ("هل يفحص SSL Labs مجموعة X25519MLKEM768؟",
+                 "<p>نعم، يعرض SSL Labs المجموعات المقاومة للكم المدعومة ضمن اختباره الكامل، إلا أن F5 وثّقت حالات فشل مع الإعدادات الكمومية فقط. الفحص المخصص يتعامل أيضاً مع HelloRetryRequest كما تفعل المتصفحات.</p>"),
+                ("هل تعني درجة A+ في SSL Labs أن الموقع مقاوم للكم؟",
+                 "<p>لا. يمكن لموقع أن يحصل على A+ في SSL Labs بتبادل مفاتيح تقليدي X25519 فقط، وهو ما يظل عرضة لهجوم احفظ الآن وفكّ لاحقاً.</p>"),
+                ("لماذا قد تختلف النتيجة بين SSL Labs وQuantum Aether؟",
+                 "<p>غالباً لأن الفحصين وصلا إلى عنوانَي IP مختلفين خلف شبكة CDN أو عدة سجلات DNS، أو تغيّر الإعداد بين الفحصين.</p>"),
+            ],
+        },
+        "de": {
+            "short": "<p><strong>Ja, Qualys SSL Labs zeigt inzwischen Post-Quanten-Gruppen an</strong>, bleibt aber ein langsameres Einzel-Audit ohne tägliche Regressionswarnungen. Nutzen Sie SSL Labs für das vollständige Cipher-/Zertifikats-Audit und Quantum Aether für schnelle X25519MLKEM768-Prüfungen und tägliche Überwachung.</p>",
+            "faq": [
+                ("Bedeutet die Note A+ bei SSL Labs, dass meine Website quantensicher ist?",
+                 "<p>Nein. Eine Website kann bei SSL Labs A+ mit rein klassischem X25519 erhalten und bleibt dennoch gegen Harvest-Now-Decrypt-Later ungeschützt.</p>"),
+                ("Warum weichen SSL Labs und Quantum Aether manchmal voneinander ab?",
+                 "<p>Meist treffen beide Tests unterschiedliche IP-Adressen hinter einem Anycast-CDN oder mehreren DNS-Einträgen.</p>"),
+            ],
+        },
+    },
+    "x25519mlkem768-handshake-latency-performance": {
+        "en": {
+            "short": "<p><code>X25519MLKEM768</code> adds only <strong>~150–350 microseconds</strong> of CPU time on modern servers (under 1 ms) and zero extra TLS round trips when offered first. The main network change is a <strong>1,216-byte ClientHello key share</strong>, which pushes ClientHello across two TCP segments and can trip legacy middleboxes.</p>",
+            "faq": [
+                ("How much latency does X25519MLKEM768 add to a TLS 1.3 handshake?",
+                 "<p>On modern x86_64 or ARM64 CPUs, ML-KEM-768 key operations typically add 150–350 microseconds (roughly 0.5–2% of a normal internet RTT) and zero extra network round trips when both sides prefer X25519MLKEM768.</p>"),
+                ("How big is the X25519MLKEM768 ClientHello key share?",
+                 "<p>1,216 bytes (1,184 bytes for the ML-KEM-768 public key plus 32 bytes for X25519), compared with 32 bytes for classical X25519. That usually makes the full ClientHello span two TCP packets on a 1,500-byte MTU link.</p>"),
+                ("Why can X25519MLKEM768 cause connection hangs on some networks?",
+                 "<p>Because legacy firewalls or DPI middleboxes sometimes expect the entire TLS ClientHello in a single TCP segment and drop or stall two-segment handshakes.</p>"),
+            ],
+        },
+        "ar": {
+            "short": "<p>تضيف مجموعة <code>X25519MLKEM768</code> نحو <strong>150–350 ميكروثانية فقط</strong> على المعالج (أقل من 1 مللي ثانية) وصفر جولات شبكية إضافية. التغيير الفعلي هو حجم المفتاح في ClientHello البالغ <strong>1,216 بايت</strong> مما يقسم الرسالة على حزمتي TCP.</p>",
+            "faq": [
+                ("كم يضيف X25519MLKEM768 من تأخير لمصافحة TLS 1.3؟",
+                 "<p>على المعالجات الحديثة يضيف نحو 150–350 ميكروثانية فقط (قرابة 0.5–2% من زمن جولة الإنترنت المعتادة) دون أي جولة شبكية إضافية إذا اتفق الطرفان عليها أولاً.</p>"),
+                ("ما حجم مفتاح X25519MLKEM768 في ClientHello؟",
+                 "<p>1,216 بايت (1,184 بايت لمفتاح ML-KEM-768 و32 بايت لـ X25519)، مقارنة بـ 32 بايت فقط في X25519 التقليدي.</p>"),
+            ],
+        },
+        "de": {
+            "short": "<p><code>X25519MLKEM768</code> kostet auf modernen Servern nur <strong>ca. 150–350 Mikrosekunden</strong> CPU-Zeit und keinen zusätzlichen Round-Trip. Entscheidend ist der <strong>1.216 Byte große ClientHello Key Share</strong>, der zwei TCP-Segmente belegt.</p>",
+            "faq": [
+                ("Wie viel Latenz fügt X25519MLKEM768 hinzu?",
+                 "<p>Typischerweise 150–350 Mikrosekunden Rechenzeit (unter 1 ms) und keinen zusätzlichen Netzwerk-Round-Trip, solange kein HelloRetryRequest ausgelöst wird.</p>"),
+                ("Wie groß ist der Key Share von X25519MLKEM768?",
+                 "<p>1.216 Byte im ClientHello (1.184 Byte ML-KEM-768 + 32 Byte X25519) und 1.120 Byte im ServerHello.</p>"),
+            ],
+        },
+    },
+    "openssl-3-5-curl-test-x25519mlkem768": {
+        "en": {
+            "short": "<p>Run <code>openssl s_client -connect example.com:443 -groups X25519MLKEM768</code> with <strong>OpenSSL 3.5 or newer</strong> and check for <code>Negotiated TLS1.3 group: X25519MLKEM768</code>, or run <code>curl -Iv --tlsv1.3 --curves X25519MLKEM768 https://example.com</code>.</p>",
+            "faq": [
+                ("Which OpenSSL version is required to test X25519MLKEM768?",
+                 "<p>OpenSSL 3.5.0 or newer. Earlier OpenSSL 3.0–3.4 releases do not recognize X25519MLKEM768 and fail with an unknown group error.</p>"),
+                ("How can I test X25519MLKEM768 if my machine only has OpenSSL 3.0?",
+                 "<p>Use an external probe such as curl https://ather-quantum.com/api/v1/scan?domain=example.com&amp;format=text or run openssl inside a newer container image (for example Debian 13 or Alpine 3.22+).</p>"),
+            ],
+        },
+        "ar": {
+            "short": "<p>شغّل <code>openssl s_client -connect example.com:443 -groups X25519MLKEM768</code> مع <strong>OpenSSL 3.5 أو أحدث</strong> وتأكد من ظهور <code>Negotiated TLS1.3 group: X25519MLKEM768</code>، أو استخدم <code>curl -Iv --tlsv1.3 --curves X25519MLKEM768</code>.</p>",
+            "faq": [
+                ("ما إصدار OpenSSL المطلوب لاختبار X25519MLKEM768؟",
+                 "<p>OpenSSL 3.5.0 أو أحدث؛ الإصدارات 3.0 إلى 3.4 لا تعرف هذه المجموعة وتعيد خطأ.</p>"),
+                ("كيف أفحص دون ترقية OpenSSL على جهازي؟",
+                 "<p>عبر الواجهة النصية curl https://ather-quantum.com/api/v1/scan?domain=example.com&amp;format=text أو عبر الفاحص المجاني على الموقع.</p>"),
+            ],
+        },
+        "de": {
+            "short": "<p>Führen Sie <code>openssl s_client -connect example.com:443 -groups X25519MLKEM768</code> mit <strong>OpenSSL 3.5+</strong> aus und prüfen Sie auf <code>Negotiated TLS1.3 group: X25519MLKEM768</code>.</p>",
+            "faq": [
+                ("Welche OpenSSL-Version wird benötigt?",
+                 "<p>Mindestens OpenSSL 3.5.0; ältere Versionen (3.0–3.4) kennen X25519MLKEM768 nicht.</p>"),
+            ],
+        },
+    },
+    "windows-server-iis-dotnet-post-quantum-tls": {
+        "en": {
+            "short": "<p>IIS delegates TLS 1.3 to Windows <strong>Schannel / SymCrypt</strong>. Windows Server 2019 and 2022 do not negotiate <code>X25519MLKEM768</code> natively; while Windows Server 2025 introduces ML-KEM in CNG, the fastest way to enable hybrid PQ TLS for IIS today is terminating TLS on a PQ-capable reverse proxy or CDN in front of IIS.</p>",
+            "faq": [
+                ("Does Windows Server 2022 IIS support X25519MLKEM768?",
+                 "<p>No. Windows Server 2022 supports TLS 1.3 with classical curves (X25519, P-256, P-384) but does not natively negotiate X25519MLKEM768 in Schannel.</p>"),
+                ("How can I enable post-quantum TLS for an IIS site without replacing Windows Server?",
+                 "<p>Terminate public HTTPS in front of IIS with Cloudflare, AWS CloudFront, Caddy, HAProxy, or nginx built with OpenSSL 3.5+, then verify the public hostname with a live TLS scan.</p>"),
+            ],
+        },
+        "ar": {
+            "short": "<p>يعتمد IIS على <strong>Schannel وSymCrypt</strong> في نظام Windows. إصدارا Windows Server 2019 و2022 لا يدعمان <code>X25519MLKEM768</code> أصلياً، وأسرع حل إنتاجي اليوم هو إنهاء TLS العام أمام IIS عبر وكيل عكسي أو CDN يدعم ما بعد الكم.</p>",
+            "faq": [
+                ("هل يدعم IIS على Windows Server 2022 مجموعة X25519MLKEM768؟",
+                 "<p>لا، يدعم Windows Server 2022 بروتوكول TLS 1.3 بالمنحنيات التقليدية فقط دون X25519MLKEM768 أصلياً.</p>"),
+                ("كيف أفعّل TLS المقاوم للكم لموقع IIS دون استبدال الخادم؟",
+                 "<p>ضع أمام IIS شبكة CDN مثل Cloudflare أو وكيلاً عكسياً مثل Caddy أو nginx (OpenSSL 3.5+) ثم افحص النطاق العام للتأكد.</p>"),
+            ],
+        },
+        "de": {
+            "short": "<p>IIS nutzt Windows <strong>Schannel / SymCrypt</strong>. Windows Server 2019 und 2022 handeln <code>X25519MLKEM768</code> nicht nativ aus; am schnellsten sichern Sie IIS heute über einen PQ-fähigen Reverse Proxy oder ein CDN davor ab.</p>",
+            "faq": [
+                ("Unterstützt Windows Server 2022 IIS X25519MLKEM768?",
+                 "<p>Nein, Schannel auf Windows Server 2022 bietet nur klassische TLS-1.3-Gruppen an.</p>"),
+            ],
+        },
+    },
 }
 
 LABELS = {"en": ("Short answer", "Frequently asked questions"),

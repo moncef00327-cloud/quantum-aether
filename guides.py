@@ -1023,12 +1023,24 @@ Environment=OPENSSL_CONF=/etc/nginx/openssl-oqs.cnf</pre>
         },
     },
     "ssl-labs-post-quantum-tls-check": {
-        "updated": "2026-11-11",
+        "updated": "2026-11-24",
         "en": {
-            "title": "SSL Labs and post-quantum TLS: what each check shows",
-            "description": "SSL Labs audits your whole TLS setup once. A dedicated post-quantum check answers one question, handles PQ-only servers and keeps watching. When to use which.",
+            "title": "SSL Labs vs post-quantum TLS check (X25519MLKEM768)",
+            "description": "Does SSL Labs test post-quantum TLS (X25519MLKEM768)? Compare SSL Labs with a dedicated PQ-TLS check for HelloRetryRequest, PQ-only servers and daily alerts.",
             "body": """
-<p><a href="https://www.ssllabs.com/ssltest/" rel="noopener">Qualys SSL Labs</a> is the best-known free TLS test, and it now reports on post-quantum key exchange as well. So why another check? Because the two answer different questions. Use both; here is what each is for.</p>
+<p><a href="https://www.ssllabs.com/ssltest/" rel="noopener">Qualys SSL Labs</a> is the best-known free TLS audit tool, and it now lists post-quantum key exchange groups as well. So when do you still need a dedicated post-quantum TLS check? Because the two tools answer different operational questions.</p>
+
+<h2>Side-by-side comparison</h2>
+<table class="data">
+<thead><tr><th>Check</th><th>SSL Labs</th><th>Quantum Aether</th></tr></thead>
+<tbody>
+<tr><td>Full one-off TLS &amp; cipher audit</td><td>Yes (60–120s)</td><td>Focused on PQ key exchange + cert summary (2–5s)</td></tr>
+<tr><td>X25519MLKEM768 &amp; HelloRetryRequest</td><td>Reports groups; PQ-only configs can fail</td><td>Offers hybrid + pure ML-KEM, handles HRR like browsers</td></tr>
+<tr><td>IPv4 + IPv6 endpoint consistency</td><td>All A/AAAA IPs</td><td>Up to 6 public IPs, flags mixed CDN edges</td></tr>
+<tr><td>Daily regression alerts (silent downgrade)</td><td>No (manual one-off)</td><td>Yes (<a href="/monitoring?lang=en">14-day free trial</a>, CI GitHub Action)</td></tr>
+<tr><td>Automation (API, CLI, MCP, A2A)</td><td>REST API</td><td>REST API, CLI (<code>npx quantum-aether</code>), MCP &amp; A2A</td></tr>
+</tbody>
+</table>
 
 <h2>What SSL Labs is best at</h2>
 <ul>
@@ -1042,7 +1054,7 @@ Environment=OPENSSL_CONF=/etc/nginx/openssl-oqs.cnf</pre>
 <li><strong>Post-quantum-only servers.</strong> Some deployments accept only hybrid or pure ML-KEM groups. F5 documents cases of <a href="https://my.f5.com/manage/s/article/K000161411" rel="noopener">post-quantum configurations failing in SSL Labs</a>. Our probe offers X25519MLKEM768, the other hybrids and pure ML-KEM-768/1024, and answers a HelloRetryRequest once as browsers do, so the group the server finally selects is recorded.</li>
 <li><strong>One question, answered in seconds.</strong> Does the server negotiate X25519MLKEM768 with a browser today: yes, no, or undetermined, with the evidence.</li>
 <li><strong>Staying fixed.</strong> A one-off test cannot tell you that a load-balancer update or a CDN change quietly removed the hybrid exchange. <a href="/monitoring?lang=en">Daily monitoring</a> emails you when it disappears, and the <a href="https://github.com/marketplace/actions/post-quantum-tls-check-quantum-aether" rel="noopener">GitHub Action</a> fails a deployment that drops it.</li>
-<li><strong>Fix steps for your stack.</strong> Guides for <a href="/guides/enable-x25519mlkem768-nginx?lang=en">nginx</a>, <a href="/guides/ubuntu-openssl-3-0-post-quantum-tls?lang=en">Ubuntu with OpenSSL 3.0</a>, <a href="/guides/post-quantum-tls-apache-caddy-haproxy-cloudflare?lang=en">Apache, Caddy, HAProxy and Cloudflare</a> and <a href="/guides/aws-alb-cloudfront-post-quantum-tls?lang=en">AWS</a>.</li>
+<li><strong>Fix steps for your stack.</strong> Guides for <a href="/guides/enable-x25519mlkem768-nginx?lang=en">nginx</a>, <a href="/guides/ubuntu-openssl-3-0-post-quantum-tls?lang=en">Ubuntu with OpenSSL 3.0</a>, <a href="/guides/post-quantum-tls-apache-caddy-haproxy-cloudflare?lang=en">Apache, Caddy, HAProxy and Cloudflare</a>, <a href="/guides/aws-alb-cloudfront-post-quantum-tls?lang=en">AWS</a>, and <a href="/guides/openssl-3-5-curl-test-x25519mlkem768?lang=en">OpenSSL 3.5 / curl CLI verification</a>.</li>
 <li><strong>Context.</strong> How your site compares with the top 10,000 sites, every week, in an <a href="/adoption?lang=en">open dataset</a>.</li>
 </ul>
 
@@ -1054,10 +1066,22 @@ Environment=OPENSSL_CONF=/etc/nginx/openssl-oqs.cnf</pre>
 """,
         },
         "ar": {
-            "title": "SSL Labs وTLS المقاوم للكم: ماذا يُظهر كل فحص",
-            "description": "يدقق SSL Labs إعدادات TLS كلها مرة واحدة. الفحص المخصص لما بعد الكم يجيب عن سؤال واحد، ويتعامل مع الخوادم المقاومة للكم فقط، ويستمر في المراقبة. متى تستخدم كلاً منهما.",
+            "title": "مقارنة SSL Labs مع فحص TLS المقاوم للكم (X25519MLKEM768)",
+            "description": "هل يفحص SSL Labs التشفير المقاوم للكم X25519MLKEM768؟ مقارنة عملية مع الفحص المخصص لما بعد الكم وHelloRetryRequest والمراقبة اليومية.",
             "body": """
-<p><a href="https://www.ssllabs.com/ssltest/" rel="noopener">Qualys SSL Labs</a> أشهر فحص مجاني لـ TLS، وصار يعرض أيضاً تبادل المفاتيح المقاوم للكم. فلماذا فحص آخر؟ لأن الاثنين يجيبان عن سؤالين مختلفين. استخدم الاثنين؛ وهذا ما يصلح له كل منهما.</p>
+<p><a href="https://www.ssllabs.com/ssltest/" rel="noopener">Qualys SSL Labs</a> أشهر أداة مجانية لتدقيق TLS، وصار يعرض أيضاً مجموعات تبادل المفاتيح المقاومة للكم. فمتى تحتاج مع ذلك إلى فحص مخصص لـ TLS المقاوم للكم؟ لأن الأداتين تجيبان عن سؤالين تشغيليين مختلفين.</p>
+
+<h2>مقارنة مباشرة</h2>
+<table class="data">
+<thead><tr><th>المعيار</th><th>SSL Labs</th><th>Quantum Aether</th></tr></thead>
+<tbody>
+<tr><td>تدقيق TLS الكامل والشهادات</td><td>شامل لمرة واحدة (60–120 ثانية)</td><td>مركّز على تبادل المفاتيح الكمومي + ملخص الشهادة (2–5 ثوانٍ)</td></tr>
+<tr><td>X25519MLKEM768 وHelloRetryRequest</td><td>يعرض المجموعات؛ قد تفشل إعدادات PQ فقط</td><td>يعرض الهجين وML-KEM الخالص ويجيب HRR كالمتصفحات</td></tr>
+<tr><td>اتساق نقاط IPv4 وIPv6</td><td>كل العناوين</td><td>حتى 6 عناوين عامة مع تنبيه اختلاف حواف CDN</td></tr>
+<tr><td>مراقبة يومية للتراجع الصامت</td><td>لا (فحص يدوي لمرة واحدة)</td><td>نعم (<a href="/monitoring?lang=ar">تجربة 14 يوماً مجاناً</a> + GitHub Action)</td></tr>
+<tr><td>الأتمتة (API / CLI / MCP)</td><td>REST API</td><td>REST API وCLI وMCP وA2A</td></tr>
+</tbody>
+</table>
 
 <h2>ما يتفوق فيه SSL Labs</h2>
 <ul>
@@ -1071,7 +1095,7 @@ Environment=OPENSSL_CONF=/etc/nginx/openssl-oqs.cnf</pre>
 <li><strong>الخوادم التي لا تقبل إلا التشفير المقاوم للكم.</strong> بعض الإعدادات تقبل المجموعات الهجينة أو ML-KEM الخالص فقط. وتوثّق F5 حالات <a href="https://my.f5.com/manage/s/article/K000161411" rel="noopener">فشل إعدادات ما بعد الكم في SSL Labs</a>. مجسّنا يعرض X25519MLKEM768 وبقية المجموعات الهجينة وML-KEM-768/1024 الخالص، ويجيب على طلب HelloRetryRequest مرة واحدة كما تفعل المتصفحات، فيسجّل المجموعة التي يختارها الخادم في النهاية.</li>
 <li><strong>سؤال واحد بإجابة خلال ثوانٍ.</strong> هل يتفاوض الخادم اليوم على X25519MLKEM768 مع المتصفح: نعم، أو لا، أو غير محسوم، مع الدليل.</li>
 <li><strong>بقاء الإصلاح.</strong> الفحص لمرة واحدة لا يخبرك أن تحديثاً لموازن التحميل أو تغييراً في CDN أزال التبادل الهجين بصمت. <a href="/monitoring?lang=ar">المراقبة اليومية</a> تراسلك حين يختفي، و<a href="https://github.com/marketplace/actions/post-quantum-tls-check-quantum-aether" rel="noopener">GitHub Action</a> يُفشل أي نشر يُسقطه.</li>
-<li><strong>خطوات إصلاح لبيئتك.</strong> أدلة لـ <a href="/guides/enable-x25519mlkem768-nginx?lang=ar">nginx</a>، و<a href="/guides/ubuntu-openssl-3-0-post-quantum-tls?lang=ar">Ubuntu مع OpenSSL 3.0</a>، و<a href="/guides/post-quantum-tls-apache-caddy-haproxy-cloudflare?lang=ar">Apache وCaddy وHAProxy وCloudflare</a>، و<a href="/guides/aws-alb-cloudfront-post-quantum-tls?lang=ar">AWS</a>.</li>
+<li><strong>خطوات إصلاح لبيئتك.</strong> أدلة لـ <a href="/guides/enable-x25519mlkem768-nginx?lang=ar">nginx</a>، و<a href="/guides/ubuntu-openssl-3-0-post-quantum-tls?lang=ar">Ubuntu مع OpenSSL 3.0</a>، و<a href="/guides/post-quantum-tls-apache-caddy-haproxy-cloudflare?lang=ar">Apache وCaddy وHAProxy وCloudflare</a>، و<a href="/guides/aws-alb-cloudfront-post-quantum-tls?lang=ar">AWS</a>، و<a href="/guides/openssl-3-5-curl-test-x25519mlkem768?lang=ar">الفحص عبر OpenSSL 3.5 وcurl</a>.</li>
 <li><strong>السياق.</strong> موقعك مقارنة بأكبر 10,000 موقع، كل أسبوع، في <a href="/adoption?lang=ar">بيانات مفتوحة</a>.</li>
 </ul>
 
@@ -1080,6 +1104,33 @@ Environment=OPENSSL_CONF=/etc/nginx/openssl-oqs.cnf</pre>
 
 <h2>إذا اختلفت النتيجتان</h2>
 <p>للاختلاف عادة سبب بسيط: وصل الفحصان إلى عنوانَي IP مختلفين (شبكات CDN أو عدة سجلات A)، أو تغيّر الخادم بين الفحصين. أعد <a href="/?lang=ar">الفحص المجاني</a> وقارن عنوان IP في النتيجة بالعنوان الذي فحصه SSL Labs.</p>
+""",
+        },
+        "de": {
+            "title": "SSL Labs vs. Post-Quanten-TLS-Check (X25519MLKEM768)",
+            "description": "Prüft SSL Labs Post-Quanten-TLS (X25519MLKEM768)? Vergleich mit einem dedizierten PQ-TLS-Check für HelloRetryRequest, PQ-only-Server und tägliche Warnungen.",
+            "body": """
+<p><a href="https://www.ssllabs.com/ssltest/" rel="noopener">Qualys SSL Labs</a> ist der bekannteste kostenlose TLS-Test und zeigt inzwischen auch Post-Quanten-Gruppen an. Wann lohnt sich zusätzlich ein dedizierter Post-Quanten-TLS-Check? Weil beide Werkzeuge unterschiedliche Betriebsfragen beantworten.</p>
+
+<h2>Direkter Vergleich</h2>
+<table class="data">
+<thead><tr><th>Prüfpunkt</th><th>SSL Labs</th><th>Quantum Aether</th></tr></thead>
+<tbody>
+<tr><td>Vollständiges einmaliges TLS-Audit</td><td>Ja (60–120 s)</td><td>Fokus auf PQ-Schlüsselaustausch + Zertifikatsübersicht (2–5 s)</td></tr>
+<tr><td>X25519MLKEM768 &amp; HelloRetryRequest</td><td>Zeigt Gruppen; PQ-only-Setups können scheitern</td><td>Bietet Hybrid + reines ML-KEM, beantwortet HRR wie Browser</td></tr>
+<tr><td>Konsistenz über IPv4 &amp; IPv6</td><td>Alle A/AAAA-IPs</td><td>Bis zu 6 öffentliche IPs, erkennt uneinheitliche CDN-Edges</td></tr>
+<tr><td>Tägliche Warnung bei leisem Rückfall</td><td>Nein (manuell)</td><td>Ja (<a href="/monitoring?lang=de">14 Tage kostenlos testen</a>, GitHub Action)</td></tr>
+</tbody>
+</table>
+
+<h2>Wann SSL Labs und wann ein PQ-Check passt</h2>
+<ul>
+<li><strong>SSL Labs</strong> eignet sich für ein tiefes Einzel-Audit aller Cipher-Suites, Zertifikatsketten und historischen Schwachstellen.</li>
+<li><strong>Quantum Aether</strong> prüft in wenigen Sekunden gezielt, ob ein Browser heute <code>X25519MLKEM768</code> aushandelt, unterstützt PQ-only-Server (bei denen F5 <a href="https://my.f5.com/manage/s/article/K000161411" rel="noopener">Probleme mit SSL Labs</a> dokumentiert) und überwacht Änderungen täglich.</li>
+</ul>
+
+<h2>Grenzen beider Tests</h2>
+<p>Beide sehen nur den öffentlichen HTTPS-Endpunkt (oft ein CDN), nicht die Verbindung zum Origin-Server oder interne Dienste. Klassische RSA/ECDSA-Zertifikate sind 2026 weiterhin normal, weil Browser noch keine ML-DSA-Zertifikate akzeptieren. <a href="/?lang=de">Domain jetzt kostenlos prüfen</a>.</p>
 """,
         },
     },
@@ -1318,6 +1369,234 @@ Environment=OPENSSL_CONF=/etc/nginx/openssl-oqs.cnf</pre>
 
 <h2>لتبقى الإجابة صحيحة بعد إرسالها</h2>
 <p>تغيير سياسة الـ CDN أو نقل موازن الحمل أو تحديث الخادم قد يزيل تبادل المفاتيح ما بعد الكمّي دون أن تلاحظ. إن أخبرت عميلاً أنه مفعّل، فتحقق منه باستمرار: المراقبة تعيد فحص نطاقاتك ونطاقاتها الفرعية الشائعة يومياً وتراسلك عند تغيّر تبادل المفاتيح.</p>
+""",
+        },
+    },
+    "x25519mlkem768-handshake-latency-performance": {
+        "updated": "2026-11-24",
+        "en": {
+            "title": "X25519MLKEM768 performance: latency & ClientHello size",
+            "description": "Real CPU overhead, ClientHello byte size (1,216 B key share) and TCP packet impact of hybrid post-quantum TLS 1.3 (X25519MLKEM768) vs classical X25519.",
+            "body": """
+<p>Enabling hybrid post-quantum TLS 1.3 (<code>X25519MLKEM768</code>, NIST FIPS 203) adds negligible CPU time on modern servers, typically well under one millisecond per handshake. The operational difference you actually need to plan for is <strong>packet size</strong>, not CPU.</p>
+
+<h2>Wire sizes: X25519 vs X25519MLKEM768</h2>
+<table class="data">
+<thead><tr><th>Metric</th><th>Classical X25519</th><th>Hybrid X25519MLKEM768</th></tr></thead>
+<tbody>
+<tr><td>ClientHello key share</td><td>32 bytes</td><td>1,216 bytes (1,184 B ML-KEM-768 + 32 B X25519)</td></tr>
+<tr><td>ServerHello key share</td><td>32 bytes</td><td>1,120 bytes (1,088 B ciphertext + 32 B X25519)</td></tr>
+<tr><td>Typical ClientHello total</td><td>~300–550 bytes (1 TCP segment)</td><td>~1,500–1,800 bytes (2 TCP segments on 1,500 B MTU)</td></tr>
+<tr><td>Extra TLS round trips (1-RTT)</td><td>0</td><td>0 (unless HelloRetryRequest triggers)</td></tr>
+<tr><td>CPU cost (modern x86_64/ARM64)</td><td>~50–100 µs</td><td>~150–350 µs (~0.5–2% of a typical WAN RTT)</td></tr>
+</tbody>
+</table>
+
+<h2>Why CPU is rarely the bottleneck</h2>
+<p>ML-KEM-768 key generation, encapsulation and decapsulation use lattice arithmetic (NTT over small integers) that runs in tens to a few hundred microseconds on modern CPUs with AVX2 or NEON. Across a 20–80 ms internet round trip, that CPU delta is invisible to end users, and TLS 1.3 session resumption avoids repeating key exchange on subsequent connections anyway.</p>
+
+<h2>What actually breaks in production: 2-segment ClientHello</h2>
+<p>Because a classical ClientHello fits inside a single 1,500-byte Ethernet frame while an <code>X25519MLKEM768</code> ClientHello spans two TCP segments, legacy firewalls, DPI appliances and misconfigured load balancers occasionally drop or stall the handshake. That causes a timeout or a silent fallback, not slow CPU. Check whether your public hosts survive a real hybrid ClientHello with our <a href="/?lang=en">free single-handshake scanner</a>.</p>
+
+<h2>Avoiding an extra HelloRetryRequest round trip</h2>
+<p>If your server lists <code>X25519MLKEM768</code> first while a client sends only a classical key share (or vice versa), TLS 1.3 falls back to a <code>HelloRetryRequest</code>, adding one full network round trip (1 RTT). Match Chrome, Firefox and Safari by keeping <code>X25519MLKEM768</code> first in your group preference list, with <code>X25519</code> and <code>prime256v1</code> as fallbacks — see our <a href="/guides/enable-x25519mlkem768-nginx?lang=en">nginx guide</a> or <a href="/tools/pq-tls-config?lang=en">config generator</a>.</p>
+
+<h2>Verify and monitor after enabling</h2>
+<p>Measure any host now at <a href="/?lang=en">ather-quantum.com</a>, or start a <a href="/monitoring?lang=en#trial-form">14-day free daily monitoring trial</a> (up to 10 domains, no card) to get alerted if a CDN or firewall change silently reverts your endpoints back to classical TLS.</p>
+""",
+        },
+        "ar": {
+            "title": "أداء X25519MLKEM768: زمن المصافحة وحجم ClientHello",
+            "description": "العبء الحقيقي على المعالج، وحجم رسالة ClientHello (1,216 بايت)، وأثر حزمتي TCP عند تفعيل TLS 1.3 المقاوم للكم X25519MLKEM768 مقارنة بـ X25519.",
+            "body": """
+<p>تفعيل تبادل المفاتيح الهجين المقاوم للكم في TLS 1.3 (<code>X25519MLKEM768</code>، معيار NIST FIPS 203) يضيف وقتاً ضئيلاً جداً على المعالج في الخوادم الحديثة — عادةً أقل بكثير من مللي ثانية واحدة لكل مصافحة. الأثر التشغيلي الحقيقي الذي يستحق التخطيط هو <strong>حجم الحزمة الشبكية</strong> لا استهلاك المعالج.</p>
+
+<h2>مقارنة الأحجام والأداء: X25519 مقابل X25519MLKEM768</h2>
+<table class="data">
+<thead><tr><th>المؤشر</th><th>X25519 التقليدي</th><th>X25519MLKEM768 الهجين</th></tr></thead>
+<tbody>
+<tr><td>مفتاح ClientHello</td><td>32 بايت</td><td>1,216 بايت (1,184 بايت ML-KEM-768 + 32 بايت X25519)</td></tr>
+<tr><td>مفتاح ServerHello</td><td>32 بايت</td><td>1,120 بايت (1,088 بايت نص مشفر + 32 بايت X25519)</td></tr>
+<tr><td>حجم ClientHello الإجمالي</td><td>~300–550 بايت (حزمة TCP واحدة)</td><td>~1,500–1,800 بايت (حزمتا TCP على MTU 1500)</td></tr>
+<tr><td>جولات شبكية إضافية (RTT)</td><td>0</td><td>0 (ما لم يحدث HelloRetryRequest)</td></tr>
+<tr><td>زمن المعالج (x86_64/ARM64 حديث)</td><td>~50–100 ميكروثانية</td><td>~150–350 ميكروثانية (~0.5–2% من زمن جولة إنترنت)</td></tr>
+</tbody>
+</table>
+
+<h2>لماذا لا يشكّل المعالج عنق زجاجة؟</h2>
+<p>عمليات توليد المفتاح والتغليف وفك التغليف في ML-KEM-768 تعتمد على حسابات شبكية سريعة جداً تستغرق بضع مئات من الميكروثانية فقط. مقارنة بزمن انتقال شبكي بين 20 و80 مللي ثانية، يظل الفارق غير محسوس للمستخدم، كما أن استئناف الجلسات في TLS 1.3 يتجنب تكرار تبادل المفاتيح في الاتصالات اللاحقة.</p>
+
+<h2>ما قد يتعطل فعلاً في الإنتاج: انقسام ClientHello على حزمتي TCP</h2>
+<p>لأن رسالة ClientHello الهجينة تتجاوز حد حزمة Ethernet القياسية (1,500 بايت) وتنقسم إلى حزمتي TCP، فإن بعض الجدران النارية القديمة وأجهزة الفحص العميق (DPI) وموازنات الحمل غير المحدّثة قد تُسقط الاتصال أو تسبب تراجعاً صامتاً. تحقق فوراً من مضيفك عبر <a href="/?lang=ar">الفحص المجاني</a>.</p>
+
+<h2>تجنب جولة HelloRetryRequest الإضافية</h2>
+<p>ضع <code>X25519MLKEM768</code> أولاً في قائمة المجموعات متبوعة بـ <code>X25519</code> و<code>prime256v1</code> لتطابق ترتيب المتصفحات الحديثة وتتجنب جولة إضافية. راجع <a href="/guides/enable-x25519mlkem768-nginx?lang=ar">دليل nginx</a> أو <a href="/tools/pq-tls-config?lang=ar">مولّد الإعدادات</a>، ويمكنك بدء <a href="/monitoring?lang=ar#trial-form">تجربة مراقبة يومية مجانية لمدة 14 يوماً</a> (حتى 10 نطاقات بلا بطاقة).</p>
+""",
+        },
+        "de": {
+            "title": "X25519MLKEM768 Performance: Latenz & ClientHello-Größe",
+            "description": "CPU-Aufwand, ClientHello-Größe (1.216 Byte Key Share) und TCP-Segmentierung von hybridem Post-Quanten-TLS 1.3 (X25519MLKEM768) im Vergleich zu X25519.",
+            "body": """
+<p>Hybrides Post-Quanten-TLS 1.3 (<code>X25519MLKEM768</code>, NIST FIPS 203) verursacht auf modernen Servern nur minimalen CPU-Aufwand — typischerweise wenige hundert Mikrosekunden pro Handshake. Betrieblich relevant ist vor allem die <strong>Paketgröße des ClientHello</strong>.</p>
+
+<h2>Größen- und Latenzvergleich</h2>
+<table class="data">
+<thead><tr><th>Kennzahl</th><th>Klassisch X25519</th><th>Hybrid X25519MLKEM768</th></tr></thead>
+<tbody>
+<tr><td>ClientHello Key Share</td><td>32 Byte</td><td>1.216 Byte (1.184 B ML-KEM-768 + 32 B X25519)</td></tr>
+<tr><td>ServerHello Key Share</td><td>32 Byte</td><td>1.120 Byte (1.088 B Ciphertext + 32 B X25519)</td></tr>
+<tr><td>ClientHello gesamt</td><td>~300–550 Byte (1 TCP-Segment)</td><td>~1.500–1.800 Byte (2 TCP-Segmente bei 1.500 B MTU)</td></tr>
+<tr><td>CPU-Zeit (x86_64/ARM64)</td><td>~50–100 µs</td><td>~150–350 µs (~0,5–2 % einer typischen WAN-RTT)</td></tr>
+</tbody>
+</table>
+
+<h2>Praxispunkt: 2-Segment-ClientHello und Middleboxes</h2>
+<p>Ältere Firewalls, DPI-Appliances oder Load Balancer, die das gesamte TLS-ClientHello in einem einzigen TCP-Paket erwarten, können Verbindungen abbrechen oder verlangsamen. Prüfen Sie Ihre öffentlichen Endpunkte sofort mit dem <a href="/?lang=de">kostenlosen Scan</a> oder richten Sie die <a href="/monitoring?lang=de#trial-form">14-tägige kostenlose Überwachung</a> für bis zu 10 Domains ein.</p>
+""",
+        },
+    },
+    "openssl-3-5-curl-test-x25519mlkem768": {
+        "updated": "2026-11-24",
+        "en": {
+            "title": "Test X25519MLKEM768 with OpenSSL 3.5 and curl (CLI)",
+            "description": "Exact openssl s_client and curl commands to verify hybrid post-quantum TLS 1.3 (X25519MLKEM768), read server key-exchange groups and debug fallbacks.",
+            "body": """
+<p>If you want to verify post-quantum TLS from your terminal or CI pipeline, you need a client linked against <strong>OpenSSL 3.5+</strong> (or BoringSSL/AWS-LC with ML-KEM support). Older OpenSSL 3.0–3.4 builds do not recognize <code>X25519MLKEM768</code>.</p>
+
+<h2>1. Check your local OpenSSL and curl versions</h2>
+<pre dir="ltr">openssl version
+curl --version | head -n 2</pre>
+<p>Confirm OpenSSL reports <strong>3.5.0 or newer</strong> (Debian 13, Ubuntu 26.04, Homebrew <code>openssl@3</code>, or Docker <code>alpine:3.22+</code>).</p>
+
+<h2>2. Test X25519MLKEM768 with openssl s_client</h2>
+<pre dir="ltr">openssl s_client -connect example.com:443 -servername example.com -tls1_3 -groups X25519MLKEM768 &lt;/dev/null 2&gt;/dev/null | grep -iE "Protocol|Cipher|Peer Temp Key|Negotiated TLS1.3 group"</pre>
+<p>A post-quantum-ready server prints:</p>
+<pre dir="ltr">Negotiated TLS1.3 group: X25519MLKEM768</pre>
+<p>To test browser-like fallback behaviour (hybrid offered first, classical allowed if unsupported):</p>
+<pre dir="ltr">openssl s_client -connect example.com:443 -servername example.com -groups X25519MLKEM768:X25519:prime256v1 &lt;/dev/null 2&gt;/dev/null | grep -i group</pre>
+
+<h2>3. Test with curl (built against OpenSSL 3.5+)</h2>
+<pre dir="ltr">curl -Iv --tlsv1.3 --curves X25519MLKEM768 https://example.com 2&gt;&amp;1 | grep -iE "SSL connection|using|group|X25519MLKEM768"</pre>
+<p>If curl fails with <code>SSL_CTX_set1_curves_list failed</code> or <code>unsupported curve</code>, your curl binary is linked to an OpenSSL older than 3.5.</p>
+
+<h2>4. Zero-install CLI &amp; automated monitoring</h2>
+<p>If your workstation still ships OpenSSL 3.0/3.2, you can run a live external probe without upgrading OpenSSL locally:</p>
+<pre dir="ltr">curl -s "https://ather-quantum.com/api/v1/scan?domain=example.com&amp;format=text"</pre>
+<p>Or use the <a href="/?lang=en">web scanner</a> and <a href="/monitoring?lang=en#trial-form">14-day free daily monitoring trial</a> to get email alerts if a deployment ever drops <code>X25519MLKEM768</code>.</p>
+""",
+        },
+        "ar": {
+            "title": "فحص X25519MLKEM768 عبر OpenSSL 3.5 وcurl من الطرفية",
+            "description": "أوامر openssl s_client وcurl الدقيقة للتحقق من تفعيل TLS 1.3 المقاوم للكم (X25519MLKEM768) وقراءة المجموعة المتفاوض عليها واكتشاف التراجع.",
+            "body": """
+<p>للتحقق من دعم TLS المقاوم للكم من سطر الأوامر أو خط CI، تحتاج إلى عميل مربوط بـ <strong>OpenSSL 3.5 أو أحدث</strong> (أو BoringSSL/AWS-LC). إصدارات OpenSSL 3.0–3.4 لا تتعرف على المجموعة <code>X25519MLKEM768</code>.</p>
+
+<h2>1. تحقق من إصدار OpenSSL وcurl لديك</h2>
+<pre dir="ltr">openssl version
+curl --version | head -n 2</pre>
+<p>تأكد أن OpenSSL هو <strong>3.5.0 أو أحدث</strong> (متوفر في Debian 13 وUbuntu 26.04 وHomebrew <code>openssl@3</code>).</p>
+
+<h2>2. الفحص عبر openssl s_client</h2>
+<pre dir="ltr">openssl s_client -connect example.com:443 -servername example.com -tls1_3 -groups X25519MLKEM768 &lt;/dev/null 2&gt;/dev/null | grep -iE "Protocol|Cipher|Peer Temp Key|Negotiated TLS1.3 group"</pre>
+<p>الخادم الجاهز للكم يطبع:</p>
+<pre dir="ltr">Negotiated TLS1.3 group: X25519MLKEM768</pre>
+<p>ولاخنبار سلوك المتصفحات (تفضيل الهجين مع السماح بالتراجع التقليدي):</p>
+<pre dir="ltr">openssl s_client -connect example.com:443 -servername example.com -groups X25519MLKEM768:X25519:prime256v1 &lt;/dev/null 2&gt;/dev/null | grep -i group</pre>
+
+<h2>3. الفحص عبر curl</h2>
+<pre dir="ltr">curl -Iv --tlsv1.3 --curves X25519MLKEM768 https://example.com 2&gt;&amp;1 | grep -iE "SSL connection|using|group|X25519MLKEM768"</pre>
+
+<h2>4. الفحص الفوري بدون ترقية OpenSSL محلياً</h2>
+<p>إذا كان جهازك لا يزال على OpenSSL 3.0 يمكنك الفحص مباشرة عبر API النصي:</p>
+<pre dir="ltr">curl -s "https://ather-quantum.com/api/v1/scan?domain=example.com&amp;format=text"</pre>
+<p>أو عبر <a href="/?lang=ar">الفاحص المجاني</a>، مع إمكانية بدء <a href="/monitoring?lang=ar#trial-form">تجربة مراقبة يومية مجانية لمدة 14 يوماً</a> (حتى 10 نطاقات بلا بطاقة).</p>
+""",
+        },
+        "de": {
+            "title": "X25519MLKEM768 mit OpenSSL 3.5 und curl testen (CLI)",
+            "description": "Konkrete openssl s_client- und curl-Befehle, um hybrides Post-Quanten-TLS 1.3 (X25519MLKEM768) im Terminal oder in CI-Pipelines zu prüfen.",
+            "body": """
+<p>Für lokale Tests im Terminal oder in CI-Pipelines wird ein Client mit <strong>OpenSSL 3.5 oder neuer</strong> benötigt. Ältere OpenSSL-Versionen (3.0–3.4) kennen <code>X25519MLKEM768</code> noch nicht.</p>
+
+<h2>1. Versionen prüfen</h2>
+<pre dir="ltr">openssl version
+curl --version | head -n 2</pre>
+
+<h2>2. Mit openssl s_client testen</h2>
+<pre dir="ltr">openssl s_client -connect example.com:443 -servername example.com -tls1_3 -groups X25519MLKEM768 &lt;/dev/null 2&gt;/dev/null | grep -iE "Protocol|Cipher|Negotiated TLS1.3 group"</pre>
+<p>Erwartete Ausgabe bei Unterstützung: <code>Negotiated TLS1.3 group: X25519MLKEM768</code>.</p>
+
+<h2>3. Mit curl oder ohne lokales OpenSSL 3.5 testen</h2>
+<pre dir="ltr">curl -Iv --tlsv1.3 --curves X25519MLKEM768 https://example.com 2&gt;&amp;1 | grep -iE "SSL connection|group|X25519MLKEM768"
+curl -s "https://ather-quantum.com/api/v1/scan?domain=example.com&amp;format=text"</pre>
+<p>Alternativ direkt im <a href="/?lang=de">Web-Scanner</a> prüfen oder die <a href="/monitoring?lang=de#trial-form">14-tägige kostenlose Überwachung</a> aktivieren.</p>
+""",
+        },
+    },
+    "windows-server-iis-dotnet-post-quantum-tls": {
+        "updated": "2026-11-24",
+        "en": {
+            "title": "Post-quantum TLS on Windows Server, IIS & .NET",
+            "description": "How Windows Server (Schannel / SymCrypt), IIS and .NET handle ML-KEM post-quantum TLS 1.3, what is supported today, and the fastest production options.",
+            "body": """
+<p>On Windows Server and IIS, TLS 1.3 key exchange is controlled by the operating system's <strong>Schannel</strong> and <strong>SymCrypt / CNG</strong> stack — not by IIS configuration alone. That means enabling <code>X25519MLKEM768</code> on IIS depends directly on your Windows Server build and updates.</p>
+
+<h2>1. Where Windows Server &amp; .NET stand</h2>
+<ul>
+<li><strong>Windows Server 2019 &amp; 2022:</strong> Schannel supports TLS 1.3 (on Server 2022) with classical curves (<code>X25519</code>, <code>P-256</code>, <code>P-384</code>), but does <strong>not</strong> negotiate <code>X25519MLKEM768</code> natively.</li>
+<li><strong>Windows Server 2025 &amp; newer Insider/update channels:</strong> Microsoft added ML-KEM (FIPS 203) into SymCrypt and Windows CNG, with TLS 1.3 hybrid key-exchange rollout progressing through Windows servicing updates. Always verify your actual endpoint over the wire rather than assuming an OS patch enabled it.</li>
+<li><strong>.NET on Linux vs Windows:</strong> ASP.NET Core / Kestrel on Linux delegates TLS to the host's OpenSSL library (so Linux + OpenSSL 3.5+ negotiates <code>X25519MLKEM768</code> immediately), while .NET on Windows delegates to Schannel.</li>
+</ul>
+
+<h2>2. Fastest production path for IIS workloads today</h2>
+<p>If you run IIS on Windows Server 2019/2022 (or a Server 2025 build whose Schannel does not yet negotiate <code>X25519MLKEM768</code> publicly), terminate public TLS in front of IIS using a post-quantum-capable reverse proxy or CDN:</p>
+<ul>
+<li><strong>Cloudflare / Azure Front Door / AWS CloudFront:</strong> enable hybrid PQ TLS at the edge while keeping TLS 1.3 between edge and IIS origin.</li>
+<li><strong>Caddy, HAProxy or nginx (OpenSSL 3.5+) reverse proxy:</strong> place in front of IIS — see our <a href="/guides/post-quantum-tls-apache-caddy-haproxy-cloudflare?lang=en">reverse proxy &amp; CDN guide</a> and <a href="/guides/enable-x25519mlkem768-nginx?lang=en">nginx guide</a>.</li>
+</ul>
+
+<h2>3. Check your IIS endpoint right now</h2>
+<p>Run our <a href="/?lang=en">free public TLS scan</a> against your IIS hostname (and <code>api.</code> / <code>portal.</code> subdomains) to confirm what external browsers actually negotiate today. For ongoing compliance (<a href="/guides/nis2-dora-post-quantum-cryptography?lang=en">NIS2 / DORA</a> or <a href="/guides/gulf-banks-post-quantum-cryptography-requirements?lang=en">SAMA</a>), start a <a href="/monitoring?lang=en#trial-form">14-day free daily monitoring trial</a> (up to 10 domains, no card).</p>
+""",
+        },
+        "ar": {
+            "title": "TLS المقاوم للكم على Windows Server وIIS و.NET",
+            "description": "كيف يتعامل Windows Server (Schannel / SymCrypt) وIIS و.NET مع ML-KEM في TLS 1.3، وما المدعوم اليوم، وأسرع حلول الإنتاج لخوادم IIS.",
+            "body": """
+<p>على Windows Server وIIS يتحكم نظام التشغيل عبر <strong>Schannel</strong> و<strong>SymCrypt / CNG</strong> بتبادل مفاتيح TLS 1.3، وليس إعدادات IIS وحدها. لذلك يتوقف تفعيل <code>X25519MLKEM768</code> مباشرةً على إصدار Windows Server وتحديثاته.</p>
+
+<h2>1. الوضع الحالي لـ Windows Server و.NET</h2>
+<ul>
+<li><strong>Windows Server 2019 و2022:</strong> يدعم Server 2022 بروتوكول TLS 1.3 بالمنحنيات التقليدية (<code>X25519</code>، <code>P-256</code>، <code>P-384</code>) لكنه <strong>لا</strong> يتفاوض على <code>X25519MLKEM768</code> أصلياً.</li>
+<li><strong>Windows Server 2025 والتحديثات الأحدث:</strong> أضافت مايكروسوفت خوارزمية ML-KEM (FIPS 203) إلى SymCrypt وWindows CNG مع تفعيل تدريجي لتبادل المفاتيح الهجين في TLS 1.3 عبر التحديثات. افحص نقطتك فعلياً على الشبكة ولا تفترض التفعيل التلقائي.</li>
+<li><strong>.NET على Linux مقابل Windows:</strong> تطبيقات ASP.NET Core / Kestrel على Linux تعتمد على OpenSSL (فتدعم <code>X25519MLKEM768</code> فوراً مع OpenSSL 3.5+)، بينما تعتمد على Schannel في Windows.</li>
+</ul>
+
+<h2>2. أسرع طريق عملي لخوادم IIS اليوم</h2>
+<p>إذا كان لديك IIS على Windows Server 2019/2022 أو بناء لا يتفاوض بعد على <code>X25519MLKEM768</code>، فأنهِ TLS العام أمام IIS عبر وكيل عكسي أو CDN يدعم ما بعد الكم:</p>
+<ul>
+<li><strong>Cloudflare أو AWS CloudFront أو وكيل Caddy / nginx (OpenSSL 3.5+):</strong> يوفّر الحماية الكمومية للمتصفحات فوراً دون تعديل تطبيقات .NET الداخلية (انظر <a href="/guides/post-quantum-tls-apache-caddy-haproxy-cloudflare?lang=ar">دليل الوكلاء وCDN</a>).</li>
+</ul>
+
+<h2>3. افحص خادم IIS الآن</h2>
+<p>اختبر نطاقك العام الآن عبر <a href="/?lang=ar">الفحص المجاني</a>، وللامتثال المستمر (<a href="/guides/gulf-banks-post-quantum-cryptography-requirements?lang=ar">ساما</a> أو <a href="/guides/nis2-dora-post-quantum-cryptography?lang=ar">NIS2/DORA</a>) ابدأ <a href="/monitoring?lang=ar#trial-form">تجربة المراقبة اليومية المجانية لمدة 14 يوماً</a> (حتى 10 نطاقات بلا بطاقة).</p>
+""",
+        },
+        "de": {
+            "title": "Post-Quanten-TLS auf Windows Server, IIS & .NET",
+            "description": "Wie Windows Server (Schannel / SymCrypt), IIS und .NET ML-KEM in TLS 1.3 unterstützen und wie Sie IIS-Endpunkte heute schnell absichern.",
+            "body": """
+<p>Unter Windows Server und IIS steuert das Betriebssystem über <strong>Schannel</strong> und <strong>SymCrypt / CNG</strong> den TLS-1.3-Schlüsselaustausch — nicht allein IIS. Ob <code>X25519MLKEM768</code> ausgehandelt wird, hängt daher direkt von der Windows-Server-Version ab.</p>
+
+<h2>1. Aktueller Stand</h2>
+<ul>
+<li><strong>Windows Server 2019 &amp; 2022:</strong> Kein natives <code>X25519MLKEM768</code> in Schannel (nur klassisches X25519 / P-256 / P-384).</li>
+<li><strong>Windows Server 2025 &amp; neuere Updates:</strong> ML-KEM (FIPS 203) ist in SymCrypt/CNG integriert; prüfen Sie stets per Live-Handshake, ob Ihr Endpunkt die hybride Gruppe bereits extern anbietet.</li>
+<li><strong>.NET auf Linux vs. Windows:</strong> ASP.NET Core / Kestrel unter Linux nutzt OpenSSL (mit OpenSSL 3.5+ sofort PQ-fähig), unter Windows dagegen Schannel.</li>
+</ul>
+
+<h2>2. Schnellster Produktionsweg für IIS heute</h2>
+<p>Terminieren Sie externes TLS vor IIS über einen PQ-fähigen Reverse Proxy (nginx mit OpenSSL 3.5+, Caddy, HAProxy) oder ein CDN wie Cloudflare — siehe unseren <a href="/guides/enable-x25519mlkem768-nginx?lang=de">nginx-Leitfaden</a>. Prüfen Sie Ihren IIS-Endpunkt sofort mit dem <a href="/?lang=de">kostenlosen Scan</a> oder starten Sie die <a href="/monitoring?lang=de#trial-form">14-tägige kostenlose Überwachung</a>.</p>
 """,
         },
     },

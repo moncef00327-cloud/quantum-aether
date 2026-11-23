@@ -34,7 +34,8 @@ class GuideFaqTests(unittest.TestCase):
                 self.assertEqual(len(faq), 1)
                 self.assertEqual(len(faq[0]["mainEntity"]), len(entry["faq"]))
                 self.assertNotIn("<", faq[0]["mainEntity"][0]["acceptedAnswer"]["text"])
-                self.assertIn(guide_faq.CHECKED, body)
+                self.assertIn(guides.GUIDES[slug]["updated"], body)
+                self.assertGreaterEqual(guides.GUIDES[slug]["updated"], guide_faq.CHECKED)
 
     def test_other_guides_unchanged(self):
         body = self.client.get("/guides/harvest-now-decrypt-later?lang=en").get_data(as_text=True)
