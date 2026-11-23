@@ -61,7 +61,7 @@
       <td>{{ card.scenarios[w.closest].label }}</td></tr>{% endfor %}
   </table></div>
   <p class="muted small">Since launch: {{ card.totals.visitors }} visitors · {{ card.totals.scans }} scans · {{ card.totals.reports }} reports (${{ "%.2f"|format(card.totals.revenue) }}{% for cur, amt in (card.totals.revenue_by_currency or {}).items()|sort if cur != 'USD' %} + {{ "%.2f"|format(amt) }} {{ cur }}{% endfor %})
-    · MRR ${{ "%.2f"|format(card.mrr) }} · cash cost ${{ card.cost_so_far }} (credit until {{ card.credit_until }}, then ~${{ card.cost_per_month|int }}/mo) · break-even = {{ card.breakeven_subs }} Starter subscriptions.
+    · MRR €{{ "%.2f"|format(card.mrr) }} · cash cost €{{ "%.2f"|format(card.cost_so_far) }} (€{{ card.cost_per_month|int }}/mo server since {{ card.cost_start }}) · break-even = {{ card.breakeven_subs }} Starter subscription{{ '' if card.breakeven_subs == 1 else 's' }}.
     Excludes bots, admin-cookie visits and test orders.</p>
 </section>
 

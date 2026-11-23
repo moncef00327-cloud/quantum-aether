@@ -8,17 +8,20 @@ import analytics_db
 
 LAUNCH = dt.date(2026, 11, 3)          # أول يوم بزوار حقيقيين
 WEEKS_PER_MONTH = 4.345
-COST_PER_MONTH = 123.0                  # تقدير 2026-11-04: خادم Vultr Optimized Cloud 4c/16GB ~$120 + نطاق ~$3. لم تُؤكد الفاتورة.
-CREDIT_UNTIL = dt.date(2026, 12, 2)     # رصيد Vultr الترويجي $250 (تقدير 30 يوماً من التسجيل): لا دفع نقدي قبله
+COST_PER_MONTH = 3.0                    # 2026-11-23: خادم 80.211.34.89 بتجديد شهري 3€ (بعد إيقاف خادم Vultr)
+COST_CURRENCY = "EUR"
+COST_START = dt.date(2026, 11, 22)      # تاريخ الانتقال للخادم الجديد (قبل ذلك كان Vultr ضمن الرصيد المجاني)
+CREDIT_UNTIL = COST_START               # اسم قديم محفوظ للتوافق
 
 # visitors_m1, monthly growth, visitor→scan, scan→report, scan→subscription
+# net_12m عُدّل في 2026-11-23 ليعكس تكلفة الخادم الجديدة 3€/شهر (36€/سنة) بدلاً من تقدير Vultr السابق (~1,353$/11 شهراً)
 SCENARIOS = {
     "pessimistic": {"label": "Pessimistic", "label_ar": "متشائم", "visitors": 300, "growth": 1.10,
-                    "scan": 0.05, "report": 0.002, "sub": 0.001, "net_12m": -1307},
+                    "scan": 0.05, "report": 0.002, "sub": 0.001, "net_12m": 10},
     "realistic": {"label": "Realistic", "label_ar": "واقعي", "visitors": 1500, "growth": 1.20,
-                  "scan": 0.15, "report": 0.004, "sub": 0.003, "net_12m": 3927},
+                  "scan": 0.15, "report": 0.004, "sub": 0.003, "net_12m": 5244},
     "optimistic": {"label": "Optimistic", "label_ar": "متفائل", "visitors": 5000, "growth": 1.25,
-                   "scan": 0.20, "report": 0.008, "sub": 0.005, "net_12m": 54889},
+                   "scan": 0.20, "report": 0.008, "sub": 0.005, "net_12m": 56206},
 }
 
 
@@ -104,13 +107,15 @@ def build(conn, owner_email="", plans=None, today=None):
             by_currency[currency] = round(by_currency.get(currency, 0) + amount, 2)
     totals["revenue_by_currency"] = by_currency
     day = min(today or dt.date.today(), dt.date.today())
-    paid_days = max(0, (day - CREDIT_UNTIL).days + 1)   # الأيام بعد انتهاء الرصيد فقط تكلّف نقداً
+    paid_days = max(0, (day - COST_START).days + 1)     # الأيام على الخادم الجديد (3€/شهر) فقط تكلّف نقداً
     cost_so_far = COST_PER_MONTH * paid_days / 30.4
+    eur_revenue = by_currency.get(COST_CURRENCY, 0)
     full = [r for r in rows if r["partial_days"] == 7]
     latest = (full or rows)[-1] if rows else None
     return {"weeks": rows, "totals": totals, "mrr": mrr, "cost_so_far": round(cost_so_far, 2),
-            "net_so_far": round(totals["revenue"] - cost_so_far, 2), "breakeven_subs": math.ceil(COST_PER_MONTH / 27.06),
-            "credit_until": CREDIT_UNTIL.isoformat(), "cost_per_month": COST_PER_MONTH,
+            "net_so_far": round(eur_revenue - cost_so_far, 2), "breakeven_subs": math.ceil(COST_PER_MONTH / 27.06),
+            "credit_until": CREDIT_UNTIL.isoformat(), "cost_start": COST_START.isoformat(),
+            "cost_per_month": COST_PER_MONTH, "cost_currency": COST_CURRENCY,
             "verdict": latest["closest"] if latest else None, "scenarios": SCENARIOS,
             "conversion": {"scan": round(totals["scans"] / totals["visitors"], 4) if totals["visitors"] else None},
             "conversion_warning": conversion_warning(totals, latest["closest"] if latest else None)}
@@ -143,10 +148,10 @@ def as_text(card):
                        if cur != REVENUE_CURRENCY)
     lines += ["", f"Since launch: {t['visitors']} visitors, {t['scans']} scans, {t['reports']} reports (${t['revenue']:.2f}"
                   f"{' + ' + others if others else ''}), "
-                  f"{t['subs']} subscriptions. MRR ${card['mrr']:.2f}.",
-              f"Cash cost so far ${card['cost_so_far']:.2f} (Vultr credit until {card['credit_until']}, then ~${card['cost_per_month']:.0f}/month); "
-              f"net ${card['net_so_far']:.2f}. "
-              f"Break-even: {card['breakeven_subs']} Starter subscriptions.",
+                  f"{t['subs']} subscriptions. MRR €{card['mrr']:.2f}.",
+              f"Cash cost so far €{card['cost_so_far']:.2f} (€{card['cost_per_month']:.0f}/month server since {card['cost_start']}); "
+              f"EUR net €{card['net_so_far']:.2f}. "
+              f"Break-even: {card['breakeven_subs']} Starter subscription{'s' if card['breakeven_subs'] != 1 else ''}.",
               f"Verdict: tracking the {SCENARIOS[card['verdict']]['label'].upper()} scenario "
               f"(الأقرب: {SCENARIOS[card['verdict']]['label_ar']})." if card["verdict"] else "No data yet."]
     if card["weeks"]:

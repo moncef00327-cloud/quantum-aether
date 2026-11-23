@@ -36,8 +36,18 @@ class ScorecardTests(unittest.TestCase):
         self.assertEqual(week["partial_days"], 3)
         self.assertEqual(card["verdict"], "pessimistic")
         self.assertIn("PESSIMISTIC", scorecard.as_text(card))
-        self.assertEqual(card["breakeven_subs"], 5)
-        self.assertEqual(card["cost_so_far"], 0)  # ما زلنا ضمن رصيد Vultr
+        self.assertEqual(card["breakeven_subs"], 1)
+        self.assertEqual(card["cost_so_far"], 0)  # قبل الانتقال للخادم الجديد (2026-11-22)
+
+    def test_server_cost_3_eur_per_month_from_move_date(self):
+        card = scorecard.build(self.conn, "owner@x.test", monitor.PLANS, today=dt.date(2026, 11, 23))
+        self.assertEqual(card["cost_per_month"], 3.0)
+        self.assertEqual(card["cost_currency"], "EUR")
+        self.assertEqual(card["breakeven_subs"], 1)
+        self.assertEqual(card["cost_so_far"], round(3.0 * 2 / 30.4, 2))
+        text = scorecard.as_text(card)
+        self.assertIn("€3/month", text)
+        self.assertIn("1 Starter subscription.", text)
 
     def test_conversion_warning_when_no_scans(self):
         totals = {"visitors": 70, "scans": 0}
