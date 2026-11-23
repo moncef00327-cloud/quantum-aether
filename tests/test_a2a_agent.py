@@ -62,6 +62,28 @@ class A2ATests(unittest.TestCase):
         self.assertIn("/.well-known/agent-card.json", self.client.get("/llms.txt").get_data(as_text=True))
         self.assertEqual(self.client.get("/api/v1/agent/discovery").json["a2a_endpoint"], "https://ather-quantum.com/a2a")
 
+    def test_get_a2a_and_service_offers_and_crawler_link_headers(self):
+        get_a2a = self.client.get("/a2a")
+        self.assertEqual(get_a2a.status_code, 200)
+        self.assertEqual(get_a2a.json["url"], "https://ather-quantum.com/a2a")
+        self.assertIn("monitoring", get_a2a.json["services"])
+        self.assertIn("organization_audit", get_a2a.json["services"])
+
+        ev = self.send("Is example.com post-quantum ready?").json["result"]["parts"][1]["data"]
+        self.assertIn("services", ev)
+        self.assertIn("/monitoring?domain=example.com#trial-form", ev["services"]["monitoring"]["trial_url"])
+        self.assertIn("/audit?domain=example.com", ev["services"]["organization_audit"]["url"])
+
+        paid = self.send(data={"skill": "paid-data"}).json["result"]
+        self.assertIn("29 EUR/mo", paid["parts"][0]["text"])
+        self.assertEqual(paid["parts"][1]["data"]["organization_audit"]["price_eur"], "490")
+
+        for path in ("/", "/api/v1/badge/example.com"):
+            link = self.client.get(path).headers.get("Link", "")
+            self.assertIn("/.well-known/agent-card.json", link, path)
+            self.assertIn("/.well-known/mcp.json", link, path)
+            self.assertIn("/llms.txt", link, path)
+
 
 if __name__ == "__main__":
     unittest.main()

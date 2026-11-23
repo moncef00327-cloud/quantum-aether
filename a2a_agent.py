@@ -22,14 +22,49 @@ HOST_RE = re.compile(r"(?<![@\w.-])((?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[
 SCAN_WORDS = re.compile(r"\b(scan|rescan|measure|check now|fresh|افحص|فحص)\b", re.I)
 
 
+def services_offer(base, domain=None, scan_id=None, price_usd="49", sector_price_usd="0.50"):
+    q = f"?domain={domain}" if domain else ""
+    return {
+        "monitoring": {
+            "summary": "Daily post-quantum TLS regression & certificate monitoring (14-day free trial, up to 10 domains, no card)",
+            "plans": {"starter": "29 EUR/month (up to 10 domains)", "business": "99 EUR/month (up to 100 domains)"},
+            "trial_url": f"{base}/monitoring{q}#trial-form",
+            "pricing_url": f"{base}/pricing",
+        },
+        "full_report": {
+            "price_usd": str(price_usd),
+            "how": "PayPal, on-chain USDC/USDT, or x402 v2 exact USDC on Base",
+            "http": f"{base}/api/v1/agent/report/{scan_id or '{scan_id}'}",
+            "mcp_tool": "get_full_report",
+            "needs": "scan_id from tls-scan",
+        },
+        "organization_audit": {
+            "price_eur": "490",
+            "summary": "Estate-wide subdomain TLS inventory & compliance audit (SAMA / DORA / NIS2) with PDF report",
+            "url": f"{base}/audit{q}",
+        },
+        "sector_snapshot": {
+            "price_usd": str(sector_price_usd),
+            "how": "x402 v2 exact USDC on Base",
+            "http": f"{base}/api/v1/agent/sector/{{sector}}",
+            "mcp_tool": "get_sector_snapshot",
+            "sectors": sector_snapshot.keys(),
+        },
+        "mcp_endpoint": f"{base}/mcp",
+        "llms_txt": f"{base}/llms.txt",
+        "terms": f"{base}/agb?lang=en",
+    }
+
+
 def card(base, version):
     return {
         "protocolVersion": PROTOCOL,
         "name": "Quantum Aether",
         "description": ("Post-quantum TLS evidence for any public website: does it negotiate hybrid post-quantum key "
-                        "exchange (X25519MLKEM768)? Free stored evidence and free rate-limited scans; paid full reports "
-                        "and weekly sector snapshots via x402 (USDC on Base). External observations, not compliance "
-                        "certifications. Also available as an MCP server at " + base + "/mcp."),
+                        "exchange (X25519MLKEM768)? Free stored evidence and free rate-limited scans; daily monitoring "
+                        "(14-day free trial, 29 EUR/mo Starter, 99 EUR/mo Business), organization compliance audits "
+                        "(490 EUR), and paid full reports / weekly sector snapshots via x402 (USDC on Base). "
+                        "External observations, not compliance certifications. Also available as an MCP server at " + base + "/mcp."),
         "url": base + "/a2a",
         "preferredTransport": "JSONRPC",
         "version": version,
@@ -111,12 +146,22 @@ def register(bp, services, version):
     def err(code, message, rid=None, status=200):
         return jsonify(jsonrpc="2.0", id=rid, error={"code": code, "message": message}), status
 
-    @bp.route("/a2a", methods=["POST", "OPTIONS"])
+    @bp.route("/a2a", methods=["GET", "POST", "OPTIONS"])
     def a2a_endpoint():
         if request.method == "OPTIONS":
             resp = current_app.make_response(("", 204))
-            resp.headers.update({"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "POST",
+            resp.headers.update({"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
                                  "Access-Control-Allow-Headers": "Content-Type"})
+            return resp
+        if request.method == "GET":
+            b = base()
+            info = dict(card(b, version),
+                        how_to_call="POST JSON-RPC 2.0 method 'message/send' to this URL",
+                        services=services_offer(b, price_usd=current_app.config["PRICE"],
+                                                sector_price_usd=current_app.config.get("X402_SECTOR_PRICE") or "0.50"))
+            resp = jsonify(info)
+            resp.headers["Access-Control-Allow-Origin"] = "*"
+            resp.headers["Cache-Control"] = "public, max-age=3600"
             return resp
         body = request.get_json(silent=True)
         if not isinstance(body, dict) or body.get("jsonrpc") != "2.0":
@@ -130,38 +175,43 @@ def register(bp, services, version):
         ctx = message.get("contextId") if isinstance(message.get("contextId"), str) else None
         skill, domain = _read_request(message)
         b = base()
+        price_usd = str(current_app.config["PRICE"])
+        sector_price_usd = str(current_app.config.get("X402_SECTOR_PRICE") or "0.50")
         if skill == "paid-data":
-            data = {"full_report": {"price_usd": str(current_app.config["PRICE"]), "how": "x402 v2 exact USDC on Base",
-                                    "http": b + "/api/v1/agent/report/{scan_id}", "mcp_tool": "get_full_report",
-                                    "needs": "scan_id from tls-scan"},
-                    "sector_snapshot": {"price_usd": str(current_app.config.get("X402_SECTOR_PRICE") or "0.50"),
-                                        "how": "x402 v2 exact USDC on Base", "http": b + "/api/v1/agent/sector/{sector}",
-                                        "mcp_tool": "get_sector_snapshot", "sectors": sector_snapshot.keys()},
-                    "mcp": b + "/mcp", "terms": b + "/agb?lang=en"}
+            offer = services_offer(b, domain=domain, price_usd=price_usd, sector_price_usd=sector_price_usd)
+            data = dict(offer, mcp=b + "/mcp")
             return jsonify(jsonrpc="2.0", id=rid, result=_message(
-                "Paid data is bought per call with x402 (USDC on Base) over HTTP or MCP. Unpaid calls return the price "
-                "challenge and never charge.", data, ctx))
+                "Paid data is bought per call with x402 (USDC on Base) over HTTP or MCP (unpaid calls return the price "
+                "challenge and never charge). Also available: 14-day free daily monitoring trial (Starter 29 EUR/mo, "
+                f"Business 99 EUR/mo at {offer['monitoring']['trial_url']}) and organization compliance audit (490 EUR at "
+                f"{offer['organization_audit']['url']}).", data, ctx))
         if not domain:
             return jsonify(jsonrpc="2.0", id=rid, result=_message(
                 "Send a public hostname, e.g. 'Is example.com post-quantum ready?' or {\"skill\":\"tls-scan\",\"domain\":\"example.com\"}.",
-                {"skills": ["tls-evidence", "tls-scan", "paid-data"]}, ctx))
+                {"skills": ["tls-evidence", "tls-scan", "paid-data"],
+                 "services": services_offer(b, price_usd=price_usd, sector_price_usd=sector_price_usd)}, ctx))
         try:
             domain = quantum_vuln_scanner.normalize_domain(domain)
             if skill == "tls-scan":
                 scan_id, raw = services["scan"](domain, "a2a")
-                data = services["summary"](scan_id, raw)
+                offer = services_offer(b, domain=domain, scan_id=scan_id, price_usd=price_usd, sector_price_usd=sector_price_usd)
+                data = dict(services["summary"](scan_id, raw), services=offer)
                 pq = data.get("post_quantum_key_exchange")
                 text = (f"{domain}: grade {data.get('grade')}, key exchange {data.get('key_exchange_group') or 'unknown'}"
-                        f"{' (post-quantum)' if pq else ''}. Full report via x402: use scan_id {scan_id}.")
+                        f"{' (post-quantum)' if pq else ''}. Full report via x402: use scan_id {scan_id}. "
+                        f"Daily monitoring (14-day free trial, from 29 EUR/mo): {offer['monitoring']['trial_url']}")
             else:
-                data = dict(badge_evidence.for_domain(services["db"](), domain), verification_url=b + "/verify/" + domain)
+                offer = services_offer(b, domain=domain, price_usd=price_usd, sector_price_usd=sector_price_usd)
+                data = dict(badge_evidence.for_domain(services["db"](), domain),
+                            verification_url=b + "/verify/" + domain, services=offer)
                 if data.get("state") == "not_scanned":
                     text = f"No stored evidence for {domain} yet (not proof of anything). Ask to 'scan {domain}' for a measurement."
                 else:
                     obs = {"observed_pq": "negotiates post-quantum key exchange", "observed_classical": "classical key exchange only",
                            "undetermined": "undetermined"}.get(data.get("observation_status"), "see data")
                     text = (f"{domain}: {obs} (group {data.get('group') or 'unknown'}, grade {data.get('grade')}), "
-                            f"checked {data.get('checked_at')}, evidence {data.get('state')}. Ask to 'scan' for a fresh measurement.")
+                            f"checked {data.get('checked_at')}, evidence {data.get('state')}. Ask to 'scan' for a fresh measurement. "
+                            f"Daily monitoring (14-day free trial): {offer['monitoring']['trial_url']}")
         except quantum_vuln_scanner.ScanError as exc:
             return jsonify(jsonrpc="2.0", id=rid, result=_message(f"Could not measure {domain}: {exc}",
                                                                    {"error": exc.code}, ctx))

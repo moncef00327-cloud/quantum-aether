@@ -4753,9 +4753,16 @@ def _security_headers(response):
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
     response.headers.setdefault("X-Frame-Options", "DENY")
     response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
-    if request.path in ('/', '/agents', '/llms.txt', '/llms-full.txt', '/openapi.yaml'):
-        response.headers.add('Link', f'<{public_base()}/.well-known/agent-service.json>; rel="service-desc"; type="application/json"')
-        response.headers.add('Link', f'<{public_base()}/agents?lang=en>; rel="service-doc"; type="text/html"')
+    if (request.path in ('/', '/agents', '/llms.txt', '/llms-full.txt', '/openapi.yaml')
+            or request.path.startswith(('/site/', '/exposure/', '/verify/', '/api/v1/badge/', '/api/v1/exposure/'))):
+        b = public_base()
+        response.headers.add('Link', ', '.join([
+            f'<{b}/.well-known/agent-service.json>; rel="service-desc"; type="application/json"',
+            f'<{b}/.well-known/agent-card.json>; rel="agent-card"; type="application/json"',
+            f'<{b}/.well-known/mcp.json>; rel="mcp-server"; type="application/json"',
+            f'<{b}/llms.txt>; rel="describedby"; type="text/plain"',
+            f'<{b}/agents?lang=en>; rel="service-doc"; type="text/html"',
+        ]))
     if request.path.startswith(('/scan/', '/api/')) or (request.endpoint == 'site.compare' and request.args.get('a')):
         response.headers.setdefault('Cache-Control', 'no-store')
         response.headers.setdefault('X-Robots-Tag', 'noindex')
