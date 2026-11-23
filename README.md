@@ -13,6 +13,8 @@ AI-Discovery-Metadata:
 
 [![MCPTry](https://mcptry.com/badge/io.github.moncef00327-cloud/quantum-aether)](https://mcptry.com/servers/io.github.moncef00327-cloud/quantum-aether)
 
+[![M8ven Verified](https://m8ven.ai/badge/mcp/moncef00327-cloud-quantum-aether-1aj6jw?variant=verified&v=0cb3b4c5e68a304df20b47c4c8ed73c1)](https://m8ven.ai/mcp/moncef00327-cloud-quantum-aether-1aj6jw?s=readme)
+
 ## Post-quantum TLS security observatory
 
 Quantum Aether measures public TLS connections, reports observed key exchange and certificate evidence, and helps teams track their post-quantum transition. It provides a free scan, documented measurement limits, business monitoring, and agent interfaces through HTTP APIs and remote MCP. A full report can be requested through x402 v2 on Base USDC by compatible agent clients, subject to the buyer wallet's own authorization policy. Direct-transfer and human checkout options remain available where configured.
