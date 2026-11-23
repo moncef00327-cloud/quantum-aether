@@ -180,6 +180,7 @@ class SendScriptRenderTests(unittest.TestCase):
         url = "https://ather-quantum.com/u/" + osup.make_token("security@example.com", SECRET)
         self.assertIn(f"Unsubscribe in one click: {url}", m["text"])
         self.assertEqual(m["headers"]["List-Unsubscribe-Post"], "List-Unsubscribe=One-Click")
+        self.assertIn("https://ather-quantum.com/monitoring?domain=example.com&lang=en#trial-form", m["text"])
         self.assertNotIn("{", m["text"])
         self.assertTrue(m["text"].rstrip().endswith("https://ather-quantum.com/impressum"))
 
@@ -190,6 +191,7 @@ class SendScriptRenderTests(unittest.TestCase):
         self.assertEqual(m["lang"], "ar")
         self.assertIn("هذه هي المجموعة الهجينة", m["text"])
         self.assertIn("lang=ar", m["text"])
+        self.assertIn("https://ather-quantum.com/monitoring?domain=example.com&lang=ar#trial-form", m["text"])
         self.assertNotIn("{", m["text"])
 
     def test_requires_explicit_mode(self):

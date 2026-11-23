@@ -29,8 +29,26 @@ class TrialEmailSignupTest(TrialTest):
         body = self.client.get("/monitoring?lang=ar").get_data(as_text=True)
         self.assertIn("trial-form.js?v=20261123-email-required2", body)
         js = self.client.get("/static/trial-form.js").get_data(as_text=True)
-        for text in ("هذا يبدو نطاقاً لا بريداً", "That looks like a domain", "Meinten Sie", "domain_only"):
+        for text in ("هذا يبدو نطاقاً لا بريداً", "That looks like a domain", "Meinten Sie", "domain_only",
+                     "qa_recent_scans", "qa-multi-scan-nudge", "extra_domains"):
             self.assertIn(text, js)
+
+    def test_trial_accepts_extra_domains_up_to_limit(self):
+        extras = ",".join([f"d{i}.example" for i in range(1, 15)] + ["acme.org", "not a domain!!!"])
+        r = self.client.post("/monitoring/trial?lang=en", data={
+            "email": "ops@acme.org", "domain": "acme.org", "extra_domains": extras, "consent": "1",
+        })
+        self.assertEqual(r.status_code, 200)
+        acc = self.account("ops@acme.org")
+        self.assertIsNotNone(acc)
+        with self.conn() as c:
+            doms = [row[0] for row in c.execute(
+                "SELECT domain FROM monitor_domains WHERE account_id = ? ORDER BY domain", (acc["id"],)
+            ).fetchall()]
+        self.assertEqual(len(doms), 10)  # monitor.TRIAL_DOMAINS cap
+        self.assertIn("acme.org", doms)
+        self.assertIn("d1.example", doms)
+        self.assertNotIn("d10.example", doms)
 
 
 if __name__ == "__main__":

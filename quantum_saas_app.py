@@ -3521,6 +3521,24 @@ def monitor_trial():
             account_id, _ = monitor_db.create_trial(conn, email, current_lang(), now_iso(), client_hash(), ends,
                                                     plan=plan, acquisition_variant=variant)
             monitor_db.add_domain(conn, account_id, domain)
+            added_extras = []
+            raw_extras = (request.form.get("extra_domains") or "").strip()
+            if raw_extras:
+                seen_domains = {domain}
+                for tok in re.split(r"[\s,;]+", raw_extras):
+                    if len(seen_domains) >= monitor.TRIAL_DOMAINS:
+                        break
+                    tok = tok.strip()
+                    if not tok:
+                        continue
+                    try:
+                        extra = monitor.normalize(tok)
+                    except quantum_vuln_scanner.ScanError:
+                        continue
+                    if extra and extra not in seen_domains:
+                        seen_domains.add(extra)
+                        monitor_db.add_domain(conn, account_id, extra)
+                        added_extras.append(extra)
             account = monitor_db.get_account(conn, account_id)
             if send_dashboard_link(conn, account):
                 record_conversion_event("trial_created", detail=src)
@@ -3528,8 +3546,9 @@ def monitor_trial():
                 record_conversion_event("monitoring_activated", "/monitoring", variant=variant)
                 # Owner/test requests (admin cookie or remembered owner client) must not email a "new customer" alert.
                 if not is_test_request():
+                    extra_note = f" (+{len(added_extras)} more)" if added_extras else ""
                     monitor.notify_owner(mailer, current_app.config["OWNER_EMAIL"], "New free trial", account,
-                                         f"Domain: {domain} · lang: {current_lang()}")
+                                         f"Domain: {domain}{extra_note} · lang: {current_lang()}")
             else:
                 with conn:  # لم يصل الرابط: لا نترك حساباً لا يستطيع صاحبه دخوله
                     conn.execute("DELETE FROM monitor_domains WHERE account_id = ?", (account_id,))

@@ -46,7 +46,8 @@ EN = {
     "intro": "Hello {domain} security team,\n\nOn {date}, one public TLS handshake to {host}:443 negotiated {tls_version} with {group} key exchange.",
     "classical": "That is classical key exchange. Chrome, Firefox and Safari already offer the hybrid post-quantum group X25519MLKEM768, so enabling it is mostly a server/CDN setting.",
     "hybrid-pq": "That is the hybrid post-quantum group, so this host is already covered. Other hosts can differ, and a config or CDN change can quietly revert it.",
-    "rest": ("You can check any of your hosts for free, no sign-up: https://ather-quantum.com/?domain={domain}&lang=en\n\n"
+    "rest": ("You can check any of your hosts for free, no sign-up: https://ather-quantum.com/?domain={domain}&lang=en\n"
+             "Or start a free 14-day daily monitoring trial (up to 10 domains, no card, silent-downgrade alerts): https://ather-quantum.com/monitoring?domain={domain}&lang=en#trial-form\n\n"
              "Why this email: this address is published in {domain}'s security.txt. This is a one-time commercial message from Quantum Aether; we will not write again.\n\n"
              "Unsubscribe in one click: {unsubscribe_url} (or reply \"stop\").\n\n"
              "Quantum Aether Team\n"
@@ -57,7 +58,8 @@ AR = {
     "intro": "مرحبًا فريق أمن {domain}،\n\nبتاريخ {date} أجرينا مصافحة TLS عامة واحدة مع {host} على المنفذ 443، فتم التفاوض على {tls_version} مع تبادل المفاتيح {group}.",
     "classical": "هذا تبادل مفاتيح تقليدي. متصفحات Chrome وFirefox وSafari تعرض أصلًا المجموعة الهجينة المقاومة للحوسبة الكمومية X25519MLKEM768، وتفعيلها غالبًا إعداد في الخادم أو شبكة CDN.",
     "hybrid-pq": "هذه هي المجموعة الهجينة المقاومة للحوسبة الكمومية، أي أن هذا المضيف مغطّى. قد تختلف مضيفات أخرى لديكم، وقد يُلغي تغيير في الإعدادات أو في CDN ذلك دون أن يُلاحظ.",
-    "rest": ("يمكنكم فحص أي مضيف مجانًا ودون تسجيل: https://ather-quantum.com/?domain={domain}&lang=ar\n\n"
+    "rest": ("يمكنكم فحص أي مضيف مجانًا ودون تسجيل: https://ather-quantum.com/?domain={domain}&lang=ar\n"
+             "أو بدء تجربة مجانية لمدة 14 يومًا للمراقبة اليومية (حتى 10 نطاقات، بلا بطاقة، مع تنبيهات التراجع الصامت): https://ather-quantum.com/monitoring?domain={domain}&lang=ar#trial-form\n\n"
              "سبب هذه الرسالة: هذا العنوان منشور في ملف security.txt الخاص بـ {domain}. هذه رسالة تجارية لمرة واحدة من Quantum Aether، ولن نراسلكم مجددًا.\n\n"
              "لإلغاء الاشتراك بنقرة واحدة: {unsubscribe_url} (أو ردّوا بكلمة «إيقاف» أو stop).\n\n"
              "Quantum Aether Team\n"

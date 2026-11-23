@@ -70,7 +70,14 @@
     "box-shadow:0 0 16px rgba(103,232,249,.22),inset 0 1px 0 rgba(255,255,255,.15)!important}" +
     "button.trial-plan-pill[aria-pressed='true'] .trial-plan-main::before{content:'✓ ';color:#67e8f9}" +
     "article.card[data-select-plan],.price-box[data-select-plan]{cursor:pointer}" +
-    "article.card.is-plan-selected,.price-box.is-plan-selected{border-color:#67e8f9!important;box-shadow:0 0 0 1px rgba(103,232,249,.35)}";
+    "article.card.is-plan-selected,.price-box.is-plan-selected{border-color:#67e8f9!important;box-shadow:0 0 0 1px rgba(103,232,249,.35)}" +
+    ".qa-multi-scan-nudge{margin:0 0 .9rem;padding:11px 14px;border-radius:12px;border:1px solid rgba(103,232,249,.55);background:rgba(103,232,249,.12);color:#e2f8ff;font-size:.93rem;line-height:1.5}" +
+    ".qa-multi-scan-nudge strong{color:#67e8f9}" +
+    ".qa-multi-scan-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}" +
+    ".qa-multi-scan-chip{display:inline-block;padding:2px 8px;border-radius:999px;background:rgba(15,23,42,.65);border:1px solid rgba(103,232,249,.35);font-size:.8rem;font-family:monospace;direction:ltr}" +
+    ".qa-empty-alt{display:block;margin-top:6px;font-size:.85rem;font-weight:500;color:#cbd5e1}" +
+    ".qa-empty-alt a{color:#67e8f9;text-decoration:underline}" +
+    ".trial-form input[name='email']:focus{border-color:#67e8f9!important;box-shadow:0 0 0 3px rgba(103,232,249,.22)!important}";
   if (typeof document !== "undefined" && !document.getElementById("trial-plan-style")) {
     var st = document.createElement("style");
     st.id = "trial-plan-style";
@@ -219,6 +226,18 @@
         text = text.replace("{fix}", function () { return at[0] + "@" + TYPO[at[1]]; });
       }
       el.textContent = (isGuide ? "\u26A0 " : "") + text;
+      if (isGuide && document.getElementById("alert")) {
+        var altWrap = document.createElement("span");
+        altWrap.className = "qa-empty-alt";
+        var altLink = document.createElement("a");
+        altLink.href = "#alert";
+        altLink.textContent = lang === "ar"
+          ? "تفضّل تنبيهاً مجانياً لتغيّر هذا النطاق فقط؟ انتقل للتنبيه السريع ↓"
+          : (lang === "de" ? "Lieber nur kostenlose Änderungs-Warnung für 1 Domain? ↓"
+            : "Prefer a free single-domain change alert instead? Jump to quick alert ↓");
+        altWrap.appendChild(altLink);
+        el.appendChild(altWrap);
+      }
       el.setAttribute("data-trial-problem", problem);
       el.hidden = false;
       if (field) {
@@ -280,4 +299,80 @@
       if (message) message.hidden = true;
     }
   }, true);
+  // Repeat-scanner incentive: remember recent scanned domains in localStorage (browser-only, max 10)
+  // and offer to monitor all of them together in one 14-day free trial.
+  function initMultiScanNudge() {
+    var KEY = "qa_recent_scans";
+    var list = [];
+    try { list = JSON.parse(localStorage.getItem(KEY) || "[]"); } catch (e) { list = []; }
+    if (!Array.isArray(list)) list = [];
+    function normDom(s) {
+      return String(s || "").trim().toLowerCase().replace(/^https?:\/\//, "").split("/")[0].split(":")[0].replace(/^www\./, "");
+    }
+    var cur = "";
+    var ch = document.getElementById("common-hosts");
+    if (ch && ch.getAttribute("data-domain")) cur = normDom(ch.getAttribute("data-domain"));
+    else if (location.pathname.indexOf("/scan/") === 0) {
+      var h1 = document.querySelector("h1.domain");
+      if (h1) cur = normDom(h1.textContent);
+    }
+    if (cur && /^[a-z0-9][a-z0-9.-]+\.[a-z]{2,}$/.test(cur)) {
+      list = [cur].concat(list.filter(function (d) { return d && d !== cur; })).slice(0, 10);
+      try { localStorage.setItem(KEY, JSON.stringify(list)); } catch (e) {}
+    }
+    if (list.length < 2) return;
+    var forms = document.querySelectorAll('form[action*="/monitoring/trial"]');
+    if (!forms.length) return;
+    var NUDGE = {
+      en: "You've checked {n} domains in this session — instead of re-scanning manually, monitor all {n} daily for free (14-day trial, no card, instant silent-downgrade alerts). Enter your email below and we'll add them all automatically:",
+      ar: "فحصت للتو {n} نطاقات في هذه الجلسة — بدل إعادة الفحص يدويًا، راقبها جميعًا يوميًا مجانًا لمدة 14 يومًا (بلا بطاقة، وتنبيه فوري عند أي تراجع صامت). أدخل بريدك أدناه وسنضيفها كلها تلقائيًا:",
+      de: "Sie haben in dieser Sitzung {n} Domains geprüft — überwachen Sie alle {n} täglich kostenlos (14 Tage Test, keine Karte, sofortige Downgrade-Warnungen). E-Mail unten eingeben, alle Domains werden automatisch hinzugefügt:"
+    };
+    forms.forEach(function (f) {
+      if (f.querySelector(".qa-multi-scan-nudge")) return;
+      var domInput = f.querySelector('[name="domain"]');
+      var primary = normDom(domInput ? domInput.value : cur);
+      if (!primary && domInput && domInput.type !== "hidden") {
+        primary = list[0];
+        domInput.value = primary;
+      }
+      var extras = list.filter(function (d) { return d !== primary; }).slice(0, primary ? 9 : 10);
+      var allDoms = (primary ? [primary] : []).concat(extras);
+      if (allDoms.length < 2) return;
+      var hidden = f.querySelector('input[name="extra_domains"]');
+      if (!hidden) {
+        hidden = document.createElement("input");
+        hidden.type = "hidden";
+        hidden.name = "extra_domains";
+        f.appendChild(hidden);
+      }
+      hidden.value = extras.join(",");
+      var banner = document.createElement("div");
+      banner.className = "qa-multi-scan-nudge";
+      banner.setAttribute("role", "status");
+      var total = allDoms.length;
+      var p = document.createElement("div");
+      p.textContent = (NUDGE[lang] || NUDGE.en).replace(/\{n\}/g, String(total));
+      banner.appendChild(p);
+      var chips = document.createElement("div");
+      chips.className = "qa-multi-scan-chips";
+      allDoms.slice(0, 6).forEach(function (d) {
+        var chip = document.createElement("span");
+        chip.className = "qa-multi-scan-chip";
+        chip.textContent = d;
+        chips.appendChild(chip);
+      });
+      if (total > 6) {
+        var more = document.createElement("span");
+        more.className = "qa-multi-scan-chip";
+        more.textContent = "+" + (total - 6);
+        chips.appendChild(more);
+      }
+      banner.appendChild(chips);
+      f.insertBefore(banner, f.firstChild);
+      ev("multi_scan_nudge", f, String(total));
+    });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initMultiScanNudge);
+  else initMultiScanNudge();
 })();
