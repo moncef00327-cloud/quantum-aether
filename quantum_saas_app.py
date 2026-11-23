@@ -395,7 +395,9 @@ def localized_url(lang, canonical=False):
         return public_base() + url_for(g.canonical_endpoint, lang=lang)
     if request.endpoint:
         # Google selected the language-neutral root as the homepage canonical.
-        if canonical and request.endpoint == "site.index" and lang == "en":
+        # The same for /index and /pricing: GSC inspected the bare URLs and did not
+        # know them while the English canonical was ?lang=en.
+        if canonical and lang == "en" and request.endpoint in ("site.index", "site.pq_index_page", "site.pricing_page"):
             return public_base() + url_for(request.endpoint, **values)
         return public_base() + url_for(request.endpoint, **values, lang=lang)
     return public_base() + urllib.parse.quote(request.path, safe='/') + '?lang=' + lang
@@ -635,9 +637,18 @@ def org_jsonld(full=True):
     return ref
 
 
+def product_image_url():
+    """Existing site OG image (1200×630 PNG) for Product JSON-LD / Merchant listings."""
+    return public_base() + "/og/default.png"
+
+
+def product_brand():
+    return {"@type": "Brand", "name": "Quantum Aether"}
+
+
 @bp.app_context_processor
 def _jsonld_helpers():
-    return {"org_jsonld": org_jsonld}
+    return {"org_jsonld": org_jsonld, "product_image_url": product_image_url, "product_brand": product_brand}
 
 
 def home_jsonld():
@@ -4201,7 +4212,11 @@ def _sitemap_pages():
         week_day = adoption.week_monday(board["week"]).isoformat()
         pages.append(("/adoption/countries", week_day, de_langs))
         pages.append(("/adoption/hosting", week_day, de_langs))
-        pages += [(f"/adoption/countries/{e['code']}", week_day, de_langs) for e in board["entries"]]
+        # Country detail pages are a thin translation of the same weekly dataset
+        # (translated chrome + country name). Keep only the English canonical in
+        # the sitemap; ar/de stay available, self-canonical, and listed as
+        # hreflang alternates on the English page (GSC "Discovered - not indexed").
+        pages += [(f"/adoption/countries/{e['code']}", week_day, ("en",)) for e in board["entries"]]
     pages += [(f"/guides/{slug}", g["updated"], de_langs if "de" in g else site_langs) for slug, g in guides.GUIDES.items()]
     pages += [(f"/tools/pq-tls-config/{key}", _template_day("pq_config.html"), de_langs) for key in config_gen.SERVERS]
     pages += [(f"/reports/{rid}", reports.load(rid)["published"], de_langs) for rid in reports.ids()]
@@ -4247,8 +4262,8 @@ def _urlset(pages):
         return u.replace("&", "&amp;")
 
     def localized(path, lang):
-        if path == "/" and lang == "en":
-            return base + "/"
+        if lang == "en" and path in ("/", "/index", "/pricing"):
+            return base + ("/" if path == "/" else path)
         return f"{base}{path}?lang={lang}"
 
     parts = []
@@ -4626,6 +4641,12 @@ def _security_headers(response):
     if request.path.startswith(('/scan/', '/api/')) or (request.endpoint == 'site.compare' and request.args.get('a')):
         response.headers.setdefault('Cache-Control', 'no-store')
         response.headers.setdefault('X-Robots-Tag', 'noindex')
+    # Machine-readable / installer endpoints: crawlable so Google sees the tag, but not indexed.
+    if request.path.startswith("/verify/") or request.path in {
+        "/install-agent.sh", "/adoption/summary.json", "/adoption/countries.json",
+        "/index.csv", "/index.json", "/index/panel.csv", "/mcp/health", "/mcp/scan",
+    }:
+        response.headers.setdefault("X-Robots-Tag", "noindex")
     if request.endpoint == 'site.site_page':
         # Result pages carry a visitor-level offer variant; never let a shared cache mix arms.
         response.headers['Cache-Control'] = 'private, no-store'

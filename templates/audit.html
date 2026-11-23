@@ -8,7 +8,8 @@
   "@type": "Product",
   "name": c.title,
   "description": c.meta,
-  "brand": org_jsonld(False),
+  "brand": product_brand(),
+  "image": product_image_url(),
   "url": metadata_url(lang),
   "offers": {
     "@type": "Offer",

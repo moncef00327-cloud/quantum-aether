@@ -76,7 +76,10 @@ class CountriesTest(unittest.TestCase):
         self.assertEqual(data["license"], "CC BY 4.0")
         sm = self.client.get("/sitemap-pages.xml").get_data(as_text=True)
         xml.dom.minidom.parseString(sm)
-        self.assertIn("/adoption/countries/de?lang=de", sm)
+        self.assertIn("/adoption/countries/de?lang=en", sm)
+        self.assertNotIn("/adoption/countries/de?lang=de", sm)
+        self.assertNotIn("/adoption/countries/de?lang=ar", sm)
+        self.assertIn("/adoption/countries?lang=de", sm)
         self.assertIn("/adoption/countries", self.client.get("/llms.txt").get_data(as_text=True))
         self.assertIn("/adoption/countries", self.client.get("/feed.xml").get_data(as_text=True))
 
