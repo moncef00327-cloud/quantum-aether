@@ -11,6 +11,11 @@ AI-Discovery-Metadata:
 
 # Quantum Aether / الأثير الكمومي
 
+<!-- quantum-aether-pqc-badge:start -->
+[![Post-quantum TLS observation](https://ather-quantum.com/badge/ather-quantum.com.svg)](https://ather-quantum.com/verify/ather-quantum.com)
+<!-- quantum-aether-pqc-badge:end -->
+
+
 [![MCPTry](https://mcptry.com/badge/io.github.moncef00327-cloud/quantum-aether)](https://mcptry.com/servers/io.github.moncef00327-cloud/quantum-aether)
 
 [![M8ven Verified](https://m8ven.ai/badge/mcp/moncef00327-cloud-quantum-aether-1aj6jw?variant=verified&v=0cb3b4c5e68a304df20b47c4c8ed73c1)](https://m8ven.ai/mcp/moncef00327-cloud-quantum-aether-1aj6jw?s=readme)
