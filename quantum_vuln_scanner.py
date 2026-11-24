@@ -802,13 +802,13 @@ def probe_endpoints(ips: list, host: str, primary_ip: str, primary_kx: dict, tim
 
 
 def scan(raw_domain: str, timeout: float = TIMEOUT, all_endpoints: bool = False,
-         port: int = PORT, check_legacy: bool = True) -> dict:
+         port: int = PORT, check_legacy: bool = False) -> dict:
     """all_endpoints=False (المتتبّع الأسبوعي): عنوان واحد كما كان. True (الموقع والمراقبة): كل عناوين النطاق."""
     domain = normalize_domain(raw_domain)
     ips = resolve_public_ips(domain)
     ip = ips[0]
-    kx = probe_key_exchange(ip, domain, timeout, port=port)
-    cert = probe_certificate(ip, domain, timeout, port=port)
+    kx = probe_key_exchange(ip, domain, timeout) if port == PORT else probe_key_exchange(ip, domain, timeout, port=port)
+    cert = probe_certificate(ip, domain, timeout) if port == PORT else probe_certificate(ip, domain, timeout, port=port)
     legacy = probe_legacy_tls(ip, domain, timeout=min(timeout, 3.0), port=port) if check_legacy else None
     result = {
         "domain": domain,
@@ -838,8 +838,8 @@ def scan_target(host: str, port: int = PORT, timeout: float = TIMEOUT) -> dict:
     """Scan a public host (domain or public IP) on a specified port for v1 signed receipts."""
     target_host, ips = resolve_public_target(host, port)
     ip = ips[0]
-    kx = probe_key_exchange(ip, target_host, timeout, port=port)
-    cert = probe_certificate(ip, target_host, timeout, port=port)
+    kx = probe_key_exchange(ip, target_host, timeout) if port == PORT else probe_key_exchange(ip, target_host, timeout, port=port)
+    cert = probe_certificate(ip, target_host, timeout) if port == PORT else probe_certificate(ip, target_host, timeout, port=port)
     legacy = probe_legacy_tls(ip, target_host, timeout=min(timeout, 3.0), port=port)
     return {
         "domain": target_host,
@@ -857,7 +857,7 @@ def scan_target(host: str, port: int = PORT, timeout: float = TIMEOUT) -> dict:
 
 def scan_full(raw_domain: str, timeout: float = TIMEOUT) -> dict:
     """فحص كل العناوين: للموقع والمراقبة والتقرير المدفوع."""
-    return scan(raw_domain, timeout, all_endpoints=True)
+    return scan(raw_domain, timeout, all_endpoints=True, check_legacy=True)
 
 
 def main(argv=None) -> int:

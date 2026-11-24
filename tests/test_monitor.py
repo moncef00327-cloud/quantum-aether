@@ -533,13 +533,13 @@ class AdminExclusionAndSeoTest(unittest.TestCase):
         self.assertIn('xmlns:xhtml="http://www.w3.org/1999/xhtml"', body)
         self.assertIn('<xhtml:link rel="alternate" hreflang="x-default" href="https://ather-quantum.com/guides?lang=en"/>', body)
         self.assertIn("https://ather-quantum.com/impressum?lang=de", body)
-        # Pages sitemap (2026-11-23 GSC fix): 33 trilingual paths + 50 bilingual paths
-        # + 1 English-only country-detail path (thin ar/de variants omitted) + bare "/".
+        # Pages sitemap (updated 2026-11-24 after SEO sector hubs & new trilingual guides):
+        # 46 trilingual paths + 48 bilingual paths + bare "/".
         # English /index and /pricing locs omit ?lang=en. Update when pages are added;
         # every <loc> must stay unique.
         locs = re.findall(r"<loc>([^<]+)</loc>", body)
         self.assertEqual(len(locs), len(set(locs)))
-        self.assertEqual(body.count("<url>"), 33 * 3 + 50 * 2 + 1 + 1)
+        self.assertEqual(body.count("<url>"), 46 * 3 + 48 * 2 + 1)
         self.assertIn("<loc>https://ather-quantum.com/index</loc>", body)
         self.assertIn("<loc>https://ather-quantum.com/pricing</loc>", body)
         self.assertIn("https://ather-quantum.com/compare?lang=en", body)
