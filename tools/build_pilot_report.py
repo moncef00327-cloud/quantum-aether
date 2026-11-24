@@ -380,14 +380,20 @@ def render_pilot_html(
 
 
 def to_pdf(html_path: str, pdf_path: str) -> bool:
-    if not os.path.exists(CHROMIUM):
-        return False
-    subprocess.run(
-        [CHROMIUM, "--headless=new", "--no-sandbox", "--disable-gpu", "--no-pdf-header-footer",
-         f"--print-to-pdf={pdf_path}", "file://" + os.path.abspath(html_path)],
-        check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=120,
-    )
-    return True
+    import shutil
+    wp = shutil.which("weasyprint")
+    if wp:
+        subprocess.run([wp, os.path.abspath(html_path), os.path.abspath(pdf_path)],
+                       check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=120)
+        return True
+    if os.path.exists(CHROMIUM):
+        subprocess.run(
+            [CHROMIUM, "--headless=new", "--no-sandbox", "--disable-gpu", "--no-pdf-header-footer",
+             f"--print-to-pdf={pdf_path}", "file://" + os.path.abspath(html_path)],
+            check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=120,
+        )
+        return True
+    return False
 
 
 def main(argv=None) -> int:
