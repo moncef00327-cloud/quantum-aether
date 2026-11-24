@@ -3,6 +3,8 @@ __pycache__/
 *.pyc
 .vscode/
 instance/
+# Live copy is newer than the repo and must never be deployed from git (AGENTS.md).
+data/family_dns_blocked.json
 *.db
 *.db-wal
 *.db-shm
