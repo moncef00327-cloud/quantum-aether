@@ -16,9 +16,10 @@ BASE = "https://ather-quantum.com"
 
 # HN وStack Exchange: البحث يطلب كل كلمات الاستعلام، فـ "post-quantum" وحدها تلتقط نقاشات TLS التي لا تذكر الكلمة.
 QUERIES = ["X25519MLKEM768", "MLKEM768", "ML-KEM TLS", "post-quantum TLS", "post quantum nginx",
-           "hybrid key exchange TLS", "post-quantum"]
+           "hybrid key exchange TLS", "post-quantum", "ML-KEM openssl"]
 # GitHub بلا تسجيل دخول: 10 طلبات بحث بالدقيقة، فنترك GITHUB_PAUSE ثوانٍ بين الطلبات.
-GITHUB_QUERIES = ["X25519MLKEM768", "MLKEM768", "post-quantum TLS", "ClientHello ML-KEM"]
+GITHUB_QUERIES = ["X25519MLKEM768", "MLKEM768", "post-quantum TLS", "ClientHello ML-KEM",
+                  "ML-KEM openssl", "post-quantum nginx", "post-quantum cloudflare"]
 GITHUB_PAUSE = 7
 
 SCHEMA = """
@@ -58,8 +59,12 @@ CAUSE = re.compile(r"clienthello|client hello|middlebox|firewall|load balancer|p
 def _breakage(title):
     return bool(FAILURE.search(title) and CAUSE.search(title))
 QUESTION = re.compile(r"\?|\bhow\b|\benable\b|\bsupport\b|\berror\b|\bfail|\bnot work|\bwhy\b|\bconfigure", re.I)
-# في GitHub نريد من يشغّل خادماً ويسأل عن تفعيله، لا نقاشات داخلية لمطوّري المكتبات
-WEBSERVER = re.compile(r"nginx|apache|httpd|caddy|haproxy|cloudflare|traefik|envoy|web ?server|reverse proxy|ingress", re.I)
+# في GitHub نريد من يشغّل خادماً أو بنية TLS ويسأل عن تفعيله، لا نقاشات داخلية لمطوّري المكتبات
+WEBSERVER = re.compile(
+    r"nginx|apache|httpd|caddy|haproxy|cloudflare|traefik|envoy|web ?server|reverse proxy|ingress"
+    r"|openssl|cloudfront|aws alb|azure|iis|f5|big-ip|fortinet|palo alto|kubernetes|istio|certbot|let'?s encrypt",
+    re.I,
+)
 
 TOPICS = [("clienthello", re.compile(r"clienthello|client hello|middlebox|firewall|load balancer|fragment|oversized"
                                      r"|decode_error", re.I)),
@@ -152,7 +157,7 @@ def collect(since, get=_get_json, sleep=None):
     """يجمع من كل المصادر. فشل مصدر واحد لا يوقف الباقي."""
     if sleep is None:  # ننتظر فقط مع الشبكة الحقيقية، لا في الاختبارات
         sleep = time.sleep if get is _get_json else (lambda seconds: None)
-    se_sites = ("serverfault", "stackoverflow", "security")  # Security SE كان معرّفاً وغير مُستعلَم؛ أُضيف الآن
+    se_sites = ("serverfault", "stackoverflow", "security", "devops")
     jobs = [(name, query, fn) for query in QUERIES
             for name, fn in ([("hn", lambda q: fetch_hn(q, since, get))]
                              + [(s, (lambda q, s=s: fetch_stackexchange(q, since, s, get))) for s in se_sites])]

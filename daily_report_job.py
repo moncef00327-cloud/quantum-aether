@@ -1,11 +1,42 @@
 # يرسل تقريراً يومياً للمالك (quantum_daily_report.timer، 06:00). قراءة فقط من قاعدة البيانات.
 # يغطّي يوم أمس (UTC): الزيارات، الفحوصات بالدرجات، قمع التحويل، أثر البريد، التسجيلات الجديدة.
 import datetime as dt
+import json
 import os
+from pathlib import Path
 import sqlite3
 import sys
 
 from mailer import Mailer
+
+
+def _prospect_history_path():
+    return Path(os.environ.get("QS_DATA_DIR", "/var/lib/quantum_saas")) / "marketing_briefs" / "daily_report_history.json"
+
+
+def _load_shown_prospects(day: str, ttl_days: int = 7) -> dict:
+    p = _prospect_history_path()
+    if not p.exists():
+        return {}
+    try:
+        raw = json.loads(p.read_text(encoding="utf-8"))
+        if not isinstance(raw, dict):
+            return {}
+    except Exception:
+        return {}
+    cutoff = (dt.date.fromisoformat(day) - dt.timedelta(days=ttl_days)).isoformat()
+    return {str(k).lower(): str(v) for k, v in raw.items() if str(v) >= cutoff}
+
+
+def _save_shown_prospects(shown: dict) -> None:
+    try:
+        p = _prospect_history_path()
+        p.parent.mkdir(parents=True, exist_ok=True)
+        tmp = p.with_suffix(".json.tmp")
+        tmp.write_text(json.dumps(shown, indent=2, sort_keys=True), encoding="utf-8")
+        os.replace(tmp, p)
+    except OSError:
+        pass
 
 
 def conn_ro():
@@ -26,13 +57,13 @@ PAY_SECTORS = ("banks-europe", "banks-mena", "banks-dach", "banks-americas-apac"
                "enterprise-saas-b2b", "companies-dach", "global-insurance-healthcare", "cloud-security")
 
 
-def prospects_today(c, day):
-    """عملاء محتملون: مؤسسة في قطاع يدفع، درجة B/C/F (غير جاهزة للكم)، أظهرت اهتماماً أمس (زيارة أو فحص)، ولم نراسلها."""
+def prospects_today(c, day, shown_recently=None):
+    """عملاء محتملون جدد: مؤسسة في قطاع يدفع، درجة B/C/F، أظهرت اهتماماً أمس، ولم نراسلها ولم تُعرض آخر 7 أيام."""
     try:
         wk = c.execute("SELECT MAX(week) FROM adoption_results").fetchone()[0]
     except Exception:
         return []
-    contacted = set()
+    contacted = set(shown_recently or ())
     for tbl in ("contacted_orgs", "outreach_sent", "outreach_suppress", "adoption_optout"):
         try:
             contacted |= {r[0].lower().removeprefix("www.") for r in c.execute(f"SELECT domain FROM {tbl}") if r[0]}
@@ -73,12 +104,14 @@ def prospects_today(c, day):
     return out
 
 
-def build(c, day):
+def build(c, day, shown_recently=None, out_prospects=None):
     y = day
     L = [f"Quantum Aether — التقرير اليومي ليوم {y} (UTC)", "=" * 48, ""]
 
-    # 0) عملاء محتملون اليوم (الأهم)
-    prospects = prospects_today(c, y)
+    # 0) عملاء محتملون اليوم (الأهم — دون تكرار من الأيام الـ 7 السابقة)
+    prospects = prospects_today(c, y, shown_recently=shown_recently)
+    if out_prospects is not None:
+        out_prospects.extend(dom for _, _, dom, _ in prospects)
     L.append("🎯 عملاء محتملون اليوم (مؤسسة تدفع · B/C/F غير جاهزة · أظهرت اهتماماً · لم نراسلها):")
     if prospects:
         for v, g, dom, sec in prospects:
@@ -189,15 +222,22 @@ def build(c, day):
 def main():
     yesterday = (dt.datetime.now(dt.timezone.utc).date() - dt.timedelta(days=1)).isoformat()
     c = conn_ro()
-    text = build(c, yesterday)
+    dry_run = "--dry-run" in sys.argv
+    shown = _load_shown_prospects(yesterday)
+    picked = []
+    text = build(c, yesterday, shown_recently=set(shown), out_prospects=picked)
     print(text)
     owner = os.environ.get("QS_OWNER_EMAIL", "")
     mailer = Mailer(os.environ.get("RESEND_API_KEY", ""), os.environ.get("QS_MAIL_FROM", ""),
                     fallback_sender=os.environ.get("QS_MAIL_FROM_FALLBACK", ""),
                     site_url=os.environ.get("QS_PUBLIC_URL", ""))
-    if owner and mailer.enabled and "--dry-run" not in sys.argv:
+    if owner and mailer.enabled and not dry_run:
         ok = mailer.send(owner, f"[Quantum Aether] تقرير يومي {yesterday}", text)
         print(f"\n[sent={ok} to {owner}]")
+        if ok and picked:
+            for dom in picked:
+                shown[dom.lower()] = yesterday
+            _save_shown_prospects(shown)
     else:
         print(f"\n[dry-run or disabled; owner={owner!r} enabled={mailer.enabled}]")
     return 0

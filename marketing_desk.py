@@ -26,7 +26,7 @@ SITE = "https://ather-quantum.com"
 
 mail_from_with_team_name = with_team_from
 
-HISTORY_TTL_DAYS = 30
+HISTORY_TTL_DAYS = 60
 
 PAY_SECTORS = (
     "banks-mena", "banks-dach", "banks-europe", "banks-americas-apac",
@@ -74,8 +74,14 @@ def _history_path(data_dir: str) -> Path:
 
 
 def load_history(data_dir: str, today: dt.date) -> dict:
-    """Load previously shown URLs/domains and drop entries older than HISTORY_TTL_DAYS (except radar_urls)."""
-    empty = {"radar_urls": {}, "shoutout_domains": {}, "priority_cf_domains": {}, "regression_keys": {}}
+    """Load previously shown URLs/domains and drop entries older than HISTORY_TTL_DAYS (except permanent URL buckets)."""
+    empty = {
+        "radar_urls": {},
+        "news_urls": {},
+        "shoutout_domains": {},
+        "priority_cf_domains": {},
+        "regression_keys": {},
+    }
     path = _history_path(data_dir)
     if not path.exists():
         return empty
@@ -93,8 +99,8 @@ def load_history(data_dir: str, today: dt.date) -> dict:
         if not isinstance(entries, dict):
             out[bucket] = {}
             continue
-        if bucket == "radar_urls":
-            # Never re-show an already-briefed radar discussion URL
+        if bucket in ("radar_urls", "news_urls", "regression_keys"):
+            # Never re-show an already-briefed radar discussion, news link, or same-week regression
             out[bucket] = {str(k): str(v) for k, v in entries.items()}
         else:
             out[bucket] = {str(k): str(v) for k, v in entries.items() if str(v) >= cutoff}
@@ -445,12 +451,17 @@ def employee_b2b_leads(
 
 
 # ---------------------------------------------------------------- Employee 5: GEO / AI Search Freshness
-def employee_geo_freshness(data_dir: str, refresh_news: bool = True) -> dict:
-    """يحدّث تغذية أخبار PQC في DATA_DIR لتبقى الصفحات متجددة لزواحف Google/OpenAI ويلخص حركة الزواحف."""
-    news_status = {"updated": False, "items": 0, "error": None}
+def employee_geo_freshness(
+    data_dir: str,
+    refresh_news: bool = True,
+    seen_news_urls: set[str] | None = None,
+) -> dict:
+    """يحدّث تغذية أخبار PQC في DATA_DIR ويعرض الأخبار الجديدة غير المعروضة سابقاً فقط مع ملخص الزواحف."""
+    already = seen_news_urls or set()
+    news_status = {"updated": False, "items": 0, "fresh_items": [], "error": None}
+    out_path = Path(data_dir) / "news_feed.json"
     if refresh_news:
         try:
-            out_path = Path(data_dir) / "news_feed.json"
             prev_out = generate_pqc_news.OUTPUT
             generate_pqc_news.OUTPUT = out_path
             try:
@@ -459,12 +470,26 @@ def employee_geo_freshness(data_dir: str, refresh_news: bool = True) -> dict:
                 generate_pqc_news.OUTPUT = prev_out
             if rc == 0 and out_path.exists():
                 doc = json.loads(out_path.read_text(encoding="utf-8"))
-                news_status = {"updated": True, "items": len(doc.get("items", [])), "updated_at": doc.get("updated_at"), "error": None}
+                items = doc.get("items") or []
+                fresh = [it for it in items if it.get("url") and it["url"] not in already]
+                news_status = {
+                    "updated": True, "items": len(items), "fresh_items": fresh[:5],
+                    "updated_at": doc.get("updated_at"), "error": None,
+                }
             else:
                 news_status["error"] = f"feed_refresh_rc_{rc}"
         except Exception as exc:
             news_status["error"] = f"{type(exc).__name__}: {exc}"[:140]
             log.warning("PQC news refresh failed: %s", news_status["error"])
+    elif out_path.exists():
+        try:
+            doc = json.loads(out_path.read_text(encoding="utf-8"))
+            items = doc.get("items") or []
+            fresh = [it for it in items if it.get("url") and it["url"] not in already]
+            news_status["items"] = len(items)
+            news_status["fresh_items"] = fresh[:5]
+        except Exception:
+            pass
     crawlers = crawler_log.summary(data_dir, days=7)
     return {"news": news_status, "crawlers": crawlers}
 
@@ -549,7 +574,7 @@ def render_brief(day: str, radar_drafts: list[dict], dj: dict, badges: list[dict
         L.append("- تم عرض جميع أهداف C/F الحالية خلال آخر 30 يوماً.")
     L.append("")
 
-    L += ["---", "", "## 5️⃣ موظف الظهور في البحث والذكاء الاصطناعي (GEO / Crawlers)"]
+    L += ["---", "", "## 5️⃣ موظف الظهور في البحث والذكاء الاصطناعي (GEO / الأخبار الجديدة)"]
     news = geo["news"]
     if news["updated"]:
         L.append(f"- ✅ **تغذية أخبار PQC:** حُدّثت بنجاح ({news['items']} خبرًا من NIST/IBM/Google/Cloudflare/arXiv).")
@@ -557,6 +582,11 @@ def render_brief(day: str, radar_drafts: list[dict], dj: dict, badges: list[dict
         L.append(f"- ⚠️ **تغذية أخبار PQC:** تعذّر التحديث ({news['error']}).")
     else:
         L.append("- ℹ️ **تغذية أخبار PQC:** تخطّي التحديث في وضع الاختبار.")
+    fresh_news = news.get("fresh_items") or []
+    if fresh_news:
+        L.append("- **أخبار PQC جديدة لم تُعرض سابقاً:**")
+        for it in fresh_news:
+            L.append(f"  - [{it.get('source', 'PQC')}] {it.get('title', '')} — {it.get('url', '')}")
     fams = geo["crawlers"].get("families") or []
     if fams:
         summary_str = " · ".join(f"{f['family']}={f['hits']}" for f in fams[:6])
@@ -599,7 +629,9 @@ def run(
     finally:
         c.close()
 
-    geo = employee_geo_freshness(data_dir, refresh_news=refresh_news)
+    geo = employee_geo_freshness(
+        data_dir, refresh_news=refresh_news, seen_news_urls=set(history["news_urls"])
+    )
     brief = render_brief(today_iso, radar_drafts, dj, badges, leads, geo)
 
     out_dir = Path(data_dir) / "marketing_briefs"
@@ -612,6 +644,9 @@ def run(
     if record_history:
         for d in radar_drafts:
             history["radar_urls"][d["url"]] = today_iso
+        for it in geo["news"].get("fresh_items") or []:
+            if it.get("url"):
+                history["news_urls"][it["url"]] = today_iso
         wk = dj.get("week") or ""
         for r in dj.get("regressions") or []:
             history["regression_keys"][f"{wk}:{r['domain']}"] = today_iso
