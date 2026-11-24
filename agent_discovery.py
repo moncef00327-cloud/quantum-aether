@@ -9,16 +9,39 @@ from werkzeug.exceptions import HTTPException
 import agent_audit
 import badge_evidence
 import quantum_vuln_scanner
+import receipts
 import scan_experience
 import sector_snapshot
 import signed_receipts
 import x402_pay
 
-UPDATED='2026-11-21'
+UPDATED='2026-11-24'
 PROTOCOLS=('2025-11-25','2025-06-18','2025-03-26')  # 2025-03-26 introduced Streamable HTTP; many enterprise clients still speak it
-VERSION='1.5.0'
+VERSION='1.6.0'
 PACKAGE_VERSION='1.4.2'  # PyPI/npm wrappers are versioned separately from the remote server
 DOMAIN_SCHEMA={'type':'object','properties':{'domain':{'type':'string','minLength':1,'maxLength':253,'description':'Public DNS hostname, for example example.com. HTTPS port 443 only.'}},'required':['domain'],'additionalProperties':False}
+SCAN_TLS_SCHEMA={
+ 'type':'object',
+ 'properties':{
+  'host':{'type':'string','minLength':1,'maxLength':253,'description':'Public hostname or IP address to scan, for example mcp.example.com.'},
+  'domain':{'type':'string','minLength':1,'maxLength':253,'description':'Alias for host (backward compatible).'},
+  'port':{'type':'integer','minimum':1,'maximum':65535,'default':443,'description':'TLS port (default 443).'},
+  'endpoint_type':{'type':'string','minLength':1,'maxLength':64,'description':'Optional endpoint classification, e.g. mcp_remote or a2a.'},
+  'discovered_manifest':{'type':'string','minLength':1,'maxLength':256,'description':'Optional manifest path observed on the target.'},
+ },
+ 'additionalProperties':False,
+}
+EVIDENCE_SCHEMA={
+ 'type':'object',
+ 'properties':{
+  'jti':{'type':'string','minLength':1,'maxLength':128,'description':'Receipt ID (jti) returned by scan_tls.'},
+  'host':{'type':'string','minLength':1,'maxLength':253,'description':'Target hostname or host:port to look up the latest stored signed receipt.'},
+  'port':{'type':'integer','minimum':1,'maximum':65535,'default':443,'description':'TLS port (default 443).'},
+  'target':{'type':'string','minLength':1,'maxLength':260,'description':'Normalized target host:port.'},
+  'domain':{'type':'string','minLength':1,'maxLength':253,'description':'Public DNS hostname (backward compatible alias).'},
+ },
+ 'additionalProperties':False,
+}
 EMPTY_SCHEMA={'type':'object','properties':{},'additionalProperties':False}
 ORDER_SCHEMA={'type':'object','properties':{'scan_id':{'type':'string','minLength':1,'description':'ID returned by scan_tls.'},'consent_immediate_delivery':{'type':'boolean','const':True,'description':'Set true only after the payer explicitly agrees to immediate delivery and the applicable withdrawal-right terms.'}},'required':['scan_id','consent_immediate_delivery'],'additionalProperties':False}
 VERIFY_SCHEMA={'type':'object','properties':{'order_id':{'type':'string','minLength':1},'tx_hash':{'type':'string','pattern':'^0x[0-9a-fA-F]{64}$'}},'required':['order_id','tx_hash'],'additionalProperties':False}
@@ -26,8 +49,8 @@ REPORT_SCHEMA={'type':'object','properties':{'scan_id':{'type':'string','minLeng
 SECTOR_KEYS=sector_snapshot.keys()
 SECTOR_SCHEMA={'type':'object','properties':{'sector':{'type':'string','enum':SECTOR_KEYS,'default':sector_snapshot.DEFAULT_SECTOR,'examples':[sector_snapshot.DEFAULT_SECTOR,'banks-mena'],'description':'Sector watch-list key. Default: '+sector_snapshot.DEFAULT_SECTOR+'.'}},'additionalProperties':False}
 TOOLS=[
- {'name':'scan_tls','title':'Measure TLS and post-quantum key exchange','description':'Run a new, rate-limited TLS scan of a public hostname on port 443. Returns observation_status, measured time, negotiated group and certificate summary. Starts an external connection and stores a publicly accessible result. Does not judge application safety.', 'inputSchema':DOMAIN_SCHEMA,'annotations':{'readOnlyHint':False,'destructiveHint':False,'idempotentHint':False,'openWorldHint':True}},
- {'name':'get_tls_evidence','title':'Read stored TLS evidence without scanning','description':'Read existing TLS evidence with source, checked_at, expires_at and fresh/stale/undetermined/not_scanned state. Never starts a new network scan. A missing record is not proof that a domain is unsafe.', 'inputSchema':DOMAIN_SCHEMA,'annotations':{'readOnlyHint':True,'idempotentHint':True,'openWorldHint':False}},
+ {'name':'scan_tls','title':'Measure TLS and post-quantum key exchange','description':'Run a new, rate-limited TLS scan of a public host (default port 443) and issue a signed Ed25519 JWS receipt (v1, policy qa-pqc-transport 1.0) verifiable offline via /.well-known/jwks.json. Starts an external connection and stores a publicly accessible result. Does not judge application safety.', 'inputSchema':SCAN_TLS_SCHEMA,'outputSchema':receipts.RECEIPT_OUTPUT_SCHEMA,'annotations':{'readOnlyHint':False,'destructiveHint':False,'idempotentHint':False,'openWorldHint':True}},
+ {'name':'get_tls_evidence','title':'Read stored TLS evidence without scanning','description':'Read the latest valid stored signed TLS receipt by jti or host:port (or legacy domain evidence) without starting a network scan. Returns RECEIPT_EXPIRED if the stored receipt expired. A missing record is not proof that a domain is unsafe.', 'inputSchema':EVIDENCE_SCHEMA,'outputSchema':receipts.RECEIPT_OUTPUT_SCHEMA,'annotations':{'readOnlyHint':True,'idempotentHint':True,'openWorldHint':False}},
  {'name':'exposure_window','title':'Read a domain\'s post-quantum exposure window (registry, no scan)','description':'Quantum Exposure Registry: from when a domain was first observed, the week it first negotiated post-quantum key exchange (first_pq_week), the observed classical exposure window (harvest-now-decrypt-later, a lower bound), regressions, the weekly timeline with row fingerprints and OpenTimestamps anchor proofs, and same-network peers. Read-only, never scans. External observation, not a compliance certification.','inputSchema':DOMAIN_SCHEMA,'annotations':{'readOnlyHint':True,'idempotentHint':True,'openWorldHint':False}},
  {'name':'get_methodology','title':'Understand measurement scope and limitations','description':'Get the documented measurement scope, observation states, certificate-grade rules and privacy limitations before interpreting a TLS result.','inputSchema':EMPTY_SCHEMA,'annotations':{'readOnlyHint':True,'idempotentHint':True,'openWorldHint':False}},
  {'name':'get_example_result','title':'Inspect an archived example without scanning','description':'Return an explicitly labeled archived example, not live telemetry. No payment and no network scan.','inputSchema':EMPTY_SCHEMA,'annotations':{'readOnlyHint':True,'idempotentHint':True,'openWorldHint':False}},
@@ -58,7 +81,7 @@ def methodology(base):
   'observation_states':{'observed_pq':'Hybrid post-quantum key exchange was observed.','observed_classical':'A classical key-exchange selection was observed.','undetermined':'The probe could not establish a completed selection; do not treat this as proof of classical-only support.'},
   'grades':{'A':'TLS 1.3 and observed hybrid key exchange, subject to certificate and protocol findings.','B':'TLS 1.3 without an observed hybrid exchange; read observation_status before concluding classical-only support.','C':'TLS 1.2 without a more severe finding.','F':'A severe certificate, legacy-protocol or weak-key finding.'},
   'limitations':scan_experience.LIMITATION,
-  'signed_receipts':{'enabled':True,'algorithm':'EdDSA','curve':'Ed25519','format':'RFC 7515 compact JWS','jwks_uri':base+'/.well-known/jwks.json'},
+  'signed_receipts':{'enabled':True,'version':'1.0','algorithm':'EdDSA','curve':'Ed25519','typ':receipts.RECEIPT_TYP,'format':'RFC 7515 compact JWS','jwks_uri':base+'/.well-known/jwks.json','configuration_uri':base+'/.well-known/qa-receipt-configuration','policy_uri':base+receipts.POLICY_PATH},
   'not_provided':['application vulnerability assessment','permission to execute code or transmit secrets','numeric trust score','HSTS measurement'],
   'data_policy':{'stored_results':'Scan results are stored and can be publicly accessible. Do not submit confidential targets without accepting that policy.','indexing':'A noindex directive is not access control.'},
   'references':{'scan_policy':base+'/scanning','study':base+'/study/top-1000-post-quantum-tls','guide':base+'/guides/enable-x25519mlkem768-nginx','privacy':base+'/datenschutz?lang=en'}}
@@ -72,8 +95,12 @@ def manifest(base):
   'keywords':['TLS','post-quantum','ML-KEM','X25519MLKEM768','HTTPS','certificate','cryptography','ACP','A2A','MCP','JWS'],
   'use_cases':['Measure the negotiated key exchange before applying a transport-security policy.','Re-check a public domain after changing TLS or CDN configuration.','Read existing evidence before deciding whether a fresh scan is needed.','Monitor an organization\'s domains daily and keep a dated check history (CSV) for audits; free 14-day trial at '+base+'/monitoring.'],
   'endpoints':{'scan':{'url':base+'/api/scan','method':'POST','input':{'domain':'example.com'},'success_status':201},
+   'receipt_scan':{'url':base+'/api/v1/scan','method':'POST','input':{'host':'mcp.example.com','port':443},'success_status':200},
+   'receipt_get':{'url_template':base+'/api/v1/receipts/{jti}','method':'GET','starts_scan':False},
    'quantum_scan':{'url':base+'/api/v1/quantum-scan','method':'POST'},'stored_evidence':{'url_template':base+'/api/v1/badge/{domain}','method':'GET','starts_scan':False},
    'acp_agents':{'url':base+'/acp/agents','method':'GET'},'acp_runs':{'url':base+'/acp/runs','method':'POST'},'jwks':{'url':base+'/.well-known/jwks.json','method':'GET'},
+   'receipt_configuration':{'url':base+'/.well-known/qa-receipt-configuration','method':'GET'},
+   'policy_v1':{'url':base+receipts.POLICY_PATH,'method':'GET'},
    'methodology':{'url':base+'/api/v1/agent/methodology','method':'GET'},'example':{'url':base+'/api/v1/agent/example','method':'GET','is_live':False},'health':{'url':base+'/healthz','method':'GET'}},
   'mcp':{'url':base+'/mcp','transport':'streamable-http','mode':'stateless JSON responses; no SSE stream','protocol_versions':list(PROTOCOLS),'authentication':'none','tools':[t['name'] for t in TOOLS],'active_scan_tool':'scan_tls'},
   'pricing':{'scan_summary':{'amount':'0','currency':cfg['CURRENCY']},'monitoring':{'signup':base+'/monitoring','free_trial_days':14,'free_trial_domains':10,'plans':[{'name':'Starter','amount':'29.00','currency':cfg['CURRENCY'],'period':'month','domains':10},{'name':'Business','amount':'99.00','currency':cfg['CURRENCY'],'period':'month','domains':100}],'human_signup_required':True},'full_report':{'amount':str(cfg['PRICE']),'currency':cfg['CURRENCY'],'purchase_method':'x402','network':'Base','token':'USDC','endpoint_template':base+'/api/v1/agent/report/{scan_id}','mcp_tool':'get_full_report','payment_authorization_required':True,'buyer_wallet_required':True,'purchase_documentation':base+'/openapi.yaml'},'x402':{'enabled':bool(re.fullmatch(r'0x[0-9a-fA-F]{40}',cfg.get('USDC_BASE_ADDR',''))),'status':'configured' if re.fullmatch(r'0x[0-9a-fA-F]{40}',cfg.get('USDC_BASE_ADDR','')) else 'disabled_missing_receiver','automatic_checkout':bool(re.fullmatch(r'0x[0-9a-fA-F]{40}',cfg.get('USDC_BASE_ADDR',''))),'buyer_wallet_required':True,'network':'eip155:8453','asset':'0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913','scheme':'exact','facilitator':'https://facilitator.payai.network'},'sector_snapshot':{'amount':sector_price_usd(),'currency':'USDC','purchase_method':'x402','network':'Base','endpoint_template':base+'/api/v1/agent/sector/{sector}','mcp_tool':'get_sector_snapshot','sectors':SECTOR_KEYS,'read_only':True},'signed_receipts':{'enabled':True,'algorithm':'EdDSA','jwks_uri':base+'/.well-known/jwks.json'}},
@@ -252,8 +279,29 @@ def register(bp, services):
    names={t['name'] for t in TOOLS if not free or t['name'] in FREE_TOOLS}
    if not isinstance(name,str) or name not in names:return rpc_error(-32602,'Unknown tool',request_id)
    if not isinstance(args,dict):return rpc_error(-32602,'arguments must be an object',request_id)
-   domain_tools={'scan_tls','get_tls_evidence','exposure_window'}
-   if name in domain_tools:
+   if name=='scan_tls':
+    allowed={'host','domain','port','endpoint_type','discovered_manifest'}
+    if not set(args)<=allowed or (not args.get('host') and not args.get('domain')):
+     return rpc_error(-32602,'Expected host (or domain), with optional port and endpoint_type',request_id)
+    target_val=args.get('host') if args.get('host') is not None else args.get('domain')
+    if not isinstance(target_val,str) or not 1<=len(target_val)<=253:
+     return rpc_error(-32602,'host/domain must be a string up to 253 characters',request_id)
+    if 'port' in args and (isinstance(args['port'],bool) or not isinstance(args['port'],int) or not 1<=args['port']<=65535):
+     return rpc_error(-32602,'port must be an integer between 1 and 65535',request_id)
+    if 'endpoint_type' in args and (not isinstance(args['endpoint_type'],str) or len(args['endpoint_type'])>64):
+     return rpc_error(-32602,'invalid endpoint_type',request_id)
+    if 'discovered_manifest' in args and (not isinstance(args['discovered_manifest'],str) or len(args['discovered_manifest'])>256):
+     return rpc_error(-32602,'invalid discovered_manifest',request_id)
+   elif name=='get_tls_evidence':
+    allowed={'jti','host','port','target','domain'}
+    if not set(args)<=allowed or not any(k in args for k in ('jti','host','target','domain')):
+     return rpc_error(-32602,'Expected jti, host, target, or domain',request_id)
+    for k in ('jti','host','target','domain'):
+     if k in args and (not isinstance(args[k],str) or not 1<=len(args[k])<=260):
+      return rpc_error(-32602,f'{k} must be a non-empty string',request_id)
+    if 'port' in args and (isinstance(args['port'],bool) or not isinstance(args['port'],int) or not 1<=args['port']<=65535):
+     return rpc_error(-32602,'port must be an integer between 1 and 65535',request_id)
+   elif name=='exposure_window':
     if set(args)!={'domain'} or not isinstance(args['domain'],str) or not 1<=len(args['domain'])<=253:
      return rpc_error(-32602,'Expected one domain string, at most 253 characters',request_id)
    elif name=='create_full_report_order':
@@ -270,15 +318,94 @@ def register(bp, services):
    audit_fn=services.get('audit')
    sign_fn=services.get('sign')
    client_name=agent_audit.client_label(request.headers)
+   custom_text=None
    try:
-    if name in domain_tools:domain=quantum_vuln_scanner.normalize_domain(args['domain'])
+    if name=='exposure_window':
+     domain=quantum_vuln_scanner.normalize_domain(args['domain'])
     if name=='scan_tls':
-     scan_id,raw=services['scan'](domain,'mcp');value=services['summary'](scan_id,raw)
+     is_v1_call='host' in args or 'port' in args or 'endpoint_type' in args or 'discovered_manifest' in args
+     raw_host=args.get('host') if args.get('host') is not None else args['domain']
+     port=int(args.get('port',443))
+     if is_v1_call:
+      try:
+       clean_host,clean_port,sub=receipts.parse_host_port_input(raw_host,port)
+      except ValueError as exc:
+       raise quantum_vuln_scanner.ScanError('invalid_domain',str(exc)) from exc
+      domain=clean_host
+      import ipaddress as _ipaddr
+      try:
+       _ipaddr.ip_address(clean_host)
+       is_ip=True
+      except ValueError:
+       is_ip=False
+      import adoption as _adoption,search_indexing as _si
+      if not is_ip and (_si.is_excluded(clean_host) or _adoption.opted_out(clean_host,_adoption.load_optout(conn=services['db']()))):
+       raise quantum_vuln_scanner.ScanError('domain_blocked','Receipts are not issued for blocked or opted-out domains')
+      try:
+       if not is_ip and clean_port==443:
+        scan_id,raw=services['scan'](clean_host,'mcp')
+       else:
+        if services.get('claim_attempt'):services['claim_attempt']()
+        scan_id=None
+        raw=quantum_vuln_scanner.scan_target(clean_host,clean_port)
+       _, _, custom_text, dual=receipts.issue_and_store_receipt(
+        services,raw,scan_id=scan_id,endpoint_type=args.get('endpoint_type'),discovered_manifest=args.get('discovered_manifest'))
+       value=dual
+      except quantum_vuln_scanner.ScanError as scan_exc:
+       if scan_exc.code in ('tls_failure','connect_failure'):
+        _, _, custom_text, dual=receipts.issue_and_store_failed_receipt(
+         services,clean_host,clean_port,endpoint_type=args.get('endpoint_type'),discovered_manifest=args.get('discovered_manifest'))
+        value=dual
+       else:
+        raise
+     else:
+      domain=quantum_vuln_scanner.normalize_domain(raw_host)
+      scan_id,raw=services['scan'](domain,'mcp')
+      summary=services['summary'](scan_id,raw)
+      _, _, custom_text, dual=receipts.issue_and_store_receipt(services,raw,scan_id=scan_id)
+      value=dict(summary,**dual,receipt_jws=dual['signed_receipt_jws'],jwks_url=dual['verify']['jwks_uri'])
     elif name=='get_tls_evidence':
-     value=dict(badge_evidence.for_domain(services['db'](),domain),verification_url=base()+'/verify/'+domain,monitoring_trial_url=base()+'/monitoring?domain='+domain+'#trial-form',audit_url=base()+'/audit?domain='+domain,pricing_url=base()+'/pricing')
-     if sign_fn:
-      value['receipt_jws']=sign_fn(signed_receipts.build_evidence_claims(value,kind='tls-evidence'))
-      value['jwks_url']=base()+'/.well-known/jwks.json'
+     import time as _time
+     now_ts=int(_time.time())
+     if 'jti' in args:
+      row=receipts.get_receipt_by_jti(services['db'](),args['jti'])
+      if not row:
+       tool_is_error=True
+       value={'error':'RECEIPT_NOT_FOUND','message':'No receipt found for this jti. Run scan_tls to issue a new signed receipt.','jti':args['jti']}
+      elif row['exp']<=now_ts:
+       tool_is_error=True
+       value={'error':'RECEIPT_EXPIRED','message':'Stored receipt expired. Run scan_tls to issue a fresh signed receipt.','jti':row['jti'],'sub':row['sub']}
+      else:
+       domain=row['sub']
+       custom_text,value=receipts.format_dual_response(row['receipt'],row['jws'],issuer=base())
+     elif 'host' in args or 'target' in args:
+      raw_t=args.get('target') if 'target' in args else args['host']
+      try:
+       clean_host,clean_port,sub=receipts.parse_host_port_input(raw_t,args.get('port'))
+      except ValueError as exc:
+       raise quantum_vuln_scanner.ScanError('invalid_domain',str(exc)) from exc
+      domain=clean_host
+      row=receipts.get_latest_receipt_for_sub(services['db'](),sub)
+      if not row:
+       tool_is_error=True
+       value={'error':'RECEIPT_NOT_FOUND','message':f'No stored receipt for {sub}. Run scan_tls to issue a new signed receipt.','sub':sub}
+      elif row['exp']<=now_ts:
+       tool_is_error=True
+       value={'error':'RECEIPT_EXPIRED','message':f'Stored receipt for {sub} expired. Run scan_tls to issue a fresh signed receipt.','jti':row['jti'],'sub':sub}
+      else:
+       custom_text,value=receipts.format_dual_response(row['receipt'],row['jws'],issuer=base())
+     else:
+      domain=quantum_vuln_scanner.normalize_domain(args['domain'])
+      value=dict(badge_evidence.for_domain(services['db'](),domain),verification_url=base()+'/verify/'+domain,monitoring_trial_url=base()+'/monitoring?domain='+domain+'#trial-form',audit_url=base()+'/audit?domain='+domain,pricing_url=base()+'/pricing')
+      row=receipts.get_latest_receipt_for_sub(services['db'](),f'{domain}:443')
+      if row and row['exp']>now_ts:
+       _,dual=receipts.format_dual_response(row['receipt'],row['jws'],issuer=base())
+       value.update(dual)
+       value['receipt_jws']=dual['signed_receipt_jws']
+       value['jwks_url']=dual['verify']['jwks_uri']
+      elif sign_fn:
+       value['receipt_jws']=sign_fn(signed_receipts.build_evidence_claims(value,kind='tls-evidence'))
+       value['jwks_url']=base()+'/.well-known/jwks.json'
     elif name=='exposure_window':
      import exposure_web
      win=exposure_web.window_for(services['db'](),domain)
@@ -319,7 +446,9 @@ def register(bp, services):
      status,value=invoke_view(services['crypto_verify'],f"/api/v1/crypto/orders/{args['order_id']}/verify",{'tx_hash':args['tx_hash']})
      if status>=400 or status==202:value={'http_status':status,**value};tool_is_error=status>=400
     else:value=manifest(base())
-    if name not in ('get_full_report','get_sector_snapshot'):result={'content':[{'type':'text','text':json.dumps(value,ensure_ascii=False)}],'structuredContent':value,'isError':tool_is_error}
+    if name not in ('get_full_report','get_sector_snapshot'):
+     text_out=custom_text if custom_text is not None else json.dumps(value,ensure_ascii=False)
+     result={'content':[{'type':'text','text':text_out}],'structuredContent':value,'isError':tool_is_error}
     if audit_fn:audit_fn('mcp',name,client_name,domain,'error' if result.get('isError') else 'ok')
    except quantum_vuln_scanner.ScanError as exc:
     if audit_fn:audit_fn('mcp',name,client_name,domain,f'error:{exc.code}')

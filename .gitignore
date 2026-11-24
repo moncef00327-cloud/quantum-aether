@@ -8,6 +8,8 @@ instance/
 *.db-shm
 .env
 *.env
+*.pem
+keys/
 
 tests/__pycache__/
 wordpress-plugin/*.zip

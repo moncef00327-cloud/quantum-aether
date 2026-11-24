@@ -11,6 +11,7 @@
 import argparse
 import concurrent.futures
 import datetime as dt
+import hashlib
 import ipaddress
 import json
 import queue
@@ -26,6 +27,7 @@ from urllib.parse import urlsplit
 import certifi
 from cryptography import x509
 from cryptography.exceptions import UnsupportedAlgorithm
+from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import dsa, ec, ed448, ed25519, rsa, x25519
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 from cryptography.x509.oid import ExtensionOID, NameOID
@@ -183,6 +185,41 @@ def _connect(ip: str, timeout: float) -> socket.socket:
         return socket.create_connection((ip, PORT), timeout=timeout)
     except OSError as exc:
         raise ScanError("connect_failure", f"could not connect to port {PORT}: {exc}") from exc
+
+
+def _connect_port(ip: str, port: int, timeout: float) -> socket.socket:
+    if port == PORT:
+        return _connect(ip, timeout)
+    try:
+        return socket.create_connection((ip, port), timeout=timeout)
+    except OSError as exc:
+        raise ScanError("connect_failure", f"could not connect to port {port}: {exc}") from exc
+
+
+def _is_public_ip(ip_obj) -> bool:
+    if ip_obj.version == 6 and ip_obj.ipv4_mapped:
+        ip_obj = ip_obj.ipv4_mapped
+    return bool(ip_obj.is_global and not ip_obj.is_multicast)
+
+
+def resolve_public_target(host: str, port: int = PORT) -> tuple:
+    """Resolve a public hostname or public IPv4/IPv6 literal, rejecting any private/reserved/multicast IP."""
+    if not isinstance(port, int) or isinstance(port, bool) or not 1 <= port <= 65535:
+        raise ScanError("invalid_port", "port must be an integer between 1 and 65535")
+    raw = str(host or "").strip().lower().rstrip(".")
+    if not raw or any(ch in raw for ch in "/?#@\\") or any(c.isspace() or ord(c) < 32 or ord(c) == 127 for c in raw):
+        raise ScanError("invalid_domain", "invalid target host")
+    try:
+        ip_obj = ipaddress.ip_address(raw.strip("[]"))
+    except ValueError:
+        domain = normalize_domain(raw)
+        ips = resolve_public_ips(domain)
+        return domain, ips
+    if not _is_public_ip(ip_obj):
+        raise ScanError("private_address", f"{raw} is a non-public address")
+    if ip_obj.version == 6 and ip_obj.ipv4_mapped:
+        ip_obj = ip_obj.ipv4_mapped
+    return str(ip_obj), [str(ip_obj)]
 
 
 # ---------------------------------------------------------------- بناء ClientHello
@@ -420,7 +457,7 @@ PQ_OFFER = [X25519MLKEM768, X25519, 0x0017, 0x0018, 0x11EB, 0x11ED, 0x0201, 0x02
 CLASSICAL_OFFER = [X25519, 0x0017, 0x0018]
 
 
-def _hello_attempt(ip: str, host: str, offer_pq: bool, timeout: float) -> dict:
+def _hello_attempt(ip: str, host: str, offer_pq: bool, timeout: float, port: int = PORT) -> dict:
     x25519_public = x25519.X25519PrivateKey.generate().public_key().public_bytes(Encoding.Raw, PublicFormat.Raw)
     if offer_pq:
         groups = PQ_OFFER
@@ -429,7 +466,7 @@ def _hello_attempt(ip: str, host: str, offer_pq: bool, timeout: float) -> dict:
         groups = CLASSICAL_OFFER
         shares = [(X25519, x25519_public)]
     client_random, session_id = secrets.token_bytes(32), secrets.token_bytes(32)
-    with _connect(ip, timeout) as sock:
+    with _connect_port(ip, port, timeout) as sock:
         sock.settimeout(timeout)
         sock.sendall(build_client_hello(host, groups, shares, client_random, session_id))
         hello = read_server_response(sock, timeout=timeout)
@@ -464,11 +501,11 @@ def _check_offered(hello: dict, groups: list) -> None:
         raise ValueError('server selected an unoffered TLS version')
 
 
-def probe_key_exchange(ip: str, host: str, timeout: float = TIMEOUT) -> dict:
+def probe_key_exchange(ip: str, host: str, timeout: float = TIMEOUT, port: int = PORT) -> dict:
     result = {"pq_hello_ok": None, "pq_hello_error": None, "error": None}
     for offer_pq in (True, False):
         try:
-            hello = _hello_attempt(ip, host, offer_pq, timeout)
+            hello = _hello_attempt(ip, host, offer_pq, timeout, port=port)
         except (TLSAlert, ConnectionError, ValueError, OSError, ScanError) as exc:
             if offer_pq:
                 result["pq_hello_ok"] = False
@@ -496,9 +533,87 @@ def probe_key_exchange(ip: str, host: str, timeout: float = TIMEOUT) -> dict:
     return result
 
 
+LEGACY_CIPHER_SUITES = [0xC014, 0xC013, 0xC00A, 0xC009, 0x0035, 0x002F, 0x000A]
+
+
+def build_legacy_client_hello(host: str, version: int = 0x0302) -> bytes:
+    """Build a minimal TLS 1.1/1.0 ClientHello (no supported_versions) to test legacy TLS acceptance."""
+    sni_ext = b""
+    try:
+        ipaddress.ip_address(host.strip("[]"))
+    except ValueError:
+        sni_ext = _ext(0x0000, _vec16(b"\x00" + _vec16(host.encode("ascii"))))
+    extensions = b"".join([
+        sni_ext,
+        _ext(0x000A, _vec16(_u16(0x0017) + _u16(0x0018))),
+        _ext(0x000B, _vec8(b"\x00")),
+        _ext(0xFF01, b"\x00"),
+    ])
+    body = (
+        _u16(version) + secrets.token_bytes(32) + b"\x00"
+        + _vec16(b"".join(_u16(c) for c in LEGACY_CIPHER_SUITES)) + _vec8(b"\x00") + _vec16(extensions)
+    )
+    handshake = b"\x01" + len(body).to_bytes(3, "big") + body
+    return b"\x16" + _u16(0x0301) + _u16(len(handshake)) + handshake
+
+
+def probe_legacy_tls(ip: str, host: str, timeout: float = 3.0, port: int = PORT) -> bool:
+    """Return True if the server accepts TLS 1.1 or TLS 1.0 (or SSLv3), False otherwise."""
+    for legacy_ver in (0x0302, 0x0301):
+        try:
+            with _connect_port(ip, port, timeout) as sock:
+                sock.settimeout(timeout)
+                sock.sendall(build_legacy_client_hello(host, version=legacy_ver))
+                reader = _HandshakeReader(sock, timeout=timeout)
+                msg_type, body = reader.next_message()
+                if msg_type == 2 and len(body) >= 38:
+                    hello = parse_server_hello(body)
+                    if hello["version"] in (0x0300, 0x0301, 0x0302):
+                        return True
+        except (TLSAlert, ConnectionError, TimeoutError, ValueError, OSError, ScanError):
+            continue
+    return False
+
+
 def _name_attr(name: x509.Name, oid) -> str:
     values = name.get_attributes_for_oid(oid)
     return str(values[0].value) if values else ""
+
+
+def _dns_matches(pattern: str, host: str) -> bool:
+    p = pattern.strip().lower().rstrip(".")
+    h = host.strip().lower().rstrip(".")
+    if not p or not h:
+        return False
+    if p == h:
+        return True
+    if p.startswith("*.") and p.count("*") == 1:
+        suffix = p[2:]
+        if "." in suffix and h.endswith("." + suffix):
+            left = h[:-(len(suffix) + 1)]
+            return bool(left) and "." not in left
+    return False
+
+
+def _cert_matches_host(cert: x509.Certificate, host: str) -> bool:
+    h = host.strip().lower().rstrip(".").strip("[]")
+    try:
+        target_ip = ipaddress.ip_address(h)
+    except ValueError:
+        target_ip = None
+    try:
+        sans = cert.extensions.get_extension_for_oid(ExtensionOID.SUBJECT_ALTERNATIVE_NAME).value
+        if target_ip is not None:
+            return any(ip == target_ip for ip in sans.get_values_for_type(x509.IPAddress))
+        dns_names = sans.get_values_for_type(x509.DNSName)
+        if dns_names:
+            return any(_dns_matches(name, h) for name in dns_names)
+    except x509.ExtensionNotFound:
+        pass
+    if target_ip is not None:
+        return False
+    cn = _name_attr(cert.subject, NameOID.COMMON_NAME)
+    return _dns_matches(cn, h) if cn else False
 
 
 def describe_certificate(cert: x509.Certificate) -> dict:
@@ -525,6 +640,14 @@ def describe_certificate(cert: x509.Certificate) -> dict:
         dns_names = sans.get_values_for_type(x509.DNSName)
     except x509.ExtensionNotFound:
         dns_names = []
+    leaf_sha256 = cert.fingerprint(hashes.SHA256()).hex()
+    spki_sha256 = None
+    if key is not None:
+        try:
+            spki_der = key.public_bytes(Encoding.DER, PublicFormat.SubjectPublicKeyInfo)
+            spki_sha256 = hashlib.sha256(spki_der).hexdigest()
+        except Exception:
+            spki_sha256 = None
     return {
         "key_algorithm": algorithm,
         "key_bits": bits,
@@ -536,34 +659,58 @@ def describe_certificate(cert: x509.Certificate) -> dict:
         "days_left": (not_after - dt.datetime.now(dt.timezone.utc)).days,
         "san_count": len(dns_names),
         "sans": dns_names[:10],
+        "leaf_sha256": leaf_sha256,
+        "spki_sha256": spki_sha256,
     }
 
 
-def _ssl_handshake(ip: str, host: str, context: ssl.SSLContext, timeout: float):
-    with _connect(ip, timeout) as raw:
+def _ssl_handshake(ip: str, host: str, context: ssl.SSLContext, timeout: float, port: int = PORT):
+    with _connect_port(ip, port, timeout) as raw:
         with context.wrap_socket(raw, server_hostname=host) as tls:
             return tls.getpeercert(binary_form=True), tls.version(), tls.cipher()
 
 
-def probe_certificate(ip: str, host: str, timeout: float = TIMEOUT) -> dict:
-    info = {"verified": True, "verify_error": None}
+def probe_certificate(ip: str, host: str, timeout: float = TIMEOUT, port: int = PORT) -> dict:
+    info = {"verified": True, "verify_error": None, "chain_valid": True, "hostname_match": True}
+    cert_obj = None
     try:
         try:
             # certifi: نفس جذور Mozilla على Windows وLinux، فلا تختلف النتيجة باختلاف الجهاز.
             verified = ssl.create_default_context(cafile=certifi.where())
-            der, version, cipher = _ssl_handshake(ip, host, verified, timeout)
+            der, version, cipher = _ssl_handshake(ip, host, verified, timeout, port=port)
         except ssl.SSLCertVerificationError as exc:
-            info.update(verified=False, verify_error=exc.verify_message or str(exc))
-            unverified = ssl.create_default_context()
-            unverified.check_hostname = False
-            unverified.verify_mode = ssl.CERT_NONE
-            der, version, cipher = _ssl_handshake(ip, host, unverified, timeout)
+            msg = exc.verify_message or str(exc)
+            info.update(verified=False, verify_error=msg)
+            verify_code = getattr(exc, "verify_code", None)
+            is_hostname_err = (verify_code == 62) or ("hostname mismatch" in msg.lower()) or ("ip address mismatch" in msg.lower())
+            if is_hostname_err:
+                try:
+                    no_host = ssl.create_default_context(cafile=certifi.where())
+                    no_host.check_hostname = False
+                    der, version, cipher = _ssl_handshake(ip, host, no_host, timeout, port=port)
+                    info.update(chain_valid=True, hostname_match=False)
+                except ssl.SSLCertVerificationError:
+                    unverified = ssl.create_default_context()
+                    unverified.check_hostname = False
+                    unverified.verify_mode = ssl.CERT_NONE
+                    der, version, cipher = _ssl_handshake(ip, host, unverified, timeout, port=port)
+                    info.update(chain_valid=False, hostname_match=False)
+            else:
+                unverified = ssl.create_default_context()
+                unverified.check_hostname = False
+                unverified.verify_mode = ssl.CERT_NONE
+                der, version, cipher = _ssl_handshake(ip, host, unverified, timeout, port=port)
+                info["chain_valid"] = False
+                info["hostname_match"] = None
     except (ssl.SSLError, OSError) as exc:
         raise ScanError("tls_failure", f"TLS handshake failed: {exc}") from exc
     try:
-        info.update(describe_certificate(x509.load_der_x509_certificate(der)))
+        cert_obj = x509.load_der_x509_certificate(der)
+        info.update(describe_certificate(cert_obj))
     except (ValueError, UnsupportedAlgorithm) as exc:
         raise ScanError('tls_failure', 'could not parse the server certificate') from exc
+    if info["hostname_match"] is None and cert_obj is not None:
+        info["hostname_match"] = _cert_matches_host(cert_obj, host)
     info["negotiated_version"] = version
     info["negotiated_cipher"] = cipher[0] if cipher else None
     return info
@@ -654,21 +801,25 @@ def probe_endpoints(ips: list, host: str, primary_ip: str, primary_kx: dict, tim
     return [_endpoint(primary_ip, primary_kx)] + extra
 
 
-def scan(raw_domain: str, timeout: float = TIMEOUT, all_endpoints: bool = False) -> dict:
+def scan(raw_domain: str, timeout: float = TIMEOUT, all_endpoints: bool = False,
+         port: int = PORT, check_legacy: bool = True) -> dict:
     """all_endpoints=False (المتتبّع الأسبوعي): عنوان واحد كما كان. True (الموقع والمراقبة): كل عناوين النطاق."""
     domain = normalize_domain(raw_domain)
     ips = resolve_public_ips(domain)
     ip = ips[0]
-    kx = probe_key_exchange(ip, domain, timeout)
-    cert = probe_certificate(ip, domain, timeout)
+    kx = probe_key_exchange(ip, domain, timeout, port=port)
+    cert = probe_certificate(ip, domain, timeout, port=port)
+    legacy = probe_legacy_tls(ip, domain, timeout=min(timeout, 3.0), port=port) if check_legacy else None
     result = {
         "domain": domain,
         "ip": ip,
-        "port": PORT,
+        "port": port,
         "scanned_at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
         "scanner_version": SCANNER_VERSION,
         "key_exchange": kx,
         "certificate": cert,
+        "legacy_tls_enabled": legacy,
+        "client_offered_groups": [GROUP_NAMES.get(g, hex(g)) for g in PQ_OFFER],
         **assess(kx, cert),
     }
     if all_endpoints:
@@ -681,6 +832,27 @@ def scan(raw_domain: str, timeout: float = TIMEOUT, all_endpoints: bool = False)
             result["findings"].append({"code": "ENDPOINTS_MIXED", "status": "warning",
                                        "params": {"pq": summary["pq"], "total": summary["total"], "ips": ", ".join(odd)}})
     return result
+
+
+def scan_target(host: str, port: int = PORT, timeout: float = TIMEOUT) -> dict:
+    """Scan a public host (domain or public IP) on a specified port for v1 signed receipts."""
+    target_host, ips = resolve_public_target(host, port)
+    ip = ips[0]
+    kx = probe_key_exchange(ip, target_host, timeout, port=port)
+    cert = probe_certificate(ip, target_host, timeout, port=port)
+    legacy = probe_legacy_tls(ip, target_host, timeout=min(timeout, 3.0), port=port)
+    return {
+        "domain": target_host,
+        "ip": ip,
+        "port": port,
+        "scanned_at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
+        "scanner_version": SCANNER_VERSION,
+        "key_exchange": kx,
+        "certificate": cert,
+        "legacy_tls_enabled": legacy,
+        "client_offered_groups": [GROUP_NAMES.get(g, hex(g)) for g in PQ_OFFER],
+        **assess(kx, cert),
+    }
 
 
 def scan_full(raw_domain: str, timeout: float = TIMEOUT) -> dict:

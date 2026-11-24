@@ -107,7 +107,9 @@ class AgentDiscoveryTests(unittest.TestCase):
   first=self.rpc('tools/call',{'name':'scan_tls','arguments':{'domain':'example.com'}})
   self.assertFalse(first.json['result']['isError']);data=first.json['result']['structuredContent']
   self.assertEqual(data['domain'],'example.com');self.assertEqual(data['observation_status'],'observed_classical')
-  self.assertEqual(self.client.get('/api/scan/'+data['scan_id']).json,data)
+  api_summary=self.client.get('/api/scan/'+data['scan_id']).json
+  for k,v in api_summary.items():self.assertEqual(data[k],v)
+  self.assertIn('signed_receipt_jws',data);self.assertIn('receipt',data);self.assertIn('verify',data)
   with self.app.app_context():
    source=quantum_saas_app.db().execute('SELECT source FROM scans WHERE id=?',(data['scan_id'],)).fetchone()['source']
   self.assertEqual(source,'mcp')

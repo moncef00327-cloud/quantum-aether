@@ -18,6 +18,7 @@ import a2a_agent
 import agent_audit
 import badge_evidence
 import quantum_vuln_scanner
+import receipts
 import signed_receipts
 
 AGENT_NAME = "quantum-aether"
@@ -220,6 +221,8 @@ def register(bp, services, version: str):
                 offer = a2a_agent.services_offer(b, domain=domain, scan_id=scan_id, price_usd=price_usd, sector_price_usd=sector_price_usd)
                 data = dict(services["summary"](scan_id, raw), services=offer)
                 _attach_receipt(data, "tls-scan", b)
+                _, _, _, dual = receipts.issue_and_store_receipt(services, raw, scan_id=scan_id, endpoint_type="acp")
+                data.update(dual)
                 pq = data.get("post_quantum_key_exchange")
                 text = (
                     f"{domain}: grade {data.get('grade')}, key exchange {data.get('key_exchange_group') or 'unknown'}"

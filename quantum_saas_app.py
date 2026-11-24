@@ -190,6 +190,14 @@ def create_app(overrides=None, scanner=None, paypal=None, mailer=None, chain=Non
     app.jinja_env.globals["url_for"] = template_url_for
     import crawler_log  # عدّاد زيارات الزواحف (بلا IP)، للملخص الأسبوعي
     crawler_log.register(app, lambda: app.config["DATA_DIR"])
+    if not app.config.get("TESTING"):
+        try:
+            import receipts as _receipts
+            _kp = app.config.get("QA_SIGNING_KEY_PATH") or os.environ.get("QA_SIGNING_KEY_PATH") or None
+            _kd = app.config.get("QA_SIGNING_KID") or os.environ.get("QA_SIGNING_KID") or None
+            _receipts.load_signing_bundle(key_path=_kp, kid=_kd, data_dir=app.config["DATA_DIR"])
+        except Exception:
+            log.exception("Failed to preload Ed25519 receipt signing key at startup")
     return app
 
 
@@ -4956,13 +4964,34 @@ def _server_error(_e):
 
 import agent_audit
 import agent_discovery
+import receipts
 import signed_receipts
+
+
+def _claim_scan_attempt_for_receipt():
+    conn, chash = db(), client_hash()
+    cfg = current_app.config
+    since = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    if not sales_db.claim_scan_attempt(conn, chash, since, cfg["SCANS_PER_HOUR"], cfg["GLOBAL_SCANS_PER_HOUR"]):
+        if sales_db.count_attempts_since(conn, since, chash) >= cfg["SCANS_PER_HOUR"]:
+            abort(429)
+        abort(429, description="busy")
+
+
+def _sign_legacy_evidence(claims):
+    kcfg = receipts.key_config_from_app({'data_dir': lambda: current_app.config['DATA_DIR']})
+    return signed_receipts.sign_receipt(
+        kcfg['data_dir'], claims, public_base(), key_path=kcfg['key_path'], kid=kcfg['kid']
+    )
+
+
 agent_discovery.register(bp, {
     'base': public_base, 'db': db, 'scan': perform_scan, 'summary': scan_summary, 'sample': sample_result,
+    'claim_attempt': _claim_scan_attempt_for_receipt,
     'crypto_create_order': crypto_create_order, 'crypto_verify': crypto_verify,
     'x402_report': x402_agent_report,
     'data_dir': lambda: current_app.config['DATA_DIR'],
-    'sign': lambda claims: signed_receipts.sign_receipt(current_app.config['DATA_DIR'], claims, public_base()),
+    'sign': _sign_legacy_evidence,
     'audit': lambda proto, action, client='', dom='', status='ok': agent_audit.record(db(), proto, action, client, dom, status),
 })
 
