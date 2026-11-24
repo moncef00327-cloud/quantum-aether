@@ -23,6 +23,7 @@ import signed_receipts
 PROTOCOL = "0.3.0"
 HOST_RE = re.compile(r"(?<![@\w.-])((?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63})(?![\w-])", re.I)
 SCAN_WORDS = re.compile(r"\b(scan|rescan|measure|check now|fresh|افحص|فحص)\b", re.I)
+AFFILIATE_WORDS = re.compile(r"\b(affiliate|referral|partner|commission|ref\s*code|عمولة|إحالة|شراكة|شريك)\b", re.I)
 
 
 def services_offer(base, domain=None, scan_id=None, price_usd="49", sector_price_usd="0.50"):
@@ -75,7 +76,9 @@ def card(base, version):
                         "exchange (X25519MLKEM768)? Free stored evidence and free rate-limited scans with Ed25519 JWS "
                         "signed receipts (/.well-known/jwks.json); daily monitoring "
                         "(14-day free trial, 29 EUR/mo Starter, 99 EUR/mo Business), organization compliance audits "
-                        "(490 EUR), and paid full reports / weekly sector snapshots via x402 (USDC on Base). "
+                        "(490 EUR), paid full reports / weekly sector snapshots via x402 (USDC on Base), and a "
+                        "programmatic AI Agent Affiliate Programme (30% monitoring 12m / 20% one-time, monthly manual "
+                        "owner payout via POST /api/v1/agent/affiliate/register or MCP register_agent_affiliate). "
                         "External observations, not compliance certifications. Also available via MCP (" + base + "/mcp) and ACP (" + base + "/acp/agents)."),
         "url": base + "/a2a",
         "preferredTransport": "JSONRPC",
@@ -96,8 +99,8 @@ def card(base, version):
              "examples": ["Is example.com post-quantum ready?", '{"skill":"tls-evidence","domain":"example.com"}']},
             {"id": "tls-scan", "name": "Measure a website now",
              "description": "New rate-limited TLS 1.3 measurement of a public hostname on port 443. Stores a publicly "
-                            "accessible result. Free.",
-             "tags": ["post-quantum", "tls", "scan"],
+                            "accessible result and issues a v1 Ed25519 JWS signed receipt. Free.",
+             "tags": ["post-quantum", "tls", "scan", "signed-receipt", "ed25519"],
              "examples": ["scan example.com", '{"skill":"tls-scan","domain":"example.com"}']},
             {"id": "paid-data", "name": "Full report and sector snapshots (x402)",
              "description": "Returns how to buy: full remediation report per scan, or a weekly sector snapshot "
@@ -105,6 +108,12 @@ def card(base, version):
                             "via HTTP or the MCP tools get_full_report / get_sector_snapshot.",
              "tags": ["x402", "paid", "report", "dataset"],
              "examples": ['{"skill":"paid-data"}', "How do I buy the full report?"]},
+            {"id": "agent-affiliate", "name": "AI Agent Affiliate Programme (30% recurring)",
+             "description": "Returns programmatic self-registration details for AI agents and operators to get an "
+                            "instant ?ref=CODE link: 30% of monitoring payments for 12 months and 20% of one-time "
+                            "reports/audits, paid monthly manually by the owner (PayPal or USDC, 30-day hold, min $50).",
+             "tags": ["affiliate", "referral", "partner", "commission", "monetization", "mcp"],
+             "examples": ['{"skill":"agent-affiliate"}', "How do AI agents earn referral commission?"]},
         ],
     }
 
@@ -130,13 +139,15 @@ def _read_request(message):
         elif p.get("kind") == "data" and isinstance(p.get("data"), dict):
             data.update(p["data"])
     joined = " ".join(text)
-    skill = data.get("skill") if data.get("skill") in ("tls-evidence", "tls-scan", "paid-data") else None
+    skill = data.get("skill") if data.get("skill") in ("tls-evidence", "tls-scan", "paid-data", "agent-affiliate") else None
     domain = data.get("domain") if isinstance(data.get("domain"), str) else None
     if not domain:
         m = HOST_RE.search(joined)
         domain = m.group(1) if m else None
     if not skill:
-        if re.search(r"\b(buy|price|pay|report|x402|sector|snapshot|شراء|سعر|تقرير)\b", joined, re.I) and not domain:
+        if AFFILIATE_WORDS.search(joined) and not domain:
+            skill = "agent-affiliate"
+        elif re.search(r"\b(buy|price|pay|report|x402|sector|snapshot|شراء|سعر|تقرير)\b", joined, re.I) and not domain:
             skill = "paid-data"
         elif SCAN_WORDS.search(joined):
             skill = "tls-scan"
@@ -202,6 +213,16 @@ def register(bp, services, version):
                 payload["receipt_jws"] = sign(signed_receipts.build_evidence_claims(payload, kind=kind))
                 payload["jwks_url"] = b + "/.well-known/jwks.json"
 
+        if skill == "agent-affiliate":
+            offer = services_offer(b, domain=domain, price_usd=price_usd, sector_price_usd=sector_price_usd)
+            data = dict(offer["partner_affiliate"], mcp=b + "/mcp", services=offer)
+            _audit("agent-affiliate", domain or "", "ok")
+            return jsonify(jsonrpc="2.0", id=rid, result=_message(
+                "AI Agent Affiliate Programme: call MCP tool register_agent_affiliate or POST "
+                f"{b}/api/v1/agent/affiliate/register with name, contact_email, payout_method (usdc|paypal), "
+                "payout_destination, and consent_terms=true to receive an instant ?ref=CODE link. Earns 30% of "
+                "monitoring payments for 12 months and 20% of one-time reports/audits; paid monthly manually by "
+                f"the owner after a 30-day hold (min $50). Terms: {b}/partners?lang=en", data, ctx))
         if skill == "paid-data":
             offer = services_offer(b, domain=domain, price_usd=price_usd, sector_price_usd=sector_price_usd)
             data = dict(offer, mcp=b + "/mcp")

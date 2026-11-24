@@ -98,3 +98,23 @@ def start_monitoring(email, plan, consent):
                 "message": "Set consent to true only after the customer agreed to processing their email and to "
                            "monitoring starting immediately."}
     return _post("/api/monitor/signup", {"email": email, "plan": plan, "consent": True})
+
+
+def register_agent_affiliate(name, contact_email, payout_method, payout_destination="", channel="", website="", consent_terms=False):
+    """Register an AI agent/operator in the affiliate programme (30% monitoring 12m / 20% one-time, monthly manual owner payout)."""
+    if consent_terms is not True:
+        return {"error": "consent_required",
+                "message": "Set consent_terms to true only after accepting the partner terms (monthly manual payout by owner, 30-day hold, min $50, no spam)."}
+    payload = {
+        "name": name,
+        "contact_email": contact_email,
+        "payout_method": payout_method,
+        "consent_terms": True,
+    }
+    if payout_destination:
+        payload["payout_destination"] = payout_destination
+    if channel:
+        payload["channel"] = channel
+    if website:
+        payload["website"] = website
+    return _post("/api/v1/agent/affiliate/register", payload)

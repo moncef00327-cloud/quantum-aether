@@ -2,8 +2,8 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.moncef00327-cloud/quantum-aether",
   "title": "Quantum Aether",
-  "description": "Post-quantum TLS evidence; x402 USDC on Base for full reports and sector snapshots",
-  "version": "1.5.0",
+  "description": "Post-quantum TLS evidence & Ed25519 signed receipts (v1); x402 USDC on Base; 30% AI agent affiliate programme",
+  "version": "1.6.0",
   "repository": {
     "url": "https://github.com/moncef00327-cloud/quantum-aether",
     "source": "github",

@@ -31,8 +31,15 @@ class A2ATests(unittest.TestCase):
             self.assertEqual(c["protocolVersion"], a2a_agent.PROTOCOL)
             self.assertEqual(c["url"], "https://ather-quantum.com/a2a")
             self.assertEqual(c["preferredTransport"], "JSONRPC")
-            self.assertEqual({s["id"] for s in c["skills"]}, {"tls-evidence", "tls-scan", "paid-data"})
+            self.assertEqual({s["id"] for s in c["skills"]}, {"tls-evidence", "tls-scan", "paid-data", "agent-affiliate"})
             self.assertFalse(c["capabilities"]["streaming"])
+
+    def test_agent_affiliate_skill(self):
+        r = self.send("How do AI agents earn referral commission?").json["result"]
+        self.assertIn("register_agent_affiliate", r["parts"][0]["text"])
+        self.assertIn("/api/v1/agent/affiliate/register", r["parts"][0]["text"])
+        self.assertEqual(r["parts"][1]["data"]["mcp_tool"], "register_agent_affiliate")
+        self.scanner.assert_not_called()
 
     def test_evidence_never_scans(self):
         r = self.send("Is example.com post-quantum ready?").json["result"]

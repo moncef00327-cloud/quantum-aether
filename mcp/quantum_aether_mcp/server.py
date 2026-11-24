@@ -78,6 +78,41 @@ def start_monitoring(email: str, plan: str = "starter", consent: bool = False) -
     return core.start_monitoring(email, plan, consent)
 
 
+@mcp.tool(annotations=_ACTION)
+def register_agent_affiliate(
+    name: str,
+    contact_email: str,
+    payout_method: str,
+    payout_destination: str = "",
+    channel: str = "",
+    website: str = "",
+    consent_terms: bool = False,
+) -> dict:
+    """Register an AI agent or operator for the Quantum Aether affiliate programme and immediately
+    receive a ?ref=CODE link. Earns 30% of monitoring payments for 12 months and 20% of one-time
+    reports, packs and audits. Paid monthly manually by the owner (PayPal or USDC on Base/Arbitrum)
+    after a 30-day hold, from $50 minimum. No automatic payouts; no spam or unsolicited cold emails.
+
+    Args:
+        name: agent or operator display name.
+        contact_email: operator email for monthly payout coordination.
+        payout_method: "usdc" or "paypal".
+        payout_destination: 0x EVM address for USDC, or PayPal email (optional for paypal).
+        channel: optional description of how this agent recommends Quantum Aether.
+        website: optional operator website or repository URL.
+        consent_terms: must be true to accept the partner terms.
+    """
+    return core.register_agent_affiliate(
+        name=name,
+        contact_email=contact_email,
+        payout_method=payout_method,
+        payout_destination=payout_destination,
+        channel=channel,
+        website=website,
+        consent_terms=consent_terms,
+    )
+
+
 def main():
     mcp.run()
 

@@ -3,10 +3,14 @@ info:
   title: Quantum Aether — Post-Quantum TLS Readiness Scanner
   description: >
     Free API that checks whether an HTTPS server negotiates the hybrid post-quantum key exchange
-    X25519MLKEM768 (ML-KEM, FIPS 203), and summarizes its TLS version and certificate.
-    The full report (remediation steps, certificate details) is sold separately through a
-    PayPal checkout on the scan page; payment is approved by a person in the PayPal window.
-  version: 2.0.0
+    X25519MLKEM768 (ML-KEM, FIPS 203), summarizes its TLS version and certificate, and issues
+    offline-verifiable Ed25519 JWS signed TLS receipts (v1, policy qa-pqc-transport 1.0, JWKS at
+    /.well-known/jwks.json). Full remediation reports are available via PayPal, direct stablecoin,
+    or x402 v2 USDC on Base. AI agents and operators can also self-register in the AI Agent
+    Affiliate Programme via POST /api/v1/agent/affiliate/register or MCP register_agent_affiliate
+    for an instant ?ref=CODE link (30% of monitoring for 12 months, 20% of one-time reports/audits,
+    paid monthly manually by the owner via PayPal or USDC after a 30-day hold, min $50).
+  version: 2.1.0
 servers:
   - url: "{{PUBLIC_URL}}"
 paths:
@@ -326,9 +330,11 @@ paths:
       summary: Stateless remote MCP over Streamable HTTP with JSON responses
       description: >
         Supports initialize, ping, tools/list and tools/call. Use the MCP client protocol;
-        scan_tls starts a public, rate-limited probe and stores a public result.
-        Read-only tools never start scans. GET returns 405 because no SSE stream is provided.
-        No automatic payments or signed receipts are implemented.
+        scan_tls starts a public, rate-limited probe, stores a public result, and issues an
+        offline-verifiable Ed25519 JWS signed TLS receipt (v1, JWKS at /.well-known/jwks.json).
+        Read-only tools never start scans. Paid tools support x402 v2 exact USDC on Base.
+        AI agents can self-register for the 30% recurring affiliate programme via register_agent_affiliate.
+        GET returns 405 because no SSE stream is provided.
       requestBody:
         required: true
         content:
@@ -360,6 +366,117 @@ paths:
           description: Unknown JSON-RPC method.
         "415":
           description: Content-Type must be application/json.
+  /api/v1/scan:
+    post:
+      operationId: scanTlsSignedReceipt
+      summary: Scan a public TLS endpoint and issue an Ed25519 JWS signed TLS receipt (v1)
+      description: >
+        Runs a rate-limited public TLS probe for host:port (default 443), evaluates policy
+        qa-pqc-transport 1.0, persists the receipt, and returns dual format: structured receipt
+        claims, compact RFC 7515 Ed25519 JWS (signed_receipt_jws), and verification pointers.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [host]
+              properties:
+                host: { type: string, example: mcp.example.com }
+                port: { type: integer, default: 443, minimum: 1, maximum: 65535 }
+                endpoint_type: { type: string, example: mcp_remote }
+                discovered_manifest: { type: string, example: /.well-known/mcp/server-card.json }
+      responses:
+        "200":
+          description: Scan completed and v1 signed receipt issued.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SignedReceiptResponse" }
+        "400":
+          description: Invalid host, port, or private address.
+        "429":
+          description: Rate limit exceeded.
+  /api/v1/receipts/{jti}:
+    get:
+      operationId: getSignedReceipt
+      summary: Fetch a stored v1 signed TLS receipt by jti without starting a scan
+      parameters:
+        - name: jti
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Stored signed receipt in dual format (receipt + signed_receipt_jws + verify).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SignedReceiptResponse" }
+        "404":
+          description: Unknown receipt ID.
+  /api/v1/agent/affiliate/register:
+    post:
+      operationId: registerAgentAffiliate
+      summary: Programmatically register an AI agent or operator in the affiliate programme
+      description: >
+        Immediately issues an active ?ref=CODE referral link (idempotent per contact_email).
+        Earns 30% of monitoring payments for 12 months and 20% of one-time reports, agency packs,
+        and audits. Paid monthly manually by the owner (PayPal or USDC on Base/Arbitrum) after a
+        30-day refund hold, from $50 minimum. No automatic payouts; no spam or unsolicited cold emails.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AgentAffiliateRequest" }
+      responses:
+        "201":
+          description: New partner code created and active immediately.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AgentAffiliateRegistration" }
+        "200":
+          description: Existing active partner code returned for the same contact_email.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AgentAffiliateRegistration" }
+        "400":
+          description: Invalid fields or consent_terms missing/false.
+        "429":
+          description: Registration rate limit exceeded.
+  /.well-known/jwks.json:
+    get:
+      operationId: getJwks
+      summary: Public Ed25519 JWKS (application/jwk-set+json) for offline receipt verification
+      responses:
+        "200":
+          description: JWK Set containing active verification keys.
+  /.well-known/qa-receipt-configuration:
+    get:
+      operationId: getReceiptConfiguration
+      summary: Signed TLS receipt issuer metadata, JWKS URI, and policy URI
+      responses:
+        "200":
+          description: Receipt issuer configuration document.
+  /.well-known/mcp/server-card.json:
+    get:
+      operationId: getMcpServerCard
+      summary: Machine-readable MCP Server Card with transport, tools, signed receipts and affiliate metadata
+      responses:
+        "200":
+          description: MCP Server Card JSON.
+  /.well-known/api-catalog:
+    get:
+      operationId: getApiCatalog
+      summary: RFC 9727 API Catalog (application/linkset+json) linking all machine-readable specifications
+      responses:
+        "200":
+          description: Linkset JSON document.
+  /.well-known/agents.json:
+    get:
+      operationId: getAgentsJson
+      summary: WildCard agents.json declarative workflow specification for LLM agents
+      responses:
+        "200":
+          description: agents.json document.
 components:
   schemas:
     ScanSummary:
@@ -430,6 +547,41 @@ components:
         recommended_action: { type: string }
         scan_your_domain: { type: object }
         full_report: { type: object }
+    SignedReceiptResponse:
+      type: object
+      properties:
+        receipt: { type: object, description: Structured v1 TLS receipt claims (policy qa-pqc-transport 1.0). }
+        signed_receipt_jws: { type: string, description: RFC 7515 compact Ed25519 JWS (typ qa-tls-receipt+jwt). }
+        verify:
+          type: object
+          properties:
+            jwks_uri: { type: string, format: uri }
+            receipt_url: { type: string, format: uri }
+            policy_uri: { type: string, format: uri }
+            cli: { type: string }
+    AgentAffiliateRequest:
+      type: object
+      required: [name, contact_email, payout_method, consent_terms]
+      properties:
+        name: { type: string, minLength: 2, maxLength: 120, example: PQSecurityBot }
+        contact_email: { type: string, format: email, example: ops@example.com }
+        payout_method: { type: string, enum: [usdc, paypal] }
+        payout_destination: { type: string, description: 0x EVM address for USDC on Base/Arbitrum, or PayPal email. }
+        channel: { type: string, description: Optional description of how this agent recommends Quantum Aether. }
+        website: { type: string, format: uri }
+        consent_terms: { type: boolean, enum: [true] }
+    AgentAffiliateRegistration:
+      type: object
+      properties:
+        status: { type: string, enum: [active] }
+        existing: { type: boolean }
+        code: { type: string }
+        referral_url: { type: string, format: uri }
+        monitoring_referral_url: { type: string, format: uri }
+        audit_referral_url: { type: string, format: uri }
+        payout_schedule: { type: string, enum: [monthly_manual_by_owner] }
+        commission: { type: object }
+        rules: { type: array, items: { type: string } }
     Error:
       type: object
       properties:

@@ -43,6 +43,7 @@ class McpCoreTest(unittest.TestCase):
     def test_consent_is_required_for_purchase_and_monitoring(self):
         self.assertEqual(core.prepare_report_purchase("s1", False)["error"], "consent_required")
         self.assertEqual(core.start_monitoring("a@b.co", "starter", False)["error"], "consent_required")
+        self.assertEqual(core.register_agent_affiliate("Bot", "ops@example.com", "paypal", consent_terms=False)["error"], "consent_required")
 
     def test_base_url_override(self):
         os.environ["QUANTUM_AETHER_BASE"] = "https://example.test/"

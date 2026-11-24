@@ -146,7 +146,17 @@ class AcpJwsAuditTests(unittest.TestCase):
         self.assertIn("490 EUR", paid_text)
         self.assertIn("x402", paid_text)
 
-        # 5) Unsupported mode rejected
+        # 5) agent-affiliate returns programmatic registration instructions
+        r_aff = self.client.post("/acp/runs", json={
+            "agent_name": "quantum-aether",
+            "input": [{"role": "user", "parts": [{"content_type": "text/plain", "content": "How does your agent affiliate referral commission work?"}]}],
+        })
+        self.assertEqual(r_aff.status_code, 200)
+        aff_text = r_aff.json["output"][0]["parts"][0]["content"]
+        self.assertIn("register_agent_affiliate", aff_text)
+        self.assertIn("30%", aff_text)
+
+        # 6) Unsupported mode rejected
         r_bad_mode = self.client.post("/acp/runs", json={"agent_name": "quantum-aether", "mode": "stream", "input": []})
         self.assertEqual(r_bad_mode.status_code, 400)
 

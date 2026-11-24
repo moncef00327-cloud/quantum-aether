@@ -196,6 +196,39 @@ class AgentDiscoveryTests(unittest.TestCase):
   plugin=self.client.get('/.well-known/ai-plugin.json').json
   self.assertEqual(plugin['api']['url'],'https://ather-quantum.com/openapi.yaml')
   self.assertEqual(plugin['mcp']['url'],'https://ather-quantum.com/mcp')
+  self.assertEqual(plugin['partner_affiliate']['mcp_tool'],'register_agent_affiliate')
+  self.assertEqual(plugin['partner_affiliate']['payout_schedule'],'monthly_manual_by_owner')
+
+ def test_well_known_server_card_api_catalog_and_agents_json(self):
+  card=self.client.get('/.well-known/mcp/server-card.json')
+  self.assertEqual(card.status_code,200)
+  self.assertEqual(card.headers.get('Access-Control-Allow-Origin'),'*')
+  cj=card.json
+  self.assertEqual(cj['transport']['endpoint'],'https://ather-quantum.com/mcp')
+  self.assertIn('register_agent_affiliate',{t['name'] for t in cj['tools']})
+  self.assertEqual(cj['partner_affiliate']['monitoring_commission_pct'],30)
+
+  cat=self.client.get('/.well-known/api-catalog')
+  self.assertEqual(cat.status_code,200)
+  self.assertIn('application/linkset+json',cat.content_type)
+  anchors={item['anchor'] for item in cat.json['linkset']}
+  self.assertIn('https://ather-quantum.com/mcp',anchors)
+  self.assertIn('https://ather-quantum.com/api/v1/agent/affiliate/register',anchors)
+
+  aj=self.client.get('/.well-known/agents.json')
+  self.assertEqual(aj.status_code,200)
+  flows={f['id'] for f in aj.json['flows']}
+  self.assertEqual(flows,{'scan_tls_signed_receipt','read_stored_tls_evidence','register_agent_affiliate'})
+
+  link=self.client.get('/partners?lang=en').headers.get('Link','')
+  self.assertIn('rel="api-catalog"',link)
+  self.assertIn('rel="mcp-server-card"',link)
+  self.assertIn('rel="agents-json"',link)
+
+  oa=self.client.get('/openapi.yaml').text
+  self.assertIn('/api/v1/agent/affiliate/register:',oa)
+  self.assertIn('/.well-known/mcp/server-card.json:',oa)
+  self.assertNotIn('No automatic payments or signed receipts are implemented',oa)
 
  def test_free_mcp_endpoint_lists_only_free_tools_with_explicit_hints(self):
   r=self.client.post('/mcp/free',json={'jsonrpc':'2.0','id':1,'method':'tools/list'}).json['result']['tools']

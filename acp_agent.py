@@ -32,7 +32,9 @@ def manifest(base: str, version: str) -> dict:
         "description": (
             "Post-quantum TLS readiness and evidence agent (X25519MLKEM768 / ML-KEM, FIPS 203). "
             "Reads stored TLS evidence (free, read-only), runs rate-limited port-443 probes (free), "
-            "and attaches Ed25519 JWS signed scan receipts verifiable via /.well-known/jwks.json. "
+            "attaches Ed25519 JWS signed scan receipts verifiable via /.well-known/jwks.json, and "
+            "offers a programmatic AI Agent Affiliate Programme (30% monitoring 12m / 20% one-time, "
+            "monthly manual owner payout via POST /api/v1/agent/affiliate/register or MCP register_agent_affiliate). "
             "External observations, not compliance certifications."
         ),
         "input_content_types": ["text/plain", "application/json"],
@@ -46,9 +48,10 @@ def manifest(base: str, version: str) -> dict:
             "a2a_agent_card": f"{base}/.well-known/agent-card.json",
             "a2a_endpoint": f"{base}/a2a",
             "mcp_endpoint": f"{base}/mcp",
+            "mcp_server_card": f"{base}/.well-known/mcp/server-card.json",
             "jwks_uri": f"{base}/.well-known/jwks.json",
-            "capabilities": {"streaming": False, "async_runs": False, "signed_receipts": True},
-            "skills": ["tls-evidence", "tls-scan", "paid-data"],
+            "capabilities": {"streaming": False, "async_runs": False, "signed_receipts": True, "agent_affiliate": True},
+            "skills": ["tls-evidence", "tls-scan", "paid-data", "agent-affiliate"],
             "services": a2a_agent.services_offer(base),
         },
     }
@@ -97,13 +100,15 @@ def _parse_input(body: dict):
                 elif isinstance(content, str):
                     texts.append(content[:2000])
     joined = " ".join(texts)
-    skill = data.get("skill") if data.get("skill") in ("tls-evidence", "tls-scan", "paid-data") else None
+    skill = data.get("skill") if data.get("skill") in ("tls-evidence", "tls-scan", "paid-data", "agent-affiliate") else None
     domain = data.get("domain") if isinstance(data.get("domain"), str) else None
     if not domain:
         m = a2a_agent.HOST_RE.search(joined)
         domain = m.group(1) if m else None
     if not skill:
-        if PAID_WORDS.search(joined) and not domain:
+        if a2a_agent.AFFILIATE_WORDS.search(joined) and not domain:
+            skill = "agent-affiliate"
+        elif PAID_WORDS.search(joined) and not domain:
             skill = "paid-data"
         elif a2a_agent.SCAN_WORDS.search(joined):
             skill = "tls-scan"
@@ -185,6 +190,22 @@ def register(bp, services, version: str):
         b = base()
         price_usd = str(current_app.config["PRICE"])
         sector_price_usd = str(current_app.config.get("X402_SECTOR_PRICE") or "0.50")
+
+        if skill == "agent-affiliate":
+            offer = a2a_agent.services_offer(b, domain=domain, price_usd=price_usd, sector_price_usd=sector_price_usd)
+            data = dict(offer["partner_affiliate"], mcp=b + "/mcp", a2a=b + "/a2a", services=offer)
+            _audit("agent-affiliate", domain or "", "ok")
+            text = (
+                "AI Agent Affiliate Programme: call MCP tool register_agent_affiliate or POST "
+                f"{b}/api/v1/agent/affiliate/register with name, contact_email, payout_method (usdc|paypal), "
+                "payout_destination, and consent_terms=true for an instant ?ref=CODE link. Earns 30% of monitoring "
+                "payments for 12 months and 20% of one-time reports/audits; paid monthly manually by the owner after "
+                f"a 30-day hold (min $50). Terms: {b}/partners?lang=en"
+            )
+            resp = _run_response(run_id, created_at, text, data)
+            resp.headers["Access-Control-Allow-Origin"] = "*"
+            resp.headers["Cache-Control"] = "no-store"
+            return resp
 
         if skill == "paid-data":
             offer = a2a_agent.services_offer(b, domain=domain, price_usd=price_usd, sector_price_usd=sector_price_usd)

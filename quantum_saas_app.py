@@ -4386,6 +4386,12 @@ def robots():
             + f"Sitemap: {public_base()}/sitemap.xml\n"
             f"# AI agents: machine-readable summary and API at {public_base()}/llms.txt\n"
             f"# Full text for AI agents (guides + live figures in one file): {public_base()}/llms-full.txt\n"
+            f"# Agent discovery: {public_base()}/.well-known/agent-service.json\n"
+            f"# MCP Server Card: {public_base()}/.well-known/mcp/server-card.json\n"
+            f"# A2A Agent Card: {public_base()}/.well-known/agent-card.json\n"
+            f"# API Catalog (RFC 9727): {public_base()}/.well-known/api-catalog\n"
+            f"# Declarative Agent Flows: {public_base()}/.well-known/agents.json\n"
+            f"# OpenAPI: {public_base()}/openapi.yaml\n"
             f"# Content feed (Atom): {public_base()}/feed.xml\n")
     return Response(body, mimetype="text/plain")
 
@@ -4867,11 +4873,14 @@ def _security_headers(response):
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
     response.headers.setdefault("X-Frame-Options", "DENY")
     response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
-    if (request.path in ('/', '/agents', '/llms.txt', '/llms-full.txt', '/openapi.yaml')
+    if (request.path in ('/', '/agents', '/partners', '/llms.txt', '/llms-full.txt', '/openapi.yaml')
             or request.path.startswith(('/site/', '/exposure/', '/verify/', '/api/v1/badge/', '/api/v1/exposure/'))):
         b = public_base()
         response.headers.add('Link', ', '.join([
             f'<{b}/.well-known/agent-service.json>; rel="service-desc"; type="application/json"',
+            f'<{b}/.well-known/api-catalog>; rel="api-catalog"; type="application/linkset+json"',
+            f'<{b}/.well-known/mcp/server-card.json>; rel="mcp-server-card"; type="application/json"',
+            f'<{b}/.well-known/agents.json>; rel="agents-json"; type="application/json"',
             f'<{b}/.well-known/agent-card.json>; rel="agent-card"; type="application/json"',
             f'<{b}/acp/agents>; rel="acp-agents"; type="application/json"',
             f'<{b}/.well-known/mcp.json>; rel="mcp-server"; type="application/json"',
