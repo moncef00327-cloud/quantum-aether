@@ -28,12 +28,15 @@ ORGS_CSV_CANDIDATES = (
     Path(__file__).resolve().parent / 'data' / 'orgs.csv',
 )
 
-# DACH institution watchlists (banks, government, companies, insurers) plus the
-# published DACH hosting study. Worldwide sector lists are not auto-indexed;
-# those domains stay indexable only if they have human traffic, a bank-report
-# row, an orgs.csv entry, or a top REFERENCE_MAX_RANK placement.
+# Curated, 100%-clean institutional & commercial watchlists (DACH + global/MENA
+# banks, fintech/payments, cloud/security, enterprise SaaS, PQC vendors, crypto
+# exchanges, telecom, secure comms). Every host still passes excluded, family-DNS,
+# sensitive-keyword, and infrastructure checks; Tranco random ranks stay capped at
+# REFERENCE_MAX_RANK = 50 so zero adult/gambling/junk domains ever enter the index.
 NOTABLE_WATCHLIST_SECTORS = frozenset({
     "government-dach", "banks-dach", "companies-dach", "health-insurance-dach",
+    "payments-fintech", "crypto-exchanges", "cloud-security", "enterprise-saas-b2b",
+    "pqc-security-vendors", "secure-communication", "banks-mena", "banks-europe", "telecom",
 })
 
 # Household-name lookups such as "does amazon.com use post-quantum TLS?".

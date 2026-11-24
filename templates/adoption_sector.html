@@ -1,15 +1,22 @@
 {% extends "base.html" %}
+{% from "_trial_cta.html" import trial_cta with context %}
 {% set lead = t.adoption_lead.format(week=iso(s.week), date=iso(s.week_start), pq=s.pq, reachable=s.reachable, pct=s.pct) %}
 {% set sector_name = sector.labels[lang] or sector.labels.en or sector.key %}
-{% block title %}{{ sector_name }} · {{ t.adoption_title }} · {{ s.week }} · {{ t.brand }}{% endblock %}
-{% block description %}{{ t.adoption_enabled_of.format(pq=sector.pq, reachable=sector.reachable) }}{% endblock %}
+{% block title %}{{ sector_name }}: {{ 'جاهزية TLS للكم' if lang == 'ar' else ('Post-Quanten-TLS' if lang == 'de' else 'Post-Quantum TLS') }} ({{ pct }}%) · {{ t.brand }}{% endblock %}
+{% block description %}{{ sector_name }}: {{ pct }}% ({{ sector.pq }}/{{ sector.reachable }}) {{ 'يتفاوض على X25519MLKEM768 في الأسبوع' if lang == 'ar' else ('handeln X25519MLKEM768 aus in Woche' if lang == 'de' else 'negotiate X25519MLKEM768 in week') }} {{ s.week }}.{% endblock %}
+{% block head %}{% if jsonld %}{% for obj in jsonld %}
+<script type="application/ld+json">{{ obj | tojson }}</script>{% endfor %}{% endif %}{% endblock %}
 {% macro host_link(domain) %}{% if domain_discoverable(domain) %}<a href="{{ url_for('site.site_page', domain=domain, lang=lang) }}">{{ domain }}</a>{% else %}<span dir="ltr">{{ domain }}</span>{% endif %}{% endmacro %}
 {% block content %}
 <section class="card">
   <p class="small"><a href="{{ url_for('site.adoption_page', lang=lang) }}">← {{ t.adoption_title }}</a></p>
-  <h1>{{ sector_name }}</h1>
-  <p class="muted">{{ t.adoption_enabled_of.format(pq=sector.pq, reachable=sector.reachable) }}{% if sector.unsure %} · {{ t.adoption_unsure_count.format(n=sector.unsure) }}{% endif %}
-     · {{ total }} {{ t.host_col }}</p>
+  <h1>{{ sector_name }} — {{ 'جاهزية TLS المقاوم للكم' if lang == 'ar' else ('Post-Quanten-TLS-Bereitschaft' if lang == 'de' else 'Post-Quantum TLS Readiness') }}</h1>
+  <p class="muted">{{ t.adoption_enabled_of.format(pq=sector.pq, reachable=sector.reachable) }} (<strong dir="ltr">{{ pct }}%</strong>){% if sector.unsure %} · {{ t.adoption_unsure_count.format(n=sector.unsure) }}{% endif %}
+     · {{ total }} {{ t.host_col }} · <span dir="ltr">{{ iso(s.week) }}</span></p>
+  <p class="small">
+    <a class="button-link" href="{{ url_for('site.pq_tls_checker_page', lang=lang) }}">{{ 'افحص نطاق مؤسستك مجاناً' if lang == 'ar' else ('Eigene Domain kostenlos prüfen' if lang == 'de' else 'Check your domain free') }}</a>
+    · <a href="{{ url_for('site.audit_page', lang=lang) }}" data-ev="audit_cta">{{ 'تدقيق امتثال المؤسسات (490 €)' if lang == 'ar' else ('Organisations-Audit (490 €)' if lang == 'de' else 'Organization PQC audit (490 €)') }} →</a>
+  </p>
 </section>
 <section class="card">
   <table class="data" dir="ltr">
@@ -24,11 +31,19 @@
   </table>
   {% if pages > 1 %}
   <p class="small" dir="ltr">
-    {% if page > 1 %}<a href="{{ url_for('site.adoption_page', lang=lang, sector=sector.key, page=page-1) }}">←</a>{% endif %}
+    {% set ep = 'site.adoption_sector_page' if clean_route else 'site.adoption_page' %}
+    {% if page > 1 %}<a href="{{ url_for(ep, lang=lang, sector_key=sector.key, page=page-1) if clean_route else url_for(ep, lang=lang, sector=sector.key, page=page-1) }}">←</a>{% endif %}
     {{ page }} / {{ pages }}
-    {% if page < pages %}<a href="{{ url_for('site.adoption_page', lang=lang, sector=sector.key, page=page+1) }}">→</a>{% endif %}
+    {% if page < pages %}<a href="{{ url_for(ep, lang=lang, sector_key=sector.key, page=page+1) if clean_route else url_for(ep, lang=lang, sector=sector.key, page=page+1) }}">→</a>{% endif %}
   </p>
   {% endif %}
   <p class="small"><a href="{{ url_for('site.adoption_json') }}">JSON</a> · <a href="{{ url_for('site.adoption_csv') }}">CSV</a></p>
 </section>
+{% if faq_items %}
+<section class="card prose" id="faq">
+  <h2>{{ 'أسئلة شائعة' if lang == 'ar' else ('Häufige Fragen' if lang == 'de' else 'Frequently asked questions') }}</h2>
+  {% for item in faq_items %}<h3>{{ item.q }}</h3><p>{{ item.a }}</p>{% endfor %}
+</section>
+{% endif %}
+{{ trial_cta('sector-trial', source='sector_hub') }}
 {% endblock %}

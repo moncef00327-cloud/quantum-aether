@@ -107,7 +107,7 @@
       <td>{% if r.ok and not r.unsure %}<code>{{ r.grp or r.tls or "?" }}</code>{% endif %}</td></tr>{% endfor %}
   </table>
   {% if sector.rows | length > preview_n %}
-  <p class="small"><a href="{{ url_for('site.adoption_page', lang=lang, sector=sector.key) }}">{{ t.adoption_show_all.format(n=sector.rows | length) }} →</a>
+  <p class="small"><a href="{{ url_for('site.adoption_sector_page', sector_key=sector.key, lang=lang) }}">{{ t.adoption_show_all.format(n=sector.rows | length) }} →</a>
      · <a href="{{ url_for('site.adoption_json') }}">JSON</a> · <a href="{{ url_for('site.adoption_csv') }}">CSV</a></p>
   {% endif %}
   {% endif %}

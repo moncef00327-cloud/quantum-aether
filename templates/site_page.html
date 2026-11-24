@@ -91,7 +91,7 @@
     <tr><th>{{ sa.col_scope }}</th><th>{{ sa.col_share }}</th></tr>
     <tr><td><strong>{{ sa.this_site }}</strong> (<bdi dir="ltr">{{ domain }}</bdi>)</td>
       <td><strong>{{ sa.pq_unsure if summary.unsure else (sa.pq_yes if summary.pq else sa.pq_no) }}</strong></td></tr>
-    {% for r in compare_rows %}<tr><td>{% if r.kind == 'country' %}<a href="{{ url_for('site.country_page', code=r.code, lang=lang) }}">{{ r.label }}</a>{% elif r.kind == 'global' %}<a href="{{ url_for('site.adoption_page', lang=lang) }}">{{ r.label }}</a>{% else %}{{ r.label }}{% endif %}</td>
+    {% for r in compare_rows %}<tr><td>{% if r.kind == 'country' %}<a href="{{ url_for('site.country_page', code=r.code, lang=lang) }}">{{ r.label }}</a>{% elif r.kind == 'sector' and r.key %}<a href="{{ url_for('site.adoption_sector_page', sector_key=r.key, lang=lang) }}">{{ r.label }}</a>{% elif r.kind == 'global' %}<a href="{{ url_for('site.adoption_page', lang=lang) }}">{{ r.label }}</a>{% else %}{{ r.label }}{% endif %}</td>
       <td dir="ltr">{{ r.pct }}% ({{ r.pq }}/{{ r.n }})</td></tr>{% endfor %}
   </table>
 </section>

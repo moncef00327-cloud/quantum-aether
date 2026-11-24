@@ -2108,6 +2108,81 @@ ADOPTION_SECTOR_PREVIEW = 25
 ADOPTION_SECTOR_PAGE_SIZE = 50
 
 
+def _render_adoption_sector(snap, iso, sector_key, clean_route=False):
+    sector = next((item for item in (snap.get("sectors") or []) if item.get("key") == sector_key), None)
+    if not sector:
+        abort(404)
+    lang = current_lang()
+    rows = sector.get("rows") or []
+    total = len(rows)
+    page_size = 250 if clean_route else ADOPTION_SECTOR_PAGE_SIZE
+    pages = max(1, (total + page_size - 1) // page_size)
+    try:
+        page = int(request.args.get("page") or 1)
+    except (TypeError, ValueError):
+        page = 1
+    page = min(max(page, 1), pages)
+    start = (page - 1) * page_size
+    sector_name = (sector.get("labels") or {}).get(lang) or (sector.get("labels") or {}).get("en") or sector_key
+    reachable = sector.get("reachable") or 0
+    pq = sector.get("pq") or 0
+    pct = round(100.0 * pq / reachable, 1) if reachable else 0.0
+    classical = max(0, reachable - pq - (sector.get("unsure") or 0))
+    week = snap.get("week") or ""
+    week_start = snap.get("week_start") or ""
+    base = public_base()
+    hub_url = base + url_for(".adoption_sector_page", sector_key=sector_key, lang=lang)
+    if lang == "ar":
+        faq_items = [
+            {"q": f"ما نسبة جاهزية قطاع {sector_name} لتشفير TLS المقاوم للكم؟",
+             "a": f"في مسح الأسبوع {week} ({week_start})، يتفاوض {pq} من أصل {reachable} موقعاً مستجيباً في قطاع {sector_name} ({pct}%) على تبادل مفاتيح هجين مقاوم للكم (X25519MLKEM768)، بينما لا يزال {classical} موقعاً يستخدم تشفيراً تقليدياً."},
+            {"q": f"كيف يُقاس قطاع {sector_name}؟",
+             "a": "يجري Quantum Aether مصافحة TLS 1.3 عامة واحدة أسبوعياً على المنفذ 443 لكل نطاق في القائمة، ويعرض المجموعة الهجينة X25519MLKEM768 كما تفعل متصفحات Chrome وFirefox وSafari. هذه ملاحظة خارجية وليست شهادة امتثال."},
+        ]
+    elif lang == "de":
+        faq_items = [
+            {"q": f"Wie hoch ist die Post-Quanten-TLS-Quote im Sektor {sector_name}?",
+             "a": f"In Woche {week} ({week_start}) handeln {pq} von {reachable} erreichbaren Websites im Sektor {sector_name} ({pct} %) den hybriden Post-Quanten-Schlüsselaustausch X25519MLKEM768 aus; {classical} nutzen weiterhin klassisches TLS."},
+            {"q": f"Wie wird der Sektor {sector_name} gemessen?",
+             "a": "Quantum Aether führt wöchentlich einen öffentlichen TLS-1.3-Handshake auf Port 443 je Domain durch und bietet X25519MLKEM768 wie Chrome, Firefox und Safari an. Externe Beobachtung, keine Compliance-Zertifizierung."},
+        ]
+    else:
+        faq_items = [
+            {"q": f"What share of {sector_name} sites support post-quantum TLS (X25519MLKEM768)?",
+             "a": f"In week {week} ({week_start}), {pq} of {reachable} reachable hosts in {sector_name} ({pct}%) negotiated hybrid post-quantum key exchange (X25519MLKEM768), while {classical} still negotiated classical key exchange."},
+            {"q": f"How is {sector_name} post-quantum readiness measured?",
+             "a": "Quantum Aether runs one public TLS 1.3 ClientHello on port 443 every week for each tracked domain, offering X25519MLKEM768 just like Chrome, Firefox and Safari. Results are external observations, not compliance certifications."},
+        ]
+    jsonld = [
+        {"@context": "https://schema.org", "@type": "Dataset",
+         "name": f"{sector_name} — Post-Quantum TLS Adoption ({week})",
+         "description": f"Weekly post-quantum TLS (X25519MLKEM768) readiness measurements for {sector_name}: {pq}/{reachable} ({pct}%) ready.",
+         "url": hub_url, "inLanguage": lang, "dateModified": week_start or dt.date.today().isoformat(),
+         "license": "https://creativecommons.org/licenses/by/4.0/",
+         "creator": org_jsonld()},
+        {"@context": "https://schema.org", "@type": "FAQPage", "inLanguage": lang,
+         "mainEntity": [{"@type": "Question", "name": f["q"],
+                         "acceptedAnswer": {"@type": "Answer", "text": f["a"]}} for f in faq_items]},
+        {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
+            {"@type": "ListItem", "position": 1, "name": "Quantum Aether", "item": base + "/"},
+            {"@type": "ListItem", "position": 2, "name": "Post-quantum TLS adoption tracker", "item": base + url_for(".adoption_page", lang=lang)},
+            {"@type": "ListItem", "position": 3, "name": sector_name, "item": hub_url},
+        ]},
+    ]
+    return render_template(
+        "adoption_sector.html", s=snap, iso=iso, sector=sector,
+        rows=rows[start:start + page_size], page=page, pages=pages, total=total,
+        pct=pct, classical=classical, faq_items=faq_items, jsonld=jsonld,
+        clean_route=clean_route, canonical_override=hub_url)
+
+
+@bp.get("/adoption/sector/<sector_key>")
+def adoption_sector_page(sector_key):
+    iso = (lambda value: f"\u2066{value}\u2069") if current_lang() == "ar" else str
+    snap = adoption_snapshot() or {}
+    return _render_adoption_sector(snap, iso, (sector_key or "").strip(), clean_route=True)
+
+
 @bp.get("/adoption")
 def adoption_page():
     # في العربية نعزل اتجاه رمز الأسبوع (Unicode isolate) حتى لا ينقلب «2026-W46» إلى «W46-2026»
@@ -2115,22 +2190,7 @@ def adoption_page():
     snap = adoption_snapshot() or {}
     sector_key = (request.args.get("sector") or "").strip()
     if sector_key:
-        sector = next((item for item in (snap.get("sectors") or []) if item.get("key") == sector_key), None)
-        if not sector:
-            abort(404)
-        rows = sector.get("rows") or []
-        total = len(rows)
-        pages = max(1, (total + ADOPTION_SECTOR_PAGE_SIZE - 1) // ADOPTION_SECTOR_PAGE_SIZE)
-        try:
-            page = int(request.args.get("page") or 1)
-        except (TypeError, ValueError):
-            page = 1
-        page = min(max(page, 1), pages)
-        start = (page - 1) * ADOPTION_SECTOR_PAGE_SIZE
-        return render_template(
-            "adoption_sector.html", s=snap, iso=iso, sector=sector,
-            rows=rows[start:start + ADOPTION_SECTOR_PAGE_SIZE],
-            page=page, pages=pages, total=total)
+        return _render_adoption_sector(snap, iso, sector_key, clean_route=False)
     return render_template("adoption.html", s=snap, iso=iso, preview=ADOPTION_SECTOR_PREVIEW,
                            country_links=_country_links(), bank_reports=_bank_report_links())
 
@@ -4323,8 +4383,13 @@ def _sitemap_pages():
              ("/study/top-1000-post-quantum-tls",
               max(study_data()["scanned_on"], (adoption_snapshot() or {}).get("scanned_at", "")[:10]), de_langs)]
     adoption_weeks = adoption.weeks(db())
-    pages.append(("/adoption", adoption.week_monday(adoption_weeks[-1]).isoformat() if adoption_weeks
-                  else study_data()["scanned_on"], de_langs))
+    adoption_day = adoption.week_monday(adoption_weeks[-1]).isoformat() if adoption_weeks else study_data()["scanned_on"]
+    pages.append(("/adoption", adoption_day, de_langs))
+    snap_for_sitemap = adoption_snapshot() or {}
+    available_sectors = {item.get("key") for item in (snap_for_sitemap.get("sectors") or []) if item.get("reachable")}
+    for sec_key in sorted(search_indexing.NOTABLE_WATCHLIST_SECTORS):
+        if sec_key in available_sectors:
+            pages.append((f"/adoption/sector/{sec_key}", adoption_day, de_langs))
     pages.append(("/analytics", _template_day("analytics.html"), de_langs))
     pages.append(("/scanning", _template_day("scanning.html"), de_langs))
     pages.append(("/deadlines", deadlines.UPDATED, de_langs))
@@ -4904,6 +4969,8 @@ i18n.DE_ENDPOINTS.add("site.partners_page")
 DE_PAGES.add("site.partners_page")
 i18n.DE_ENDPOINTS.add("site.pq_tls_checker_page")
 DE_PAGES.add("site.pq_tls_checker_page")
+i18n.DE_ENDPOINTS.add("site.adoption_sector_page")
+DE_PAGES.add("site.adoption_sector_page")
 
 import inbound_mail  # noqa: E402  Replies to reply@/outreach@mail.ather-quantum.com via Resend webhook (2026-11-21)
 inbound_mail.register(bp, {"db": db, "mailer": lambda: current_app.extensions["mailer"],

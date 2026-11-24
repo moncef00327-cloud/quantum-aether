@@ -207,7 +207,7 @@ def comparison(snapshot, country, sector_key, lang):
         if sector and sector.get("reachable"):
             labels = sector.get("labels") or {}
             name = labels.get(lang) or labels.get("en") or sector_key
-            rows.append({"kind": "sector", "label": t["scope_sector"].format(sector=name), "name": name,
+            rows.append({"kind": "sector", "key": sector_key, "label": t["scope_sector"].format(sector=name), "name": name,
                          "pct": _pct(sector["pq"], sector["reachable"]), "pq": sector["pq"], "n": sector["reachable"]})
     return rows
 
