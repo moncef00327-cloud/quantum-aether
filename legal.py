@@ -70,7 +70,7 @@ PAGES = {
 
 <h2>6. Cookies</h2>
 <p>Unsere Website setzt für Besucher grundsätzlich keine Cookies. Nur der Betreiber erhält nach Anmeldung im Verwaltungsbereich ein technisch notwendiges Cookie. Der PayPal-Bezahlknopf (siehe Punkt 7) kann eigene Cookies setzen.</p>
-<p>Ausnahme Partnerprogramm: Kommen Sie über den Link eines Partners (…?ref=CODE), fragen wir Sie, ob wir für 60 Tage ein Cookie „qa_ref“ mit dem Partnercode speichern dürfen. Es dient nur dazu, dem Partner eine Provision zuzuordnen, falls Sie Kunde werden; wir erfassen dann bei Bestellung, Audit oder Abo den Partnercode. Das Cookie wird nur nach Ihrer Einwilligung gesetzt (§ 165 Abs. 3 TKG 2021, Art. 6 Abs. 1 lit. a DSGVO); Sie können sie jederzeit widerrufen, indem Sie das Cookie in Ihrem Browser löschen. Ohne Einwilligung zählen wir nur anonym, wie oft ein Partnerlink pro Tag aufgerufen wurde.</p>
+<p>Ausnahme Partnerprogramm: Kommen Sie über den Link eines Partners (…?ref=CODE), wird beim Aufruf des Links ein First-Party-Cookie „qa_ref“ mit dem Partnercode für 60 Tage gespeichert. Es dient ausschließlich dazu, dem Partner eine Provision zuzuordnen, falls Sie Kunde werden; wir erfassen dann bei Bestellung, Audit oder Abo den Partnercode. Sie können das Cookie jederzeit in Ihrem Browser löschen. Außerdem zählen wir anonym, wie oft ein Partnerlink pro Tag aufgerufen wurde.</p>
 <p>Bewerbungen für das Partnerprogramm (Name, E-Mail, Beschreibung, Website, Auszahlungsweg) speichern wir zur Durchführung der Partnerschaft und zur Abrechnung der Provisionen (Art. 6 Abs. 1 lit. b DSGVO), abgelehnte Bewerbungen höchstens 12 Monate, Abrechnungsdaten gemäß den steuerlichen Aufbewahrungsfristen.</p>
 
 <h2>7. Zahlungen über PayPal</h2>
@@ -117,7 +117,7 @@ PAGES = {
 
 <h2>6. Cookies</h2>
 <p>As a rule our website sets no cookies for visitors. Only the operator receives a technically necessary cookie after logging in to the admin area. The PayPal button (see section 7) may set its own cookies.</p>
-<p>Exception, partner programme: if you arrive via a partner's link (…?ref=CODE), we ask whether we may store a cookie "qa_ref" with the partner code for 60 days. Its only purpose is to credit the partner with a commission if you become a customer; we then record the partner code with your order, audit or subscription. The cookie is set only with your consent (§ 165(3) TKG 2021, Art. 6(1)(a) GDPR); you can withdraw it at any time by deleting the cookie in your browser. Without consent we only count anonymously how often a partner link was opened per day.</p>
+<p>Exception, partner programme: if you arrive via a partner's link (…?ref=CODE), opening the link sets a first-party cookie "qa_ref" containing the partner code for 60 days. Its only purpose is to credit the partner with a commission if you become a customer; we then record the partner code with your order, audit or subscription. You can delete this cookie in your browser at any time. We also count anonymously how often a partner link was opened per day.</p>
 <p>Partner programme applications (name, e-mail, description, website, payout method) are stored to run the partnership and settle commissions (Art. 6(1)(b) GDPR); rejected applications for at most 12 months, accounting data for the statutory tax retention periods.</p>
 
 <h2>7. Payments via PayPal</h2>

@@ -14,9 +14,12 @@ class PartnerTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.paypal = FakePayPal()
+        self.sent_mail = []
+        self.mailer = Mock()
+        self.mailer.send.side_effect = lambda to, subj, text, **kw: self.sent_mail.append((to, subj, text)) or True
         self.app = quantum_saas_app.create_app({"TESTING": True, "DATA_DIR": self.tmp.name, "PUBLIC_URL": "https://ather-quantum.com",
-                                                "PAYPAL_CLIENT_ID": "c", "SCANS_PER_HOUR": 5},
-                                               scanner=Mock(return_value=dict(RESULT)), paypal=self.paypal)
+                                                "PAYPAL_CLIENT_ID": "c", "SCANS_PER_HOUR": 5, "OWNER_EMAIL": "owner@example.com"},
+                                               scanner=Mock(return_value=dict(RESULT)), paypal=self.paypal, mailer=self.mailer)
         self.client = self.app.test_client()
         self.db = f"{self.tmp.name}/quantum_saas.db"
         c = sqlite3.connect(self.db)
@@ -32,23 +35,29 @@ class PartnerTests(unittest.TestCase):
     def cookie(self):
         return self.client.get_cookie(partners.COOKIE)
 
-    def test_ref_link_asks_consent_and_sets_no_cookie_by_itself(self):
-        html = self.client.get("/?ref=ahmed10&lang=en").get_data(as_text=True)
-        self.assertIn('id="ref-bar"', html)
-        self.assertIn("AHMED10", html)
-        self.assertIsNone(self.cookie())
-        self.assertNotIn('id="ref-bar"', self.client.get("/?lang=en").get_data(as_text=True))
-        self.assertNotIn('id="ref-bar"', self.client.get("/?ref=UNKNOWN1&lang=en").get_data(as_text=True))
-        c = sqlite3.connect(self.db)
-        self.assertEqual(c.execute("SELECT n FROM partner_clicks WHERE code='AHMED10'").fetchone()[0], 1)
-
-    def test_consent_sets_cookie_and_purchase_is_attributed(self):
-        self.assertEqual(self.client.post("/partners/consent", json={"code": "NOPE"}).status_code, 400)
-        r = self.client.post("/partners/consent", json={"code": "ahmed10"})
-        self.assertEqual(r.status_code, 200)
+    def test_ref_link_sets_cookie_immediately_without_consent_bar(self):
+        r = self.client.get("/?ref=ahmed10&lang=en")
+        html = r.get_data(as_text=True)
+        self.assertNotIn('id="ref-bar"', html)
         self.assertEqual(self.cookie().value, "AHMED10")
         self.assertIn("Max-Age=5184000", r.headers["Set-Cookie"])
         self.assertIn("HttpOnly", r.headers["Set-Cookie"])
+        self.assertNotIn('id="ref-bar"', self.client.get("/?lang=en").get_data(as_text=True))
+        c = sqlite3.connect(self.db)
+        self.assertEqual(c.execute("SELECT n FROM partner_clicks WHERE code='AHMED10'").fetchone()[0], 1)
+        c.close()
+
+        # Unknown ref code does not set a cookie
+        c2 = self.app.test_client()
+        r_unknown = c2.get("/?ref=UNKNOWN1&lang=en")
+        self.assertNotIn('id="ref-bar"', r_unknown.get_data(as_text=True))
+        self.assertIsNone(c2.get_cookie(partners.COOKIE))
+
+    def test_click_sets_cookie_and_purchase_is_attributed_immediately(self):
+        self.assertEqual(self.client.post("/partners/consent", json={"code": "NOPE"}).status_code, 400)
+        r = self.client.get("/?ref=ahmed10&lang=en")
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(self.cookie().value, "AHMED10")
         sid = self.client.post("/api/scan", json={"domain": "example.com"}).get_json()["scan_id"]
         order = self.client.post("/api/paypal/orders", json={"scan_id": sid, "consent": True}).get_json()["id"]
         self.client.post(f"/api/paypal/orders/{order}/capture")
@@ -57,6 +66,7 @@ class PartnerTests(unittest.TestCase):
         com = partners.commissions(c)["AHMED10"]
         self.assertAlmostEqual(com["pending"], 49 * 0.20, places=2)  # inside the 30-day hold
         self.assertEqual(com["due"], 0)
+        c.close()
 
     def test_no_cookie_no_attribution(self):
         sid = self.client.post("/api/scan", json={"domain": "example.com"}).get_json()["scan_id"]
@@ -159,10 +169,11 @@ class PartnerTests(unittest.TestCase):
             400,
         )
 
-        # 4) End-to-end referral click -> consent -> purchase attribution -> monthly manual commission
-        html = self.client.get(f"/?ref={code}&lang=en").get_data(as_text=True)
-        self.assertIn(code, html)
-        self.assertEqual(self.client.post("/partners/consent", json={"code": code}).status_code, 200)
+        # 4) End-to-end referral click -> immediate cookie -> purchase attribution -> monthly manual commission
+        r_ref = self.client.get(f"/?ref={code}&lang=en")
+        self.assertEqual(r_ref.status_code, 200)
+        self.assertNotIn('id="ref-bar"', r_ref.get_data(as_text=True))
+        self.assertEqual(self.cookie().value, code)
         sid = self.client.post("/api/scan", json={"domain": "example.com"}).get_json()["scan_id"]
         order = self.client.post("/api/paypal/orders", json={"scan_id": sid, "consent": True}).get_json()["id"]
         self.client.post(f"/api/paypal/orders/{order}/capture")
@@ -177,6 +188,39 @@ class PartnerTests(unittest.TestCase):
         self.assertTrue(manifest["pricing"]["partner_affiliate"]["enabled"])
         self.assertEqual(manifest["pricing"]["partner_affiliate"]["payout_schedule"], "monthly_manual_by_owner")
         self.assertIn("register_agent_affiliate", manifest["mcp"]["tools"])
+
+    def test_owner_notified_on_partner_pilot_and_agent_registrations(self):
+        # 1) Invalid & honeypot submissions send zero email
+        self.client.post("/partners/apply", data={"name": "X", "email": "bad", "channel": "short"})
+        self.client.post("/partners/apply", data={"name": "Bot", "email": "b@b.com", "channel": "spam channel text",
+                                                  "payout": "paypal", "consent": "1", "website2": "trap"})
+        self.client.post("/partners/pilot", data={"name": "Bot", "email": "b@b.com", "consent": "1", "website2": "trap"})
+        self.assertEqual(len(self.sent_mail), 0)
+
+        # 2) Valid partner application notifies owner only
+        self.client.post("/partners/apply", data={"name": "Nadia", "email": "nadia@example.com", "lang": "ar",
+                                                  "channel": "Security newsletter with 3k readers", "payout": "paypal", "consent": "1"})
+        self.assertEqual(len(self.sent_mail), 1)
+        self.assertEqual(self.sent_mail[0][0], "owner@example.com")
+        self.assertIn("Nadia", self.sent_mail[0][1])
+        self.assertIn("nadia@example.com", self.sent_mail[0][2])
+
+        # 3) Valid MSP pilot lead notifies owner only
+        self.client.post("/partners/pilot", data={"lang": "de", "name": "Lukas", "email": "lukas@msp.example",
+                                                  "company": "MSP Nord GmbH", "hostnames": "40", "consent": "1"})
+        self.assertEqual(len(self.sent_mail), 2)
+        self.assertEqual(self.sent_mail[1][0], "owner@example.com")
+        self.assertIn("MSP Nord GmbH", self.sent_mail[1][1])
+        self.assertIn("lukas@msp.example", self.sent_mail[1][2])
+
+        # 4) New agent affiliate notifies owner once; idempotent repeat does not re-notify
+        payload = {"name": "NotifyBot", "contact_email": "bot@example.com", "payout_method": "paypal", "consent_terms": True}
+        self.assertEqual(self.client.post("/api/v1/agent/affiliate/register", json=payload).status_code, 201)
+        self.assertEqual(len(self.sent_mail), 3)
+        self.assertEqual(self.sent_mail[2][0], "owner@example.com")
+        self.assertIn("NotifyBot", self.sent_mail[2][1])
+        self.assertEqual(self.client.post("/api/v1/agent/affiliate/register", json=payload).status_code, 200)
+        self.assertEqual(len(self.sent_mail), 3)
 
 
 if __name__ == "__main__":

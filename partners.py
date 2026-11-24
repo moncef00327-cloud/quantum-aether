@@ -79,7 +79,7 @@ T = {
   "terms": [
     "30% of every monitoring payment (Starter 29 €/month, Business 99 €/month) for the first 12 months of each customer you refer.",
     "20% of one-time purchases: full report ($49), agency pack, and the small-company audit (€490).",
-    "Attribution: your link ?ref=YOURCODE. Visitors who agree are credited to you for 60 days (last partner link wins). Visitors who decline are not tracked.",
+    "Attribution: your link ?ref=YOURCODE. Visiting your link sets a first-party attribution cookie for 60 days automatically (last partner link wins).",
     "Payout monthly by PayPal or USDC, for payments older than 30 days (refund period), from USD 50. Refunded or charged-back payments are deducted.",
     "No spam, no cold e-mail without the recipient's consent, no ads on our brand name, no misleading security claims (we sell an external observation, not a certification). Self-referrals earn nothing.",
     "Either side can end the partnership at any time; earned commission for payments already made is still paid. Austrian law applies.",
@@ -115,7 +115,7 @@ T = {
   "terms": [
     "30 % jeder Überwachungszahlung (Starter 29 €/Monat, Business 99 €/Monat) in den ersten 12 Monaten jedes vermittelten Kunden.",
     "20 % von Einmalkäufen: vollständiger Bericht (49 $), Agenturpaket und Audit für kleine Unternehmen (490 €).",
-    "Zuordnung: Ihr Link ?ref=IHRCODE. Besucher, die zustimmen, werden Ihnen 60 Tage zugeordnet (letzter Partnerlink zählt). Wer ablehnt, wird nicht erfasst.",
+    "Zuordnung: Ihr Link ?ref=IHRCODE. Beim Aufruf Ihres Links wird automatisch ein First-Party-Zuordnungscookie für 60 Tage gesetzt (letzter Partnerlink zählt).",
     "Auszahlung monatlich per PayPal oder USDC für Zahlungen, die älter als 30 Tage sind (Rückerstattungsfrist), ab 50 USD. Erstattete oder zurückgebuchte Zahlungen werden abgezogen.",
     "Kein Spam, keine unverlangten E-Mails ohne Einwilligung, keine Anzeigen auf unseren Markennamen, keine irreführenden Sicherheitsversprechen (wir verkaufen eine externe Beobachtung, keine Zertifizierung). Eigenvermittlungen sind ausgeschlossen.",
     "Beide Seiten können die Partnerschaft jederzeit beenden; Provision für bereits geleistete Zahlungen wird weiter ausgezahlt. Es gilt österreichisches Recht.",
@@ -151,7 +151,7 @@ T = {
   "terms": [
     "30% من كل دفعة مراقبة (Starter بـ 29 € شهرياً، Business بـ 99 € شهرياً) خلال أول 12 شهراً لكل عميل تجلبه.",
     "20% من المشتريات لمرة واحدة: التقرير الكامل (49$)، وباقة الوكالات، وتدقيق الشركات الصغيرة (490€).",
-    "النسبة: رابطك ‎?ref=رمزك. الزائر الذي يوافق يُنسب إليك 60 يوماً (آخر رابط شريك هو المعتمد). ومن يرفض لا يُتتبَّع.",
+    "النسبة: رابطك ‎?ref=رمزك. بمجرد فتح الرابط يُحفظ ملف تعريف ارتباط أولي (cookie) تلقائياً لمدة 60 يوماً لتُحتسب العمولة فوراً (آخر رابط شريك هو المعتمد).",
     "الدفع شهرياً عبر PayPal أو USDC، للمدفوعات التي مضى عليها 30 يوماً (فترة الاسترداد)، بحد أدنى 50 دولاراً. المدفوعات المستردة تُخصم.",
     "ممنوع: الرسائل المزعجة، والإيميل البارد بلا موافقة المستلم، والإعلان على اسم علامتنا، والوعود الأمنية المضلِّلة (نبيع رصداً خارجياً لا شهادة). لا عمولة على الإحالة الذاتية.",
     "لأي طرف إنهاء الشراكة متى شاء، وتُدفع العمولة المستحقة عن المدفوعات السابقة. يسري القانون النمساوي.",
@@ -248,11 +248,23 @@ def _affiliate_payload(code: str, payout_method: str, payout_destination: str, b
             "terms_url": f"{b}/partners?lang=en",
         },
         "note": (
-            "Attach ?ref=" + code + " to any Quantum Aether URL you share. Visitors must consent to the referral cookie. "
+            "Attach ?ref=" + code + " to any Quantum Aether URL you share. Attribution is set automatically on link click for 60 days. "
             "Commissions are reviewed and paid manually by the owner once per month after the 30-day refund hold (min USD 50). "
             "No automatic payouts; abusive or spam referrals are revoked."
         ),
     }
+
+
+def _notify_owner(subject: str, text: str) -> None:
+    """Best-effort owner-only email alert via Flask Mailer. Never emails applicants and never raises."""
+    try:
+        from flask import current_app
+        mailer = current_app.extensions.get("mailer")
+        owner = (current_app.config.get("OWNER_EMAIL") or "").strip()
+        if mailer and owner:
+            mailer.send(owner, subject, text)
+    except Exception:
+        pass
 
 
 def register_agent_affiliate(
@@ -316,11 +328,27 @@ def register_agent_affiliate(
     payout_stored = f"{method}:{dest}"
     now_iso = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     with conn:
-        conn.execute(
+        cur = conn.execute(
             "INSERT INTO partners (code, name, email, channel, website, payout, lang, status, client_hash, consent_at, approved_at) "
             "VALUES (?, ?, ?, ?, ?, ?, 'en', 'ACTIVE', ?, ?, ?)",
             (code, nm, em, f"[agent] {ch}", web or None, payout_stored, client_hash, now_iso, now_iso),
         )
+        pid = cur.lastrowid
+    b = base_url.rstrip("/")
+    _notify_owner(
+        f"[Quantum Aether] تسجيل وكيل إحالة جديد ({code}) — {nm}",
+        f"تم تسجيل وكيل ذكاء اصطناعي جديد تلقائياً في برنامج الشركاء:\n\n"
+        f"- المعرّف: #{pid}\n"
+        f"- الاسم: {nm}\n"
+        f"- البريد: {em}\n"
+        f"- الكود: {code}\n"
+        f"- الرابط: {b}/?ref={code}\n"
+        f"- الدفع الشهري اليدوي: {method} ({dest})\n"
+        f"- الموقع: {web or '-'}\n"
+        f"- القناة: {ch}\n\n"
+        f"لإيقاف الشريك عند الحاجة:\n"
+        f"python3 tools/partners_admin.py end {pid}\n",
+    )
     return 201, _affiliate_payload(code, method, dest, base_url, already_registered=False)
 
 
@@ -373,6 +401,7 @@ def register(bp, deps):
     def _partner_ref():
         g.partner_code = None
         g.ref_offer = None
+        g.set_ref_cookie = None
         cookie = request.cookies.get(COOKIE)
         if not cookie and not request.args.get("ref"):
             return  # the common case: no database access at all
@@ -387,10 +416,18 @@ def register(bp, deps):
                     with conn:
                         conn.execute("INSERT INTO partner_clicks (code, day, n) VALUES (?, date('now'), 1) "
                                      "ON CONFLICT(code, day) DO UPDATE SET n = n + 1", (code,))
-                    if code != g.partner_code:
-                        g.ref_offer = code
+                    g.partner_code = code
+                    if code != cookie:
+                        g.set_ref_cookie = code
         except Exception:
             pass
+
+    @bp.after_app_request
+    def _apply_partner_cookie(response):
+        code = g.get("set_ref_cookie")
+        if code:
+            response.set_cookie(COOKIE, code, max_age=COOKIE_DAYS * 86400, secure=True, httponly=True, samesite="Lax")
+        return response
 
     @bp.app_context_processor
     def _ref_bar():
@@ -434,9 +471,23 @@ def register(bp, deps):
         if n >= 3:
             return back(error="rate_limited")
         with conn:
-            conn.execute("INSERT INTO partners (name, email, channel, website, payout, lang, client_hash, consent_at) "
-                         "VALUES (?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))",
-                         (f["name"], f["email"], f["channel"], f["website"] or None, f["payout"], lang, client))
+            cur = conn.execute("INSERT INTO partners (name, email, channel, website, payout, lang, client_hash, consent_at) "
+                               "VALUES (?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))",
+                               (f["name"], f["email"], f["channel"], f["website"] or None, f["payout"], lang, client))
+            pid = cur.lastrowid
+        _notify_owner(
+            f"[Quantum Aether] طلب شراكة جديد (#{pid}) — {f['name']}",
+            f"وصل طلب شراكة جديد من صفحة /partners:\n\n"
+            f"- المعرّف: #{pid}\n"
+            f"- الاسم: {f['name']}\n"
+            f"- البريد: {f['email']}\n"
+            f"- طريقة الدفع: {f['payout']}\n"
+            f"- اللغة: {lang}\n"
+            f"- الموقع: {f['website'] or '-'}\n"
+            f"- القناة وطريقة التسويق:\n{f['channel']}\n\n"
+            f"لتفعيل الشريك وإرسال رابطه:\n"
+            f"python3 tools/partners_admin.py approve {pid}\n",
+        )
         return back(sent="1")
 
     @bp.post("/partners/pilot")
@@ -465,11 +516,28 @@ def register(bp, deps):
         if n >= 3:
             return back(perror="rate_limited")
         with conn:
-            conn.execute(
+            cur = conn.execute(
                 "INSERT INTO pilot_leads (name, email, company, client_domain, hostnames, white_label, note, lang, "
                 "client_hash, consent_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))",
                 (f["name"], f["email"], f["company"] or None, f["client_domain"] or None, hosts,
                  white or None, f["note"] or None, lang, client))
+            lid = cur.lastrowid
+        label = f["company"] or f["name"]
+        _notify_owner(
+            f"[Quantum Aether] طلب MSP Pilot جديد (#{lid}) — {label}",
+            f"وصل طلب MSP Pilot جديد من صفحة /partners:\n\n"
+            f"- المعرّف: #{lid}\n"
+            f"- الاسم: {f['name']}\n"
+            f"- البريد: {f['email']}\n"
+            f"- الشركة: {f['company'] or '-'}\n"
+            f"- نطاق العميل: {f['client_domain'] or '-'}\n"
+            f"- عدد المضيفين: {hosts or '-'}\n"
+            f"- White-Label (شعار الشريك): {white or '-'}\n"
+            f"- اللغة: {lang}\n"
+            f"- ملاحظات:\n{f['note'] or '-'}\n\n"
+            f"لمتابعة الحالة:\n"
+            f"python3 tools/partners_admin.py pilot {lid} CONTACTED\n",
+        )
         return back(psent="1")
 
     @bp.route("/api/v1/agent/affiliate/register", methods=["POST", "OPTIONS"])
