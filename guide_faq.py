@@ -478,3 +478,6 @@ LABELS = {"en": ("Short answer", "Frequently asked questions"),
 
 def for_page(slug, lang):
     return FAQ.get(slug, {}).get(lang)
+
+import guide_pages_seo_gap
+FAQ.update(guide_pages_seo_gap.FAQ)

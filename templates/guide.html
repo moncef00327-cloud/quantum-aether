@@ -34,5 +34,16 @@
   {{ trial_cta('guide-trial', source='questionnaire_guide', title=t.trial_cta_title, sub=t.guide_nginx_trial_sub) }}
 </section>
 {% endif %}
+
+{% if related %}
+<section class="card prose" id="related-guides">
+  <h2>{{ related_label }}</h2>
+  <ul>
+  {% for item in related %}
+    <li><a href="{{ item.href }}">{{ item.title }}</a></li>
+  {% endfor %}
+  </ul>
+</section>
+{% endif %}
 {% include "_scan_box.html" %}
 {% endblock %}

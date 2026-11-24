@@ -39,6 +39,8 @@ import analytics_db
 import assets
 import guides
 import guide_faq
+import guide_pages_seo_gap
+import pq_tls_checker
 import bot_page
 import legal
 import monitor
@@ -1150,6 +1152,14 @@ def pq_config_server(server):
     return render_template("pq_config.html", servers=config_gen.SERVERS, server=server, s=s, vkey=vkey, v=v,
                            titles=config_gen.STEP_TITLES, pin_warning=config_gen.PIN_WARNING, rich=config_gen.rich)
 
+@bp.get("/tools/post-quantum-tls-checker")
+def pq_tls_checker_page():
+    lang = current_lang()
+    page = pq_tls_checker.page(lang)
+    return render_template(
+        "pq_tls_checker.html", page=page, updated=pq_tls_checker.UPDATED,
+        jsonld=pq_tls_checker.jsonld(lang, public_base(), org_jsonld()))
+
 
 @bp.get("/guides")
 def guides_index():
@@ -2007,10 +2017,21 @@ def guide(slug):
         if len(matches) != 1:
             abort(404)
         return redirect(url_for(".guide", slug=matches[0], **({"lang": request.args["lang"]} if "lang" in request.args else {})), code=301)
-    page = g[current_lang()]
-    faq = guide_faq.for_page(slug, current_lang())
+    lang = current_lang()
+    page = g[lang]
+    faq = guide_faq.for_page(slug, lang)
+    related = []
+    for item in guide_pages_seo_gap.related_for(slug, lang):
+        if item["kind"] == "guide":
+            target = item["target"]
+            target_lang = lang if lang in guides.GUIDES.get(target, {}) else "en"
+            href = url_for(".guide", slug=target, lang=target_lang)
+        else:
+            href = url_for(".pq_tls_checker_page", lang=lang)
+        related.append({"title": item["title"], "href": href})
     return render_template("guide.html", slug=slug, page=page, updated=g["updated"], faq=faq,
-                           faq_labels=guide_faq.LABELS[current_lang()])
+                           faq_labels=guide_faq.LABELS[lang],
+                           related=related, related_label=guide_pages_seo_gap.RELATED_LABELS[lang])
 
 
 @bp.get("/study/top-1000-post-quantum-tls")
@@ -4297,6 +4318,7 @@ def _sitemap_pages():
              ("/gravity", _template_day("gravity.html"), site_langs),
              ("/guides", max(g["updated"] for g in guides.GUIDES.values()), site_langs),
              ("/tools/pq-tls-config", _template_day("pq_config.html"), de_langs),
+             ("/tools/post-quantum-tls-checker", pq_tls_checker.UPDATED, de_langs),
              ("/press", _template_day("press.html"), de_langs),
              ("/study/top-1000-post-quantum-tls",
               max(study_data()["scanned_on"], (adoption_snapshot() or {}).get("scanned_at", "")[:10]), de_langs)]
@@ -4880,6 +4902,8 @@ import partners  # noqa: E402  Partner (affiliate) programme: /partners, consent
 partners.register(bp, {"db": db, "lang": current_lang, "client_hash": client_hash})
 i18n.DE_ENDPOINTS.add("site.partners_page")
 DE_PAGES.add("site.partners_page")
+i18n.DE_ENDPOINTS.add("site.pq_tls_checker_page")
+DE_PAGES.add("site.pq_tls_checker_page")
 
 import inbound_mail  # noqa: E402  Replies to reply@/outreach@mail.ather-quantum.com via Resend webhook (2026-11-21)
 inbound_mail.register(bp, {"db": db, "mailer": lambda: current_app.extensions["mailer"],

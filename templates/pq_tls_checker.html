@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}{{ page.title }} · {{ t.brand }}{% endblock %}
+{% block description %}{{ page.description }}{% endblock %}
+{% block head %}
+{% for obj in jsonld %}
+<script type="application/ld+json">{{ obj | tojson }}</script>{% endfor %}
+{% endblock %}
+{% block content %}
+<section class="hero home-hero">
+  <div class="hero-copy">
+    <p class="eyebrow"><span class="status-dot" aria-hidden="true"></span> {{ 'فاحص TLS لما بعد الكم' if lang == 'ar' else ('Post-Quanten-TLS-Checker' if lang == 'de' else 'POST-QUANTUM TLS CHECKER') }}</p>
+    <h1>{{ page.h1 }}</h1>
+    <p class="lead">{{ page.lead }}</p>
+  </div>
+  <div class="scanner-panel" id="scanner">
+    {% with box_id='domain-box-checker', box_src='pq-tls-checker' %}{% include "_scan_box.html" %}{% endwith %}
+    <div class="scanner-footnote"><span aria-hidden="true">◇</span> {{ 'الفحص مصافحة TLS على المنفذ 443 فقط.' if lang == 'ar' else ('Die Prüfung ist ein TLS-Handshake ausschließlich auf Port 443.' if lang == 'de' else 'The check is a TLS handshake on port 443 only.') }}</div>
+  </div>
+  <div class="hero-secondary">
+    <div class="protocol-rail" dir="ltr"><span>TLS 1.3</span><span>X25519MLKEM768</span><span>ML-KEM-768</span><span>ML-KEM-1024</span><span>PORT 443</span></div>
+  </div>
+</section>
+
+<section class="card prose">
+  <h2>{{ page.what_h }}</h2>
+  {{ page.what_body | safe }}
+</section>
+
+<section class="card highlight">
+  <h2>{{ page.cta_h }}</h2>
+  <div class="grid-2">
+    <div class="price-box">
+      <p>{{ page.cta_mon | safe }}</p>
+      <p><a class="button-link" href="{{ url_for('site.monitoring', lang=lang) }}" data-ev="monitoring_cta">{{ page.cta_mon_btn }}</a></p>
+    </div>
+    <div class="price-box highlight">
+      <p>{{ page.cta_audit | safe }}</p>
+      <p><a class="button-link" href="{{ url_for('site.audit_page', lang=lang) }}" data-ev="audit_cta">{{ page.cta_audit_btn }}</a></p>
+    </div>
+  </div>
+</section>
+
+<section class="card prose">
+  <h2>{{ page.guides_h }}</h2>
+  <p>{{ page.guides_intro }}</p>
+  <ul>
+    <li><a href="{{ url_for('site.guide', slug='openssl-3-5-x25519mlkem768', lang=lang) }}">{{ 'اختبار X25519MLKEM768 باستخدام OpenSSL 3.5' if lang == 'ar' else ('X25519MLKEM768 mit OpenSSL 3.5 prüfen' if lang == 'de' else 'Test X25519MLKEM768 with OpenSSL 3.5') }}</a></li>
+    <li><a href="{{ url_for('site.guide', slug='bsi-tr-02102-2-post-quantum-tls', lang=lang) }}">{{ 'BSI TR-02102-2: TLS المقاوم للكم' if lang == 'ar' else ('BSI TR-02102-2: Post-Quanten-TLS' if lang == 'de' else 'BSI TR-02102-2: Post-Quantum TLS') }}</a></li>
+    <li><a href="{{ url_for('site.pq_index_page', lang=lang) }}">PQ-TLS Index</a></li>
+    <li><a href="{{ url_for('site.guide', slug='ssl-labs-post-quantum-tls-check', lang=lang) }}">{{ 'SSL Labs وفحص TLS المقاوم للكم' if lang == 'ar' else ('SSL Labs und Post-Quanten-TLS' if lang == 'de' else 'SSL Labs and post-quantum TLS') }}</a></li>
+    <li><a href="{{ url_for('site.guides_index', lang=lang) }}">{{ t.nav_guides }}</a></li>
+  </ul>
+</section>
+
+<section class="card faq" id="faq">
+  <h2>{{ page.faq_h }}</h2>
+  {% for q, a in page.faq %}
+  <h3>{{ q }}</h3>
+  {{ a | safe }}
+  {% endfor %}
+</section>
+{% endblock %}

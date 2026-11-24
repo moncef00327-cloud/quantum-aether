@@ -335,7 +335,7 @@ example.com {
         },
     },
     "nis2-dora-post-quantum-cryptography": {
-        "updated": "2026-11-10",
+        "updated": "2026-11-24",
         "en": {
             "title": "NIS2 and DORA: what they require for cryptography, and where post-quantum TLS fits",
             "description": "What NIS2, its implementing regulation, Germany's BSIG and the DORA technical standard actually say about cryptography, with exact article references, and what evidence a post-quantum TLS check can and cannot provide.",
@@ -371,7 +371,7 @@ example.com {
 <p>For timelines (NIST IR 8547, the EU coordinated roadmap, CNSA 2.0), see <a href="/deadlines?lang=en">post-quantum deadlines</a>.</p>
 
 <h2>What a TLS check does not prove</h2>
-<p>A public scan observes one public endpoint on port 443 at one point in time. It does not cover internal links, the CDN-to-origin connection, certificates and signatures, stored data or key management. It is evidence for one line of your inventory, not a NIS2 or DORA compliance attestation. <a href="/?lang=en">Check a domain</a>, or see <a href="/business?lang=en">business monitoring</a> for many hosts.</p>
+<p>A public scan observes one public endpoint on port 443 at one point in time. It does not cover internal links, the CDN-to-origin connection, certificates and signatures, stored data or key management. It is evidence for one line of your inventory, not a NIS2 or DORA compliance attestation. The same limit applies to <a href="/guides/bsi-tr-02102-2-post-quantum-tls?lang=en">BSI TR-02102-2</a>: a port-443 handshake is evidence of endpoint posture, not a BSI certification. <a href="/?lang=en">Check a domain</a>, or see <a href="/business?lang=en">business monitoring</a> for many hosts.</p>
 
 <h2>Sources</h2>
 <ul>
@@ -418,7 +418,7 @@ example.com {
 <p>للمواعيد (NIST IR 8547 وخارطة الطريق الأوروبية وCNSA 2.0) راجع <a href="/deadlines?lang=ar">مواعيد الانتقال إلى ما بعد الكم</a>.</p>
 
 <h2>ما لا يثبته فحص TLS</h2>
-<p>الفحص العام يرصد نقطة عامة واحدة على المنفذ 443 في وقت محدد. لا يغطي الاتصالات الداخلية، ولا الاتصال بين CDN والخادم الأصلي، ولا الشهادات والتواقيع، ولا البيانات المخزنة أو إدارة المفاتيح. هو دليل لسطر واحد في حصرك، لا شهادة امتثال لـ NIS2 أو DORA. <a href="/?lang=ar">افحص نطاقاً</a>، أو راجع <a href="/business?lang=ar">المراقبة للشركات</a> لعدد كبير من النطاقات.</p>
+<p>الفحص العام يرصد نقطة عامة واحدة على المنفذ 443 في وقت محدد. لا يغطي الاتصالات الداخلية، ولا الاتصال بين CDN والخادم الأصلي، ولا الشهادات والتواقيع، ولا البيانات المخزنة أو إدارة المفاتيح. هو دليل لسطر واحد في حصرك، لا شهادة امتثال لـ NIS2 أو DORA. وينطبق الحد نفسه على <a href="/guides/bsi-tr-02102-2-post-quantum-tls?lang=ar">BSI TR-02102-2</a>: مصافحة المنفذ 443 دليل على وضع نقطة النهاية، وليست شهادة BSI. <a href="/?lang=ar">افحص نطاقاً</a>، أو راجع <a href="/business?lang=ar">المراقبة للشركات</a> لعدد كبير من النطاقات.</p>
 
 <h2>المصادر</h2>
 <ul>
@@ -465,7 +465,7 @@ example.com {
 <p>Zu Fristen (NIST IR 8547, EU-Roadmap, CNSA 2.0) siehe <a href="/deadlines?lang=de">Post-Quanten-Fristen</a>.</p>
 
 <h2>Was eine TLS-Prüfung nicht belegt</h2>
-<p>Ein öffentlicher Scan beobachtet einen öffentlichen Endpunkt auf Port 443 zu einem Zeitpunkt. Er deckt keine internen Verbindungen, nicht die Verbindung vom CDN zum Origin, keine Zertifikate und Signaturen, keine gespeicherten Daten und kein Schlüsselmanagement ab. Er ist ein Nachweis für eine Zeile Ihres Inventars, keine NIS2- oder DORA-Konformitätsbestätigung. <a href="/?lang=de">Domain prüfen</a> oder <a href="/business?lang=de">Monitoring für Unternehmen</a> ansehen.</p>
+<p>Ein öffentlicher Scan beobachtet einen öffentlichen Endpunkt auf Port 443 zu einem Zeitpunkt. Er deckt keine internen Verbindungen, nicht die Verbindung vom CDN zum Origin, keine Zertifikate und Signaturen, keine gespeicherten Daten und kein Schlüsselmanagement ab. Er ist ein Nachweis für eine Zeile Ihres Inventars, keine NIS2- oder DORA-Konformitätsbestätigung. Dieselbe Grenze gilt für <a href="/guides/bsi-tr-02102-2-post-quantum-tls?lang=de">BSI TR-02102-2</a>: ein Handshake auf Port 443 ist ein Beleg für die Endpunkt-Haltung, keine BSI-Zertifizierung. <a href="/?lang=de">Domain prüfen</a> oder <a href="/business?lang=de">Monitoring für Unternehmen</a> ansehen.</p>
 
 <h2>Quellen</h2>
 <ul>
@@ -817,7 +817,7 @@ with socket.create_connection(("example.com", 443)) as s:
         },
     },
     "check-website-post-quantum-tls": {
-        "updated": "2026-11-21",
+        "updated": "2026-11-24",
         "en": {
             "title": "How to check if a website uses post-quantum TLS (X25519MLKEM768)",
             "description": "Four ways to see whether a site negotiates the hybrid ML-KEM key exchange: Chrome DevTools, openssl s_client, a few lines of Go or Python, and a free online scan.",
@@ -840,6 +840,7 @@ with socket.create_connection(("example.com", 443)) as s:
 <pre dir="ltr">openssl version   # must be 3.5 or newer
 openssl s_client -connect example.com:443 -groups X25519MLKEM768 &lt;/dev/null 2&gt;/dev/null | grep -i group</pre>
 <p>With <code>-groups X25519MLKEM768</code> the client offers only the hybrid group, so a classical-only server fails the handshake instead of silently falling back. OpenSSL 3.0 to 3.4 cannot test this; their output says nothing about ML-KEM.</p>
+<p>For the flags, how to read <code>Negotiated TLS1.3 group</code> versus <code>Peer Temp Key</code>, and handshake-failure (alert 40), see <a href="/guides/openssl-3-5-x25519mlkem768?lang=en">Test X25519MLKEM768 with OpenSSL 3.5</a>. Or skip the flags and use the <a href="/tools/post-quantum-tls-checker?lang=en">post-quantum TLS checker</a>.</p>
 
 <h2>4. A few lines of code</h2>
 <p>Go 1.24+ (with <code>go 1.24</code> or newer in go.mod):</p>
@@ -876,6 +877,7 @@ fmt.Println(c.ConnectionState().CurveID)</pre>
 <pre dir="ltr">openssl version   # must be 3.5 or newer
 openssl s_client -connect example.com:443 -groups X25519MLKEM768 &lt;/dev/null 2&gt;/dev/null | grep -i group</pre>
 <p>مع <code>-groups X25519MLKEM768</code> يعرض العميل المجموعة الهجينة فقط، فالخادم الكلاسيكي يفشل في الاتصال بدل أن يرجع بصمت إلى X25519. نسخ OpenSSL من 3.0 إلى 3.4 لا تستطيع هذا الفحص، ولا يذكر ناتجها ML-KEM أصلاً.</p>
+<p>للتفاصيل عن الأعلام وقراءة <code>Negotiated TLS1.3 group</code> مقابل <code>Peer Temp Key</code> والتنبيه 40، انظر <a href="/guides/openssl-3-5-x25519mlkem768?lang=ar">اختبار X25519MLKEM768 باستخدام OpenSSL 3.5</a>. أو تجاوز الأعلام واستخدم <a href="/tools/post-quantum-tls-checker?lang=ar">فاحص TLS المقاوم للكم</a>.</p>
 
 <h2>4. أسطر قليلة من الكود</h2>
 <p>Go 1.24 أو أحدث (مع <code>go 1.24</code> أو أحدث في go.mod):</p>
@@ -892,7 +894,7 @@ fmt.Println(c.ConnectionState().CurveID)</pre>
         },
     },
     "ubuntu-openssl-3-0-post-quantum-tls": {
-        "updated": "2026-11-13",
+        "updated": "2026-11-24",
         "en": {
             "title": "Post-quantum TLS on Ubuntu 22.04, 24.04 and 26.04 LTS",
             "description": "Ubuntu 25.10 and 26.04 LTS negotiate X25519MLKEM768 by default, unless an old curve list overrides it. On 22.04 / 24.04 (OpenSSL 3.0): Caddy or a CDN in front, nginx with OpenSSL 3.5, or oqs-provider for testing.",
@@ -954,6 +956,7 @@ Environment=OPENSSL_CONF=/etc/nginx/openssl-oqs.cnf</pre>
 
 <h2>Verify</h2>
 <p>Run the <a href="/?lang=en">free scan</a>: grade A means TLS 1.3 with a hybrid post-quantum key exchange. The scan also answers a HelloRetryRequest the way browsers do, so servers that ask for a different group are measured too. For continuous checks, the <a href="https://github.com/marketplace/actions/post-quantum-tls-check-quantum-aether" rel="noopener">GitHub Action</a> fails a build when the hybrid disappears.</p>
+<p>To confirm the group locally, see <a href="/guides/openssl-3-5-x25519mlkem768?lang=en">Test X25519MLKEM768 with OpenSSL 3.5</a> or the <a href="/tools/post-quantum-tls-checker?lang=en">post-quantum TLS checker</a>.</p>
 <p class="muted small">Sources: Canonical's "Post-quantum support in the upcoming 26.04 LTS" (Ubuntu Discourse), OpenSSL 3.5 release notes (ML-KEM), nginx <code>--with-openssl</code> build option, Open Quantum Safe liboqs and oqs-provider READMEs, Go crypto/tls default key exchanges.</p>
 """,
         },
@@ -1018,6 +1021,7 @@ Environment=OPENSSL_CONF=/etc/nginx/openssl-oqs.cnf</pre>
 
 <h2>التحقق</h2>
 <p>شغّل <a href="/?lang=ar">الفحص المجاني</a>: الدرجة A تعني TLS 1.3 مع تبادل مفاتيح هجين مقاوم للكم. الفحص يجيب أيضاً على طلب HelloRetryRequest كما تفعل المتصفحات، فتُقاس الخوادم التي تطلب مجموعة أخرى كذلك. وللفحص المستمر، <a href="https://github.com/marketplace/actions/post-quantum-tls-check-quantum-aether" rel="noopener">GitHub Action</a> يُفشل البناء إذا اختفى التبادل الهجين.</p>
+<p>للتأكد من المجموعة محلياً، انظر <a href="/guides/openssl-3-5-x25519mlkem768?lang=ar">اختبار X25519MLKEM768 باستخدام OpenSSL 3.5</a> أو <a href="/tools/post-quantum-tls-checker?lang=ar">فاحص TLS المقاوم للكم</a>.</p>
 <p class="muted small">المصادر: إعلان Canonical عن دعم التشفير المقاوم للكم في 26.04 LTS ‏(Ubuntu Discourse)، وملاحظات إصدار OpenSSL 3.5 (ML-KEM)، وخيار البناء <code>--with-openssl</code> في nginx، وملفات README لمشروعي liboqs وoqs-provider من Open Quantum Safe، والمجموعات الافتراضية في crypto/tls بلغة Go.</p>
 """,
         },
@@ -1482,7 +1486,7 @@ curl --version | head -n 2</pre>
 <h2>4. Zero-install CLI &amp; automated monitoring</h2>
 <p>If your workstation still ships OpenSSL 3.0/3.2, you can run a live external probe without upgrading OpenSSL locally:</p>
 <pre dir="ltr">curl -s "https://ather-quantum.com/api/v1/scan?domain=example.com&amp;format=text"</pre>
-<p>Or use the <a href="/?lang=en">web scanner</a> and <a href="/monitoring?lang=en#trial-form">14-day free daily monitoring trial</a> to get email alerts if a deployment ever drops <code>X25519MLKEM768</code>.</p>
+<p>Or use the <a href="/tools/post-quantum-tls-checker?lang=en">post-quantum TLS checker</a>, the longer cookbook <a href="/guides/openssl-3-5-x25519mlkem768?lang=en">Test X25519MLKEM768 with OpenSSL 3.5</a>, and the <a href="/monitoring?lang=en#trial-form">14-day free daily monitoring trial</a> to get email alerts if a deployment ever drops <code>X25519MLKEM768</code>.</p>
 """,
         },
         "ar": {
@@ -1509,7 +1513,7 @@ curl --version | head -n 2</pre>
 <h2>4. الفحص الفوري بدون ترقية OpenSSL محلياً</h2>
 <p>إذا كان جهازك لا يزال على OpenSSL 3.0 يمكنك الفحص مباشرة عبر API النصي:</p>
 <pre dir="ltr">curl -s "https://ather-quantum.com/api/v1/scan?domain=example.com&amp;format=text"</pre>
-<p>أو عبر <a href="/?lang=ar">الفاحص المجاني</a>، مع إمكانية بدء <a href="/monitoring?lang=ar#trial-form">تجربة مراقبة يومية مجانية لمدة 14 يوماً</a> (حتى 10 نطاقات بلا بطاقة).</p>
+<p>أو عبر <a href="/tools/post-quantum-tls-checker?lang=ar">فاحص TLS المقاوم للكم</a>، والدليل الأوسع <a href="/guides/openssl-3-5-x25519mlkem768?lang=ar">اختبار X25519MLKEM768 باستخدام OpenSSL 3.5</a>، مع إمكانية بدء <a href="/monitoring?lang=ar#trial-form">تجربة مراقبة يومية مجانية لمدة 14 يوماً</a> (حتى 10 نطاقات بلا بطاقة).</p>
 """,
         },
         "de": {
@@ -1529,7 +1533,7 @@ curl --version | head -n 2</pre>
 <h2>3. Mit curl oder ohne lokales OpenSSL 3.5 testen</h2>
 <pre dir="ltr">curl -Iv --tlsv1.3 --curves X25519MLKEM768 https://example.com 2&gt;&amp;1 | grep -iE "SSL connection|group|X25519MLKEM768"
 curl -s "https://ather-quantum.com/api/v1/scan?domain=example.com&amp;format=text"</pre>
-<p>Alternativ direkt im <a href="/?lang=de">Web-Scanner</a> prüfen oder die <a href="/monitoring?lang=de#trial-form">14-tägige kostenlose Überwachung</a> aktivieren.</p>
+<p>Alternativ direkt im <a href="/tools/post-quantum-tls-checker?lang=de">Post-Quanten-TLS-Checker</a> oder im ausführlichen Leitfaden <a href="/guides/openssl-3-5-x25519mlkem768?lang=de">X25519MLKEM768 mit OpenSSL 3.5 prüfen</a> nachvollziehen, oder die <a href="/monitoring?lang=de#trial-form">14-tägige kostenlose Überwachung</a> aktivieren.</p>
 """,
         },
     },
@@ -1601,3 +1605,6 @@ curl -s "https://ather-quantum.com/api/v1/scan?domain=example.com&amp;format=tex
         },
     },
 }
+
+import guide_pages_seo_gap
+GUIDES.update(guide_pages_seo_gap.GUIDES)
