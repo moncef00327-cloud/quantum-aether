@@ -240,6 +240,8 @@ def register(bp, services):
   return resp
 
  @bp.get('/.well-known/mcp/server-card.json')
+ @bp.get('/mcp/server-card')
+ @bp.get('/mcp/server-card.json')
  def mcp_server_card():
   b=base()
   m=manifest(b)
