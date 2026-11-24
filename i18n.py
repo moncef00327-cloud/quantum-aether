@@ -2565,9 +2565,9 @@ for _l in ("en", "ar", "de"):
 
 # Trial form sent with an empty email (2026-11-21): name the missing field instead of "does not look right".
 _TRIAL_EMAIL_REQUIRED = {
-    "en": "Email required: enter your work email, the activation link is sent there.",
-    "ar": "البريد مطلوب: أدخل بريد العمل، يصل إليه رابط التفعيل.",
-    "de": "E-Mail-Adresse fehlt: Geben Sie Ihre geschäftliche E-Mail-Adresse ein, dorthin senden wir den Aktivierungslink.",
+    "en": "Email required: enter your email (work or personal), the activation link is sent there.",
+    "ar": "البريد مطلوب: أدخل بريدك الإلكتروني (عمل أو شخصي)، يصل إليه رابط التفعيل.",
+    "de": "E-Mail-Adresse fehlt: Geben Sie Ihre E-Mail-Adresse (geschäftlich oder privat) ein, dorthin senden wir den Aktivierungslink.",
 }
 for _l in ("en", "ar", "de"):
     TEXTS[_l]["trial_email_required"] = _TRIAL_EMAIL_REQUIRED[_l]

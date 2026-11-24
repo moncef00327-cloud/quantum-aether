@@ -5,18 +5,18 @@
 (function () {
   var lang = (document.documentElement.lang || "en").slice(0, 2);
   var ALL = {
-    en: { empty: "Email required: enter your work email to receive your monitoring activation link.",
-          emptyDom: "Email required: enter your work email to receive your monitoring activation link for {domain}.",
+    en: { empty: "Email required: enter your email (work or personal) to receive your monitoring activation link.",
+          emptyDom: "Email required: enter your email (work or personal) to receive your monitoring activation link for {domain}.",
           email: "Please enter a valid email address, for example security@company.com.",
           domain: "Personal mailboxes are welcome: please also enter the domain to monitor (for example company.com).",
           consent: "Accept the Terms and Privacy Policy to start your free trial." },
-    de: { empty: "E-Mail-Adresse fehlt: Geben Sie Ihre geschäftliche E-Mail-Adresse ein, um den Aktivierungslink für die Überwachung zu erhalten.",
-          emptyDom: "E-Mail-Adresse fehlt: Geben Sie Ihre geschäftliche E-Mail-Adresse ein, um den Aktivierungslink für die Überwachung von {domain} zu erhalten.",
+    de: { empty: "E-Mail-Adresse fehlt: Geben Sie Ihre E-Mail-Adresse (geschäftlich oder privat) ein, um den Aktivierungslink für die Überwachung zu erhalten.",
+          emptyDom: "E-Mail-Adresse fehlt: Geben Sie Ihre E-Mail-Adresse (geschäftlich oder privat) ein, um den Aktivierungslink für die Überwachung von {domain} zu erhalten.",
           email: "Bitte geben Sie eine gültige E-Mail-Adresse ein, z. B. security@firma.at.",
           domain: "Private Adressen sind willkommen: Bitte geben Sie zusätzlich die zu überwachende Domain ein (z. B. firma.at).",
           consent: "Bestätigen Sie die AGB und die Datenschutzerklärung, um den kostenlosen Test zu starten." },
-    ar: { empty: "البريد مطلوب: أدخل بريد العمل لإرسال رابط تفعيل المراقبة.",
-          emptyDom: "البريد مطلوب: أدخل بريد العمل لإرسال رابط تفعيل المراقبة لـ {domain}.",
+    ar: { empty: "البريد مطلوب: أدخل بريدك الإلكتروني (عمل أو شخصي) لإرسال رابط تفعيل المراقبة.",
+          emptyDom: "البريد مطلوب: أدخل بريدك الإلكتروني (عمل أو شخصي) لإرسال رابط تفعيل المراقبة لـ {domain}.",
           email: "اكتب بريداً صحيحاً، مثل security@company.com.",
           domain: "البريد الشخصي مقبول: اكتب أيضاً النطاق المراد مراقبته (مثل company.com).",
           consent: "وافق على الشروط وسياسة الخصوصية لبدء التجربة المجانية." }

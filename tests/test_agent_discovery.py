@@ -200,13 +200,14 @@ class AgentDiscoveryTests(unittest.TestCase):
   self.assertEqual(plugin['partner_affiliate']['payout_schedule'],'monthly_manual_by_owner')
 
  def test_well_known_server_card_api_catalog_and_agents_json(self):
-  card=self.client.get('/.well-known/mcp/server-card.json')
-  self.assertEqual(card.status_code,200)
-  self.assertEqual(card.headers.get('Access-Control-Allow-Origin'),'*')
-  cj=card.json
-  self.assertEqual(cj['transport']['endpoint'],'https://ather-quantum.com/mcp')
-  self.assertIn('register_agent_affiliate',{t['name'] for t in cj['tools']})
-  self.assertEqual(cj['partner_affiliate']['monitoring_commission_pct'],30)
+  for path in ('/.well-known/mcp/server-card.json','/mcp/server-card'):
+   card=self.client.get(path)
+   self.assertEqual(card.status_code,200,path)
+   self.assertEqual(card.headers.get('Access-Control-Allow-Origin'),'*')
+   cj=card.json
+   self.assertEqual(cj['transport']['endpoint'],'https://ather-quantum.com/mcp')
+   self.assertIn('register_agent_affiliate',{t['name'] for t in cj['tools']})
+   self.assertEqual(cj['partner_affiliate']['monitoring_commission_pct'],30)
 
   cat=self.client.get('/.well-known/api-catalog')
   self.assertEqual(cat.status_code,200)

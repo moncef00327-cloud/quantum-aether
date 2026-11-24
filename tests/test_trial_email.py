@@ -27,11 +27,14 @@ class TrialEmailSignupTest(TrialTest):
 
     def test_pages_load_the_new_form_script(self):
         body = self.client.get("/monitoring?lang=ar").get_data(as_text=True)
-        self.assertIn("trial-form.js?v=20261123-email-required2", body)
+        self.assertIn("trial-form.js?v=20261124-email-any", body)
         js = self.client.get("/static/trial-form.js").get_data(as_text=True)
         for text in ("هذا يبدو نطاقاً لا بريداً", "That looks like a domain", "Meinten Sie", "domain_only",
-                     "qa_recent_scans", "qa-multi-scan-nudge", "extra_domains"):
+                     "qa_recent_scans", "qa-multi-scan-nudge", "extra_domains",
+                     "work or personal", "عمل أو شخصي", "geschäftlich oder privat"):
             self.assertIn(text, js)
+        for old in ("enter your work email", "أدخل بريد العمل", "geschäftliche E-Mail-Adresse"):
+            self.assertNotIn(old, js)
 
     def test_trial_accepts_extra_domains_up_to_limit(self):
         extras = ",".join([f"d{i}.example" for i in range(1, 15)] + ["acme.org", "not a domain!!!"])
