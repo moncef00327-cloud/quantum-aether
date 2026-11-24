@@ -4,6 +4,7 @@
   partners_admin.py list                 applications and partners
   partners_admin.py approve ID [CODE]    activate, assign a code, e-mail the partner their link (needs RESEND env)
   partners_admin.py reject ID
+  partners_admin.py end ID               revoke/end an active partner (stops further click/referral attribution)
   partners_admin.py report               clicks, referrals and commission due / pending per partner
 """
 import json
@@ -51,7 +52,7 @@ def send(to, subject, text):
 
 
 def main(argv):
-    if not argv or argv[0] not in ("list", "approve", "reject", "report"):
+    if not argv or argv[0] not in ("list", "approve", "reject", "end", "report"):
         print(__doc__)
         return 2
     c = conn()
@@ -61,16 +62,17 @@ def main(argv):
             print(f"#{r['id']} [{r['status']}] {r['code'] or '-'} · {r['name']} · {r['email']} · {r['payout']} · {r['lang']} · {r['created_at']}")
             print(f"    {r['website'] or ''} | {r['channel'][:200]}")
         return 0
-    if cmd in ("approve", "reject"):
+    if cmd in ("approve", "reject", "end"):
         pid = int(argv[1])
         row = c.execute("SELECT * FROM partners WHERE id = ?", (pid,)).fetchone()
         if not row:
             print("no such application")
             return 1
-        if cmd == "reject":
+        if cmd in ("reject", "end"):
+            new_st = "REJECTED" if cmd == "reject" else "ENDED"
             with c:
-                c.execute("UPDATE partners SET status = 'REJECTED' WHERE id = ?", (pid,))
-            print("rejected")
+                c.execute("UPDATE partners SET status = ? WHERE id = ?", (new_st, pid))
+            print(new_st.lower())
             return 0
         code = (argv[2].upper() if len(argv) > 2 else None) or row["code"] or partners.new_code(c, row["name"])
         if not partners.CODE_RE.match(code):

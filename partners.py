@@ -20,6 +20,7 @@ COOKIE = "qa_ref"
 COOKIE_DAYS = 60
 CODE_RE = re.compile(r"^[A-Z0-9]{3,20}$")
 EMAIL_RE = re.compile(r"^[^@\s<>\"']{1,64}@[A-Za-z0-9.-]{1,190}\.[A-Za-z]{2,24}$")
+WALLET_RE = re.compile(r"^0x[0-9a-fA-F]{40}$")
 SUB_RATE, ONE_TIME_RATE, SUB_MONTHS, MIN_PAYOUT, HOLD_DAYS = 0.30, 0.20, 12, 50, 30
 PLAN_PRICE = {"starter": 29.0, "business": 99.0}
 
@@ -170,6 +171,108 @@ def new_code(conn, name):
     return "P" + secrets.token_hex(4).upper()
 
 
+def _affiliate_payload(code: str, payout_method: str, payout_destination: str, base_url: str, already_registered: bool = False) -> dict:
+    b = base_url.rstrip("/")
+    return {
+        "status": "ACTIVE",
+        "already_registered": already_registered,
+        "code": code,
+        "referral_links": {
+            "home": f"{b}/?ref={code}",
+            "monitoring_trial": f"{b}/monitoring?ref={code}#trial-form",
+            "audit": f"{b}/audit?ref={code}",
+            "partners": f"{b}/partners?ref={code}",
+        },
+        "terms": {
+            "monitoring_commission_pct": int(SUB_RATE * 100),
+            "monitoring_commission_months": SUB_MONTHS,
+            "one_time_commission_pct": int(ONE_TIME_RATE * 100),
+            "payout_schedule": "monthly_manual_by_owner",
+            "payout_method": payout_method,
+            "payout_destination": payout_destination,
+            "hold_days": HOLD_DAYS,
+            "min_payout_usd": MIN_PAYOUT,
+            "cookie_days": COOKIE_DAYS,
+            "prohibited": ["spam", "unsolicited_cold_email", "brand_ads", "self_referrals", "misleading_security_claims"],
+            "terms_url": f"{b}/partners?lang=en",
+        },
+        "note": (
+            "Attach ?ref=" + code + " to any Quantum Aether URL you share. Visitors must consent to the referral cookie. "
+            "Commissions are reviewed and paid manually by the owner once per month after the 30-day refund hold (min USD 50). "
+            "No automatic payouts; abusive or spam referrals are revoked."
+        ),
+    }
+
+
+def register_agent_affiliate(
+    conn,
+    *,
+    name: str,
+    contact_email: str,
+    payout_method: str,
+    payout_destination: str | None = None,
+    channel: str | None = None,
+    website: str | None = None,
+    client_hash: str = "",
+    base_url: str = "https://ather-quantum.com",
+) -> tuple[int, dict]:
+    """Self-service registration for AI agents / operators. Payout remains monthly & manual by the owner."""
+    nm = (name or "").strip()
+    em = (contact_email or "").strip().lower()
+    method = (payout_method or "").strip().lower()
+    dest = (payout_destination or "").strip()
+    ch = (channel or "AI agent / MCP recommendation").strip()
+    web = (website or "").strip()
+
+    if not 2 <= len(nm) <= 120:
+        return 400, {"error": "invalid_name", "message": "name must be 2-120 characters"}
+    if not EMAIL_RE.match(em):
+        return 400, {"error": "invalid_email", "message": "valid contact_email is required"}
+    if method not in ("usdc", "paypal"):
+        return 400, {"error": "invalid_payout_method", "message": "payout_method must be 'usdc' or 'paypal'"}
+    if method == "usdc":
+        if not WALLET_RE.match(dest):
+            return 400, {"error": "invalid_wallet", "message": "payout_destination must be a valid 0x EVM address (Base or Arbitrum USDC)"}
+    else:
+        dest = (dest or em).lower()
+        if not EMAIL_RE.match(dest):
+            return 400, {"error": "invalid_paypal_email", "message": "payout_destination must be a valid PayPal email"}
+    if not 3 <= len(ch) <= 1000 or len(web) > 300:
+        return 400, {"error": "invalid_channel", "message": "channel must be 3-1000 chars and website <= 300 chars"}
+
+    init(conn)
+    existing = conn.execute(
+        "SELECT code, payout FROM partners WHERE lower(email) = ? AND status = 'ACTIVE' AND code IS NOT NULL LIMIT 1",
+        (em,),
+    ).fetchone()
+    if existing:
+        stored_payout = existing[1] or method
+        if ":" in stored_payout:
+            m_old, d_old = stored_payout.split(":", 1)
+        else:
+            m_old, d_old = stored_payout, em
+        return 200, _affiliate_payload(existing[0], m_old, d_old, base_url, already_registered=True)
+
+    since = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    recent_n = conn.execute(
+        "SELECT COUNT(*) FROM partners WHERE client_hash = ? AND created_at >= ?",
+        (client_hash, since),
+    ).fetchone()[0]
+    if recent_n >= 3:
+        return 429, {"error": "rate_limited", "message": "Too many affiliate registrations from this client today"}
+
+    code = new_code(conn, nm)
+    payout_stored = f"{method}:{dest}"
+    now_iso = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    with conn:
+        conn.execute(
+            "INSERT INTO partners (code, name, email, channel, website, payout, lang, status, client_hash, consent_at, approved_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, 'en', 'ACTIVE', ?, ?, ?)",
+            (code, nm, em, f"[agent] {ch}", web or None, payout_stored, client_hash, now_iso, now_iso),
+        )
+    return 201, _affiliate_payload(code, method, dest, base_url, already_registered=False)
+
+
 def commissions(conn, now=None):
     """-> {code: {"items": [...], "due": float, "pending": float}} from referrals joined with real payments."""
     now = now or dt.datetime.now(dt.timezone.utc)
@@ -282,3 +385,35 @@ def register(bp, deps):
                          "VALUES (?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))",
                          (f["name"], f["email"], f["channel"], f["website"] or None, f["payout"], lang, client))
         return back(sent="1")
+
+    @bp.route("/api/v1/agent/affiliate/register", methods=["POST", "OPTIONS"])
+    def api_agent_affiliate_register():
+        if request.method == "OPTIONS":
+            resp = make_response(("", 204))
+            resp.headers.update({
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "POST, OPTIONS",
+                "Access-Control-Allow-Headers": "Content-Type",
+            })
+            return resp
+        body = request.get_json(silent=True)
+        if not isinstance(body, dict):
+            return jsonify(error="invalid_request", message="Expected a JSON object"), 400
+        if body.get("consent_terms") is not True:
+            return jsonify(error="consent_required", message="consent_terms must be true to accept partner terms"), 400
+        base_url = deps["base"]() if deps.get("base") else "https://ather-quantum.com"
+        status, payload = register_agent_affiliate(
+            deps["db"](),
+            name=str(body.get("name") or ""),
+            contact_email=str(body.get("contact_email") or body.get("email") or ""),
+            payout_method=str(body.get("payout_method") or ""),
+            payout_destination=body.get("payout_destination") or body.get("wallet_address"),
+            channel=body.get("channel"),
+            website=body.get("website"),
+            client_hash=deps["client_hash"](),
+            base_url=base_url,
+        )
+        resp = jsonify(payload)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["Cache-Control"] = "no-store"
+        return resp, status

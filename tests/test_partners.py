@@ -78,6 +78,83 @@ class PartnerTests(unittest.TestCase):
     def test_privacy_mentions_referral_cookie(self):
         self.assertIn("qa_ref", self.client.get("/datenschutz?lang=en").get_data(as_text=True))
 
+    def test_agent_affiliate_mcp_and_http_with_monthly_manual_payout(self):
+        wallet = "0x" + "1a" * 20
+        # 1) Register via MCP tool register_agent_affiliate
+        r_mcp = self.client.post("/mcp", json={
+            "jsonrpc": "2.0", "id": 10, "method": "tools/call",
+            "params": {
+                "name": "register_agent_affiliate",
+                "arguments": {
+                    "name": "SecAuditBot",
+                    "contact_email": "ops@secauditbot.example",
+                    "payout_method": "usdc",
+                    "payout_destination": wallet,
+                    "channel": "Automated NIS2 & TLS posture assistant",
+                    "consent_terms": True,
+                },
+            },
+        })
+        self.assertEqual(r_mcp.status_code, 200)
+        res = r_mcp.get_json()["result"]
+        self.assertFalse(res["isError"])
+        sc = res["structuredContent"]
+        self.assertEqual(sc["status"], "ACTIVE")
+        self.assertEqual(sc["terms"]["payout_schedule"], "monthly_manual_by_owner")
+        self.assertEqual(sc["terms"]["monitoring_commission_pct"], 30)
+        self.assertEqual(sc["terms"]["one_time_commission_pct"], 20)
+        self.assertEqual(sc["terms"]["hold_days"], 30)
+        self.assertEqual(sc["terms"]["min_payout_usd"], 50)
+        code = sc["code"]
+        self.assertIn(f"?ref={code}", sc["referral_links"]["home"])
+
+        # 2) Idempotent re-registration returns same code
+        r_http_dup = self.client.post("/api/v1/agent/affiliate/register", json={
+            "name": "SecAuditBot",
+            "contact_email": "ops@secauditbot.example",
+            "payout_method": "usdc",
+            "payout_destination": wallet,
+            "consent_terms": True,
+        })
+        self.assertEqual(r_http_dup.status_code, 200)
+        self.assertTrue(r_http_dup.get_json()["already_registered"])
+        self.assertEqual(r_http_dup.get_json()["code"], code)
+
+        # 3) Missing consent or bad wallet rejected
+        self.assertEqual(
+            self.client.post("/api/v1/agent/affiliate/register", json={
+                "name": "BadBot", "contact_email": "b@example.com", "payout_method": "usdc",
+                "payout_destination": wallet, "consent_terms": False,
+            }).status_code,
+            400,
+        )
+        self.assertEqual(
+            self.client.post("/api/v1/agent/affiliate/register", json={
+                "name": "BadWallet", "contact_email": "w@example.com", "payout_method": "usdc",
+                "payout_destination": "not-an-evm-address", "consent_terms": True,
+            }).status_code,
+            400,
+        )
+
+        # 4) End-to-end referral click -> consent -> purchase attribution -> monthly manual commission
+        html = self.client.get(f"/?ref={code}&lang=en").get_data(as_text=True)
+        self.assertIn(code, html)
+        self.assertEqual(self.client.post("/partners/consent", json={"code": code}).status_code, 200)
+        sid = self.client.post("/api/scan", json={"domain": "example.com"}).get_json()["scan_id"]
+        order = self.client.post("/api/paypal/orders", json={"scan_id": sid, "consent": True}).get_json()["id"]
+        self.client.post(f"/api/paypal/orders/{order}/capture")
+        c = sqlite3.connect(self.db)
+        com = partners.commissions(c)[code]
+        self.assertAlmostEqual(com["pending"], 49 * 0.20, places=2)
+        self.assertEqual(com["due"], 0)
+        c.close()
+
+        # 5) Discovery advertises agent affiliate endpoint & monthly manual payout
+        manifest = self.client.get("/.well-known/agent-service.json").get_json()
+        self.assertTrue(manifest["pricing"]["partner_affiliate"]["enabled"])
+        self.assertEqual(manifest["pricing"]["partner_affiliate"]["payout_schedule"], "monthly_manual_by_owner")
+        self.assertIn("register_agent_affiliate", manifest["mcp"]["tools"])
+
 
 if __name__ == "__main__":
     unittest.main()

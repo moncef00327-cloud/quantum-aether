@@ -5005,7 +5005,7 @@ def _sign_legacy_evidence(claims):
 
 agent_discovery.register(bp, {
     'base': public_base, 'db': db, 'scan': perform_scan, 'summary': scan_summary, 'sample': sample_result,
-    'claim_attempt': _claim_scan_attempt_for_receipt,
+    'claim_attempt': _claim_scan_attempt_for_receipt, 'client_hash': client_hash,
     'crypto_create_order': crypto_create_order, 'crypto_verify': crypto_verify,
     'x402_report': x402_agent_report,
     'data_dir': lambda: current_app.config['DATA_DIR'],
@@ -5021,7 +5021,7 @@ dach_hosting.register(bp, {"base_dir": BASE_DIR, "db": db, "lang": current_lang,
                            "de_pages": DE_PAGES, "de_endpoints": i18n.DE_ENDPOINTS})
 
 import partners  # noqa: E402  Partner (affiliate) programme: /partners, consented ?ref= cookie, attribution (2026-11-21)
-partners.register(bp, {"db": db, "lang": current_lang, "client_hash": client_hash})
+partners.register(bp, {"db": db, "lang": current_lang, "client_hash": client_hash, "base": public_base})
 i18n.DE_ENDPOINTS.add("site.partners_page")
 DE_PAGES.add("site.partners_page")
 i18n.DE_ENDPOINTS.add("site.pq_tls_checker_page")

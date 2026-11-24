@@ -53,6 +53,12 @@ def services_offer(base, domain=None, scan_id=None, price_usd="49", sector_price
             "mcp_tool": "get_sector_snapshot",
             "sectors": sector_snapshot.keys(),
         },
+        "partner_affiliate": {
+            "summary": "30% of monitoring (12 months) + 20% of one-time reports/audits; monthly manual payout by owner (PayPal or USDC, 30-day hold, min $50)",
+            "register_http": f"{base}/api/v1/agent/affiliate/register",
+            "mcp_tool": "register_agent_affiliate",
+            "terms_url": f"{base}/partners?lang=en",
+        },
         "mcp_endpoint": f"{base}/mcp",
         "acp_agents": f"{base}/acp/agents",
         "jwks_url": f"{base}/.well-known/jwks.json",
