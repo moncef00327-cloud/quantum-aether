@@ -4,6 +4,8 @@
 # فتتغير الصورة تلقائياً حين تتغير النتيجة). النص لاتيني فقط: الخط وحده لا يرسم العربية متصلة.
 import hashlib
 import os
+import threading
+import uuid
 
 try:
     from PIL import Image, ImageDraw, ImageFont
@@ -191,7 +193,14 @@ def cached_png(cache_dir, key, build):
     name = hashlib.sha256(key.encode()).hexdigest()[:32] + ".png"
     path = os.path.join(cache_dir, name)
     if not os.path.exists(path):
-        tmp = path + f".{os.getpid()}.tmp"
-        build().save(tmp, "PNG", optimize=True)
-        os.replace(tmp, path)
+        tmp = f"{path}.{os.getpid()}.{threading.get_ident()}.{uuid.uuid4().hex[:8]}.tmp"
+        try:
+            build().save(tmp, "PNG", optimize=True)
+            os.replace(tmp, path)
+        finally:
+            if os.path.exists(tmp):
+                try:
+                    os.unlink(tmp)
+                except OSError:
+                    pass
     return path

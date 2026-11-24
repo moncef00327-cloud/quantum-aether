@@ -216,6 +216,23 @@ class AgentDiscoveryTests(unittest.TestCase):
   self.assertIn('https://ather-quantum.com/mcp',anchors)
   self.assertIn('https://ather-quantum.com/api/v1/agent/affiliate/register',anchors)
 
+  ai_cat=self.client.get('/.well-known/ai-catalog.json')
+  self.assertEqual(ai_cat.status_code,200)
+  self.assertEqual(ai_cat.headers.get('Access-Control-Allow-Origin'),'*')
+
+  glama=self.client.get('/.well-known/glama.json')
+  self.assertEqual(glama.status_code,200)
+  self.assertEqual(glama.headers.get('Access-Control-Allow-Origin'),'*')
+  self.assertIn('moncef00327-cloud',glama.json['maintainers'])
+
+  for method,key in (('resources/list','resources'),('resources/templates/list','resourceTemplates'),('prompts/list','prompts')):
+   r=self.rpc(method)
+   self.assertEqual(r.status_code,200,method)
+   self.assertEqual(r.json['result'],{key:[]})
+  unknown=self.rpc('nonexistent/method')
+  self.assertEqual(unknown.status_code,404)
+  self.assertEqual(unknown.json['error']['code'],-32601)
+
   aj=self.client.get('/.well-known/agents.json')
   self.assertEqual(aj.status_code,200)
   flows={f['id'] for f in aj.json['flows']}
