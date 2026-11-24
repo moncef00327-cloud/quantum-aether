@@ -2966,6 +2966,7 @@ def admin():
                            inbound_mail=inbound_mail.recent(conn),
                            by_source=sales_db.funnel_by_source(conn, (dt.date.today() - dt.timedelta(days=30)).isoformat()),
                            free_alert_counts=dict(conn.execute("SELECT status, COUNT(*) FROM free_alerts GROUP BY status").fetchall()),
+                           agent_calls=agent_audit.summary(conn),
                            audit_orders=audit_checkout.recent(conn), prooflab_stats=prooflab.counts(conn), billing_records=company_billing.recent(conn), audit_msg=request.args.get("audit_msg", "")[:40]))
     # كوكي دائم لسنة: كل زيارات هذا المتصفح لا تُحسب في الإحصاءات.
     response.set_cookie(ADMIN_COOKIE, admin_cookie_value(), max_age=365 * 24 * 3600, httponly=True,
@@ -4846,7 +4847,9 @@ def _security_headers(response):
         response.headers.add('Link', ', '.join([
             f'<{b}/.well-known/agent-service.json>; rel="service-desc"; type="application/json"',
             f'<{b}/.well-known/agent-card.json>; rel="agent-card"; type="application/json"',
+            f'<{b}/acp/agents>; rel="acp-agents"; type="application/json"',
             f'<{b}/.well-known/mcp.json>; rel="mcp-server"; type="application/json"',
+            f'<{b}/.well-known/jwks.json>; rel="jwks"; type="application/json"',
             f'<{b}/llms.txt>; rel="describedby"; type="text/plain"',
             f'<{b}/agents?lang=en>; rel="service-doc"; type="text/html"',
         ]))
@@ -4951,10 +4954,17 @@ def _server_error(_e):
     return _error(500, "server_error")
 
 
+import agent_audit
 import agent_discovery
-agent_discovery.register(bp, {'base': public_base, 'db': db, 'scan': perform_scan, 'summary': scan_summary, 'sample': sample_result,
-                             'crypto_create_order': crypto_create_order, 'crypto_verify': crypto_verify,
-                             'x402_report': x402_agent_report})
+import signed_receipts
+agent_discovery.register(bp, {
+    'base': public_base, 'db': db, 'scan': perform_scan, 'summary': scan_summary, 'sample': sample_result,
+    'crypto_create_order': crypto_create_order, 'crypto_verify': crypto_verify,
+    'x402_report': x402_agent_report,
+    'data_dir': lambda: current_app.config['DATA_DIR'],
+    'sign': lambda claims: signed_receipts.sign_receipt(current_app.config['DATA_DIR'], claims, public_base()),
+    'audit': lambda proto, action, client='', dom='', status='ok': agent_audit.record(db(), proto, action, client, dom, status),
+})
 
 import gravity_web
 gravity_web.register(bp, db)

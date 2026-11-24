@@ -469,6 +469,39 @@ FAQ = {
             ],
         },
     },
+    "securing-mcp-a2a-acp-agents-post-quantum-tls": {
+        "en": {
+            "short": "<p><strong>ACP (IBM BeeAI / merged with Linux Foundation A2A)</strong> handles horizontal agent-to-agent delegation over REST/JSON-RPC, while <strong>MCP</strong> connects each agent vertically to its tools. Securing both layers requires TLS 1.3 with <code>X25519MLKEM768</code>, least-privilege scoped auth, strict schema validation, and verifiable <strong>Ed25519 JWS</strong> receipts (public JWKS at <code>/.well-known/jwks.json</code>).</p>",
+            "faq": [
+                ("What is the difference between IBM ACP / A2A and MCP?",
+                 "<p>MCP connects a single agent vertically to tools, APIs, and resources via JSON-RPC. ACP (merged with A2A under the Linux Foundation) coordinates horizontal delegation and message exchange between independent agents across frameworks.</p>"),
+                ("How do agents verify Quantum Aether TLS scan receipts?",
+                 "<p>Responses from MCP (get_tls_evidence, exposure_window), A2A (/a2a), and ACP (/acp/runs) include a compact RFC 7515 Ed25519 JWS in receipt_jws. Fetch the public OKP JWK from https://ather-quantum.com/.well-known/jwks.json to verify the EdDSA signature offline.</p>"),
+                ("Does Quantum Aether support ACP REST endpoints?",
+                 "<p>Yes. Discover the manifest at GET https://ather-quantum.com/acp/agents and submit synchronous runs to POST https://ather-quantum.com/acp/runs using text/plain or application/json parts.</p>"),
+            ],
+        },
+        "ar": {
+            "short": "<p>يتولى <strong>ACP (من IBM BeeAI والمندمج مع A2A تحت Linux Foundation)</strong> التواصل الأفقي وتفويض المهام بين الوكلاء، بينما يربط <strong>MCP</strong> كل وكيل عمودياً بأدواته. لتأمين الطبقتين يُفرض TLS 1.3 مع <code>X25519MLKEM768</code>، وعزل الصلاحيات، والتحقق الصارم من البنية، وإيصالات <strong>Ed25519 JWS</strong> الموقّعة عبر <code>/.well-known/jwks.json</code>.</p>",
+            "faq": [
+                ("ما الفرق بين بروتوكول ACP / A2A وبروتوكول MCP؟",
+                 "<p>يربط MCP الوكيل الواحد عمودياً بالأدوات والبيانات عبر JSON-RPC، بينما ينسّق ACP (المندمج مع A2A) التعاون الأفقي وتفويض المهام بين وكلاء متعددين عبر أطر عمل مختلفة.</p>"),
+                ("كيف يتحقق الوكيل من إيصالات الفحص الموقّعة في Quantum Aether؟",
+                 "<p>تتضمن ردود MCP وA2A وACP حقل receipt_jws بتوقيع Ed25519 (خوارزمية EdDSA وفق RFC 7515)، ويمكن التحقق منه محلياً باستخدام المفتاح العام المنشور على https://ather-quantum.com/.well-known/jwks.json.</p>"),
+                ("هل يدعم Quantum Aether نقاط نهاية ACP؟",
+                 "<p>نعم، تتوفر قائمة الوكلاء على GET https://ather-quantum.com/acp/agents ونقطة التشغيل المتزامن على POST https://ather-quantum.com/acp/runs بوسائط text/plain وapplication/json.</p>"),
+            ],
+        },
+        "de": {
+            "short": "<p><strong>ACP (IBM BeeAI / mit Linux Foundation A2A zusammengeführt)</strong> steuert horizontale Agent-zu-Agent-Delegation, während <strong>MCP</strong> einen Agenten vertikal mit Werkzeugen verbindet. Beide Ebenen benötigen TLS 1.3 mit <code>X25519MLKEM768</code>, Least-Privilege-Zugriffe, Schema-Validierung und prüfbare <strong>Ed25519-JWS-Belege</strong> über <code>/.well-known/jwks.json</code>.</p>",
+            "faq": [
+                ("Worin unterscheiden sich ACP / A2A und MCP?",
+                 "<p>MCP bindet Werkzeuge und Daten vertikal an einen Agenten an; ACP bzw. A2A koordiniert die horizontale Zusammenarbeit und Aufgabenübergabe zwischen unabhängigen Agenten.</p>"),
+                ("Wie lassen sich signierte TLS-Belege von Quantum Aether prüfen?",
+                 "<p>Antworten über MCP, A2A und ACP enthalten receipt_jws (EdDSA / Ed25519 nach RFC 7515). Der öffentliche OKP-Schlüssel steht unter https://ather-quantum.com/.well-known/jwks.json bereit.</p>"),
+            ],
+        },
+    },
 }
 
 LABELS = {"en": ("Short answer", "Frequently asked questions"),

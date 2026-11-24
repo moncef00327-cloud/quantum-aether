@@ -1604,6 +1604,93 @@ curl -s "https://ather-quantum.com/api/v1/scan?domain=example.com&amp;format=tex
 """,
         },
     },
+    "securing-mcp-a2a-acp-agents-post-quantum-tls": {
+        "updated": "2026-11-24",
+        "en": {
+            "title": "Securing Multi-Agent Systems (MCP, A2A & IBM ACP) with Post-Quantum TLS & Signed Receipts",
+            "description": "How IBM ACP / Linux Foundation A2A (agent-to-agent) and MCP (agent-to-tool) fit together, why remote endpoints need TLS 1.3 + X25519MLKEM768, and how to verify Ed25519 JWS receipts.",
+            "body": """
+<p>Modern multi-agent architectures separate communication into two complementary planes: <strong>horizontal agent-to-agent orchestration</strong> via <strong>ACP</strong> (IBM BeeAI Agent Communication Protocol, merged with <strong>A2A</strong> under the Linux Foundation) and <strong>vertical agent-to-tool integration</strong> via <strong>MCP</strong> (Model Context Protocol over JSON-RPC / Streamable HTTP).</p>
+
+<h2>1. Why Post-Quantum TLS Matters for Remote MCP, A2A, and ACP Endpoints</h2>
+<p>Every remote MCP server, A2A JSON-RPC endpoint, and ACP REST runner exchanges structured prompts, tool arguments, customer metadata, and delegation state over HTTPS. Under a <a href="/guides/harvest-now-decrypt-later?lang=en">harvest-now, decrypt-later</a> threat model, classical TLS 1.3 (X25519 alone) leaves captured multi-agent traffic exposed to future decryption. Enforcing <strong>TLS 1.3 with hybrid <code>X25519MLKEM768</code> (ML-KEM, FIPS 203)</strong> protects the transport layer without breaking existing HTTP/2, REST, or JSON-RPC clients.</p>
+
+<h2>2. Four Practical Security Layers Across ACP/A2A + MCP</h2>
+<ul>
+<li><strong>Transport &amp; mutual authentication:</strong> Enforce TLS 1.3 with <code>X25519MLKEM768</code> and strict certificate validation on all remote MCP, A2A, and ACP endpoints; pair with mTLS or short-lived OAuth 2.0 / JWT credentials for privileged peers.</li>
+<li><strong>Least privilege &amp; scoped credentials:</strong> Never forward broad admin tokens across ACP into an MCP tool server. Separate authentication (who the agent is) from authorization (which tool and scope it may invoke).</li>
+<li><strong>Schema validation &amp; guardrails:</strong> Validate MIME-typed ACP parts, A2A data payloads, and MCP JSON-Schema tool arguments strictly before execution, especially around human-in-the-loop resume payloads.</li>
+<li><strong>Message integrity &amp; auditability:</strong> Attach cryptographic signatures (RFC 7515 <strong>JWS</strong>) to evidence payloads and log a privacy-safe call chain (protocol, tool/skill, client identifier, target, and status) without storing secrets.</li>
+</ul>
+
+<h2>3. Automated Compliance &amp; Vendor Verification with Ed25519 JWS Receipts</h2>
+<p>In production multi-agent systems, calling an external TLS scanner on every real-time request adds unnecessary latency. Instead, security teams verify remote endpoints during <strong>vendor onboarding, CI/CD changes, and scheduled compliance audits</strong>, then store a cryptographically verifiable receipt. Orchestrators can query Quantum Aether over all three protocols:</p>
+<ul>
+<li><strong>MCP (Streamable HTTP):</strong> <code>POST https://ather-quantum.com/mcp</code> (tools <code>get_tls_evidence</code>, <code>scan_tls</code>, <code>exposure_window</code>).</li>
+<li><strong>A2A (Agent2Agent 0.3 JSON-RPC):</strong> Agent Card at <code>/.well-known/agent-card.json</code>, endpoint <code>POST /a2a</code>.</li>
+<li><strong>ACP (IBM BeeAI / Linux Foundation REST):</strong> Offline-discoverable Agent Manifest at <code>GET /acp/agents</code>, synchronous runs at <code>POST /acp/runs</code>.</li>
+</ul>
+<p>Evidence responses include a compact <strong>Ed25519 JWS</strong> receipt (<code>receipt_jws</code>, <code>alg: EdDSA</code>) verifiable offline against the public OKP JWK set at <code>GET https://ather-quantum.com/.well-known/jwks.json</code>.</p>
+
+<h2>4. Verify &amp; Monitor Your Agent Endpoints Continuously</h2>
+<p>Test your MCP, A2A, or ACP public hostname right now with our <a href="/?lang=en">free post-quantum TLS scanner</a>, or automate daily regression and certificate monitoring across up to 10 endpoints with a <a href="/monitoring?lang=en#trial-form">14-day free trial</a> (Starter 29 €/month, Business 99 €/month; no card required). For organization-wide subdomain inventories and compliance reports, see our <a href="/audit?lang=en">490 € TLS audit</a>.</p>
+""",
+        },
+        "ar": {
+            "title": "تأمين أنظمة الوكلاء المتعددين (MCP وA2A وIBM ACP) ببروتوكول TLS المقاوم للكم وإيصالات JWS الموقّعة",
+            "description": "كيف يتكامل بروتوكول IBM ACP المندمج مع A2A (وكيل إلى وكيل) مع MCP (وكيل إلى أداة)، ولماذا تحتاج نقاط النهاية إلى TLS 1.3 + X25519MLKEM768 وإيصالات Ed25519 JWS.",
+            "body": """
+<p>تفصل الأنظمة الحديثة متعددة الوكلاء (Multi-Agent Systems) الاتصال إلى طبقتين متكاملتين: <strong>التواصل الأفقي بين الوكلاء</strong> عبر <strong>ACP</strong> (بروتوكول تواصل الوكلاء من أبحاث IBM ضمن BeeAI والذي اندمج مع معيار <strong>A2A</strong> تحت مظلة Linux Foundation)، و<strong>الاتصال العمودي بالأدوات والبيانات</strong> عبر <strong>MCP</strong> (بروتوكول سياق النموذج عبر JSON-RPC / Streamable HTTP).</p>
+
+<h2>1. لماذا يُعد TLS 1.3 المقاوم للكم أساسياً لخوادم MCP وA2A وACP؟</h2>
+<p>تتبادل نقاط نهاية MCP البعيدة ونقاط A2A وACP حمولات حساسة: تفويضات المهام، معطيات الأدوات، ومخرجات التحليل. تحت تهديد <a href="/guides/harvest-now-decrypt-later?lang=ar">التقاط الآن وفك التشفير لاحقاً</a>، يترك TLS 1.3 التقليدي حركة الوكلاء المسجّلة عرضة لفك التشفير مستقبلاً. فرض <strong>TLS 1.3 مع التبادل الهجين <code>X25519MLKEM768</code> (معيار FIPS 203)</strong> يؤمّن طبقة النقل فوراً دون كسر عملاء REST أو JSON-RPC.</p>
+
+<h2>2. أربع طبقات عملية لتأمين الاتصال المزدوج (ACP/A2A + MCP)</h2>
+<ul>
+<li><strong>تشفير النقل والمصادقة المتبادلة:</strong> فرض TLS 1.3 مع <code>X25519MLKEM768</code> والتحقق الصارم من الشهادات، مع mTLS أو رموز وصول قصيرة العمر (JWT / OAuth 2.0) للهويات المميزة.</li>
+<li><strong>عزل الصلاحيات وحصر النطاق:</strong> عدم تمرير مفاتيح إدارية واسعة عبر ACP إلى خوادم MCP؛ وفصل إثبات الهوية (Authentication) عن التفويض الدقيق (Authorization).</li>
+<li><strong>التحقق من المدخلات وضوابط التنفيذ:</strong> فحص بنية ونوع محتوى رسائل MIME ووسائط JSON-Schema قبل تنفيذ أي أداة، خصوصاً عند استئناف المهام بعد التدخل البشري.</li>
+<li><strong>سلامة الرسائل وسجل التدقيق:</strong> إرفاق توقيع رقمي <strong>JWS (RFC 7515)</strong> بمخرجات الأدلة، وتسجيل سلسلة الاستدعاءات (البروتوكول، الأداة، هوية العميل، النطاق، والحالة) بخصوصية تامة دون تخزين أسرار.</li>
+</ul>
+
+<h2>3. التحقق الآلي من الامتثال واعتماد المزودين مع إيصالات Ed25519 JWS</h2>
+<p>في بيئات الإنتاج لا يُنصح باستدعاء فاحص خارجي مع كل طلب لحظي بسبب زمن الاستجابة؛ بل يُستخدم الفحص عند <strong>ربط مزود أو خادم MCP/A2A جديد (Onboarding)، وعند تحديث إعدادات TLS، وفي التدقيق الدوري للامتثال</strong> مع الاحتفاظ بإيصال موقّع يمكن لأي مدقق التحقق منه لاحقاً. يدعم Quantum Aether البروتوكولات الثلاثة:</p>
+<ul>
+<li><strong>MCP (Streamable HTTP):</strong> عبر <code>POST https://ather-quantum.com/mcp</code> (أدوات <code>get_tls_evidence</code> و<code>scan_tls</code> و<code>exposure_window</code>).</li>
+<li><strong>A2A (Agent2Agent 0.3):</strong> بطاقة الوكيل في <code>/.well-known/agent-card.json</code> ونقطة JSON-RPC في <code>POST /a2a</code>.</li>
+<li><strong>ACP (متوافق مع IBM BeeAI / Linux Foundation):</strong> قائمة الوكلاء القابلة للاكتشاف دون اتصال في <code>GET /acp/agents</code> وتشغيل المهام المتزامن في <code>POST /acp/runs</code>.</li>
+</ul>
+<p>تتضمن ردود الأدلة إيصال <strong>Ed25519 JWS</strong> موقّعاً (<code>receipt_jws</code> بخوارزمية <code>EdDSA</code>) يمكن التحقق منه محلياً عبر المفتاح العام في <code>GET https://ather-quantum.com/.well-known/jwks.json</code>.</p>
+
+<h2>4. افحص وراقب نقاط نهاية وكلائك باستمرار</h2>
+<p>اختبر نطاق خادم MCP أو A2A أو ACP الآن عبر <a href="/?lang=ar">الفحص المجاني</a>، أو فعّل المراقبة اليومية التلقائية للتراجعات والشهادات حتى 10 نطاقات مع <a href="/monitoring?lang=ar#trial-form">تجربة مجانية لمدة 14 يوماً</a> بلا بطاقة (الخطط تبدأ من 29 € شهرياً لـ Starter و99 € لـ Business). وللتدقيق المؤسسي الشامل راجع <a href="/audit?lang=ar">خدمة التدقيق (490 €)</a>.</p>
+""",
+        },
+        "de": {
+            "title": "Multi-Agenten-Systeme (MCP, A2A & IBM ACP) mit Post-Quanten-TLS & signierten JWS-Belegen absichern",
+            "description": "Wie IBM ACP / Linux Foundation A2A (Agent-zu-Agent) und MCP (Agent-zu-Tool) zusammenspielen, warum TLS 1.3 + X25519MLKEM768 zählt und wie Ed25519-JWS-Belege geprüft werden.",
+            "body": """
+<p>Moderne Multi-Agenten-Architekturen trennen die Kommunikation in zwei komplementäre Ebenen: <strong>horizontale Agent-zu-Agent-Orchestrierung</strong> über <strong>ACP</strong> (IBM BeeAI Agent Communication Protocol, mit <strong>A2A</strong> unter der Linux Foundation zusammengeführt) und <strong>vertikale Tool-Anbindung</strong> über <strong>MCP</strong> (Model Context Protocol via JSON-RPC / Streamable HTTP).</p>
+
+<h2>1. Warum Post-Quanten-TLS für Remote-MCP, A2A und ACP entscheidend ist</h2>
+<p>Remote-Endpunkte für MCP, A2A und ACP übertragen strukturierte Aufgaben, Tool-Parameter und Metadaten über HTTPS. Gegen <a href="/guides/harvest-now-decrypt-later?lang=de">Harvest-Now-Decrypt-Later</a> reicht klassisches TLS 1.3 allein langfristig nicht aus. <strong>TLS 1.3 mit hybridem <code>X25519MLKEM768</code> (ML-KEM, FIPS 203)</strong> härtet die Transportschicht ohne Bruch bestehender REST- oder JSON-RPC-Clients.</p>
+
+<h2>2. Vier Sicherheitsbausteine für ACP/A2A + MCP</h2>
+<ul>
+<li><strong>Transport &amp; gegenseitige Authentifizierung:</strong> TLS 1.3 mit <code>X25519MLKEM768</code> und strikter Zertifikatsprüfung auf allen Remote-Endpunkten, kombiniert mit mTLS oder kurzlebigen OAuth-2.0-/JWT-Tokens.</li>
+<li><strong>Least Privilege:</strong> Keine breiten Admin-Schlüssel über ACP an MCP-Tool-Server durchreichen; Authentifizierung und feingranulare Autorisierung trennen.</li>
+<li><strong>Schema-Validierung:</strong> Strikte Prüfung von MIME-Parts, A2A-Datenobjekten und MCP-JSON-Schemas vor jeder Ausführung.</li>
+<li><strong>Nachrichtenintegrität &amp; Audit-Trail:</strong> Kryptografisch signierte Belege per <strong>JWS (RFC 7515)</strong> sowie ein datensparsamer Protokoll-Audit-Trail ohne Speicherung von Geheimnissen.</li>
+</ul>
+
+<h2>3. Automatisierte Compliance- &amp; Anbieterprüfung mit Ed25519-JWS-Belegen</h2>
+<p>In produktiven Systemen prüft man externe Endpunkte wegen der Latenz nicht bei jedem Einzelaufruf, sondern beim <strong>Onboarding neuer MCP-/A2A-Anbieter, nach Konfigurationsänderungen und in periodischen Compliance-Audits</strong>. Quantum Aether unterstützt alle drei Protokolle: <strong>MCP</strong> (<code>/mcp</code>), <strong>A2A</strong> (<code>/.well-known/agent-card.json</code> &amp; <code>/a2a</code>) und <strong>ACP</strong> (<code>GET /acp/agents</code> &amp; <code>POST /acp/runs</code>). Evidenz-Antworten enthalten einen signierten <strong>Ed25519-JWS-Beleg</strong> (<code>receipt_jws</code>), verifizierbar über <code>GET /.well-known/jwks.json</code>.</p>
+
+<h2>4. Agenten-Endpunkte jetzt testen &amp; dauerhaft überwachen</h2>
+<p>Prüfen Sie Ihren Endpunkt direkt im <a href="/?lang=de">kostenlosen Post-Quanten-TLS-Check</a> oder starten Sie die <a href="/monitoring?lang=de#trial-form">14-tägige kostenlose Überwachung</a> für bis zu 10 Domains (Starter 29 €/Monat, Business 99 €/Monat, ohne Kreditkarte).</p>
+""",
+        },
+    },
 }
 
 import guide_pages_seo_gap

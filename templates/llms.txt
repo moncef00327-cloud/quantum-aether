@@ -58,13 +58,15 @@ This file is a discovery index, not a certification. For a current result, use t
 - Agent guide: {{ base }}/agents?lang=en{{ ua }} — implemented capabilities, examples, limitations and current payment status.
 - Service discovery JSON: {{ base }}/.well-known/agent-service.json — custom service metadata with real endpoints and configured limits; not an A2A Agent Card.
 - A2A Agent Card (Agent2Agent protocol 0.3): {{ base }}/.well-known/agent-card.json — JSON-RPC `message/send` at {{ base }}/a2a. Send a hostname as text ("Is example.com post-quantum ready?", "scan example.com") or data ({"skill":"tls-scan","domain":"example.com"}). Free evidence and rate-limited scans; paid data via x402.
+- ACP (Agent Communication Protocol, IBM BeeAI / Linux Foundation): {{ base }}/acp/agents (offline-discoverable Agent Manifest) and synchronous REST runs at `POST {{ base }}/acp/runs` (`agent_name: "quantum-aether"`, MIME parts `text/plain` or `application/json`).
 - Remote MCP: {{ base }}/mcp — stateless Streamable HTTP with JSON responses; initialize, tools/list and tools/call. Tools: scan_tls, get_tls_evidence, exposure_window, get_methodology, get_example_result, get_service_info.
 - ChatGPT / ChatGPT for Sales / OpenAI Codex / Claude / Cursor: connect custom MCP connector to `{{ base }}/mcp` (Streamable HTTP, Authentication: None). Discovery metadata: `{{ base }}/.well-known/mcp.json` and `{{ base }}/.well-known/ai-plugin.json`.
 - Microsoft Copilot Studio: add {{ base }}/mcp as a Model Context Protocol tool with authentication None. Microsoft Security Copilot: custom plugin manifest at {{ base }}/security-copilot.yaml (read and scan tools only).
 - get_tls_evidence is read-only. scan_tls starts a public HTTPS probe, consumes the existing scan quota, and stores a publicly accessible result. Never treat noindex as confidentiality.
 - Machine-readable methodology: {{ base }}/api/v1/agent/methodology
 - Archived example: {{ base }}/api/v1/agent/example — explicitly is_example:true and is_live:false; not a fresh observation.
-- Agents can pay for full reports with x402 v2 exact USDC on Base at `POST {{ base }}/api/v1/agent/report/{scan_id}`. The server verifies and settles via PayAI before releasing the report. Direct-transfer checkout supports USDT Polygon and USDC on Arbitrum or Base. Signed scan receipts are not implemented.
+- Agents can pay for full reports with x402 v2 exact USDC on Base at `POST {{ base }}/api/v1/agent/report/{scan_id}`. The server verifies and settles via PayAI before releasing the report. Direct-transfer checkout supports USDT Polygon and USDC on Arbitrum or Base.
+- Signed scan receipts (RFC 7515 Ed25519 JWS, `alg: EdDSA`): attached as `receipt_jws` on MCP evidence (`get_tls_evidence`, `exposure_window`), A2A (`/a2a`), and ACP (`/acp/runs`) responses. Public OKP JWK set: `GET {{ base }}/.well-known/jwks.json`.
 - Weekly sector snapshots (read-only, x402 $0.50 USDC on Base per call): `GET {{ base }}/api/v1/agent/sector/{sector}` or the remote MCP tool `get_sector_snapshot`. Every domain of one watch list (banks, government, cyber agencies, telecom, insurers ...) with grade, group and post-quantum status. Without payment it returns the x402 challenge and never charges.
 - Source: https://github.com/moncef00327-cloud/quantum-aether
 

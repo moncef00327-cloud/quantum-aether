@@ -30,7 +30,8 @@ class AgentDiscoveryTests(unittest.TestCase):
    self.assertEqual(m['endpoints']['scan']['method'],'POST')
    self.assertEqual(m['mcp']['url'],'https://ather-quantum.com/mcp')
    self.assertFalse(m['pricing']['x402']['enabled']);self.assertEqual(m['pricing']['x402']['status'],'disabled_missing_receiver')
-   self.assertIn('get_full_report',m['mcp']['tools']);self.assertFalse(m['pricing']['signed_receipts']['enabled'])
+   self.assertIn('get_full_report',m['mcp']['tools']);self.assertTrue(m['pricing']['signed_receipts']['enabled'])
+   self.assertEqual(m['pricing']['signed_receipts']['jwks_uri'],'https://ather-quantum.com/.well-known/jwks.json')
    self.assertEqual(m['limits']['scan_attempts_per_client_per_hour'],3)
    self.assertEqual(m['limits']['global_scan_attempts_per_hour'],10)
    if path.startswith('/.well-known/'):

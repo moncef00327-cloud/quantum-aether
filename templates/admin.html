@@ -40,6 +40,11 @@
   <div class="admin-table-scroll"><table class="data"><tr><th>Source</th><th>Scans</th><th>Sales</th></tr>
     {% for row in by_source %}<tr><td>{{ row.source }}</td><td>{{ row.scans }}</td><td>{{ row.sales }}</td></tr>{% else %}<tr><td colspan="3">No real scans yet.</td></tr>{% endfor %}
   </table></div>
+  <h3>Agent protocol audit trail (MCP / A2A / ACP, last {{ agent_calls.days }} days)</h3>
+  <p class="muted small">Real tool/skill calls: <strong>{{ agent_calls.total }}</strong>{% for proto, cnt in agent_calls.by_protocol.items() %} · {{ proto|upper }}: {{ cnt }}{% endfor %} · MCP <code>initialize</code> handshakes (separate from tool calls): <strong>{{ agent_calls.init_total }}</strong> (privacy-safe: no IPs or secrets stored).</p>
+  {% if agent_calls.rows %}<div class="admin-table-scroll"><table class="data"><tr><th>Protocol</th><th>Action</th><th>Client (<code>clientInfo.name</code> / UA)</th><th>Status</th><th>Calls</th><th>Last (UTC)</th></tr>
+    {% for r in agent_calls.rows %}<tr><td><code>{{ r.protocol }}</code></td><td><code>{{ r.action }}</code></td><td dir="ltr">{{ r.client_name }}</td><td><code>{{ r.status }}</code></td><td>{{ r.n }}</td><td>{{ r.last_ts }}</td></tr>{% endfor %}
+  </table></div>{% endif %}
   <h3>ProofLab waitlist</h3>
   <p>Real signups: <strong>{{ prooflab_stats.total }}</strong>{% for k, v in prooflab_stats.by_stack.items() %} · {{ k }}: {{ v }}{% endfor %} · page views (14 days): {{ events.prooflab_view }} · signups tracked (14 days): {{ events.prooflab_submit }} · test rows: {{ prooflab_stats.tests }}</p>
   {% if prooflab_stats.recent %}<div class="admin-table-scroll"><table class="data"><tr><th>email</th><th>company</th><th>stack</th><th>lang</th><th>at (UTC)</th></tr>

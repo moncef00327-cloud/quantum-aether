@@ -13,9 +13,11 @@ import uuid
 from flask import current_app, jsonify, request
 from werkzeug.exceptions import HTTPException
 
+import agent_audit
 import badge_evidence
 import quantum_vuln_scanner
 import sector_snapshot
+import signed_receipts
 
 PROTOCOL = "0.3.0"
 HOST_RE = re.compile(r"(?<![@\w.-])((?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63})(?![\w-])", re.I)
@@ -51,6 +53,8 @@ def services_offer(base, domain=None, scan_id=None, price_usd="49", sector_price
             "sectors": sector_snapshot.keys(),
         },
         "mcp_endpoint": f"{base}/mcp",
+        "acp_agents": f"{base}/acp/agents",
+        "jwks_url": f"{base}/.well-known/jwks.json",
         "llms_txt": f"{base}/llms.txt",
         "terms": f"{base}/agb?lang=en",
     }
@@ -61,16 +65,19 @@ def card(base, version):
         "protocolVersion": PROTOCOL,
         "name": "Quantum Aether",
         "description": ("Post-quantum TLS evidence for any public website: does it negotiate hybrid post-quantum key "
-                        "exchange (X25519MLKEM768)? Free stored evidence and free rate-limited scans; daily monitoring "
+                        "exchange (X25519MLKEM768)? Free stored evidence and free rate-limited scans with Ed25519 JWS "
+                        "signed receipts (/.well-known/jwks.json); daily monitoring "
                         "(14-day free trial, 29 EUR/mo Starter, 99 EUR/mo Business), organization compliance audits "
                         "(490 EUR), and paid full reports / weekly sector snapshots via x402 (USDC on Base). "
-                        "External observations, not compliance certifications. Also available as an MCP server at " + base + "/mcp."),
+                        "External observations, not compliance certifications. Also available via MCP (" + base + "/mcp) and ACP (" + base + "/acp/agents)."),
         "url": base + "/a2a",
         "preferredTransport": "JSONRPC",
         "version": version,
         "provider": {"organization": "Quantum Aether", "url": base},
         "documentationUrl": base + "/agents?lang=en",
         "iconUrl": base + "/static/favicon.svg",
+        "jwksUri": base + "/.well-known/jwks.json",
+        "acpAgentsUrl": base + "/acp/agents",
         "capabilities": {"streaming": False, "pushNotifications": False, "stateTransitionHistory": False},
         "defaultInputModes": ["text/plain", "application/json"],
         "defaultOutputModes": ["application/json", "text/plain"],
@@ -177,15 +184,28 @@ def register(bp, services, version):
         b = base()
         price_usd = str(current_app.config["PRICE"])
         sector_price_usd = str(current_app.config.get("X402_SECTOR_PRICE") or "0.50")
+        def _audit(action, dom="", status="ok"):
+            fn = services.get("audit")
+            if fn:
+                fn("a2a", action, agent_audit.client_label(request.headers), dom or "", status)
+
+        def _attach_receipt(payload, kind):
+            sign = services.get("sign")
+            if sign:
+                payload["receipt_jws"] = sign(signed_receipts.build_evidence_claims(payload, kind=kind))
+                payload["jwks_url"] = b + "/.well-known/jwks.json"
+
         if skill == "paid-data":
             offer = services_offer(b, domain=domain, price_usd=price_usd, sector_price_usd=sector_price_usd)
             data = dict(offer, mcp=b + "/mcp")
+            _audit("paid-data", domain or "", "ok")
             return jsonify(jsonrpc="2.0", id=rid, result=_message(
                 "Paid data is bought per call with x402 (USDC on Base) over HTTP or MCP (unpaid calls return the price "
                 "challenge and never charge). Also available: 14-day free daily monitoring trial (Starter 29 EUR/mo, "
                 f"Business 99 EUR/mo at {offer['monitoring']['trial_url']}) and organization compliance audit (490 EUR at "
                 f"{offer['organization_audit']['url']}).", data, ctx))
         if not domain:
+            _audit(skill, "", "missing_domain")
             return jsonify(jsonrpc="2.0", id=rid, result=_message(
                 "Send a public hostname, e.g. 'Is example.com post-quantum ready?' or {\"skill\":\"tls-scan\",\"domain\":\"example.com\"}.",
                 {"skills": ["tls-evidence", "tls-scan", "paid-data"],
@@ -196,14 +216,17 @@ def register(bp, services, version):
                 scan_id, raw = services["scan"](domain, "a2a")
                 offer = services_offer(b, domain=domain, scan_id=scan_id, price_usd=price_usd, sector_price_usd=sector_price_usd)
                 data = dict(services["summary"](scan_id, raw), services=offer)
+                _attach_receipt(data, "tls-scan")
                 pq = data.get("post_quantum_key_exchange")
                 text = (f"{domain}: grade {data.get('grade')}, key exchange {data.get('key_exchange_group') or 'unknown'}"
                         f"{' (post-quantum)' if pq else ''}. Full report via x402: use scan_id {scan_id}. "
                         f"Daily monitoring (14-day free trial, from 29 EUR/mo): {offer['monitoring']['trial_url']}")
+                _audit("tls-scan", domain, "ok")
             else:
                 offer = services_offer(b, domain=domain, price_usd=price_usd, sector_price_usd=sector_price_usd)
                 data = dict(badge_evidence.for_domain(services["db"](), domain),
                             verification_url=b + "/verify/" + domain, services=offer)
+                _attach_receipt(data, "tls-evidence")
                 if data.get("state") == "not_scanned":
                     text = f"No stored evidence for {domain} yet (not proof of anything). Ask to 'scan {domain}' for a measurement."
                 else:
@@ -212,12 +235,16 @@ def register(bp, services, version):
                     text = (f"{domain}: {obs} (group {data.get('group') or 'unknown'}, grade {data.get('grade')}), "
                             f"checked {data.get('checked_at')}, evidence {data.get('state')}. Ask to 'scan' for a fresh measurement. "
                             f"Daily monitoring (14-day free trial): {offer['monitoring']['trial_url']}")
+                _audit("tls-evidence", domain, "ok")
         except quantum_vuln_scanner.ScanError as exc:
+            _audit(skill, domain, f"error:{exc.code}")
             return jsonify(jsonrpc="2.0", id=rid, result=_message(f"Could not measure {domain}: {exc}",
                                                                    {"error": exc.code}, ctx))
         except HTTPException as exc:
             if exc.code == 429:
                 stored = dict(badge_evidence.for_domain(services["db"](), domain), verification_url=b + "/verify/" + domain)
+                _attach_receipt(stored, "tls-evidence")
+                _audit(skill, domain, "rate_limited")
                 return jsonify(jsonrpc="2.0", id=rid, result=_message(
                     "Scan rate limit reached; returning the latest stored evidence instead (no new probe was made).",
                     {"error": "rate_limited", "retry_after_seconds": 3600, "stored_evidence": stored}, ctx))
