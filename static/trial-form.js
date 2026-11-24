@@ -375,4 +375,41 @@
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initMultiScanNudge);
   else initMultiScanNudge();
+  // Inline trial forms (pricing/monitoring/business) render the email field with no cursor in it, so a first
+  // click can land on the button while the field is still empty (8 such empty submits in two days, none retried).
+  // On a real pointer device, drop the cursor into the required email field once it scrolls fully into view, so
+  // typing starts right away. Skipped on touch (never force the mobile keyboard open), when the visitor is already
+  // typing somewhere, when the field is prefilled, and when the page opened straight to a form (#hash handles that).
+  function initTrialEmailAutofocus() {
+    if (location.hash) return;
+    if (!("IntersectionObserver" in window)) return;
+    var finePointer = false;
+    try { finePointer = window.matchMedia("(pointer:fine)").matches && !window.matchMedia("(hover:none)").matches; } catch (e) {}
+    if (!finePointer) return;  // desktop/mouse only: do not pop the mobile keyboard or scroll the page
+    var fields = [];
+    document.querySelectorAll('form[action*="/monitoring/trial"] input[name="email"]').forEach(function (el) {
+      if (el.type !== "hidden" && !el.value) fields.push(el);
+    });
+    if (!fields.length) return;
+    var done = false;
+    function busy() {
+      var a = document.activeElement;
+      return !!(a && a !== document.body && a !== document.documentElement && a.tagName !== "A");
+    }
+    var io = new IntersectionObserver(function (entries) {
+      if (done) { io.disconnect(); return; }
+      entries.forEach(function (entry) {
+        if (done) return;
+        var el = entry.target;
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.9 && !el.value && !busy()) {
+          done = true;
+          try { el.focus({ preventScroll: true }); } catch (x) { el.focus(); }
+          io.disconnect();
+        }
+      });
+    }, { threshold: [0.9] });
+    fields.forEach(function (el) { io.observe(el); });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initTrialEmailAutofocus);
+  else initTrialEmailAutofocus();
 })();
