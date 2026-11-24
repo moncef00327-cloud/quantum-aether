@@ -86,6 +86,25 @@ class MarketingDeskTests(unittest.TestCase):
         self.assertNotIn("bank5.example.sa", brief)
         self.assertTrue(brief.rstrip().endswith("Quantum Aether Team"))
 
+    def test_consecutive_days_never_repeat_radar_badges_or_leads(self):
+        day1 = marketing_desk.run(data_dir=self.tmp.name, refresh_news=False, send_email=False,
+                                  today=marketing_desk.dt.date(2026, 11, 23))
+        day2 = marketing_desk.run(data_dir=self.tmp.name, refresh_news=False, send_email=False,
+                                  today=marketing_desk.dt.date(2026, 11, 24))
+        # Day 1 showed the radar link; Day 2 must NOT repeat it
+        self.assertEqual(day1["radar_count"], 1)
+        self.assertEqual(day2["radar_count"], 0)
+        self.assertNotIn("https://github.com/org/repo/issues/1", day2["brief"])
+        # Day 1 showed bank6 regression; Day 2 must NOT repeat it
+        self.assertIn("bank6.example.sa", day1["brief"])
+        self.assertNotIn("هبط من `A` إلى `C`", day2["brief"])
+        # History file persisted cleanly
+        hist = json.loads((Path(self.tmp.name) / "marketing_briefs" / "history.json").read_text(encoding="utf-8"))
+        self.assertIn("https://github.com/org/repo/issues/1", hist["radar_urls"])
+        self.assertTrue(hist["shoutout_domains"])
+        # Day 2 social drafts rotate spotlight/date and are not identical to Day 1
+        self.assertNotEqual(day1["brief"], day2["brief"])
+
 
     def test_mail_from_uses_team_display_name_and_keeps_address(self):
         self.assertEqual(

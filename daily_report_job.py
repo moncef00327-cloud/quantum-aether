@@ -33,9 +33,9 @@ def prospects_today(c, day):
     except Exception:
         return []
     contacted = set()
-    for tbl in ("contacted_orgs", "outreach_sent"):
+    for tbl in ("contacted_orgs", "outreach_sent", "outreach_suppress", "adoption_optout"):
         try:
-            contacted |= {r[0].lower() for r in c.execute(f"SELECT domain FROM {tbl}") if r[0]}
+            contacted |= {r[0].lower().removeprefix("www.") for r in c.execute(f"SELECT domain FROM {tbl}") if r[0]}
         except Exception:
             pass
 
@@ -163,7 +163,26 @@ def build(c, day):
         bar = "█" * (round(30 * p / peak) if p else 0)
         L.append(f"    {d}  {p:>4} | {s:>3}  {bar}")
     L.append("")
-    L.append("— تذكير: راجع alerts@ather-quantum.com لردود/ارتدادات حملات البريد.")
+    # 7) نشاط المراسلات والوارد والإيصالات الموقّعة أمس
+    try:
+        sent_y = one(c, "SELECT COUNT(*) FROM outreach_sent WHERE substr(sent_at,1,10)=?", (y,))
+        bounced_y = one(c, "SELECT COUNT(*) FROM outreach_sent WHERE substr(sent_at,1,10)=? AND last_event='bounced'", (y,))
+    except Exception:
+        sent_y = bounced_y = 0
+    try:
+        inbound_rows = c.execute("SELECT subject FROM inbound_mail WHERE substr(received_at,1,10)=? ORDER BY received_at DESC LIMIT 5", (y,)).fetchall()
+    except Exception:
+        inbound_rows = []
+    try:
+        rcpt_y = one(c, "SELECT COUNT(*) FROM receipts WHERE date(iat,'unixepoch')=?", (y,))
+    except Exception:
+        rcpt_y = 0
+    L += ["• المراسلات والإيصالات الموقّعة أمس:",
+          f"    رسائل outreach مرسلة: {sent_y} (ارتداد: {bounced_y})  |  إيصالات موقّعة v1: {rcpt_y}  |  ردود واردة: {len(inbound_rows)}"]
+    for ir in inbound_rows:
+        L.append(f"    ↩ {(ir['subject'] or '(بدون عنوان)')[:90]}")
+    L.append("")
+    L.append("— تذكير: راجع الردود الواردة على reply@mail.ather-quantum.com أو في /admin.")
     return "\n".join(L)
 
 
