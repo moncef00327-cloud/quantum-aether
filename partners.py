@@ -3,11 +3,12 @@
 Terms (owner decision): 30% of monitoring payments for 12 months from the customer's start, 20% of one-time reports,
 packs and audits; paid monthly (PayPal or USDC) after a 30-day refund period; minimum payout USD 50.
 
-Attribution: a partner link ?ref=CODE shows a consent bar ONLY to that visitor. If the visitor agrees, a first-party
-cookie qa_ref=CODE is set for 60 days (ePrivacy/§ 165 TKG 2021: not strictly necessary, so consent first). Without
-consent nothing is stored except an anonymous click counter per code and day. Conversions created while the cookie is
-present (report order, pack, audit, monitoring trial/subscription) are recorded in `referrals` by the DB helpers via
-attribute(). Last partner link the visitor consented to wins. Self-referrals and test orders earn nothing.
+Attribution: a partner link ?ref=CODE automatically sets a first-party cookie qa_ref=CODE for 60 days on the first
+click (owner decision 2026-11-25; no consent bar) and increments an anonymous per-code daily click counter. The
+/partners/consent endpoint is kept for backward compatibility but is no longer required to set the cookie. Conversions
+created while the cookie is present (report order, pack, audit, monitoring trial/subscription) are recorded in
+`referrals` by the DB helpers via attribute(). Last partner link the visitor arrived through wins. Self-referrals and
+test orders earn nothing.
 """
 import datetime as dt
 import re
