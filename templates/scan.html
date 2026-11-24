@@ -118,6 +118,28 @@
     <tr><th>{{ t.findings_count }}</th><td>{{ r.findings | length }}</td></tr>
   </table>
 </section>
+{% if signed_receipt %}
+{% set rcpt = signed_receipt.receipt %}{% set pv = rcpt.policy_verdict %}
+<section class="card" id="signed-receipt">
+  <h2>{{ 'إيصال فحص موقّع (Ed25519 JWS · v1)' if lang == 'ar' else ('Signierter Prüfbeleg (Ed25519 JWS · v1)' if lang == 'de' else 'Signed TLS Receipt (Ed25519 JWS · v1)') }}</h2>
+  <p class="small">
+    {{ 'وثيقة موقّعة رقمياً قابلة للتحقق محلياً دون الرجوع لخادمنا — مناسبة لخطوط CI/CD وتوثيق الامتثال.' if lang == 'ar' else ('Kryptografisch signierter Nachweis dieser Messung — offline prüfbar für CI/CD und Dokumentation (z. B. NIS2 / DORA).' if lang == 'de' else 'Cryptographically signed proof of this TLS observation — verifiable offline for CI/CD gates and compliance documentation.') }}
+  </p>
+  <table class="kv">
+    <tr><th>{{ 'النتيجة والسياسة' if lang == 'ar' else ('Urteil & Richtlinie' if lang == 'de' else 'Verdict & Policy') }}</th>
+        <td dir="ltr"><strong>{{ pv.result | upper }} ({{ pv.grade }})</strong> · <a href="/policies/qa-pqc-transport/1.0">{{ pv.policy_id }} {{ pv.policy_version }}</a></td></tr>
+    <tr><th>{{ 'معرّف الإيصال (jti)' if lang == 'ar' else ('Beleg-ID (jti)' if lang == 'de' else 'Receipt ID (jti)') }}</th>
+        <td dir="ltr"><a href="/api/v1/receipts/{{ rcpt.jti }}"><code>{{ rcpt.jti }}</code></a></td></tr>
+    <tr><th>{{ 'المفتاح العام (JWKS)' if lang == 'ar' else ('Öffentlicher Schlüssel (JWKS)' if lang == 'de' else 'Public Key (JWKS)') }}</th>
+        <td dir="ltr"><a href="/.well-known/jwks.json"><code>/.well-known/jwks.json</code></a> · <a href="/.well-known/qa-receipt-configuration"><code>qa-receipt-configuration</code></a></td></tr>
+  </table>
+  <div class="snippet">
+    <div class="snippet-head"><span>Compact JWS (EdDSA / Ed25519)</span>
+      <button type="button" class="copy-btn" data-copy="#signed-receipt-jws" data-done="{{ t.copied }}">{{ t["copy"] }}</button></div>
+    <pre id="signed-receipt-jws" dir="ltr"><code>{{ signed_receipt.signed_receipt_jws }}</code></pre>
+  </div>
+</section>
+{% endif %}
 {% include "_endpoints.html" %}
 
 <section class="card discovery" id="discovery" data-api="{{ url_for('site.discovery_api', scan_id=scan.id) }}"

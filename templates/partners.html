@@ -8,6 +8,52 @@
 .pt-big{font-size:2rem;font-weight:700;margin:.2rem 0}
 </style>{% endblock %}
 {% block content %}
+<section class="card highlight" id="msp-pilot">
+  {% if lang == 'de' %}
+  <h2>Pilot für IT-Dienstleister (AT / DE) – 3 Partnerplätze · 290 €</h2>
+  <p class="lead">Prüfen Sie die öffentlichen TLS-Endpunkte eines Kunden auf Post-Quanten-Fähigkeit und liefern Sie einen fertigen deutschen Bericht samt signierten Prüfbelegen.</p>
+  <ul class="ticks">
+    <li>Prüfung von bis zu <strong>50 Hostnamen</strong> eines Kunden Ihrer Wahl</li>
+    <li>Deutscher <strong>PDF-Bericht mit Ampel je Endpunkt</strong>: TLS-Version, hybrider Post-Quanten-Schlüsselaustausch (<code>X25519MLKEM768</code>), Zertifikat und priorisierte Maßnahmen</li>
+    <li><strong>Signierte Prüfbelege (Ed25519 JWS)</strong> für die Kundendokumentation (z. B. NIS2 / DORA), offline prüfbar über <a href="/.well-known/jwks.json"><code>/.well-known/jwks.json</code></a></li>
+    <li>Auf Wunsch mit <strong>Ihrem Logo</strong> (White-Label) · Lieferung innerhalb von <strong>5 Werktagen</strong> · Pilotpreis <strong>290 €</strong></li>
+  </ul>
+  <p class="muted small">Klare Abgrenzung: Der Bericht deckt die öffentliche Transportverschlüsselung ab, keine vollständige Krypto-Inventur.</p>
+  <p>
+    <a class="button-link" href="mailto:reply@mail.ather-quantum.com?subject=Pilot%20IT-Dienstleister%20(50%20Hostnamen)">15-Minuten-Gespräch anfragen →</a>
+    · <a href="/policies/qa-pqc-transport/1.0">Richtlinie <code>qa-pqc-transport 1.0</code></a>
+    · <a href="/.well-known/jwks.json">JWKS</a>
+  </p>
+  {% elif lang == 'ar' %}
+  <h2>عرض البايلوت لمزوّدي خدمات تقنية المعلومات (3 شركاء · 290 €)</h2>
+  <p class="lead">افحص نقاط TLS العامة لعميلك وسلّمه تقريراً احترافياً (PDF) مع إشارات مرور لكل مضيف وإيصالات فحص موقّعة رقمياً (Ed25519 JWS).</p>
+  <ul class="ticks">
+    <li>فحص حتى <strong>50 اسم مضيف</strong> لعميل واحد من اختيارك</li>
+    <li>تقرير PDF بإشارة مرور لكل مضيف: إصدار TLS، التبادل الهجين <code>X25519MLKEM768</code>، حالة الشهادة، وخطوات الإصلاح المرتبة بالأولوية</li>
+    <li><strong>إيصالات موقّعة رقمياً (Ed25519 JWS)</strong> لتوثيق الامتثال (NIS2 / DORA / SAMA)، قابلة للتحقق محلياً عبر <a href="/.well-known/jwks.json"><code>/.well-known/jwks.json</code></a></li>
+    <li>خيار وضع <strong>شعار شركتك (White-Label)</strong> · التسليم خلال <strong>5 أيام عمل</strong> · سعر البايلوت <strong>290 €</strong></li>
+  </ul>
+  <p>
+    <a class="button-link" href="mailto:reply@mail.ather-quantum.com?subject=MSP%20Pilot%20(50%20Hostnames)">حجز مكالمة تعريفية (15 دقيقة) ←</a>
+    · <a href="/policies/qa-pqc-transport/1.0">سياسة <code>qa-pqc-transport 1.0</code></a>
+  </p>
+  {% else %}
+  <h2>IT Service Provider &amp; MSP Pilot (3 Partner Slots · 290 €)</h2>
+  <p class="lead">Deliver a ready-to-share Post-Quantum TLS assessment for one client with traffic-light grading, prioritized fixes, and cryptographically signed Ed25519 JWS receipts.</p>
+  <ul class="ticks">
+    <li>Up to <strong>50 public hostnames</strong> of one customer of your choice</li>
+    <li><strong>PDF report</strong> (DE or EN) with per-endpoint traffic light: TLS version, hybrid PQ key exchange (<code>X25519MLKEM768</code>), certificate health, and prioritized remediation</li>
+    <li><strong>Signed Ed25519 JWS receipts</strong> for compliance documentation (NIS2 / DORA), verifiable offline via <a href="/.well-known/jwks.json"><code>/.well-known/jwks.json</code></a></li>
+    <li>Optional <strong>partner logo (White-Label)</strong> · Delivered within <strong>5 business days</strong> · Pilot price <strong>290 €</strong></li>
+  </ul>
+  <p class="muted small">Clear scope: covers public transport encryption (TLS), not a full internal cryptography inventory.</p>
+  <p>
+    <a class="button-link" href="mailto:reply@mail.ather-quantum.com?subject=MSP%20Pilot%20(50%20Hostnames)">Request a 15-minute intro call →</a>
+    · <a href="/policies/qa-pqc-transport/1.0">Policy <code>qa-pqc-transport 1.0</code></a>
+    · <a href="/.well-known/jwks.json">JWKS</a>
+  </p>
+  {% endif %}
+</section>
 <section class="card">
   <h1>{{ d.title }}</h1>
   <p class="lead">{{ d.lead }}</p>

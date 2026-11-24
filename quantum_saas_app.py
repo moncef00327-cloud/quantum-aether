@@ -763,6 +763,23 @@ def scan_page(scan_id):
     cfg = current_app.config
     lang = current_lang()
     findings = [dict(f, title=i18n.finding_text(f, lang if lang in ("en", "ar") else "en")[0]) for f in scan["result"]["findings"]]
+    signed_receipt = None
+    try:
+        dom = scan["result"].get("domain", "")
+        if dom and not search_indexing.is_excluded(dom) and not adoption.opted_out(dom, adoption.load_optout(conn=db())):
+            sub = receipts.normalize_target(dom, int(scan["result"].get("port") or 443))
+            row = receipts.get_latest_receipt_for_sub(db(), sub)
+            now_ts = int(dt.datetime.now(dt.timezone.utc).timestamp())
+            if row and row["exp"] > now_ts and (row["receipt"].get("scan") or {}).get("scan_id") == scan["id"]:
+                _, signed_receipt = receipts.format_dual_response(row["receipt"], row["jws"], issuer=public_base())
+            else:
+                _, _, _, signed_receipt = receipts.issue_and_store_receipt(
+                    {"base": public_base, "db": db, "data_dir": lambda: cfg["DATA_DIR"]},
+                    scan["result"],
+                    scan_id=scan["id"],
+                )
+    except Exception:
+        log.debug("Could not attach v1 signed receipt on scan page", exc_info=True)
     return render_template(
         "scan.html", scan=scan, r=scan["result"], paid=sales_db.is_scan_paid(db(), scan_id), findings=findings,
         payments_enabled=payments_enabled(), paypal_client_id=cfg["PAYPAL_CLIENT_ID"],
@@ -772,6 +789,7 @@ def scan_page(scan_id):
         pq_reason=scan_insights.reason(scan['result']), fix_tabs=scan_insights.fix_tabs(lang),
         common_prefixes=scan_insights.COMMON_PREFIXES,
         exposure=qrisk.score(scan['result'], scan_insights.get(db(), scan['id'])),
+        signed_receipt=signed_receipt,
     )
 
 

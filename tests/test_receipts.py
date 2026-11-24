@@ -480,6 +480,20 @@ class ReceiptHttpMcpAndCliTests(unittest.TestCase):
         self.assertEqual(proc.returncode, 1)
         self.assertIn("NO_HYBRID_PQ_GROUP", proc.stderr)
 
+    def test_scan_page_shows_signed_receipt_and_partners_shows_msp_pilot(self):
+        scan_id = self.client.post("/api/scan", json={"domain": "mcp.example.com"}).get_json()["scan_id"]
+        for lang, marker in (("de", "Signierter Prüfbeleg"), ("en", "Signed TLS Receipt"), ("ar", "إيصال فحص موقّع")):
+            r_scan = self.client.get(f"/scan/{scan_id}?lang={lang}")
+            self.assertEqual(r_scan.status_code, 200, lang)
+            self.assertIn(marker, r_scan.text, lang)
+            self.assertIn("signed-receipt-jws", r_scan.text, lang)
+            self.assertIn("/.well-known/jwks.json", r_scan.text, lang)
+        r_pt = self.client.get("/partners?lang=de")
+        self.assertEqual(r_pt.status_code, 200)
+        self.assertIn("Pilot für IT-Dienstleister", r_pt.text)
+        self.assertIn("290 €", r_pt.text)
+        self.assertIn("50 Hostnamen", r_pt.text)
+
 
 if __name__ == "__main__":
     unittest.main()
