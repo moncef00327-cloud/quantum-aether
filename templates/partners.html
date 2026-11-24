@@ -24,7 +24,7 @@
     · <a href="/policies/qa-pqc-transport/1.0">Richtlinie <code>qa-pqc-transport 1.0</code></a>
     · <a href="/.well-known/jwks.json">JWKS</a>
   </p>
-  <p class="muted small">Oder direkt schreiben an <a data-ev="msp_pilot_cta" href="mailto:reply@mail.ather-quantum.com?subject=Pilot%20IT-Dienstleister%20(50%20Hostnamen)" dir="ltr">reply@mail.ather-quantum.com</a></p>
+  <p class="muted small">Oder direkt schreiben an <a data-ev="msp_pilot_cta" href="mailto:reply@mail.ather-quantum.com?subject=Pilot%20IT-Dienstleister%20(50%20Hostnamen)" dir="ltr">reply@mail.ather-quantum.com</a> · <a data-ev="msp_pilot_cta" href="#pilot-apply">Oder hier anfragen ↓</a></p>
   {% elif lang == 'ar' %}
   <h2>عرض البايلوت لمزوّدي خدمات تقنية المعلومات (3 شركاء · 290 €)</h2>
   <p class="lead">افحص نقاط TLS العامة لعميلك وسلّمه تقريراً احترافياً (PDF) مع إشارات مرور لكل مضيف وإيصالات فحص موقّعة رقمياً (Ed25519 JWS).</p>
@@ -38,7 +38,7 @@
     <a class="button-link" data-ev="msp_pilot_cta" href="mailto:reply@mail.ather-quantum.com?subject=MSP%20Pilot%20(50%20Hostnames)&body=%D8%A7%D9%84%D8%B4%D8%B1%D9%83%D8%A9:%0A%D8%A7%D9%84%D8%A7%D8%B3%D9%85:%0A%D9%86%D8%B7%D8%A7%D9%82%20%D8%A7%D9%84%D8%B9%D9%85%D9%8A%D9%84:%0A%D8%B9%D8%AF%D8%AF%20%D8%A7%D9%84%D9%85%D8%B6%D9%8A%D9%81%D9%8A%D9%86%20(%D8%AD%D8%AA%D9%89%2050):%0A%D8%B4%D8%B9%D8%A7%D8%B1%20(%D9%86%D8%B9%D9%85/%D9%84%D8%A7):%0A">حجز مكالمة تعريفية (15 دقيقة) ←</a>
     · <a href="/policies/qa-pqc-transport/1.0">سياسة <code>qa-pqc-transport 1.0</code></a>
   </p>
-  <p class="muted small">أو راسلنا مباشرة على <a data-ev="msp_pilot_cta" href="mailto:reply@mail.ather-quantum.com?subject=MSP%20Pilot%20(50%20Hostnames)" dir="ltr">reply@mail.ather-quantum.com</a></p>
+  <p class="muted small">أو راسلنا مباشرة على <a data-ev="msp_pilot_cta" href="mailto:reply@mail.ather-quantum.com?subject=MSP%20Pilot%20(50%20Hostnames)" dir="ltr">reply@mail.ather-quantum.com</a> · <a data-ev="msp_pilot_cta" href="#pilot-apply">أو اطلبه من هنا ↓</a></p>
   {% else %}
   <h2>IT Service Provider &amp; MSP Pilot (3 Partner Slots · 290 €)</h2>
   <p class="lead">Deliver a ready-to-share Post-Quantum TLS assessment for one client with traffic-light grading, prioritized fixes, and cryptographically signed Ed25519 JWS receipts.</p>
@@ -54,8 +54,28 @@
     · <a href="/policies/qa-pqc-transport/1.0">Policy <code>qa-pqc-transport 1.0</code></a>
     · <a href="/.well-known/jwks.json">JWKS</a>
   </p>
-  <p class="muted small">Or email us directly at <a data-ev="msp_pilot_cta" href="mailto:reply@mail.ather-quantum.com?subject=MSP%20Pilot%20(50%20Hostnames)" dir="ltr">reply@mail.ather-quantum.com</a></p>
+  <p class="muted small">Or email us directly at <a data-ev="msp_pilot_cta" href="mailto:reply@mail.ather-quantum.com?subject=MSP%20Pilot%20(50%20Hostnames)" dir="ltr">reply@mail.ather-quantum.com</a> · <a data-ev="msp_pilot_cta" href="#pilot-apply">or request it here ↓</a></p>
   {% endif %}
+</section>
+<section class="card" id="pilot-apply">
+  <h2>{{ d.pilot.form_title }}</h2>
+  <p class="muted small">{{ d.pilot.intro }}</p>
+  {% if pilot_sent %}<p class="notice" role="status">{{ d.pilot.sent }}</p>{% endif %}
+  {% if pilot_error %}<p class="notice" role="alert">{{ pilot_error }}</p>{% endif %}
+  <form method="post" action="{{ url_for('site.partners_pilot') }}" class="pt-form">
+    <input type="hidden" name="lang" value="{{ lang }}">
+    <label>{{ d.pilot.f_name }}<input name="name" maxlength="120" required autocomplete="name"></label>
+    <label>{{ d.pilot.f_email }}<input name="email" type="email" maxlength="254" dir="ltr" required autocomplete="email"></label>
+    <label>{{ d.pilot.f_company }}<input name="company" maxlength="120" autocomplete="organization"></label>
+    <label>{{ d.pilot.f_client }}<input name="client_domain" maxlength="253" dir="ltr" inputmode="url" placeholder="example.com"></label>
+    <label>{{ d.pilot.f_hosts }}<input name="hostnames" type="number" min="1" max="50" inputmode="numeric"></label>
+    <label>{{ d.pilot.f_logo }}<select name="white_label">{% for k, v in d.pilot.f_logo_opts.items() %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></label>
+    <label>{{ d.pilot.f_note }}<textarea name="note" rows="3" maxlength="2000"></textarea></label>
+    <label class="pt-check"><input type="checkbox" name="consent" value="1" required> <span>{{ d.pilot.f_consent }}</span></label>
+    <div class="pt-hp" aria-hidden="true"><label>Website<input name="website2" tabindex="-1" autocomplete="off"></label></div>
+    <p class="muted small"><a href="{{ url_for('site.legal_page', slug='datenschutz', lang=legal_lang) }}">{{ t.legal_privacy }}</a></p>
+    <div><button type="submit" data-ev="msp_pilot_apply">{{ d.pilot.submit }}</button></div>
+  </form>
 </section>
 <section class="card">
   <h1>{{ d.title }}</h1>

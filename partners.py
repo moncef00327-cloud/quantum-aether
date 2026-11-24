@@ -53,6 +53,21 @@ CREATE TABLE IF NOT EXISTS partner_clicks (
     n     INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (code, day)
 );
+CREATE TABLE IF NOT EXISTS pilot_leads (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    name          TEXT NOT NULL,
+    email         TEXT NOT NULL,
+    company       TEXT,
+    client_domain TEXT,
+    hostnames     INTEGER,
+    white_label   TEXT,            -- 'yes' / 'no' / NULL
+    note          TEXT,
+    lang          TEXT NOT NULL DEFAULT 'en',
+    status        TEXT NOT NULL DEFAULT 'NEW',   -- NEW / CONTACTED / WON / LOST
+    client_hash   TEXT,
+    consent_at    TEXT NOT NULL,
+    created_at    TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+);
 """
 
 T = {
@@ -79,6 +94,18 @@ T = {
   "err": {"invalid": "Please fill in name, a valid e-mail, how you will promote us, and accept the terms.", "rate_limited": "Too many applications from your connection today. Please try again tomorrow."},
   "bar": "You arrived via a link from our partner {code}. May we store a cookie for 60 days so they are credited if you become a customer?",
   "bar_yes": "Yes, credit them", "bar_no": "No",
+  "pilot": {
+    "form_title": "Request the MSP pilot",
+    "intro": "Prefer not to use e-mail? Leave your details and we'll reply within one business day. No payment now.",
+    "f_name": "Your name", "f_email": "E-mail", "f_company": "Your company (optional)",
+    "f_client": "Client domain to assess (optional)", "f_hosts": "Approx. hostnames (up to 50, optional)",
+    "f_logo": "White-label with your logo?", "f_logo_opts": {"": "—", "yes": "Yes", "no": "No"},
+    "f_note": "Anything else? (optional)",
+    "f_consent": "I agree that my data is stored so Quantum Aether can contact me about the pilot.",
+    "submit": "Request the pilot", "sent": "Thank you. We'll reply within one business day. No payment was taken.",
+    "err": {"invalid": "Please enter your name, a valid e-mail, and accept the data note.",
+            "rate_limited": "Too many requests from your connection today. Please try again tomorrow."},
+  },
 },
 "de": {
   "title": "Partnerprogramm: 30 % für Empfehlungen zur Post-Quanten-TLS-Überwachung",
@@ -103,6 +130,18 @@ T = {
   "err": {"invalid": "Bitte Name, gültige E-Mail und Empfehlungsweg angeben und die Bedingungen akzeptieren.", "rate_limited": "Zu viele Bewerbungen heute von Ihrer Verbindung. Bitte morgen erneut."},
   "bar": "Sie kommen über einen Link unseres Partners {code}. Dürfen wir 60 Tage lang ein Cookie speichern, damit er bei einem Kauf berücksichtigt wird?",
   "bar_yes": "Ja, zuordnen", "bar_no": "Nein",
+  "pilot": {
+    "form_title": "Pilot anfragen",
+    "intro": "Lieber ohne E-Mail? Hinterlassen Sie Ihre Daten, wir antworten innerhalb eines Werktags. Keine Zahlung jetzt.",
+    "f_name": "Ihr Name", "f_email": "E-Mail", "f_company": "Ihr Unternehmen (optional)",
+    "f_client": "Zu prüfende Kunden-Domain (optional)", "f_hosts": "Etwa wie viele Hostnamen (bis 50, optional)",
+    "f_logo": "White-Label mit Ihrem Logo?", "f_logo_opts": {"": "—", "yes": "Ja", "no": "Nein"},
+    "f_note": "Sonstiges? (optional)",
+    "f_consent": "Ich stimme zu, dass meine Daten gespeichert werden, damit Quantum Aether mich zum Pilot kontaktieren kann.",
+    "submit": "Pilot anfragen", "sent": "Danke. Wir antworten innerhalb eines Werktags. Es wurde keine Zahlung vorgenommen.",
+    "err": {"invalid": "Bitte Name und gültige E-Mail angeben und den Datenhinweis akzeptieren.",
+            "rate_limited": "Zu viele Anfragen heute von Ihrer Verbindung. Bitte morgen erneut."},
+  },
 },
 "ar": {
   "title": "برنامج الشركاء: اربح 30% من توصيات مراقبة TLS ما بعد الكمّي",
@@ -127,6 +166,18 @@ T = {
   "err": {"invalid": "املأ الاسم وبريداً صحيحاً وطريقة التسويق، ووافق على الشروط.", "rate_limited": "طلبات كثيرة اليوم من اتصالك. حاول غداً."},
   "bar": "وصلت عبر رابط شريكنا {code}. هل نحفظ ملف تعريف ارتباط (cookie) لمدة 60 يوماً لتُنسب إليه إن أصبحت عميلاً؟",
   "bar_yes": "نعم، انسبها إليه", "bar_no": "لا",
+  "pilot": {
+    "form_title": "اطلب بايلوت مزوّدي الخدمات",
+    "intro": "تفضّل بلا بريد؟ اترك بياناتك ونردّ خلال يوم عمل واحد. لا دفع الآن.",
+    "f_name": "اسمك", "f_email": "البريد", "f_company": "شركتك (اختياري)",
+    "f_client": "نطاق العميل المراد فحصه (اختياري)", "f_hosts": "عدد المضيفين تقريباً (حتى 50، اختياري)",
+    "f_logo": "بشعارك (White-Label)؟", "f_logo_opts": {"": "—", "yes": "نعم", "no": "لا"},
+    "f_note": "أي ملاحظة أخرى؟ (اختياري)",
+    "f_consent": "أوافق على حفظ بياناتي ليتواصل معي Quantum Aether بخصوص البايلوت.",
+    "submit": "اطلب البايلوت", "sent": "شكراً. سنردّ خلال يوم عمل واحد. لم يُجرَ أي دفع.",
+    "err": {"invalid": "أدخل اسمك وبريداً صحيحاً ووافق على حفظ البيانات.",
+            "rate_limited": "طلبات كثيرة اليوم من اتصالك. حاول غداً."},
+  },
 },
 }
 
@@ -362,7 +413,9 @@ def register(bp, deps):
         lang = deps["lang"]()
         d = T.get(lang, T["en"])
         return render_template("partners.html", d=d, sent=request.args.get("sent") == "1",
-                               error=d["err"].get(request.args.get("error", "")))
+                               error=d["err"].get(request.args.get("error", "")),
+                               pilot_sent=request.args.get("psent") == "1",
+                               pilot_error=d["pilot"]["err"].get(request.args.get("perror", "")))
 
     @bp.post("/partners/apply")
     def partners_apply():
@@ -385,6 +438,39 @@ def register(bp, deps):
                          "VALUES (?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))",
                          (f["name"], f["email"], f["channel"], f["website"] or None, f["payout"], lang, client))
         return back(sent="1")
+
+    @bp.post("/partners/pilot")
+    def partners_pilot():
+        lang = request.form.get("lang") if request.form.get("lang") in T else "en"
+        back = lambda **kw: redirect(url_for("site.partners_page", lang=lang, **kw) + "#pilot-apply", code=303)
+        if request.form.get("website2"):  # honeypot
+            return back(psent="1")
+        f = {k: (request.form.get(k) or "").strip() for k in ("name", "email", "company", "client_domain", "note")}
+        hosts_raw = (request.form.get("hostnames") or "").strip()
+        white = (request.form.get("white_label") or "").strip().lower()
+        if (not 1 <= len(f["name"]) <= 120 or not EMAIL_RE.match(f["email"]) or len(f["company"]) > 120
+                or len(f["client_domain"]) > 253 or len(f["note"]) > 2000
+                or white not in ("", "yes", "no") or not request.form.get("consent")):
+            return back(perror="invalid")
+        hosts = None
+        if hosts_raw:
+            try:
+                hosts = min(max(int(re.sub(r"[^0-9]", "", hosts_raw) or 0), 0), 50) or None
+            except ValueError:
+                hosts = None
+        conn, client = deps["db"](), deps["client_hash"]()
+        init(conn)
+        n = conn.execute("SELECT COUNT(*) FROM pilot_leads WHERE client_hash = ? AND created_at >= ?",
+                         (client, (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ"))).fetchone()[0]
+        if n >= 3:
+            return back(perror="rate_limited")
+        with conn:
+            conn.execute(
+                "INSERT INTO pilot_leads (name, email, company, client_domain, hostnames, white_label, note, lang, "
+                "client_hash, consent_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))",
+                (f["name"], f["email"], f["company"] or None, f["client_domain"] or None, hosts,
+                 white or None, f["note"] or None, lang, client))
+        return back(psent="1")
 
     @bp.route("/api/v1/agent/affiliate/register", methods=["POST", "OPTIONS"])
     def api_agent_affiliate_register():

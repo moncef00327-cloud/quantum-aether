@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """Partner programme admin (run on the server with the env loaded):
 
-  partners_admin.py list                 applications and partners
+  partners_admin.py list                 applications, partners and MSP pilot leads
   partners_admin.py approve ID [CODE]    activate, assign a code, e-mail the partner their link (needs RESEND env)
   partners_admin.py reject ID
   partners_admin.py end ID               revoke/end an active partner (stops further click/referral attribution)
   partners_admin.py report               clicks, referrals and commission due / pending per partner
+  partners_admin.py pilot                list MSP pilot leads (/partners/pilot)
+  partners_admin.py pilot ID STATUS      set a pilot lead status: NEW / CONTACTED / WON / LOST
 """
 import json
 import os
@@ -52,15 +54,41 @@ def send(to, subject, text):
 
 
 def main(argv):
-    if not argv or argv[0] not in ("list", "approve", "reject", "end", "report"):
+    if not argv or argv[0] not in ("list", "approve", "reject", "end", "report", "pilot"):
         print(__doc__)
         return 2
     c = conn()
     cmd = argv[0]
+
+    def print_pilot(rows):
+        for r in rows:
+            print(f"#{r['id']} [{r['status']}] {r['name']} · {r['email']} · {r['company'] or '-'} · "
+                  f"client={r['client_domain'] or '-'} hosts={r['hostnames'] or '-'} logo={r['white_label'] or '-'} · "
+                  f"{r['lang']} · {r['created_at']}")
+            if r["note"]:
+                print(f"    {r['note'][:300]}")
+
+    if cmd == "pilot":
+        if len(argv) >= 3:
+            pid, new_st = int(argv[1]), argv[2].upper()
+            if new_st not in ("NEW", "CONTACTED", "WON", "LOST"):
+                print("status must be NEW / CONTACTED / WON / LOST")
+                return 1
+            with c:
+                n = c.execute("UPDATE pilot_leads SET status = ? WHERE id = ?", (new_st, pid)).rowcount
+            print(f"{new_st.lower()} ({n} row)" if n else "no such pilot lead")
+            return 0 if n else 1
+        print_pilot(c.execute("SELECT * FROM pilot_leads ORDER BY id DESC"))
+        return 0
+
     if cmd == "list":
         for r in c.execute("SELECT id, status, code, name, email, payout, lang, created_at, channel, website FROM partners ORDER BY id"):
             print(f"#{r['id']} [{r['status']}] {r['code'] or '-'} · {r['name']} · {r['email']} · {r['payout']} · {r['lang']} · {r['created_at']}")
             print(f"    {r['website'] or ''} | {r['channel'][:200]}")
+        pilots = list(c.execute("SELECT * FROM pilot_leads ORDER BY id DESC"))
+        if pilots:
+            print(f"\n-- MSP pilot leads ({len(pilots)}) --")
+            print_pilot(pilots)
         return 0
     if cmd in ("approve", "reject", "end"):
         pid = int(argv[1])

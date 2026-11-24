@@ -75,6 +75,29 @@ class PartnerTests(unittest.TestCase):
         c = sqlite3.connect(self.db)
         self.assertEqual(c.execute("SELECT status, lang FROM partners WHERE email='s@example.com'").fetchone(), ("PENDING", "ar"))
 
+    def test_msp_pilot_lead_capture(self):
+        # Pilot CTAs are instrumented and the on-page capture form is present in every language.
+        for lang in ("en", "de", "ar"):
+            html = self.client.get(f"/partners?lang={lang}").get_data(as_text=True)
+            self.assertIn('data-ev="msp_pilot_cta"', html)
+            self.assertIn('id="pilot-apply"', html)
+            self.assertIn('action="/partners/pilot"', html)
+        # Invalid (missing email) is rejected and stores nothing.
+        bad = self.client.post("/partners/pilot", data={"lang": "en", "name": "X", "email": "bad", "consent": "1"})
+        self.assertIn("perror=invalid", bad.headers["Location"])
+        # Honeypot is silently accepted but stores nothing.
+        self.client.post("/partners/pilot", data={"lang": "en", "name": "Bot", "email": "b@b.com",
+                                                  "consent": "1", "website2": "spam"})
+        # Valid lead is stored with clamped hostnames and surfaces to the owner's review.
+        ok = self.client.post("/partners/pilot", data={"lang": "de", "name": "Max MSP", "email": "max@msp.example",
+                              "company": "MSP GmbH", "client_domain": "client.example", "hostnames": "400",
+                              "white_label": "yes", "note": "NIS2", "consent": "1"})
+        self.assertIn("psent=1", ok.headers["Location"])
+        c = sqlite3.connect(self.db)
+        rows = c.execute("SELECT name, email, hostnames, white_label, status FROM pilot_leads").fetchall()
+        c.close()
+        self.assertEqual(rows, [("Max MSP", "max@msp.example", 50, "yes", "NEW")])  # 400 clamped to 50
+
     def test_privacy_mentions_referral_cookie(self):
         self.assertIn("qa_ref", self.client.get("/datenschutz?lang=en").get_data(as_text=True))
 
