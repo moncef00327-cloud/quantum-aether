@@ -8,7 +8,7 @@
 .pt-big{font-size:2rem;font-weight:700;margin:.2rem 0}
 </style>{% endblock %}
 {% block content %}
-<section class="card highlight" id="msp-pilot">
+<section class="card highlight" id="msp-pilot" data-ev-impression="msp_pilot_impression">
   {% if lang == 'de' %}
   <h2>Pilot für IT-Dienstleister (AT / DE) – 3 Partnerplätze · 290 €</h2>
   <p class="lead">Prüfen Sie die öffentlichen TLS-Endpunkte eines Kunden auf Post-Quanten-Fähigkeit und liefern Sie einen fertigen deutschen Bericht samt signierten Prüfbelegen.</p>
@@ -20,10 +20,11 @@
   </ul>
   <p class="muted small">Klare Abgrenzung: Der Bericht deckt die öffentliche Transportverschlüsselung ab, keine vollständige Krypto-Inventur.</p>
   <p>
-    <a class="button-link" href="mailto:reply@mail.ather-quantum.com?subject=Pilot%20IT-Dienstleister%20(50%20Hostnamen)">15-Minuten-Gespräch anfragen →</a>
+    <a class="button-link" data-ev="msp_pilot_cta" href="mailto:reply@mail.ather-quantum.com?subject=Pilot%20IT-Dienstleister%20(50%20Hostnamen)&body=Firma:%0AName:%0AKunden-Domain:%0AHostnamen%20(bis%2050):%0AWhite-Label-Logo%20(ja/nein):%0A">15-Minuten-Gespräch anfragen →</a>
     · <a href="/policies/qa-pqc-transport/1.0">Richtlinie <code>qa-pqc-transport 1.0</code></a>
     · <a href="/.well-known/jwks.json">JWKS</a>
   </p>
+  <p class="muted small">Oder direkt schreiben an <a data-ev="msp_pilot_cta" href="mailto:reply@mail.ather-quantum.com?subject=Pilot%20IT-Dienstleister%20(50%20Hostnamen)" dir="ltr">reply@mail.ather-quantum.com</a></p>
   {% elif lang == 'ar' %}
   <h2>عرض البايلوت لمزوّدي خدمات تقنية المعلومات (3 شركاء · 290 €)</h2>
   <p class="lead">افحص نقاط TLS العامة لعميلك وسلّمه تقريراً احترافياً (PDF) مع إشارات مرور لكل مضيف وإيصالات فحص موقّعة رقمياً (Ed25519 JWS).</p>
@@ -34,9 +35,10 @@
     <li>خيار وضع <strong>شعار شركتك (White-Label)</strong> · التسليم خلال <strong>5 أيام عمل</strong> · سعر البايلوت <strong>290 €</strong></li>
   </ul>
   <p>
-    <a class="button-link" href="mailto:reply@mail.ather-quantum.com?subject=MSP%20Pilot%20(50%20Hostnames)">حجز مكالمة تعريفية (15 دقيقة) ←</a>
+    <a class="button-link" data-ev="msp_pilot_cta" href="mailto:reply@mail.ather-quantum.com?subject=MSP%20Pilot%20(50%20Hostnames)&body=%D8%A7%D9%84%D8%B4%D8%B1%D9%83%D8%A9:%0A%D8%A7%D9%84%D8%A7%D8%B3%D9%85:%0A%D9%86%D8%B7%D8%A7%D9%82%20%D8%A7%D9%84%D8%B9%D9%85%D9%8A%D9%84:%0A%D8%B9%D8%AF%D8%AF%20%D8%A7%D9%84%D9%85%D8%B6%D9%8A%D9%81%D9%8A%D9%86%20(%D8%AD%D8%AA%D9%89%2050):%0A%D8%B4%D8%B9%D8%A7%D8%B1%20(%D9%86%D8%B9%D9%85/%D9%84%D8%A7):%0A">حجز مكالمة تعريفية (15 دقيقة) ←</a>
     · <a href="/policies/qa-pqc-transport/1.0">سياسة <code>qa-pqc-transport 1.0</code></a>
   </p>
+  <p class="muted small">أو راسلنا مباشرة على <a data-ev="msp_pilot_cta" href="mailto:reply@mail.ather-quantum.com?subject=MSP%20Pilot%20(50%20Hostnames)" dir="ltr">reply@mail.ather-quantum.com</a></p>
   {% else %}
   <h2>IT Service Provider &amp; MSP Pilot (3 Partner Slots · 290 €)</h2>
   <p class="lead">Deliver a ready-to-share Post-Quantum TLS assessment for one client with traffic-light grading, prioritized fixes, and cryptographically signed Ed25519 JWS receipts.</p>
@@ -48,10 +50,11 @@
   </ul>
   <p class="muted small">Clear scope: covers public transport encryption (TLS), not a full internal cryptography inventory.</p>
   <p>
-    <a class="button-link" href="mailto:reply@mail.ather-quantum.com?subject=MSP%20Pilot%20(50%20Hostnames)">Request a 15-minute intro call →</a>
+    <a class="button-link" data-ev="msp_pilot_cta" href="mailto:reply@mail.ather-quantum.com?subject=MSP%20Pilot%20(50%20Hostnames)&body=Company:%0AName:%0AClient%20domain:%0AHostnames%20(up%20to%2050):%0AWhite-label%20logo%20(yes/no):%0A">Request a 15-minute intro call →</a>
     · <a href="/policies/qa-pqc-transport/1.0">Policy <code>qa-pqc-transport 1.0</code></a>
     · <a href="/.well-known/jwks.json">JWKS</a>
   </p>
+  <p class="muted small">Or email us directly at <a data-ev="msp_pilot_cta" href="mailto:reply@mail.ather-quantum.com?subject=MSP%20Pilot%20(50%20Hostnames)" dir="ltr">reply@mail.ather-quantum.com</a></p>
   {% endif %}
 </section>
 <section class="card">
