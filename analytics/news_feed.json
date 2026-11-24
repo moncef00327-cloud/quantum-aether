@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-11-23T17:12:29Z",
+  "updated_at": "2026-11-24T16:53:56Z",
   "classification": "Deterministic keyword rules; impact notes are editorial context, not source quotations or security advisories.",
   "sources": [
     {
@@ -31,20 +31,20 @@
     {
       "name": "arXiv quant-ph",
       "ok": true,
-      "entries": 119
+      "entries": 248
     },
     {
       "name": "arXiv cs.CR",
       "ok": true,
-      "entries": 58
+      "entries": 144
     }
   ],
   "items": [
     {
       "source": "arXiv cs.CR",
-      "url": "https://arxiv.org/abs/2611.27250",
-      "title": "PCC: Proof-Carrying Credentials for Enhanced Anonymity and Post-Quantum Delegation",
-      "published_at": "2026-11-23T05:00:00Z",
+      "url": "https://arxiv.org/abs/2611.25663",
+      "title": "Correctable Enrollment and One-Transaction Seed Proofs for Ethereum's Post-Quantum Migration",
+      "published_at": "2026-11-24T05:00:00Z",
       "category": "research",
       "importance": "medium",
       "takeaway": {
@@ -52,13 +52,13 @@
         "ar": "قراءة تحريرية: هذا سياق بحثي، وليس تنبيهاً أمنياً للإنتاج أو دليلاً على كسر تشفيري جديد؛ قيّم النتائج قبل تغيير السياسة.",
         "de": "Redaktionelle Einordnung: Forschungskontext, keine Produktionswarnung und kein Beleg für einen neuen kryptografischen Bruch; vor einer Richtlinienänderung bewerten."
       },
-      "id": "949dde96409b296c"
+      "id": "dea97b3cf35069b3"
     },
     {
       "source": "arXiv cs.CR",
-      "url": "https://arxiv.org/abs/2611.27735",
-      "title": "Post-Quantum Migration in Brownfield 5G Core Networks: Verified Hybrid Key Establishment, Performance, and Rollback",
-      "published_at": "2026-11-23T05:00:00Z",
+      "url": "https://arxiv.org/abs/2611.30396",
+      "title": "WEPWAWET-CORE: A Hardware-Resident ML-DSA Architecture with Fabric-Generated, Fabric-Sealed Keys for Post-Quantum Avionics",
+      "published_at": "2026-11-24T05:00:00Z",
       "category": "research",
       "importance": "medium",
       "takeaway": {
@@ -66,21 +66,7 @@
         "ar": "قراءة تحريرية: هذا سياق بحثي، وليس تنبيهاً أمنياً للإنتاج أو دليلاً على كسر تشفيري جديد؛ قيّم النتائج قبل تغيير السياسة.",
         "de": "Redaktionelle Einordnung: Forschungskontext, keine Produktionswarnung und kein Beleg für einen neuen kryptografischen Bruch; vor einer Richtlinienänderung bewerten."
       },
-      "id": "a9adc82761993919"
-    },
-    {
-      "source": "arXiv cs.CR",
-      "url": "https://arxiv.org/abs/2611.27909",
-      "title": "Metadata-Private Voice Communication over Tor using Post-Quantum Key Encapsulation",
-      "published_at": "2026-11-23T05:00:00Z",
-      "category": "research",
-      "importance": "medium",
-      "takeaway": {
-        "en": "Editorial takeaway: research context, not a production security advisory or evidence of a new cryptographic break; assess before changing policy.",
-        "ar": "قراءة تحريرية: هذا سياق بحثي، وليس تنبيهاً أمنياً للإنتاج أو دليلاً على كسر تشفيري جديد؛ قيّم النتائج قبل تغيير السياسة.",
-        "de": "Redaktionelle Einordnung: Forschungskontext, keine Produktionswarnung und kein Beleg für einen neuen kryptografischen Bruch; vor einer Richtlinienänderung bewerten."
-      },
-      "id": "352c3b1572cede3a"
+      "id": "7a7cfa9e9f1afa48"
     },
     {
       "source": "Cloudflare Blog",
