@@ -24,9 +24,28 @@ AI-Discovery-Metadata:
 
 ## Post-quantum TLS security observatory
 
-Quantum Aether measures public TLS connections, reports observed key exchange and certificate evidence, and helps teams track their post-quantum transition. It provides a free scan, documented measurement limits, business monitoring, and agent interfaces through HTTP APIs and remote MCP. A full report can be requested through x402 v2 on Base USDC by compatible agent clients, subject to the buyer wallet's own authorization policy. Direct-transfer and human checkout options remain available where configured.
+Quantum Aether measures public TLS connections, reports observed key exchange and certificate evidence, and helps teams track their post-quantum transition. It provides a free scan, **offline-verifiable Ed25519 JWS signed TLS receipts (v1)**, documented measurement limits, business monitoring, an **IT-Dienstleister MSP Pilot (50 hostnames, German Ampel PDF + signed receipts, 290 €)**, and agent interfaces through HTTP APIs, remote MCP, A2A, and ACP — including **programmatic AI agent affiliate registration (`register_agent_affiliate`)** with 30% monthly manual owner payouts. A full report can be requested through x402 v2 on Base USDC by compatible agent clients, subject to the buyer wallet's own authorization policy. Direct-transfer and human checkout options remain available where configured.
 
-Live agent endpoints and prices: [service discovery](https://ather-quantum.com/.well-known/agent-service.json), [MCP guide](https://ather-quantum.com/agents?lang=en), and [OpenAPI](https://ather-quantum.com/openapi.yaml).
+Live agent endpoints and prices: [service discovery](https://ather-quantum.com/.well-known/agent-service.json), [MCP guide](https://ather-quantum.com/agents?lang=en), [JWKS](https://ather-quantum.com/.well-known/jwks.json), [Policy v1.0](https://ather-quantum.com/policies/qa-pqc-transport/1.0), [Partner & MSP Pilot](https://ather-quantum.com/partners), and [OpenAPI](https://ather-quantum.com/openapi.yaml).
+
+### Signed TLS Receipts (v1 · Ed25519 JWS) & Offline CI Verification
+
+Every scan via `POST https://ather-quantum.com/api/v1/scan`, MCP (`scan_tls` / `get_tls_evidence`), A2A (`/a2a`), or ACP (`/acp/runs`) issues a 24-hour Ed25519 compact JWS receipt (`typ: qa-tls-receipt+jwt`) evaluated against the published policy [`qa-pqc-transport` 1.0](https://ather-quantum.com/policies/qa-pqc-transport/1.0):
+
+```bash
+curl -sS -X POST https://ather-quantum.com/api/v1/scan \
+  -H "Content-Type: application/json" \
+  -d '{"host":"cloudflare.com","port":443}' \
+  | python3 tools/qa_verify.py --host cloudflare.com --port 443 --check-live-spki
+```
+
+Public verification endpoints: `/.well-known/jwks.json` (`application/jwk-set+json`), `/.well-known/qa-receipt-configuration`, and `GET /api/v1/receipts/{jti}`.
+
+### AI Agent Affiliate Programme (Monthly Manual Payout)
+
+AI agents and operators can self-register via MCP (`register_agent_affiliate`) or `POST https://ather-quantum.com/api/v1/agent/affiliate/register` to receive an instant `?ref=CODE` referral link:
+- **30%** of monitoring subscriptions (`29 €/mo` Starter, `99 €/mo` Business) for 12 months, and **20%** of one-time reports, packs, and audits.
+- **Monthly manual payout by the owner** (PayPal or USDC on Base/Arbitrum) after a 30-day refund hold, from $50 minimum. No hot wallet, no automatic payouts, no spam or unsolicited cold emails. Full terms: https://ather-quantum.com/partners?lang=en.
 
 ## Research archive: quantum experiments and digital DNA
 
