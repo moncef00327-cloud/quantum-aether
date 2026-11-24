@@ -5025,6 +5025,14 @@ agent_discovery.register(bp, {
 import gravity_web
 gravity_web.register(bp, db)
 
+import x402_attestation  # noqa: E402  paid, portable signed PQ-TLS attestation bundle via x402 (owner-priced 2026-11-25)
+x402_attestation.register(bp, {
+    "db": db, "base": public_base, "perform_scan": perform_scan, "scan_summary": scan_summary,
+    "normalize_domain": quantum_vuln_scanner.normalize_domain, "scan_error": quantum_vuln_scanner.ScanError,
+    "issue_receipt": lambda result, scan_id: receipts.issue_and_store_receipt(
+        {"base": public_base, "db": db, "data_dir": lambda: current_app.config["DATA_DIR"]}, result, scan_id=scan_id),
+})
+
 import dach_hosting  # noqa: E402  DACH hosting study page (self-contained module)
 dach_hosting.register(bp, {"base_dir": BASE_DIR, "db": db, "lang": current_lang, "client_hash": client_hash,
                            "de_pages": DE_PAGES, "de_endpoints": i18n.DE_ENDPOINTS})
