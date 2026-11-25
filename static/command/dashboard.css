@@ -1,20 +1,22 @@
-/* Keep the public Command overview consistent across its server and React renderings. */
+/* Compact, synchronized Command overview layout across server SSR and React hydration. */
 #command-root #workspace-content {
   min-inline-size: 0;
 }
 
 #command-root .qa-hero-modular-glass.qa-neon {
-  --dashboard-line: #324760;
-  --dashboard-panel: #142238;
+  --dashboard-line: rgba(138, 229, 247, .20);
+  --dashboard-panel: rgba(20, 34, 56, .88);
   --dashboard-muted: #b7c8dc;
   --dashboard-accent: #8ae5f7;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(12px, 2vw, 24px);
-  padding: clamp(14px, 3vw, 32px);
+  gap: clamp(10px, 1.5vw, 18px);
+  padding: clamp(12px, 2vw, 22px);
   border: 1px solid var(--dashboard-line);
+  border-radius: 18px;
   background: #0e1a2c;
   box-shadow: none;
+  margin-bottom: 18px;
 }
 
 #command-root .qa-neon .qa-hero-grid,
@@ -37,9 +39,10 @@
 }
 
 #command-root .qa-neon .qa-hero-content h1 {
-  max-inline-size: 26ch;
-  font-size: clamp(1.9rem, 3.6vw, 3.2rem);
-  line-height: 1.22;
+  max-inline-size: 28ch;
+  font-size: clamp(1.38rem, 2.4vw, 2.25rem);
+  line-height: 1.25;
+  margin: 0 0 6px;
   color: #f4f8ff;
   background: none;
   -webkit-text-fill-color: currentColor;
@@ -48,20 +51,24 @@
 
 #command-root .qa-neon .qa-hero-content p {
   max-inline-size: 66ch;
+  font-size: 13.5px;
+  line-height: 1.55;
+  margin: 0;
   color: var(--dashboard-muted);
 }
 
 #command-root .qa-neon .qa-glass-card {
   min-inline-size: 0;
-  padding: clamp(14px, 2vw, 24px);
+  padding: clamp(12px, 1.6vw, 18px);
   border: 1px solid var(--dashboard-line);
+  border-radius: 14px;
   background: var(--dashboard-panel);
   box-shadow: none;
   transform: none;
 }
 
 #command-root .qa-neon .qa-scan-card {
-  border-color: #4e8198;
+  border-color: rgba(138, 229, 247, .36);
 }
 
 #command-root .qa-neon .qa-scan-card .input {
@@ -73,10 +80,11 @@
 #command-root .qa-neon .qa-scan-card .input input {
   inline-size: 100%;
   min-inline-size: 0;
+  min-block-size: 40px;
 }
 
 #command-root .qa-neon .qa-scan-card .input button {
-  min-block-size: 44px;
+  min-block-size: 40px;
   flex-shrink: 0;
   background: var(--dashboard-accent);
   color: #102032;
@@ -86,37 +94,169 @@
   flex: 0 1 auto;
 }
 
+/* Compact inline trial block inside scan card */
+#command-root .qa-neon .qa-trial.qa-trial-inline {
+  margin: 12px 0 0;
+  padding: 12px 13px;
+  border-radius: 12px;
+  max-inline-size: none;
+}
+
+#command-root .qa-neon .qa-trial.qa-trial-inline h2 {
+  font-size: 14.5px;
+  margin: 0 0 8px;
+}
+
+#command-root .qa-neon .trial-plan-switch {
+  gap: 8px;
+  margin: .35rem 0 .7rem;
+}
+
+#command-root .qa-neon button.trial-plan-pill {
+  min-height: 46px !important;
+  padding: 6px 10px !important;
+  border-radius: 12px !important;
+  gap: 2px !important;
+}
+
+#command-root .qa-neon button.trial-plan-pill .trial-plan-main {
+  font-size: 13.5px !important;
+}
+
+#command-root .qa-neon button.trial-plan-pill .trial-plan-sub {
+  font-size: 11px !important;
+}
+
+#command-root .qa-neon .qa-trial-inline .qa-field {
+  min-height: 38px;
+  padding: 7px 11px;
+  font-size: 13.5px;
+}
+
+#command-root .qa-neon .qa-trial-inline .qa-trial-submit {
+  min-height: 40px;
+  padding: 8px 16px;
+  font-size: 14px;
+  border-radius: 999px;
+}
+
+#command-root .qa-neon .qa-trial-inline .qa-trial-note {
+  font-size: 11.5px;
+  margin: 6px 0 0;
+}
+
+/* Compact metrics card & mini bar chart */
 #command-root .qa-neon .qa-metrics-card {
   align-items: stretch;
   text-align: start;
+  gap: 6px;
 }
 
 #command-root .qa-neon .qa-metric-big {
   text-align: match-parent;
+  font-size: clamp(1.85rem, 3vw, 2.45rem);
+  line-height: 1.1;
+  margin: 0;
   color: var(--dashboard-accent);
   background: none;
   -webkit-text-fill-color: currentColor;
   filter: none;
 }
 
+#command-root .qa-neon .qa-metrics-card .qa-card-sub {
+  font-size: 12.5px;
+  line-height: 1.45;
+  margin: 0 0 4px;
+}
+
 #command-root .qa-neon .qa-chart {
-  margin-inline: 0;
+  margin: 2px 0 0;
 }
 
 #command-root .qa-neon .qa-chart svg {
   display: block;
   inline-size: 100%;
-  max-inline-size: 340px;
+  max-inline-size: 210px;
+  height: auto;
+}
+
+/* Compact Grade B example card */
+#command-root .qa-neon .qa-grade-card {
+  gap: 8px;
+}
+
+#command-root .qa-neon .qa-grade-head {
+  gap: 8px;
+}
+
+#command-root .qa-neon .qa-grade-icon {
+  width: 34px;
+  height: 34px;
+}
+
+#command-root .qa-neon .qa-grade-b {
+  font-size: 1.2rem;
+}
+
+#command-root .qa-neon .qa-grade-line {
+  font-size: 13px;
+  margin: 0;
+}
+
+#command-root .qa-neon .qa-details summary {
+  font-size: 12.5px;
+  padding: 6px 0;
 }
 
 #command-root .qa-neon .qa-details pre {
   max-inline-size: 100%;
   overflow-x: auto;
+  font-size: 11.5px;
+}
+
+#command-root .qa-neon .qa-result-trial.qa-example-next {
+  margin-top: 6px;
+  padding: 10px 12px;
+  border-radius: 11px;
+}
+
+#command-root .qa-neon .qa-result-trial.qa-example-next h3,
+#command-root .qa-neon .qa-result-trial.qa-example-next strong {
+  font-size: 13.5px;
+  margin: 0 0 4px;
+}
+
+#command-root .qa-neon .qa-result-trial.qa-example-next p {
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0 0 8px;
+}
+
+#command-root .qa-neon .qa-example-scan {
+  min-height: 38px;
+  padding: 7px 14px;
+  font-size: 13.5px;
 }
 
 @media (max-width: 680px) {
+  #command-root .content {
+    padding: 12px 12px 16px !important;
+  }
+
   #command-root .qa-hero-modular-glass.qa-neon {
     grid-template-columns: minmax(0, 1fr);
+    padding: 10px;
+    gap: 10px;
+    border-radius: 15px;
+  }
+
+  #command-root .qa-neon .qa-glass-card {
+    padding: 11px 12px;
+    border-radius: 12px;
+  }
+
+  #command-root .qa-neon .qa-chart svg {
+    max-inline-size: 195px;
   }
 
   #command-root .qa-neon .qa-hero-examples button {

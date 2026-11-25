@@ -38,7 +38,7 @@
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="stylesheet" href="/static/command/app.css?v=20261122-scanmobile1">
   <link rel="stylesheet" href="/static/command/pages.css?v=20261122-scanmobile1">
-  {% if request.endpoint == 'site.index' %}<link rel="stylesheet" href="/static/a2a-search.css?v=20261125-a2aui4">{% endif %}
+  {% if request.endpoint == 'site.index' %}<link rel="stylesheet" href="/static/a2a-search.css?v=20261125-a2aui5">{% endif %}
   {% if false %}{% block head %}{% endblock %}{% endif %}{% set head_html = self.head() %}{{ head_html }}
   {% if not seo_noindex and "application/ld+json" not in head_html %}<script type="application/ld+json">{{ {"@context": "https://schema.org", "@type": "WebPage", "@id": metadata_url(lang) ~ "#webpage", "url": metadata_url(lang), "name": seo_title_text, "description": seo_description_text, "inLanguage": lang, "isPartOf": {"@type": "WebSite", "@id": abs_url('site.index') ~ "#website", "name": "Quantum Aether", "url": abs_url('site.index')}, "publisher": org_jsonld()} | tojson }}</script>{% endif %}
 </head>
