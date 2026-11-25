@@ -226,17 +226,18 @@ class A2ATests(unittest.TestCase):
         self.assertEqual(r_ar_c["parts"][1]["data"]["topic"], "contact")
         self.assertTrue(r_ar_c["parts"][1]["data"]["allow_contact"])
 
-        # Top-of-page A2A search & Q&A bar rendered cleanly in AR, EN, DE
+        # Top-of-page A2A search & Q&A bar rendered cleanly on homepage (AR, EN, DE) and omitted on subpages
         for path, needle in (
             ("/?lang=ar", "اسأل وكيل A2A"),
             ("/?lang=en", "Ask A2A agent"),
             ("/?lang=de", "A2A-Assistent fragen"),
-            ("/partners?lang=de", "data-qa-agent-bar"),
         ):
             html = self.client.get(path).get_data(as_text=True)
             self.assertIn("data-qa-agent-bar", html, path)
+            self.assertIn("data-qa-suggestions", html, path)
             self.assertIn(needle, html, path)
             self.assertIn("/static/a2a-search.js", html, path)
+        self.assertNotIn("data-qa-agent-bar", self.client.get("/partners?lang=de").get_data(as_text=True))
         self.scanner.assert_not_called()
 
 

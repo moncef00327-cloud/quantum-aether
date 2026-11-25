@@ -1,0 +1,127 @@
+/* Keep the public Command overview consistent across its server and React renderings. */
+#command-root #workspace-content {
+  min-inline-size: 0;
+}
+
+#command-root .qa-hero-modular-glass.qa-neon {
+  --dashboard-line: #324760;
+  --dashboard-panel: #142238;
+  --dashboard-muted: #b7c8dc;
+  --dashboard-accent: #8ae5f7;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(12px, 2vw, 24px);
+  padding: clamp(14px, 3vw, 32px);
+  border: 1px solid var(--dashboard-line);
+  background: #0e1a2c;
+  box-shadow: none;
+}
+
+#command-root .qa-neon .qa-hero-grid,
+#command-root .qa-neon .qa-hero-bottom-cards {
+  display: contents;
+}
+
+#command-root .qa-neon .qa-hero-content,
+#command-root .qa-neon .qa-scan-card {
+  grid-column: 1 / -1;
+}
+
+#command-root .qa-neon .qa-hero-content { order: 0; }
+#command-root .qa-neon .qa-scan-card { order: 1; }
+#command-root .qa-neon .qa-metrics-card { order: 2; }
+#command-root .qa-neon .qa-grade-card { order: 3; }
+
+#command-root .qa-neon .qa-shield-stage {
+  display: none;
+}
+
+#command-root .qa-neon .qa-hero-content h1 {
+  max-inline-size: 26ch;
+  font-size: clamp(1.9rem, 3.6vw, 3.2rem);
+  line-height: 1.22;
+  color: #f4f8ff;
+  background: none;
+  -webkit-text-fill-color: currentColor;
+  text-shadow: none;
+}
+
+#command-root .qa-neon .qa-hero-content p {
+  max-inline-size: 66ch;
+  color: var(--dashboard-muted);
+}
+
+#command-root .qa-neon .qa-glass-card {
+  min-inline-size: 0;
+  padding: clamp(14px, 2vw, 24px);
+  border: 1px solid var(--dashboard-line);
+  background: var(--dashboard-panel);
+  box-shadow: none;
+  transform: none;
+}
+
+#command-root .qa-neon .qa-scan-card {
+  border-color: #4e8198;
+}
+
+#command-root .qa-neon .qa-scan-card .input {
+  min-inline-size: 0;
+  background: #0e1a2c;
+  border-color: #536d89;
+}
+
+#command-root .qa-neon .qa-scan-card .input input {
+  inline-size: 100%;
+  min-inline-size: 0;
+}
+
+#command-root .qa-neon .qa-scan-card .input button {
+  min-block-size: 44px;
+  flex-shrink: 0;
+  background: var(--dashboard-accent);
+  color: #102032;
+}
+
+#command-root .qa-neon .qa-hero-examples button {
+  flex: 0 1 auto;
+}
+
+#command-root .qa-neon .qa-metrics-card {
+  align-items: stretch;
+  text-align: start;
+}
+
+#command-root .qa-neon .qa-metric-big {
+  text-align: match-parent;
+  color: var(--dashboard-accent);
+  background: none;
+  -webkit-text-fill-color: currentColor;
+  filter: none;
+}
+
+#command-root .qa-neon .qa-chart {
+  margin-inline: 0;
+}
+
+#command-root .qa-neon .qa-chart svg {
+  display: block;
+  inline-size: 100%;
+  max-inline-size: 340px;
+}
+
+#command-root .qa-neon .qa-details pre {
+  max-inline-size: 100%;
+  overflow-x: auto;
+}
+
+@media (max-width: 680px) {
+  #command-root .qa-hero-modular-glass.qa-neon {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #command-root .qa-neon .qa-hero-examples button {
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    overflow-wrap: anywhere;
+  }
+}

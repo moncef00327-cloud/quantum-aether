@@ -12,7 +12,7 @@
   box-shadow:0 12px 32px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.08);
   color:#efeef4;
 }
-.qa-agent-search[hidden],.qa-agent-search [hidden]{display:none!important}
+[data-qa-command-search][hidden],.qa-agent-search[hidden],.qa-agent-search [hidden]{display:none!important}
 .qa-agent-form{display:flex;align-items:center;gap:10px}
 .qa-agent-badge{
   display:inline-flex;align-items:center;gap:6px;flex:0 0 auto;
@@ -60,7 +60,14 @@
 }
 .qa-agent-submit:hover{filter:brightness(1.08)}
 .qa-agent-submit:disabled{opacity:.6;cursor:wait}
-.qa-agent-chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+.qa-agent-suggestions{margin-block-start:6px}
+.qa-agent-suggestions > summary{
+  width:fit-content;min-height:36px;padding-block:8px;cursor:pointer;
+  color:#cbd9ee;font-size:13px;font-weight:600;
+}
+.qa-agent-suggestions > summary:hover{color:#fff}
+.qa-agent-suggestions > summary:focus-visible{outline:2px solid #67e8f9;outline-offset:3px}
+.qa-agent-chips{display:flex;flex-wrap:wrap;gap:7px;padding-block:2px 6px}
 .qa-agent-chip{
   padding:6px 12px;border-radius:999px;
   border:1px solid rgba(148,163,184,.22);

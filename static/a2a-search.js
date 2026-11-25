@@ -7,6 +7,7 @@
       if (target && target.firstElementChild !== commandSearch) {
         target.prepend(commandSearch);
       }
+      commandSearch.hidden = Boolean(target && !target.querySelector(":scope > .qa-hero-modular-glass"));
       commandSearch.querySelectorAll("[data-qa-agent-bar]").forEach(function (bar) {
         bar.hidden = bar.getAttribute("data-lang") !== document.documentElement.lang;
       });
@@ -23,6 +24,7 @@
     var form = bar.querySelector("[data-qa-agent-form]");
     var input = bar.querySelector("[data-qa-input]");
     var submitBtn = bar.querySelector("[data-qa-submit]");
+    var suggestions = bar.querySelector("[data-qa-suggestions]");
     var panel = bar.querySelector("[data-qa-panel]");
     var answerEl = bar.querySelector("[data-qa-answer]");
     var pointsEl = bar.querySelector("[data-qa-points]");
@@ -257,6 +259,8 @@
         if (activeRequest) return;
         var prompt = chip.getAttribute("data-qa-prompt") || "";
         input.value = prompt;
+        suggestions.open = false;
+        input.focus({ preventScroll: true });
         queryAgent(prompt, null, false);
       });
     });
@@ -284,7 +288,7 @@
     }
 
     document.addEventListener("keydown", function (e) {
-      if (bar.hidden || e.defaultPrevented || bar.closest("[inert]")) return;
+      if (e.defaultPrevented || bar.closest("[hidden], [inert]")) return;
       if (e.key === "Escape" && !panel.hidden && bar.contains(document.activeElement)) {
         closePanel();
       } else if (e.key === "/" && !e.ctrlKey && !e.metaKey && !e.altKey) {

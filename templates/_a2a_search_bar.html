@@ -10,7 +10,9 @@
     </div>
     <button type="submit" class="qa-agent-submit" data-qa-submit>{{ 'اسأل' if lang == 'ar' else ('Fragen' if lang == 'de' else 'Ask') }}</button>
   </form>
-  <div class="qa-agent-chips" role="group" aria-label="{{ 'أسئلة سريعة' if lang == 'ar' else ('Schnellfragen' if lang == 'de' else 'Quick questions') }}">
+  <details class="qa-agent-suggestions" data-qa-suggestions>
+    <summary>{{ 'أسئلة مقترحة' if lang == 'ar' else ('Fragevorschläge' if lang == 'de' else 'Suggested questions') }}</summary>
+    <div class="qa-agent-chips">
     {% if lang == 'ar' %}
     <button type="button" class="qa-agent-chip" data-qa-prompt="هل cloudflare.com جاهز لما بعد الكم؟">فحص cloudflare.com</button>
     <button type="button" class="qa-agent-chip" data-qa-prompt="ما هو عرض MSP Pilot 290 €؟">عرض MSP Pilot (290 €)</button>
@@ -33,7 +35,8 @@
     <button type="button" class="qa-agent-chip" data-qa-prompt="What are the plans and pricing?">Pricing &amp; plans</button>
     <button type="button" class="qa-agent-chip" data-qa-prompt="How do I connect MCP in Cursor or Claude?">Connect MCP / A2A</button>
     {% endif %}
-  </div>
+    </div>
+  </details>
   <div class="qa-agent-panel" data-qa-panel hidden>
     <div class="qa-agent-panel-head">
       <span class="qa-agent-panel-title" data-qa-panel-title><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.5 20 5.5v6c0 5-3.4 8.4-8 10-4.6-1.6-8-5-8-10v-6z"></path><path d="m9 12 2 2 4-4"></path></svg>{{ 'رد وكيل Quantum Aether (A2A)' if lang == 'ar' else ('Antwort · Quantum Aether A2A-Assistent' if lang == 'de' else 'Quantum Aether A2A Agent') }}</span>
