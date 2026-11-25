@@ -32,7 +32,8 @@ HOST_RE = re.compile(r"(?<![@\w.-])((?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[
 SCAN_WORDS = re.compile(r"\b(scan|rescan|measure|check now|fresh|افحص|فحص)\b", re.I)
 AFFILIATE_WORDS = re.compile(r"\b(affiliate|referral|partner|commission|ref\s*code|عمولة|إحالة|شراكة|شريك)\b", re.I)
 ATTESTATION_WORDS = re.compile(r"\b(attestation|cbom|cyclonedx|auditor\s+pdf|audit\s+pdf|sample\.pdf|شهادة\s+تدقيق|ملف\s+المدقق)\b", re.I)
-VALID_SKILLS = ("tls-evidence", "tls-scan", "tls-attestation", "paid-data", "agent-affiliate")
+MSP_PILOT_WORDS = re.compile(r"\b(msp|pilot|it[- ]?dienstleister|white[- ]?label|ampel|50\s+hostnames?|290\s*€|290\s*eur|بايلوت)\b", re.I)
+VALID_SKILLS = ("tls-evidence", "tls-scan", "tls-attestation", "msp-pilot", "paid-data", "agent-affiliate")
 
 
 def services_offer(base, domain=None, scan_id=None, price_usd="49", sector_price_usd="0.50", attestation_price_usd="5.00"):
@@ -78,8 +79,18 @@ def services_offer(base, domain=None, scan_id=None, price_usd="49", sector_price
         },
         "msp_pilot": {
             "price_eur": "290",
-            "summary": "IT-Dienstleister / MSP Partner Pilot: up to 50 hostnames, German Ampel PDF + signed receipts + optional logo (3 partner slots)",
+            "currency": "EUR",
+            "hostnames_limit": 50,
+            "partner_slots": 3,
+            "deliverables": [
+                "German/English Ampel PDF report for up to 50 client hostnames",
+                "Offline-verifiable Ed25519 JWS signed TLS receipts per hostname",
+                "Optional partner white-label logo",
+            ],
+            "summary": "IT-Dienstleister / MSP Partner Pilot: up to 50 hostnames, German Ampel PDF + signed receipts + optional logo (3 partner slots, 290 EUR one-time)",
             "url": f"{base}/partners?lang=de#msp-pilot",
+            "url_en": f"{base}/partners?lang=en#msp-pilot",
+            "sample_pdf": f"{base}/api/v1/attestation/sample.pdf",
         },
         "organization_audit": {
             "price_eur": "490",
@@ -157,6 +168,13 @@ def card(base, version):
                             "buyer wallet with payment authorization. External observation, not a compliance certification.",
              "tags": ["attestation", "cbom", "cyclonedx", "pdf", "nis2", "dora", "x402", "paid", "ed25519"],
              "examples": ['{"skill":"tls-attestation"}', "How do I get a CycloneDX CBOM and auditor PDF attestation?"]},
+            {"id": "msp-pilot", "name": "IT-Dienstleister / MSP Partner Pilot (50 hostnames, 290 EUR)",
+             "description": "Returns details and booking links for the IT-Dienstleister / MSP Partner Pilot: "
+                            "up to 50 client hostnames checked for X25519MLKEM768 / BSI TR-02102-2 / NIS2 readiness, "
+                            "German Ampel PDF report + offline-verifiable Ed25519 signed receipts + optional partner "
+                            "white-label logo, 290 EUR one-time (3 partner slots). Includes free sample PDF preview.",
+             "tags": ["msp", "it-dienstleister", "pilot", "dach", "bsi", "nis2", "dora", "white-label", "pdf", "290eur"],
+             "examples": ['{"skill":"msp-pilot"}', "Tell me about the 290 EUR IT-Dienstleister MSP Pilot"]},
             {"id": "paid-data", "name": "Attestation, full report, and sector snapshots (x402)",
              "description": "Returns how to buy: Auditor-Ready PDF + CycloneDX CBOM attestation (5.00 USDC), full "
                             "remediation report per scan, or a weekly sector snapshot "
@@ -201,7 +219,9 @@ def _read_request(message):
         m = HOST_RE.search(joined)
         domain = m.group(1) if m else None
     if not skill:
-        if ATTESTATION_WORDS.search(joined):
+        if MSP_PILOT_WORDS.search(joined):
+            skill = "msp-pilot"
+        elif ATTESTATION_WORDS.search(joined):
             skill = "tls-attestation"
         elif AFFILIATE_WORDS.search(joined) and not domain:
             skill = "agent-affiliate"
@@ -423,6 +443,17 @@ def register(bp, services, version):
                 payload["receipt_jws"] = sign(signed_receipts.build_evidence_claims(payload, kind=kind))
                 payload["jwks_url"] = b + "/.well-known/jwks.json"
 
+        if skill == "msp-pilot":
+            offer = services_offer(b, domain=domain, price_usd=price_usd, sector_price_usd=sector_price_usd)
+            pilot = dict(offer["msp_pilot"], mcp=b + "/mcp", services=offer)
+            _audit("msp-pilot", domain or "", "ok")
+            return _reply(
+                "IT-Dienstleister / MSP Partner Pilot (290 EUR one-time, 3 partner slots): up to 50 client hostnames "
+                "measured for post-quantum TLS (X25519MLKEM768 / BSI TR-02102-2 / NIS2), delivered as a German Ampel "
+                "PDF report (optional partner white-label logo) + offline-verifiable Ed25519 JWS signed receipts. "
+                f"Book or request details (no upfront payment): {pilot['url']} (DE) / {pilot['url_en']} (EN). "
+                f"Free archived single-host sample PDF: {pilot['sample_pdf']}.",
+                pilot)
         if skill == "tls-attestation":
             offer = services_offer(b, domain=domain, price_usd=price_usd, sector_price_usd=sector_price_usd)
             att = dict(offer["tls_attestation"], example_request={"domain": domain or "example.com"},

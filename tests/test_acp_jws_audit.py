@@ -168,6 +168,17 @@ class AcpJwsAuditTests(unittest.TestCase):
         self.assertIs(att_data["read_only"], False)
         self.assertEqual(att_data["sample_pdf"], "https://ather-quantum.com/api/v1/attestation/sample.pdf")
 
+        # 5c) msp-pilot returns 290 EUR IT-Dienstleister Pilot without scanning
+        r_pilot = self.client.post("/acp/runs", json={
+            "agent_name": "quantum-aether",
+            "input": [{"role": "user", "parts": [{"content_type": "text/plain", "content": "Tell me about the IT-Dienstleister MSP Pilot (290 EUR)"}]}],
+        })
+        self.assertEqual(r_pilot.status_code, 200)
+        self.assertEqual(self.scanner.call_count, 1)
+        p_data = r_pilot.json["output"][0]["parts"][1]["data"]
+        self.assertEqual(p_data["price_eur"], "290")
+        self.assertEqual(p_data["hostnames_limit"], 50)
+
         # 6) Unsupported mode rejected
         r_bad_mode = self.client.post("/acp/runs", json={"agent_name": "quantum-aether", "mode": "stream", "input": []})
         self.assertEqual(r_bad_mode.status_code, 400)

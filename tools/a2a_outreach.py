@@ -51,7 +51,8 @@ OUR_CARD = f"{SITE}/.well-known/agent-card.json"
 USER_AGENT = f"QuantumAetherA2A/1.0 (+{OUR_CARD})"
 
 RELEVANT_RE = re.compile(
-    r"\b(security|cyber|tls|ssl|cert|pqc|quantum|audit|compliance|nis2|dora|soc2|iso27001|gdpr|privacy|"
+    r"\b(security|cyber|tls|ssl|cert|pqc|quantum|audit|compliance|nis2|dora|bsi|soc2|iso27001|gdpr|privacy|"
+    r"msp|it[- ]?dienstleister|managed\s+it|agency|consulting|hosting|datacenter|"
     r"x402|usdc|m2m|clearinghouse|marketplace|directory|registry|discovery|network|coordina|acquisition|"
     r"devops|cloud|infra|enterprise|b2b|fintech|bank|payment|saas|api|mcp|a2a|trust|verify|osint|recon|scanner)\b",
     re.I,
@@ -297,12 +298,14 @@ def build_a2a_pitch(summary: dict, host: str, obs: dict, *, date_iso: str | None
     text = (
         f"Hello {name} — one-time A2A interoperability & post-quantum TLS note from Quantum Aether ({OUR_CARD}).\n\n"
         f"{finding}\n\n"
-        f"Your agent or team can verify any public hostname via our signed A2A 0.3.0 endpoint ({SITE}/a2a) or "
-        f"remote MCP server ({SITE}/mcp — free stored evidence & rate-limited scans with Ed25519 JWS receipts "
-        f"verifiable via {SITE}/.well-known/jwks.json). For compliance workflows (NIS2/DORA/BSI), we also offer "
-        f"an Auditor-Ready Signed PDF + CycloneDX 1.6 CBOM Attestation ($5.00 USDC on Base via x402; free archived "
-        f"sample PDF: {SITE}/api/v1/attestation/sample.pdf) and a 30% recurring AI Agent Affiliate Programme "
-        f"(MCP register_agent_affiliate). Free live check for your host: {SITE}/?domain={host}&lang=en\n\n"
+        f"What we offer for IT service providers, MSPs, security teams, and AI agents:\n"
+        f"1) IT-Dienstleister / MSP Partner Pilot (290 EUR one-time, up to 50 client hostnames, German Ampel PDF + "
+        f"Ed25519 signed receipts + optional partner logo): {SITE}/partners?lang=de#msp-pilot\n"
+        f"2) Free A2A 0.3.0 ({SITE}/a2a) & remote MCP ({SITE}/mcp) PQ-TLS checks with Ed25519 JWS receipts "
+        f"({SITE}/.well-known/jwks.json) + Auditor-Ready Signed PDF & CycloneDX 1.6 CBOM Attestation ($5.00 USDC x402; "
+        f"free archived sample PDF: {SITE}/api/v1/attestation/sample.pdf).\n"
+        f"3) 30% recurring AI Agent & Partner Affiliate Programme (MCP register_agent_affiliate). "
+        f"Free live check for your host: {SITE}/?domain={host}&lang=en\n\n"
         f"One-time message; we will not message this endpoint again. Reply 'stop' to suppress {host}."
     )
     data = {
@@ -318,6 +321,13 @@ def build_a2a_pitch(summary: dict, host: str, obs: dict, *, date_iso: str | None
         "observed_kex_class": obs["kex_class"],
         "free_check_url": f"{SITE}/?domain={host}&lang=en",
         "free_sample_pdf": f"{SITE}/api/v1/attestation/sample.pdf",
+        "msp_pilot": {
+            "price_eur": "290",
+            "hostnames": 50,
+            "deliverables": "German Ampel PDF + Ed25519 signed receipts + optional partner white-label logo",
+            "url_de": f"{SITE}/partners?lang=de#msp-pilot",
+            "url_en": f"{SITE}/partners?lang=en#msp-pilot",
+        },
         "attestation_api": f"{SITE}/api/v1/attestation",
         "attestation_price": "5.00 USDC (Base, x402 v2)",
         "affiliate_register": f"{SITE}/api/v1/agent/affiliate/register",

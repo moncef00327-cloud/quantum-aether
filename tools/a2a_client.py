@@ -131,8 +131,10 @@ def build_intro_payload(
         text = (
             f"Hello {target_name} — Quantum Aether ({OUR_CARD}) provides post-quantum TLS readiness evidence "
             f"(X25519MLKEM768 / ML-KEM, FIPS 203) over A2A ({SITE}/a2a) and MCP ({SITE}/mcp). "
+            f"For IT service providers / MSPs: our IT-Dienstleister Partner Pilot covers up to 50 client hostnames "
+            f"(German Ampel PDF + Ed25519 signed receipts + optional logo) for 290 EUR one-time ({SITE}/partners?lang=de#msp-pilot). "
             f"Free stored evidence and rate-limited scans include Ed25519 JWS receipts ({SITE}/.well-known/jwks.json). "
-            f"For compliance workflows, we also offer a paid Auditor-Ready Signed PDF + CycloneDX 1.6 CBOM Attestation "
+            f"We also offer a paid Auditor-Ready Signed PDF + CycloneDX 1.6 CBOM Attestation "
             f"(5.00 USDC on Base via x402; free read-only sample PDF: {SITE}/api/v1/attestation/sample.pdf) and a "
             f"programmatic AI Agent Affiliate Programme (30% recurring monitoring commission via MCP register_agent_affiliate). "
             f"External observations, not compliance certifications."
@@ -143,6 +145,8 @@ def build_intro_payload(
         "a2a_endpoint": f"{SITE}/a2a",
         "mcp_endpoint": f"{SITE}/mcp",
         "jwks_url": f"{SITE}/.well-known/jwks.json",
+        "msp_pilot_eur": "290",
+        "msp_pilot_url": f"{SITE}/partners?lang=de#msp-pilot",
         "free_sample_pdf": f"{SITE}/api/v1/attestation/sample.pdf",
         "attestation_price": "5.00 USDC (Base, x402 v2, buyer wallet required)",
         "affiliate_register": f"{SITE}/api/v1/agent/affiliate/register",

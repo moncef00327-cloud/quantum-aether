@@ -83,6 +83,8 @@ class A2AOutreachTests(unittest.TestCase):
             self.assertEqual(res["sent"], 2)
             self.assertEqual(len(posted), 2)
             self.assertIn("/api/v1/attestation/sample.pdf", posted[0][1]["params"]["message"]["parts"][0]["text"])
+            self.assertIn("290 EUR", posted[0][1]["params"]["message"]["parts"][0]["text"])
+            self.assertEqual(posted[0][1]["params"]["message"]["parts"][1]["data"]["msp_pilot"]["price_eur"], "290")
             self.assertIn("X25519", posted[0][1]["params"]["message"]["parts"][0]["text"])
 
             # 3) Second run never repeats either agent

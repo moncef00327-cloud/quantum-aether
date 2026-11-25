@@ -53,6 +53,8 @@ class A2AClientTests(unittest.TestCase):
         self.assertEqual(payload["method"], "message/send")
         parts = payload["params"]["message"]["parts"]
         self.assertIn("/api/v1/attestation/sample.pdf", parts[0]["text"])
+        self.assertIn("290 EUR", parts[0]["text"])
+        self.assertEqual(parts[1]["data"]["msp_pilot_eur"], "290")
         self.assertIn("5.00 USDC", parts[0]["text"])
         self.assertEqual(parts[1]["data"]["agent_card"], "https://ather-quantum.com/.well-known/agent-card.json")
         self.assertEqual(parts[1]["data"]["domain"], "partner.example")

@@ -37,9 +37,21 @@ class A2ATests(unittest.TestCase):
             self.assertEqual(c["securitySchemes"], {})
             self.assertEqual(
                 {s["id"] for s in c["skills"]},
-                {"tls-evidence", "tls-scan", "tls-attestation", "paid-data", "agent-affiliate"},
+                {"tls-evidence", "tls-scan", "tls-attestation", "msp-pilot", "paid-data", "agent-affiliate"},
             )
             self.assertFalse(c["capabilities"]["streaming"])
+
+    def test_msp_pilot_skill_290_eur(self):
+        r = self.send("Tell me about the 290 EUR IT-Dienstleister MSP Pilot").json["result"]
+        txt = r["parts"][0]["text"]
+        data = r["parts"][1]["data"]
+        self.assertIn("290 EUR", txt)
+        self.assertIn("50 client hostnames", txt)
+        self.assertIn("/partners?lang=de#msp-pilot", txt)
+        self.assertEqual(data["price_eur"], "290")
+        self.assertEqual(data["hostnames_limit"], 50)
+        self.assertEqual(data["partner_slots"], 3)
+        self.scanner.assert_not_called()
 
     def test_tls_attestation_skill_and_msp_pilot(self):
         r = self.send("How do I get a CycloneDX CBOM and auditor PDF attestation for example.com?").json["result"]

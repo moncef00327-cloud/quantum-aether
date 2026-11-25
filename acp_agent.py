@@ -106,7 +106,9 @@ def _parse_input(body: dict):
         m = a2a_agent.HOST_RE.search(joined)
         domain = m.group(1) if m else None
     if not skill:
-        if a2a_agent.ATTESTATION_WORDS.search(joined):
+        if a2a_agent.MSP_PILOT_WORDS.search(joined):
+            skill = "msp-pilot"
+        elif a2a_agent.ATTESTATION_WORDS.search(joined):
             skill = "tls-attestation"
         elif a2a_agent.AFFILIATE_WORDS.search(joined) and not domain:
             skill = "agent-affiliate"
@@ -192,6 +194,20 @@ def register(bp, services, version: str):
         b = base()
         price_usd = str(current_app.config["PRICE"])
         sector_price_usd = str(current_app.config.get("X402_SECTOR_PRICE") or "0.50")
+
+        if skill == "msp-pilot":
+            offer = a2a_agent.services_offer(b, domain=domain, price_usd=price_usd, sector_price_usd=sector_price_usd)
+            pilot = dict(offer["msp_pilot"], mcp=b + "/mcp", a2a=b + "/a2a", services=offer)
+            _audit("msp-pilot", domain or "", "ok")
+            text = (
+                "IT-Dienstleister / MSP Partner Pilot (290 EUR one-time, 3 partner slots): up to 50 client hostnames, "
+                f"German Ampel PDF (optional partner logo) + Ed25519 signed receipts. Details: {pilot['url']} (DE) / "
+                f"{pilot['url_en']} (EN). Free sample PDF: {pilot['sample_pdf']}."
+            )
+            resp = _run_response(run_id, created_at, text, pilot)
+            resp.headers["Access-Control-Allow-Origin"] = "*"
+            resp.headers["Cache-Control"] = "no-store"
+            return resp
 
         if skill == "tls-attestation":
             offer = a2a_agent.services_offer(b, domain=domain, price_usd=price_usd, sector_price_usd=sector_price_usd)
