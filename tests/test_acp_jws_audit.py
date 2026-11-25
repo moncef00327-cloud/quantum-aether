@@ -156,6 +156,18 @@ class AcpJwsAuditTests(unittest.TestCase):
         self.assertIn("register_agent_affiliate", aff_text)
         self.assertIn("30%", aff_text)
 
+        # 5b) tls-attestation returns 5.00 USDC details + free sample PDF without scanning
+        r_att = self.client.post("/acp/runs", json={
+            "agent_name": "quantum-aether",
+            "input": [{"role": "user", "parts": [{"content_type": "text/plain", "content": "Give me the CycloneDX CBOM auditor PDF attestation details"}]}],
+        })
+        self.assertEqual(r_att.status_code, 200)
+        self.assertEqual(self.scanner.call_count, 1)
+        att_data = r_att.json["output"][0]["parts"][1]["data"]
+        self.assertEqual(att_data["price_usd"], "5.00")
+        self.assertIs(att_data["read_only"], False)
+        self.assertEqual(att_data["sample_pdf"], "https://ather-quantum.com/api/v1/attestation/sample.pdf")
+
         # 6) Unsupported mode rejected
         r_bad_mode = self.client.post("/acp/runs", json={"agent_name": "quantum-aether", "mode": "stream", "input": []})
         self.assertEqual(r_bad_mode.status_code, 400)

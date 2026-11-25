@@ -31,8 +31,32 @@ class A2ATests(unittest.TestCase):
             self.assertEqual(c["protocolVersion"], a2a_agent.PROTOCOL)
             self.assertEqual(c["url"], "https://ather-quantum.com/a2a")
             self.assertEqual(c["preferredTransport"], "JSONRPC")
-            self.assertEqual({s["id"] for s in c["skills"]}, {"tls-evidence", "tls-scan", "paid-data", "agent-affiliate"})
+            self.assertEqual(c["supportedInterfaces"][0]["url"], "https://ather-quantum.com/a2a")
+            self.assertEqual(c["supportedInterfaces"][0]["protocolBinding"], "JSONRPC")
+            self.assertFalse(c["supportsAuthenticatedExtendedCard"])
+            self.assertEqual(c["securitySchemes"], {})
+            self.assertEqual(
+                {s["id"] for s in c["skills"]},
+                {"tls-evidence", "tls-scan", "tls-attestation", "paid-data", "agent-affiliate"},
+            )
             self.assertFalse(c["capabilities"]["streaming"])
+
+    def test_tls_attestation_skill_and_msp_pilot(self):
+        r = self.send("How do I get a CycloneDX CBOM and auditor PDF attestation for example.com?").json["result"]
+        txt = r["parts"][0]["text"]
+        data = r["parts"][1]["data"]
+        self.assertIn("5.00 USDC", txt)
+        self.assertIn("/api/v1/attestation/sample.pdf", txt)
+        self.assertIn("get_tls_attestation", txt)
+        self.assertEqual(data["price_usd"], "5.00")
+        self.assertIs(data["read_only"], False)
+        self.assertIs(data["starts_scan"], True)
+        self.assertIs(data["buyer_wallet_required"], True)
+        self.assertIs(data["payment_authorization_required"], True)
+        self.assertEqual(data["sample_pdf"], "https://ather-quantum.com/api/v1/attestation/sample.pdf")
+        self.assertEqual(data["example_request"]["domain"], "example.com")
+        self.assertEqual(data["services"]["msp_pilot"]["price_eur"], "290")
+        self.scanner.assert_not_called()
 
     def test_agent_affiliate_skill(self):
         r = self.send("How do AI agents earn referral commission?").json["result"]

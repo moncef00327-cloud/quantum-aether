@@ -24,9 +24,11 @@ PROTOCOL = "0.3.0"
 HOST_RE = re.compile(r"(?<![@\w.-])((?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63})(?![\w-])", re.I)
 SCAN_WORDS = re.compile(r"\b(scan|rescan|measure|check now|fresh|افحص|فحص)\b", re.I)
 AFFILIATE_WORDS = re.compile(r"\b(affiliate|referral|partner|commission|ref\s*code|عمولة|إحالة|شراكة|شريك)\b", re.I)
+ATTESTATION_WORDS = re.compile(r"\b(attestation|cbom|cyclonedx|auditor\s+pdf|audit\s+pdf|sample\.pdf|شهادة\s+تدقيق|ملف\s+المدقق)\b", re.I)
+VALID_SKILLS = ("tls-evidence", "tls-scan", "tls-attestation", "paid-data", "agent-affiliate")
 
 
-def services_offer(base, domain=None, scan_id=None, price_usd="49", sector_price_usd="0.50"):
+def services_offer(base, domain=None, scan_id=None, price_usd="49", sector_price_usd="0.50", attestation_price_usd="5.00"):
     q = f"?domain={domain}" if domain else ""
     return {
         "monitoring": {
@@ -35,12 +37,42 @@ def services_offer(base, domain=None, scan_id=None, price_usd="49", sector_price
             "trial_url": f"{base}/monitoring{q}#trial-form",
             "pricing_url": f"{base}/pricing",
         },
+        "tls_attestation": {
+            "price_usd": str(attestation_price_usd),
+            "currency": "USDC",
+            "network": "Base",
+            "scheme": "x402 v2 exact",
+            "read_only": False,
+            "starts_scan": True,
+            "buyer_wallet_required": True,
+            "payment_authorization_required": True,
+            "how": ("Paid per call with x402 v2 (5.00 USDC on Base) over HTTP POST /api/v1/attestation or MCP tool "
+                    "get_tls_attestation using an x402-compatible client with a funded buyer wallet. Unpaid calls "
+                    "return HTTP 402 with payment requirements and never charge; agents should not auto-retry paid "
+                    "calls without explicit spend approval."),
+            "http": f"{base}/api/v1/attestation",
+            "mcp_tool": "get_tls_attestation",
+            "sample_json": f"{base}/api/v1/attestation/sample",
+            "sample_pdf": f"{base}/api/v1/attestation/sample.pdf",
+            "deliverables": [
+                "Ed25519 JWS signed TLS receipt",
+                "CycloneDX 1.6 CBOM JSON",
+                "Printable Auditor-Ready PDF (token-gated URL, 7-day expiry)",
+                "Bundle-level Ed25519 JWS integrity signature",
+            ],
+            "note": "External point-in-time port-443 TLS observation, not a compliance certification.",
+        },
         "full_report": {
             "price_usd": str(price_usd),
             "how": "PayPal, on-chain USDC/USDT, or x402 v2 exact USDC on Base",
             "http": f"{base}/api/v1/agent/report/{scan_id or '{scan_id}'}",
             "mcp_tool": "get_full_report",
             "needs": "scan_id from tls-scan",
+        },
+        "msp_pilot": {
+            "price_eur": "290",
+            "summary": "IT-Dienstleister / MSP Partner Pilot: up to 50 hostnames, German Ampel PDF + signed receipts + optional logo (3 partner slots)",
+            "url": f"{base}/partners?lang=de#msp-pilot",
         },
         "organization_audit": {
             "price_eur": "490",
@@ -74,20 +106,27 @@ def card(base, version):
         "name": "Quantum Aether",
         "description": ("Post-quantum TLS evidence for any public website: does it negotiate hybrid post-quantum key "
                         "exchange (X25519MLKEM768)? Free stored evidence and free rate-limited scans with Ed25519 JWS "
-                        "signed receipts (/.well-known/jwks.json); daily monitoring "
-                        "(14-day free trial, 29 EUR/mo Starter, 99 EUR/mo Business), organization compliance audits "
-                        "(490 EUR), paid full reports / weekly sector snapshots via x402 (USDC on Base), and a "
-                        "programmatic AI Agent Affiliate Programme (30% monitoring 12m / 20% one-time, monthly manual "
-                        "owner payout via POST /api/v1/agent/affiliate/register or MCP register_agent_affiliate). "
-                        "External observations, not compliance certifications. Also available via MCP (" + base + "/mcp) and ACP (" + base + "/acp/agents)."),
+                        "signed receipts (/.well-known/jwks.json); Auditor-Ready Signed PDF + CycloneDX 1.6 CBOM "
+                        "Attestation (5.00 USDC on Base via x402; free read-only sample at /api/v1/attestation/sample.pdf); "
+                        "daily monitoring (14-day free trial, 29 EUR/mo Starter, 99 EUR/mo Business), MSP Partner Pilot "
+                        "(290 EUR, up to 50 hostnames), organization compliance audits (490 EUR), paid full reports / "
+                        "weekly sector snapshots via x402, and a programmatic AI Agent Affiliate Programme (30% monitoring "
+                        "12m / 20% one-time, monthly manual owner payout via POST /api/v1/agent/affiliate/register or MCP "
+                        "register_agent_affiliate). External observations, not compliance certifications. Also available "
+                        "via MCP (" + base + "/mcp) and ACP (" + base + "/acp/agents)."),
         "url": base + "/a2a",
         "preferredTransport": "JSONRPC",
+        "supportedInterfaces": [
+            {"url": base + "/a2a", "protocolBinding": "JSONRPC", "protocolVersion": PROTOCOL},
+        ],
         "version": version,
         "provider": {"organization": "Quantum Aether", "url": base},
         "documentationUrl": base + "/agents?lang=en",
         "iconUrl": base + "/static/favicon.svg",
         "jwksUri": base + "/.well-known/jwks.json",
         "acpAgentsUrl": base + "/acp/agents",
+        "supportsAuthenticatedExtendedCard": False,
+        "securitySchemes": {},
         "capabilities": {"streaming": False, "pushNotifications": False, "stateTransitionHistory": False},
         "defaultInputModes": ["text/plain", "application/json"],
         "defaultOutputModes": ["application/json", "text/plain"],
@@ -102,11 +141,21 @@ def card(base, version):
                             "accessible result and issues a v1 Ed25519 JWS signed receipt. Free.",
              "tags": ["post-quantum", "tls", "scan", "signed-receipt", "ed25519"],
              "examples": ["scan example.com", '{"skill":"tls-scan","domain":"example.com"}']},
-            {"id": "paid-data", "name": "Full report and sector snapshots (x402)",
-             "description": "Returns how to buy: full remediation report per scan, or a weekly sector snapshot "
+            {"id": "tls-attestation", "name": "Auditor-ready signed PDF + CycloneDX CBOM attestation (5.00 USDC)",
+             "description": "Returns specifications and free archived sample links (/api/v1/attestation/sample and "
+                            "/api/v1/attestation/sample.pdf) for the paid Auditor-Ready TLS Attestation bundle: fresh "
+                            "port-443 measurement + Ed25519 JWS receipt + CycloneDX 1.6 CBOM + printable PDF + bundle "
+                            "JWS signature. Execution is NOT read-only (starts_scan=true) and costs 5.00 USDC on Base "
+                            "via x402 HTTP (POST /api/v1/attestation) or MCP tool get_tls_attestation using an x402 "
+                            "buyer wallet with payment authorization. External observation, not a compliance certification.",
+             "tags": ["attestation", "cbom", "cyclonedx", "pdf", "nis2", "dora", "x402", "paid", "ed25519"],
+             "examples": ['{"skill":"tls-attestation"}', "How do I get a CycloneDX CBOM and auditor PDF attestation?"]},
+            {"id": "paid-data", "name": "Attestation, full report, and sector snapshots (x402)",
+             "description": "Returns how to buy: Auditor-Ready PDF + CycloneDX CBOM attestation (5.00 USDC), full "
+                            "remediation report per scan, or a weekly sector snapshot "
                             "(" + ", ".join(sector_snapshot.keys()[:6]) + " ...), paid per call with x402 USDC on Base "
-                            "via HTTP or the MCP tools get_full_report / get_sector_snapshot.",
-             "tags": ["x402", "paid", "report", "dataset"],
+                            "via HTTP or MCP tools get_tls_attestation / get_full_report / get_sector_snapshot.",
+             "tags": ["x402", "paid", "report", "attestation", "dataset"],
              "examples": ['{"skill":"paid-data"}', "How do I buy the full report?"]},
             {"id": "agent-affiliate", "name": "AI Agent Affiliate Programme (30% recurring)",
              "description": "Returns programmatic self-registration details for AI agents and operators to get an "
@@ -139,13 +188,15 @@ def _read_request(message):
         elif p.get("kind") == "data" and isinstance(p.get("data"), dict):
             data.update(p["data"])
     joined = " ".join(text)
-    skill = data.get("skill") if data.get("skill") in ("tls-evidence", "tls-scan", "paid-data", "agent-affiliate") else None
+    skill = data.get("skill") if data.get("skill") in VALID_SKILLS else None
     domain = data.get("domain") if isinstance(data.get("domain"), str) else None
     if not domain:
         m = HOST_RE.search(joined)
         domain = m.group(1) if m else None
     if not skill:
-        if AFFILIATE_WORDS.search(joined) and not domain:
+        if ATTESTATION_WORDS.search(joined):
+            skill = "tls-attestation"
+        elif AFFILIATE_WORDS.search(joined) and not domain:
             skill = "agent-affiliate"
         elif re.search(r"\b(buy|price|pay|report|x402|sector|snapshot|شراء|سعر|تقرير)\b", joined, re.I) and not domain:
             skill = "paid-data"
@@ -213,6 +264,19 @@ def register(bp, services, version):
                 payload["receipt_jws"] = sign(signed_receipts.build_evidence_claims(payload, kind=kind))
                 payload["jwks_url"] = b + "/.well-known/jwks.json"
 
+        if skill == "tls-attestation":
+            offer = services_offer(b, domain=domain, price_usd=price_usd, sector_price_usd=sector_price_usd)
+            att = dict(offer["tls_attestation"], example_request={"domain": domain or "example.com"},
+                       mcp=b + "/mcp", services=offer)
+            _audit("tls-attestation", domain or "", "ok")
+            return jsonify(jsonrpc="2.0", id=rid, result=_message(
+                "Auditor-Ready TLS Attestation (5.00 USDC on Base via x402 v2; NOT read-only — triggers a fresh "
+                "port-443 TLS measurement and requires an x402-compatible client with a funded buyer wallet and "
+                "payment authorization; unpaid calls return HTTP 402 and never charge). Delivers an Ed25519 JWS "
+                "receipt, CycloneDX 1.6 CBOM, printable Auditor PDF, and bundle signature via POST "
+                f"{b}/api/v1/attestation or MCP tool get_tls_attestation. Preview free archived samples first: "
+                f"{att['sample_pdf']} and {att['sample_json']}. External observation, not a compliance certification.",
+                att, ctx))
         if skill == "agent-affiliate":
             offer = services_offer(b, domain=domain, price_usd=price_usd, sector_price_usd=sector_price_usd)
             data = dict(offer["partner_affiliate"], mcp=b + "/mcp", services=offer)
@@ -229,14 +293,16 @@ def register(bp, services, version):
             _audit("paid-data", domain or "", "ok")
             return jsonify(jsonrpc="2.0", id=rid, result=_message(
                 "Paid data is bought per call with x402 (USDC on Base) over HTTP or MCP (unpaid calls return the price "
-                "challenge and never charge). Also available: 14-day free daily monitoring trial (Starter 29 EUR/mo, "
-                f"Business 99 EUR/mo at {offer['monitoring']['trial_url']}) and organization compliance audit (490 EUR at "
-                f"{offer['organization_audit']['url']}).", data, ctx))
+                "challenge and never charge): Auditor-Ready PDF + CycloneDX CBOM attestation (5.00 USDC; free sample "
+                f"PDF at {offer['tls_attestation']['sample_pdf']}), full report, or weekly sector snapshot. Also "
+                f"available: 14-day free daily monitoring trial (Starter 29 EUR/mo, Business 99 EUR/mo at "
+                f"{offer['monitoring']['trial_url']}), MSP Partner Pilot (290 EUR at {offer['msp_pilot']['url']}), and "
+                f"organization compliance audit (490 EUR at {offer['organization_audit']['url']}).", data, ctx))
         if not domain:
             _audit(skill, "", "missing_domain")
             return jsonify(jsonrpc="2.0", id=rid, result=_message(
                 "Send a public hostname, e.g. 'Is example.com post-quantum ready?' or {\"skill\":\"tls-scan\",\"domain\":\"example.com\"}.",
-                {"skills": ["tls-evidence", "tls-scan", "paid-data"],
+                {"skills": list(VALID_SKILLS),
                  "services": services_offer(b, price_usd=price_usd, sector_price_usd=sector_price_usd)}, ctx))
         try:
             domain = quantum_vuln_scanner.normalize_domain(domain)

@@ -50,8 +50,8 @@ def manifest(base: str, version: str) -> dict:
             "mcp_endpoint": f"{base}/mcp",
             "mcp_server_card": f"{base}/.well-known/mcp/server-card.json",
             "jwks_uri": f"{base}/.well-known/jwks.json",
-            "capabilities": {"streaming": False, "async_runs": False, "signed_receipts": True, "agent_affiliate": True},
-            "skills": ["tls-evidence", "tls-scan", "paid-data", "agent-affiliate"],
+            "capabilities": {"streaming": False, "async_runs": False, "signed_receipts": True, "agent_affiliate": True, "tls_attestation": True},
+            "skills": list(a2a_agent.VALID_SKILLS),
             "services": a2a_agent.services_offer(base),
         },
     }
@@ -100,13 +100,15 @@ def _parse_input(body: dict):
                 elif isinstance(content, str):
                     texts.append(content[:2000])
     joined = " ".join(texts)
-    skill = data.get("skill") if data.get("skill") in ("tls-evidence", "tls-scan", "paid-data", "agent-affiliate") else None
+    skill = data.get("skill") if data.get("skill") in a2a_agent.VALID_SKILLS else None
     domain = data.get("domain") if isinstance(data.get("domain"), str) else None
     if not domain:
         m = a2a_agent.HOST_RE.search(joined)
         domain = m.group(1) if m else None
     if not skill:
-        if a2a_agent.AFFILIATE_WORDS.search(joined) and not domain:
+        if a2a_agent.ATTESTATION_WORDS.search(joined):
+            skill = "tls-attestation"
+        elif a2a_agent.AFFILIATE_WORDS.search(joined) and not domain:
             skill = "agent-affiliate"
         elif PAID_WORDS.search(joined) and not domain:
             skill = "paid-data"
@@ -191,6 +193,23 @@ def register(bp, services, version: str):
         price_usd = str(current_app.config["PRICE"])
         sector_price_usd = str(current_app.config.get("X402_SECTOR_PRICE") or "0.50")
 
+        if skill == "tls-attestation":
+            offer = a2a_agent.services_offer(b, domain=domain, price_usd=price_usd, sector_price_usd=sector_price_usd)
+            att = dict(offer["tls_attestation"], example_request={"domain": domain or "example.com"},
+                       mcp=b + "/mcp", a2a=b + "/a2a", services=offer)
+            _audit("tls-attestation", domain or "", "ok")
+            text = (
+                "Auditor-Ready TLS Attestation (5.00 USDC on Base via x402 v2; NOT read-only — triggers a fresh "
+                "port-443 TLS measurement and requires an x402 buyer wallet with payment authorization). Delivers "
+                f"Ed25519 JWS receipt + CycloneDX 1.6 CBOM + printable Auditor PDF via POST {b}/api/v1/attestation "
+                f"or MCP get_tls_attestation. Free archived sample PDF: {att['sample_pdf']}. "
+                "External observation, not a compliance certification."
+            )
+            resp = _run_response(run_id, created_at, text, att)
+            resp.headers["Access-Control-Allow-Origin"] = "*"
+            resp.headers["Cache-Control"] = "no-store"
+            return resp
+
         if skill == "agent-affiliate":
             offer = a2a_agent.services_offer(b, domain=domain, price_usd=price_usd, sector_price_usd=sector_price_usd)
             data = dict(offer["partner_affiliate"], mcp=b + "/mcp", a2a=b + "/a2a", services=offer)
@@ -213,9 +232,11 @@ def register(bp, services, version: str):
             _audit("paid-data", domain or "", "ok")
             text = (
                 "Paid data is bought per call with x402 (USDC on Base) over HTTP or MCP (unpaid calls return the price "
-                "challenge and never charge). Also available: 14-day free daily monitoring trial (Starter 29 EUR/mo, "
-                f"Business 99 EUR/mo at {offer['monitoring']['trial_url']}) and organization compliance audit "
-                f"(490 EUR at {offer['organization_audit']['url']})."
+                "challenge and never charge): Auditor-Ready PDF + CycloneDX CBOM attestation (5.00 USDC; free sample "
+                f"PDF at {offer['tls_attestation']['sample_pdf']}), full report, or weekly sector snapshot. Also "
+                f"available: 14-day free daily monitoring trial (Starter 29 EUR/mo, Business 99 EUR/mo at "
+                f"{offer['monitoring']['trial_url']}), MSP Partner Pilot (290 EUR at {offer['msp_pilot']['url']}), "
+                f"and organization compliance audit (490 EUR at {offer['organization_audit']['url']})."
             )
             resp = _run_response(run_id, created_at, text, data)
             resp.headers["Access-Control-Allow-Origin"] = "*"
@@ -228,7 +249,7 @@ def register(bp, services, version: str):
                 run_id,
                 created_at,
                 "Send a public hostname in input parts, e.g. 'Is example.com post-quantum ready?' or {\"skill\":\"tls-scan\",\"domain\":\"example.com\"}.",
-                {"skills": ["tls-evidence", "tls-scan", "paid-data"],
+                {"skills": list(a2a_agent.VALID_SKILLS),
                  "services": a2a_agent.services_offer(b, price_usd=price_usd, sector_price_usd=sector_price_usd)},
             )
             resp.headers["Access-Control-Allow-Origin"] = "*"
