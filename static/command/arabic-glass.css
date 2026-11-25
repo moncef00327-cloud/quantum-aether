@@ -1,4 +1,8 @@
 /* Unified Quantum Aether Glass Theme across AR, EN, DE and all pages (Command overview + inner pages). */
+body:has(.app) {
+  background: #071426;
+}
+
 .app {
   --glass-night: #071426;
   --glass-cyan: #55e5f4;
@@ -15,17 +19,24 @@
   background: var(--glass-night);
 }
 
-/* Shared workspace ribbon aura, glass header, and glass sidebar on all pages & languages */
+/* Shared seamless workspace ribbon aura (zero hard edges on any width or RTL/LTR direction) */
 .app #workspace-content {
-  background:
-    linear-gradient(to bottom, #07142622 0, #07142655 26rem, var(--glass-night) 52rem),
-    url("arabic-glass-ribbons.webp") left top / 100% auto no-repeat;
+  background-color: var(--glass-night);
+  background-image:
+    linear-gradient(to bottom, #07142624 0, #07142668 24rem, var(--glass-night) 48rem),
+    radial-gradient(ellipse 95% 55% at 50% 0%, transparent 45%, var(--glass-night) 100%),
+    url("arabic-glass-ribbons.webp");
+  background-position: center top, center top, center top;
+  background-size: 100% 100%, 100% 48rem, max(100%, 1200px) auto;
+  background-repeat: no-repeat;
+}
+
+.app[dir="rtl"] #workspace-content {
+  background-position: center top, center top, left top;
 }
 
 .app[dir="ltr"] #workspace-content {
-  background:
-    linear-gradient(to bottom, #07142626 0, #0714265e 26rem, var(--glass-night) 52rem),
-    url("arabic-glass-ribbons.webp") right top / 100% auto no-repeat;
+  background-position: center top, center top, center top;
 }
 
 .app #workspace-content > header {
@@ -243,35 +254,45 @@
   }
 }
 
-/* Mobile & tablet: lower top banners slightly for clean breathing room under Dynamic Island / status bar */
+/* Mobile & tablet: seamless top breathing room via padding (no margin-collapse cut line!) */
 @media (max-width: 850px) {
+  .app #workspace-content {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 18px);
+  }
+
   .app #workspace-content > header {
-    margin: calc(env(safe-area-inset-top, 0px) + 22px) 12px 0;
+    margin: 0 12px;
     border: 1px solid var(--glass-line);
     border-radius: 20px;
     box-shadow: var(--glass-shadow);
   }
 
   .app #workspace-content > .content {
-    padding-top: 18px !important;
+    padding-top: 16px !important;
   }
 
   .app .qa-agent-search {
-    margin-top: 4px;
+    margin-top: 2px;
   }
 }
 
 @media (max-width: 680px) {
   .app #workspace-content {
-    background-size: auto, max(145%, 35rem) auto;
-    background-position: center top, left -5.5rem top -4rem;
     background-image:
-      linear-gradient(to bottom, #07142648, #071426ad 14rem, var(--glass-night) 35rem),
+      linear-gradient(to bottom, #07142638 0, #071426a8 15rem, var(--glass-night) 34rem),
+      radial-gradient(ellipse 115% 45% at 50% 4%, transparent 48%, var(--glass-night) 100%),
       url("arabic-glass-ribbons.webp");
+    background-position: center top, center top, center top;
+    background-size: 100% 100%, 100% 34rem, max(165%, 640px) auto;
+    background-repeat: no-repeat;
+  }
+
+  .app[dir="rtl"] #workspace-content {
+    background-position: center top, center top, left -2rem top -2rem;
   }
 
   .app[dir="ltr"] #workspace-content {
-    background-position: center top, right -5.5rem top -4rem;
+    background-position: center top, center top, center -2rem;
   }
 
   #command-root .app .qa-neon .qa-hero-content {
