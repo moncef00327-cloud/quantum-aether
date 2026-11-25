@@ -1,4 +1,4 @@
-/* Unified Quantum Aether Glass Theme across AR, EN, DE and all pages (Command overview + inner pages). */
+/* Unified Quantum Aether Glass Theme: one shared ambient light canvas on the parent, calm frosted glass surfaces, zero clipped double borders. */
 body:has(.app) {
   background: #071426;
 }
@@ -9,35 +9,56 @@ body:has(.app) {
   --glass-violet: #b69aff;
   --glass-pearl: #f2a6df;
   --glass-text: #f5f7ff;
-  --glass-line: #a7c7f170;
+  --glass-line: rgba(167, 199, 241, .28);
+  --glass-line-strong: rgba(138, 229, 247, .48);
+  /* Calm, uniform frosted glass surface so the parent's unified ambient lighting shines through seamlessly */
   --glass-surface:
-    radial-gradient(ellipse at 12% 0%, #b69aff40, transparent 40%),
-    radial-gradient(ellipse at 94% 96%, #f2a6df23, transparent 32%),
-    linear-gradient(140deg, #8170ba40 0%, #32688b42 32%, #132943d9 72%, #92649338);
-  --glass-shadow: inset 0 1px 1px #e5edff80, inset 0 -1px 2px #b6a0eb45, 0 6px 20px #02081556;
+    linear-gradient(165deg, rgba(167, 199, 241, .12) 0%, rgba(20, 39, 68, .58) 38%, rgba(11, 24, 44, .72) 100%);
+  --glass-shadow: inset 0 1px 0 rgba(229, 237, 255, .28), inset 0 -1px 0 rgba(167, 199, 241, .10), 0 10px 28px rgba(2, 8, 21, .34);
+  position: relative;
+  isolation: isolate;
   color: var(--glass-text);
   background: var(--glass-night);
 }
 
-/* Shared seamless workspace ribbon aura (top + soft bottom glow, zero hard edges on any width or RTL/LTR) */
+/* Single continuous synchronized ambient light layer across the entire parent viewport (top -> middle -> bottom) */
+.app::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 75% 45% at 15% 8%, rgba(85, 229, 244, .11), transparent 68%),
+    radial-gradient(ellipse 70% 48% at 85% 22%, rgba(182, 154, 255, .13), transparent 70%),
+    radial-gradient(ellipse 80% 50% at 50% 62%, rgba(72, 140, 214, .09), transparent 72%),
+    radial-gradient(ellipse 75% 42% at 30% 96%, rgba(182, 154, 255, .10), rgba(85, 229, 244, .06) 45%, transparent 75%);
+}
+
+.app > main,
+.app > aside {
+  position: relative;
+  z-index: 1;
+}
+
+/* Shared seamless workspace ribbon aura softly blended into the unified parent light field */
 .app #workspace-content {
-  background-color: var(--glass-night);
+  background-color: transparent;
   background-image:
-    radial-gradient(ellipse 90% 24rem at 50% 100%, rgba(182, 154, 255, .14), rgba(85, 229, 244, .08) 46%, transparent 78%),
-    linear-gradient(to bottom, #07142624 0, #07142668 24rem, var(--glass-night) 48rem),
-    radial-gradient(ellipse 95% 55% at 50% 0%, transparent 45%, var(--glass-night) 100%),
+    linear-gradient(to bottom, rgba(7, 20, 38, .10) 0, rgba(7, 20, 38, .58) 26rem, transparent 46rem),
+    radial-gradient(ellipse 95% 55% at 50% 0%, transparent 45%, rgba(7, 20, 38, .88) 100%),
     url("arabic-glass-ribbons.webp");
-  background-position: center bottom, center top, center top, center top;
-  background-size: 100% 24rem, 100% 100%, 100% 48rem, max(100%, 1200px) auto;
+  background-position: center top, center top, center top;
+  background-size: 100% 46rem, 100% 46rem, max(100%, 1200px) auto;
   background-repeat: no-repeat;
 }
 
 .app[dir="rtl"] #workspace-content {
-  background-position: center bottom, center top, center top, left top;
+  background-position: center top, center top, left top;
 }
 
 .app[dir="ltr"] #workspace-content {
-  background-position: center bottom, center top, center top, center top;
+  background-position: center top, center top, center top;
 }
 
 .app #workspace-content > header {
@@ -83,9 +104,10 @@ body:has(.app) {
   line-height: 1.7;
 }
 
-/* Glass cards across Command overview, bottom panels, metrics, discovery strip, footer, and ALL inner pages */
+/* Glass cards across Command overview, bottom panels, metrics, discovery strip, footer, and ALL inner pages.
+   Exclude .qa-scan-card:has(> .qa-trial-inline) so the split scanner/trial container NEVER gets a double clipping border! */
 .app :is(
-  .qa-neon .qa-glass-card,
+  .qa-neon .qa-glass-card:not(.qa-scan-card:has(> .qa-trial-inline)),
   .qa-agent-search,
   .qa-neon .qa-trial.qa-trial-inline,
   .panel,
@@ -98,10 +120,17 @@ body:has(.app) {
 ) {
   background: var(--glass-surface) !important;
   border: 1px solid var(--glass-line) !important;
-  border-radius: clamp(16px, 1.8vw, 24px);
+  border-radius: clamp(18px, 1.8vw, 24px);
   box-shadow: var(--glass-shadow);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+/* Soften inner session nudge / nested callouts so they blend smoothly without harsh nested box edges */
+.app .qa-trial-inline > div,
+.app .trial-cta .session-nudge,
+.app .qa-session-nudge {
+  border-radius: 16px;
 }
 
 /* Always show chart captions, dataset notes, and grade details across ALL languages and screens */
@@ -336,20 +365,22 @@ body:has(.app) {
   color: #17203a;
 }
 
-/* Split scanner + inline trial glass card on Command homepage (AR & EN) */
+/* Split scanner + inline trial glass card on Command homepage (AR & EN): zero outer wrapper border or clipping! */
 #command-root .app .qa-neon .qa-scan-card:has(> .qa-trial-inline) {
-  --panel-inset: clamp(16px, 2.2vw, 30px);
+  --panel-inset: clamp(16px, 2.2vw, 28px);
   display: grid;
   isolation: isolate;
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: repeat(6, auto) [scanner-end] auto;
   gap: 10px 0;
-  padding: 0;
-  background: none;
-  border: 0;
-  box-shadow: none;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 #command-root .app .qa-neon .qa-scan-card:has(> .qa-trial-inline)::before {
@@ -358,11 +389,11 @@ body:has(.app) {
   z-index: -1;
   pointer-events: none;
   border: 1px solid var(--glass-line);
-  border-radius: clamp(18px, 1.8vw, 28px);
+  border-radius: clamp(18px, 1.8vw, 24px);
   background: var(--glass-surface);
   box-shadow: var(--glass-shadow);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 }
 
 #command-root .app .qa-neon .qa-scan-card:has(> .qa-trial-inline) > :not(.qa-trial-inline) {
@@ -470,21 +501,20 @@ body:has(.app) {
 @media (max-width: 680px) {
   .app #workspace-content {
     background-image:
-      radial-gradient(ellipse 100% 20rem at 50% 100%, rgba(182, 154, 255, .14), rgba(85, 229, 244, .08) 46%, transparent 78%),
-      linear-gradient(to bottom, #07142638 0, #071426a8 15rem, var(--glass-night) 34rem),
-      radial-gradient(ellipse 115% 45% at 50% 4%, transparent 48%, var(--glass-night) 100%),
+      linear-gradient(to bottom, rgba(7, 20, 38, .18) 0, rgba(7, 20, 38, .70) 16rem, transparent 34rem),
+      radial-gradient(ellipse 115% 45% at 50% 4%, transparent 48%, rgba(7, 20, 38, .92) 100%),
       url("arabic-glass-ribbons.webp");
-    background-position: center bottom, center top, center top, center top;
-    background-size: 100% 20rem, 100% 100%, 100% 34rem, max(165%, 640px) auto;
+    background-position: center top, center top, center top;
+    background-size: 100% 34rem, 100% 34rem, max(165%, 640px) auto;
     background-repeat: no-repeat;
   }
 
   .app[dir="rtl"] #workspace-content {
-    background-position: center bottom, center top, center top, left -2rem top -2rem;
+    background-position: center top, center top, left -2rem top -2rem;
   }
 
   .app[dir="ltr"] #workspace-content {
-    background-position: center bottom, center top, center top, center -2rem;
+    background-position: center top, center top, center -2rem;
   }
 
   #command-root .app .qa-neon .qa-hero-content {
