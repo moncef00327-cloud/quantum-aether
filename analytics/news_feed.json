@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-11-24T16:53:56Z",
+  "updated_at": "2026-11-25T16:42:12Z",
   "classification": "Deterministic keyword rules; impact notes are editorial context, not source quotations or security advisories.",
   "sources": [
     {
@@ -31,20 +31,20 @@
     {
       "name": "arXiv quant-ph",
       "ok": true,
-      "entries": 248
+      "entries": 163
     },
     {
       "name": "arXiv cs.CR",
       "ok": true,
-      "entries": 144
+      "entries": 96
     }
   ],
   "items": [
     {
       "source": "arXiv cs.CR",
-      "url": "https://arxiv.org/abs/2611.25663",
-      "title": "Correctable Enrollment and One-Transaction Seed Proofs for Ethereum's Post-Quantum Migration",
-      "published_at": "2026-11-24T05:00:00Z",
+      "url": "https://arxiv.org/abs/2611.32024",
+      "title": "APQKE-DR: Entropy-Failure Analysis of a Post-Quantum-Initialized Ratcheted Channel",
+      "published_at": "2026-11-25T05:00:00Z",
       "category": "research",
       "importance": "medium",
       "takeaway": {
@@ -52,13 +52,13 @@
         "ar": "قراءة تحريرية: هذا سياق بحثي، وليس تنبيهاً أمنياً للإنتاج أو دليلاً على كسر تشفيري جديد؛ قيّم النتائج قبل تغيير السياسة.",
         "de": "Redaktionelle Einordnung: Forschungskontext, keine Produktionswarnung und kein Beleg für einen neuen kryptografischen Bruch; vor einer Richtlinienänderung bewerten."
       },
-      "id": "dea97b3cf35069b3"
+      "id": "3edac897f8de13b5"
     },
     {
       "source": "arXiv cs.CR",
-      "url": "https://arxiv.org/abs/2611.30396",
-      "title": "WEPWAWET-CORE: A Hardware-Resident ML-DSA Architecture with Fabric-Generated, Fabric-Sealed Keys for Post-Quantum Avionics",
-      "published_at": "2026-11-24T05:00:00Z",
+      "url": "https://arxiv.org/abs/2611.10403",
+      "title": "QUASI: Post-Quantum Quorum Attestation of Pre-Validated Statements",
+      "published_at": "2026-11-25T05:00:00Z",
       "category": "research",
       "importance": "medium",
       "takeaway": {
@@ -66,7 +66,7 @@
         "ar": "قراءة تحريرية: هذا سياق بحثي، وليس تنبيهاً أمنياً للإنتاج أو دليلاً على كسر تشفيري جديد؛ قيّم النتائج قبل تغيير السياسة.",
         "de": "Redaktionelle Einordnung: Forschungskontext, keine Produktionswarnung und kein Beleg für einen neuen kryptografischen Bruch; vor einer Richtlinienänderung bewerten."
       },
-      "id": "7a7cfa9e9f1afa48"
+      "id": "2534bcea02f4f99a"
     },
     {
       "source": "Cloudflare Blog",
