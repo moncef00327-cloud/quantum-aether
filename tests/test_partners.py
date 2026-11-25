@@ -231,6 +231,14 @@ class PartnerTests(unittest.TestCase):
 
         tok = partners.stats_token(code, partners._stats_secret(self.app.config))
         self.assertEqual(len(tok), 24)
+        self.assertEqual(reg.get("live_stats_url"), f"https://ather-quantum.com/partners/live/{code}/{tok}")
+
+        # Approval mail templates in tools/partners_admin.py include live_stats_url in en/de/ar
+        from tools import partners_admin
+        for lang_k, (subj, tmpl) in partners_admin.MAIL.items():
+            rendered = tmpl.format(name="Partner", code=code, base="https://ather-quantum.com",
+                                   live_stats_url=reg["live_stats_url"], payout="PayPal")
+            self.assertIn(reg["live_stats_url"], rendered, lang_k)
 
         # Wrong token or unknown code -> 404
         self.assertEqual(self.client.get(f"/partners/live/{code}/badtoken0000000000000000").status_code, 404)

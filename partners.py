@@ -265,9 +265,28 @@ def stats_token(code: str, secret: str) -> str:
     return hmac.new(secret.encode("utf-8"), f"qa-partner-stats:{clean}".encode("utf-8"), hashlib.sha256).hexdigest()[:24]
 
 
-def _affiliate_payload(code: str, payout_method: str, payout_destination: str, base_url: str, already_registered: bool = False) -> dict:
+def live_stats_url(code: str, base_url: str = "https://ather-quantum.com", *, cfg: dict | None = None, data_dir: str | None = None) -> str:
+    """Return the signed private live dashboard URL for an active partner code, or '' if secret unavailable."""
+    clean = (code or "").strip().upper()
+    if not clean:
+        return ""
+    conf = dict(cfg) if cfg is not None else {}
+    if not conf and data_dir:
+        conf = {"DATA_DIR": data_dir}
+    if not conf:
+        try:
+            conf = dict(current_app.config)
+        except RuntimeError:
+            conf = {}
+    tok = stats_token(clean, _stats_secret(conf))
+    if not tok:
+        return ""
+    return f"{base_url.rstrip('/')}/partners/live/{clean}/{tok}"
+
+
+def _affiliate_payload(code: str, payout_method: str, payout_destination: str, base_url: str, already_registered: bool = False, live_url: str = "") -> dict:
     b = base_url.rstrip("/")
-    return {
+    out = {
         "status": "ACTIVE",
         "already_registered": already_registered,
         "code": code,
@@ -296,6 +315,9 @@ def _affiliate_payload(code: str, payout_method: str, payout_destination: str, b
             "No automatic payouts; abusive or spam referrals are revoked."
         ),
     }
+    if live_url:
+        out["live_stats_url"] = live_url
+    return out
 
 
 def _notify_owner(subject: str, text: str) -> None:
@@ -357,7 +379,8 @@ def register_agent_affiliate(
             m_old, d_old = stored_payout.split(":", 1)
         else:
             m_old, d_old = stored_payout, em
-        return 200, _affiliate_payload(existing[0], m_old, d_old, base_url, already_registered=True)
+        lurl = live_stats_url(existing[0], base_url)
+        return 200, _affiliate_payload(existing[0], m_old, d_old, base_url, already_registered=True, live_url=lurl)
 
     since = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
     recent_n = conn.execute(
@@ -378,6 +401,7 @@ def register_agent_affiliate(
         )
         pid = cur.lastrowid
     b = base_url.rstrip("/")
+    lurl = live_stats_url(code, b)
     _notify_owner(
         f"[Quantum Aether] تسجيل وكيل إحالة جديد ({code}) — {nm}",
         f"تم تسجيل وكيل ذكاء اصطناعي جديد تلقائياً في برنامج الشركاء:\n\n"
@@ -386,13 +410,14 @@ def register_agent_affiliate(
         f"- البريد: {em}\n"
         f"- الكود: {code}\n"
         f"- الرابط: {b}/?ref={code}\n"
+        f"- لوحة الإحصائيات المباشرة: {lurl or '-'}\n"
         f"- الدفع الشهري اليدوي: {method} ({dest})\n"
         f"- الموقع: {web or '-'}\n"
         f"- القناة: {ch}\n\n"
         f"لإيقاف الشريك عند الحاجة:\n"
         f"python3 tools/partners_admin.py end {pid}\n",
     )
-    return 201, _affiliate_payload(code, method, dest, base_url, already_registered=False)
+    return 201, _affiliate_payload(code, method, dest, base_url, already_registered=False, live_url=lurl)
 
 
 def commissions(conn, now=None):

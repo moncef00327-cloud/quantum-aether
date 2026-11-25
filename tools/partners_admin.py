@@ -24,9 +24,9 @@ DB = os.environ.get("QS_DB", "/var/lib/quantum_saas/quantum_saas.db")
 BASE = "https://ather-quantum.com"
 
 MAIL = {
-    "en": ("Your Quantum Aether partner link", "Hello {name},\n\nwelcome to the Quantum Aether partner programme.\n\nYour code: {code}\nYour link: {base}/?ref={code}\nIt works on every page, e.g. {base}/monitoring?ref={code} or {base}/guides/post-quantum-vendor-security-questionnaire?ref={code}\n\nTerms: 30% of monitoring payments for 12 months, 20% of reports, packs and audits; monthly payout ({payout}) for payments older than 30 days, from USD 50. Full terms: {base}/partners?lang=en\nPlease: no spam or cold e-mail without consent, no ads on our brand name, no misleading security claims.\n\nReply to this e-mail with questions.\nQuantum Aether"),
-    "de": ("Ihr Quantum-Aether-Partnerlink", "Hallo {name},\n\nwillkommen im Partnerprogramm von Quantum Aether.\n\nIhr Code: {code}\nIhr Link: {base}/?ref={code}\nEr funktioniert auf jeder Seite, z. B. {base}/monitoring?ref={code}&lang=de\n\nBedingungen: 30 % der Überwachungszahlungen für 12 Monate, 20 % von Berichten, Paketen und Audits; monatliche Auszahlung ({payout}) für Zahlungen älter als 30 Tage, ab 50 USD. Alle Bedingungen: {base}/partners?lang=de\nBitte: kein Spam, keine unverlangten E-Mails, keine Anzeigen auf unseren Markennamen, keine irreführenden Sicherheitsversprechen.\n\nBei Fragen einfach antworten.\nQuantum Aether"),
-    "ar": ("رابط الشريك الخاص بك في Quantum Aether", "مرحباً {name}،\n\nأهلاً بك في برنامج شركاء Quantum Aether.\n\nرمزك: {code}\nرابطك: {base}/?ref={code}&lang=ar\nيعمل على أي صفحة، مثل {base}/monitoring?ref={code}&lang=ar\n\nالشروط: 30% من مدفوعات المراقبة لمدة 12 شهراً، و20% من التقارير والباقات والتدقيقات؛ الدفع شهرياً ({payout}) للمدفوعات التي مضى عليها 30 يوماً، بحد أدنى 50 دولاراً. الشروط كاملة: {base}/partners?lang=ar\nرجاءً: لا رسائل مزعجة ولا إيميل بارد بلا موافقة، ولا إعلانات على اسم علامتنا، ولا وعود أمنية مضلِّلة.\n\nللأسئلة ردّ على هذا البريد.\nQuantum Aether"),
+    "en": ("Your Quantum Aether partner link & live dashboard", "Hello {name},\n\nwelcome to the Quantum Aether partner programme.\n\nYour code: {code}\nYour referral link: {base}/?ref={code}\nIt works on every page, e.g. {base}/monitoring?ref={code} or {base}/guides/post-quantum-vendor-security-questionnaire?ref={code}\nYour private live stats dashboard (clicks, visits & referrals): {live_stats_url}\n\nTerms: 30% of monitoring payments for 12 months, 20% of reports, packs and audits; monthly payout ({payout}) for payments older than 30 days, from USD 50. Full terms: {base}/partners?lang=en\nPlease: no spam or cold e-mail without consent, no ads on our brand name, no misleading security claims.\n\nReply to this e-mail with questions.\nQuantum Aether Team"),
+    "de": ("Ihr Quantum-Aether-Partnerlink & Live-Dashboard", "Hallo {name},\n\nwillkommen im Partnerprogramm von Quantum Aether.\n\nIhr Code: {code}\nIhr Empfehlungslink: {base}/?ref={code}\nEr funktioniert auf jeder Seite, z. B. {base}/monitoring?ref={code}&lang=de\nIhr privates Live-Statistik-Dashboard (Klicks & Vermittlungen): {live_stats_url}\n\nBedingungen: 30 % der Überwachungszahlungen für 12 Monate, 20 % von Berichten, Paketen und Audits; monatliche Auszahlung ({payout}) für Zahlungen älter als 30 Tage, ab 50 USD. Alle Bedingungen: {base}/partners?lang=de\nBitte: kein Spam, keine unverlangten E-Mails, keine Anzeigen auf unseren Markennamen, keine irreführenden Sicherheitsversprechen.\n\nBei Fragen einfach antworten.\nQuantum Aether Team"),
+    "ar": ("رابط الشريك ولوحة الإحصائيات المباشرة — Quantum Aether", "مرحباً {name}،\n\nأهلاً بك في برنامج شركاء Quantum Aether.\n\nرمزك: {code}\nرابط الإحالة الخاص بك: {base}/?ref={code}&lang=ar\nيعمل على أي صفحة، مثل {base}/monitoring?ref={code}&lang=ar\nلوحة الإحصائيات المباشرة الخاصة بك (النقرات والزيارات والتحويلات لحظياً): {live_stats_url}\n\nالشروط: 30% من مدفوعات المراقبة لمدة 12 شهراً، و20% من التقارير والباقات والتدقيقات؛ الدفع شهرياً ({payout}) للمدفوعات التي مضى عليها 30 يوماً، بحد أدنى 50 دولاراً. الشروط كاملة: {base}/partners?lang=ar\nرجاءً: لا رسائل مزعجة ولا إيميل بارد بلا موافقة، ولا إعلانات على اسم علامتنا، ولا وعود أمنية مضلِّلة.\n\nللأسئلة ردّ على هذا البريد.\nQuantum Aether Team"),
 }
 
 
@@ -81,9 +81,14 @@ def main(argv):
         print_pilot(c.execute("SELECT * FROM pilot_leads ORDER BY id DESC"))
         return 0
 
+    data_dir = os.environ.get("QS_DATA_DIR") or os.path.dirname(os.path.abspath(DB))
+
     if cmd == "list":
         for r in c.execute("SELECT id, status, code, name, email, payout, lang, created_at, channel, website FROM partners ORDER BY id"):
             print(f"#{r['id']} [{r['status']}] {r['code'] or '-'} · {r['name']} · {r['email']} · {r['payout']} · {r['lang']} · {r['created_at']}")
+            if r["status"] == "ACTIVE" and r["code"]:
+                lurl = partners.live_stats_url(r["code"], BASE, data_dir=data_dir)
+                print(f"    ref: {BASE}/?ref={r['code']} | live: {lurl}")
             print(f"    {r['website'] or ''} | {r['channel'][:200]}")
         pilots = list(c.execute("SELECT * FROM pilot_leads ORDER BY id DESC"))
         if pilots:
@@ -109,9 +114,12 @@ def main(argv):
         with c:
             c.execute("UPDATE partners SET status = 'ACTIVE', code = ?, approved_at = strftime('%Y-%m-%dT%H:%M:%SZ','now') "
                       "WHERE id = ?", (code, pid))
+        live_url = partners.live_stats_url(code, BASE, data_dir=data_dir)
         print(f"ACTIVE {code}: {BASE}/?ref={code}")
+        print(f"LIVE STATS: {live_url}")
         subject, text = MAIL.get(row["lang"], MAIL["en"])
         send(row["email"], subject, text.format(name=row["name"], code=code, base=BASE,
+                                                live_stats_url=live_url,
                                                 payout="PayPal" if row["payout"] == "paypal" else "USDC"))
         return 0
     clicks = {r[0]: r[1] for r in c.execute("SELECT code, SUM(n) FROM partner_clicks GROUP BY code")}
@@ -121,8 +129,10 @@ def main(argv):
         k = r["code"]
         d = com.get(k, {"items": [], "due": 0.0, "pending": 0.0})
         flag = "PAY NOW" if d["due"] >= partners.MIN_PAYOUT else "below minimum"
+        live_url = partners.live_stats_url(k, BASE, data_dir=data_dir)
         print(f"{k} ({r['name']}, {r['payout']}): clicks {clicks.get(k, 0)} · conversions {refs.get(k, 0)} · "
               f"due {d['due']:.2f} · pending {d['pending']:.2f} → {flag}")
+        print(f"    live: {live_url}")
         for it in d["items"]:
             print("    ", it)
     return 0
