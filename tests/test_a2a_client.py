@@ -55,6 +55,7 @@ class A2AClientTests(unittest.TestCase):
         self.assertIn("/api/v1/attestation/sample.pdf", parts[0]["text"])
         self.assertIn("290 EUR", parts[0]["text"])
         self.assertEqual(parts[1]["data"]["msp_pilot_eur"], "290")
+        self.assertEqual(parts[1]["data"]["purchase_options"]["autonomous_x402_attestation"]["mcp_tool"], "get_tls_attestation")
         self.assertIn("5.00 USDC", parts[0]["text"])
         self.assertEqual(parts[1]["data"]["agent_card"], "https://ather-quantum.com/.well-known/agent-card.json")
         self.assertEqual(parts[1]["data"]["domain"], "partner.example")

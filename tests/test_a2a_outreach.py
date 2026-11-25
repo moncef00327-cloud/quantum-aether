@@ -84,7 +84,14 @@ class A2AOutreachTests(unittest.TestCase):
             self.assertEqual(len(posted), 2)
             self.assertIn("/api/v1/attestation/sample.pdf", posted[0][1]["params"]["message"]["parts"][0]["text"])
             self.assertIn("290 EUR", posted[0][1]["params"]["message"]["parts"][0]["text"])
-            self.assertEqual(posted[0][1]["params"]["message"]["parts"][1]["data"]["msp_pilot"]["price_eur"], "290")
+            d0 = posted[0][1]["params"]["message"]["parts"][1]["data"]
+            self.assertEqual(d0["msp_pilot"]["price_eur"], "290")
+            po = d0["purchase_options"]["autonomous_x402_attestation"]
+            self.assertEqual(po["method"], "GET")
+            self.assertIn("/api/v1/attestation?domain=braigetori.example.org", po["url"])
+            self.assertEqual(po["mcp_tool"], "get_tls_attestation")
+            self.assertEqual(po["network"], "eip155:8453")
+            self.assertIs(po["payment_authorization_required"], True)
             self.assertIn("X25519", posted[0][1]["params"]["message"]["parts"][0]["text"])
 
             # 3) Second run never repeats either agent

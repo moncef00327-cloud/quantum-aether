@@ -139,6 +139,7 @@ def build_intro_payload(
             f"programmatic AI Agent Affiliate Programme (30% recurring monitoring commission via MCP register_agent_affiliate). "
             f"External observations, not compliance certifications."
         )
+    target_dom = domain or "example.com"
     data_part = {
         "from_agent": "Quantum Aether",
         "agent_card": OUR_CARD,
@@ -150,6 +151,28 @@ def build_intro_payload(
         "free_sample_pdf": f"{SITE}/api/v1/attestation/sample.pdf",
         "attestation_price": "5.00 USDC (Base, x402 v2, buyer wallet required)",
         "affiliate_register": f"{SITE}/api/v1/agent/affiliate/register",
+        "purchase_options": {
+            "autonomous_x402_attestation": {
+                "method": "GET",
+                "url": f"{SITE}/api/v1/attestation?domain={target_dom}",
+                "mcp_server": f"{SITE}/mcp",
+                "mcp_tool": "get_tls_attestation",
+                "mcp_arguments": {"domain": target_dom},
+                "protocol": "x402 v2",
+                "price_usd": "5.00",
+                "currency": "USDC",
+                "network": "eip155:8453",
+                "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                "payment_authorization_required": True,
+                "free_preview_pdf": f"{SITE}/api/v1/attestation/sample.pdf",
+            },
+            "human_msp_pilot": {
+                "price_eur": "290",
+                "hostnames_limit": 50,
+                "url_de": f"{SITE}/partners?lang=de#msp-pilot",
+                "url_en": f"{SITE}/partners?lang=en#msp-pilot",
+            },
+        },
     }
     if domain:
         data_part["domain"] = domain
