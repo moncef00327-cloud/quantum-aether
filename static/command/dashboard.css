@@ -57,6 +57,14 @@
   color: var(--dashboard-muted);
 }
 
+#command-root .qa-neon .qa-hero-content p + p {
+  margin-block-start: 7px;
+}
+
+#command-root .qa-neon .qa-hero-links {
+  margin-block-start: 10px;
+}
+
 #command-root .qa-neon .qa-glass-card {
   min-inline-size: 0;
   padding: clamp(12px, 1.6vw, 18px);
@@ -253,6 +261,44 @@
   #command-root .qa-neon .qa-glass-card {
     padding: 11px 12px;
     border-radius: 12px;
+  }
+
+  #command-root .qa-neon .qa-scan-card .input {
+    flex-wrap: nowrap;
+    gap: 6px;
+  }
+
+  #command-root .qa-neon .qa-scan-card .input > svg {
+    flex: 0 0 16px;
+  }
+
+  #command-root .qa-neon .qa-scan-card .input input {
+    inline-size: auto;
+    min-block-size: 44px;
+    padding-block: 6px;
+    font-size: 16px;
+  }
+
+  #command-root .qa-neon .qa-scan-card .input button {
+    width: auto;
+    min-block-size: 44px;
+    padding: 6px 11px;
+  }
+
+  #command-root .qa-neon .qa-scan-card .input button svg {
+    display: none;
+  }
+
+  #command-root .qa-neon .qa-trial-inline .qa-field {
+    font-size: 16px;
+  }
+
+  #command-root .qa-neon .trial-plan-switch {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #command-root .qa-neon button.trial-plan-pill :is(.trial-plan-main, .trial-plan-sub) {
+    white-space: normal !important;
   }
 
   #command-root .qa-neon .qa-chart svg {

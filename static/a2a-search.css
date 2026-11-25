@@ -14,15 +14,6 @@
 }
 [data-qa-command-search][hidden],.qa-agent-search[hidden],.qa-agent-search [hidden]{display:none!important}
 .qa-agent-form{display:flex;align-items:center;gap:8px}
-.qa-agent-badge{
-  display:inline-flex;align-items:center;gap:5px;flex:0 0 auto;
-  padding:5px 9px;border-radius:999px;
-  border:1px solid rgba(103,232,249,.38);
-  background:rgba(103,232,249,.12);
-  color:#67e8f9;
-  font:700 10.5px/1 Manrope,sans-serif;letter-spacing:.06em;direction:ltr;
-}
-.qa-agent-dot{width:6px;height:6px;border-radius:50%;background:#67e8f9;box-shadow:0 0 8px #67e8f9}
 .qa-agent-field{position:relative;flex:1 1 auto;min-width:0;display:flex;align-items:center}
 .qa-agent-icon{
   position:absolute;inset-inline-start:11px;width:15px;height:15px;
@@ -37,7 +28,7 @@
   color:#f3f1fa;font-size:13.5px;outline:none;
   transition:border-color .18s,box-shadow .18s,background .18s;
 }
-.qa-agent-input::placeholder{color:#a39abe}
+.qa-agent-input::placeholder{color:#c2b9d7;opacity:1}
 .qa-agent-input:focus{
   border-color:#67e8f9;
   background:rgba(13,10,19,.94);
@@ -119,9 +110,9 @@
 @media(max-width:640px){
   .qa-agent-search{padding:11px 12px;margin-bottom:16px;border-radius:18px}
   .qa-agent-form{gap:7px}
-  .qa-agent-badge{padding:5px 8px;font-size:10px}
   .qa-agent-kbd{display:none}
-  .qa-agent-input{padding-inline:34px}
-  .qa-agent-submit{padding:0 13px;font-size:12.5px}
-  .qa-agent-chip{min-height:32px;max-width:100%}
+  .qa-agent-input{padding-inline:30px;min-height:44px;font-size:16px}
+  .qa-agent-submit{padding:0 13px;min-height:44px;font-size:13px}
+  .qa-agent-suggestions > summary{min-height:36px;padding-block:8px}
+  .qa-agent-chip{min-height:40px;max-width:100%;overflow-wrap:anywhere}
 }

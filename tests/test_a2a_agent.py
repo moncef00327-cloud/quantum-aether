@@ -228,9 +228,9 @@ class A2ATests(unittest.TestCase):
 
         # Top-of-page A2A search & Q&A bar rendered cleanly on homepage (AR, EN, DE) and omitted on subpages
         for path, needle in (
-            ("/?lang=ar", "اسأل وكيل A2A"),
-            ("/?lang=en", "Ask A2A agent"),
-            ("/?lang=de", "A2A-Assistent fragen"),
+            ("/?lang=ar", "اكتب سؤالًا أو نطاقًا"),
+            ("/?lang=en", "Question or domain"),
+            ("/?lang=de", "Frage oder Domain"),
         ):
             html = self.client.get(path).get_data(as_text=True)
             self.assertIn("data-qa-agent-bar", html, path)

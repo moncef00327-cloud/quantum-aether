@@ -1,11 +1,10 @@
 <section class="qa-agent-search" data-qa-agent-bar{% if qa_agent_hidden %} hidden{% endif %} data-lang="{{ lang }}" data-endpoint="{{ url_for('site.a2a_endpoint') }}" data-contact="mailto:{{ contact_email }}" role="search" aria-label="{{ 'وكيل الاستفسار والبحث A2A' if lang == 'ar' else ('A2A-Frage- und Suchassistent' if lang == 'de' else 'A2A Inquiry & Search Agent') }}">
   <form class="qa-agent-form" data-qa-agent-form novalidate>
-    <span class="qa-agent-badge" aria-hidden="true"><span class="qa-agent-dot"></span>A2A</span>
     <label class="qa-sr-only" for="qa-agent-input-{{ lang }}">{{ 'اسأل وكيل Quantum Aether أو ابحث عن نطاق أو سعر أو إعدادات' if lang == 'ar' else ('Fragen Sie den Quantum-Aether-Assistenten oder suchen Sie nach Domain, Preisen oder Konfiguration' if lang == 'de' else 'Ask the Quantum Aether A2A agent or search a domain, pricing, or config') }}</label>
     <div class="qa-agent-field">
       <svg class="qa-agent-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
       <input id="qa-agent-input-{{ lang }}" class="qa-agent-input" data-qa-input type="search" dir="auto" maxlength="300" autocomplete="off"
-             placeholder="{{ 'اسأل وكيل A2A أو ابحث: نطاق (cloudflare.com)، أسعار، MSP Pilot، إعدادات Nginx، BSI/NIS2...' if lang == 'ar' else ('A2A-Assistent fragen oder suchen: Domain (cloudflare.com), Preise, MSP Pilot, nginx-Config, BSI/NIS2...' if lang == 'de' else 'Ask A2A agent or search: domain (cloudflare.com), pricing, MSP Pilot, nginx config, BSI/NIS2...') }}">
+             placeholder="{{ 'اكتب سؤالًا أو نطاقًا' if lang == 'ar' else ('Frage oder Domain' if lang == 'de' else 'Question or domain') }}">
       <kbd class="qa-agent-kbd" aria-hidden="true">/</kbd>
     </div>
     <button type="submit" class="qa-agent-submit" data-qa-submit>{{ 'اسأل' if lang == 'ar' else ('Fragen' if lang == 'de' else 'Ask') }}</button>

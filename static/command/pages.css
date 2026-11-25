@@ -200,3 +200,39 @@ article.card.is-plan-selected,.price-box.is-plan-selected{border-color:#67e8f9!i
 .service-content #buy .crypto-pay button{width:100%}
 .service-content .report-jump{padding:14px 16px}
 }
+
+/* Keep shared page content within the workspace on narrow screens. */
+.command-service #workspace-content {
+  min-inline-size: 0;
+}
+
+.service-content :is(fieldset, .grid-2 > *, .commercial-grid > *) {
+  min-inline-size: 0;
+}
+
+.service-content :is(img, video, pre) {
+  max-inline-size: 100%;
+}
+
+.service-content pre {
+  overflow-x: auto;
+}
+
+@media (max-width: 600px) {
+  .service-content :is(input:not([type=checkbox]):not([type=radio]):not([type=hidden]), textarea, select) {
+    font-size: 16px;
+  }
+
+  .service-content .scan-row {
+    flex-wrap: wrap;
+  }
+
+  .service-content .scan-row input {
+    flex: 1 1 12rem;
+  }
+
+  .service-content .scan-row button {
+    max-inline-size: 100%;
+    white-space: normal;
+  }
+}
