@@ -390,22 +390,14 @@ def register(bp, deps):
 
     @bp.get("/sitemap-exposure-<int:n>.xml")
     def sitemap_exposure(n):
+        cached = deps.get("sitemap_response")
+        if cached:
+            return cached(f"sitemap-exposure-{n}.xml")
         rows = exposure.sitemap_domains(deps["db"](), adoption.load_optout(conn=deps["db"]()))
         chunk = rows[(n - 1) * SITEMAP_CHUNK:n * SITEMAP_CHUNK] if n >= 1 else []
         if not chunk:
             abort(404)
-        base = deps["base"]()
-        parts = []
-        for d, day in chunk:
-            path = f"/exposure/{d}"
-            alts = "".join(f'<xhtml:link rel="alternate" hreflang="{l}" href="{base}{path}?lang={l}"/>' for l in ("en", "ar", "de"))
-            alts += f'<xhtml:link rel="alternate" hreflang="x-default" href="{base}{path}?lang=en"/>'
-            for l in ("en", "ar", "de"):
-                parts.append(f"  <url><loc>{base}{path}?lang={l}</loc><lastmod>{day}</lastmod>{alts}</url>\n")
-        body = ('<?xml version="1.0" encoding="UTF-8"?>\n'
-                '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n'
-                + "".join(parts) + "</urlset>\n")
-        return Response(body, mimetype="application/xml")
+        return Response(render_sitemap_chunk(deps["base"](), chunk), mimetype="application/xml")
 
 
 _WINDOW_JSON = None
@@ -430,11 +422,30 @@ def watermark_export(conn, rows, export, week, salt, client_hash, user_agent=Non
         return list(rows)
 
 
-def sitemap_entries(conn, base, optout=None):
-    """أجزاء خريطة /exposure/ لفهرس sitemap.xml (فقط النطاقات المفهرسة)."""
+def render_sitemap_chunk(base, chunk):
+    parts = []
+    for d, day in chunk:
+        path = f"/exposure/{d}"
+        alts = "".join(f'<xhtml:link rel="alternate" hreflang="{l}" href="{base}{path}?lang={l}"/>' for l in ("en", "ar", "de"))
+        alts += f'<xhtml:link rel="alternate" hreflang="x-default" href="{base}{path}?lang=en"/>'
+        for l in ("en", "ar", "de"):
+            parts.append(f"  <url><loc>{base}{path}?lang={l}</loc><lastmod>{day}</lastmod>{alts}</url>\n")
+    return ('<?xml version="1.0" encoding="UTF-8"?>\n'
+            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n'
+            + "".join(parts) + "</urlset>\n")
+
+
+def sitemap_chunks(conn, base, optout=None):
+    """أجزاء خريطة /exposure/ كقائمة (filename, url, lastmod, xml_body) للمشاركة بين فهرس sitemap والكاش."""
     rows = exposure.sitemap_domains(conn, optout)
     out = []
     for i in range(0, len(rows), SITEMAP_CHUNK):
         chunk = rows[i:i + SITEMAP_CHUNK]
-        out.append((f"{base}/sitemap-exposure-{i // SITEMAP_CHUNK + 1}.xml", max(day for _, day in chunk)))
+        name = f"sitemap-exposure-{i // SITEMAP_CHUNK + 1}.xml"
+        out.append((name, f"{base}/{name}", max(day for _, day in chunk), render_sitemap_chunk(base, chunk)))
     return out
+
+
+def sitemap_entries(conn, base, optout=None):
+    """أجزاء خريطة /exposure/ لفهرس sitemap.xml (فقط النطاقات المفهرسة)."""
+    return [(url, day) for _, url, day, _ in sitemap_chunks(conn, base, optout)]

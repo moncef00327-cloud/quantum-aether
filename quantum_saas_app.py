@@ -21,6 +21,8 @@ import os
 from pathlib import Path
 import re
 import secrets
+import threading
+import time
 import urllib.parse
 import xml.etree.ElementTree as ET
 
@@ -4509,8 +4511,20 @@ def _sitemap_domains():
     return rows
 
 
-def _urlset(pages):
-    base = public_base()
+SITEMAP_CACHE_TTL = 1800  # 30 دقيقة كحد أقصى مع إبطال فوري عند تغيّر بيانات المتتبّع أو opt-out
+_SITEMAP_CACHE = {}
+_SITEMAP_CACHE_LOCK = threading.Lock()
+
+
+def _safe_mtime(path):
+    try:
+        return int(os.path.getmtime(path))
+    except OSError:
+        return 0
+
+
+def _urlset_xml(pages, base=None):
+    base = base or public_base()
 
     def esc(u):
         return u.replace("&", "&amp;")
@@ -4528,40 +4542,130 @@ def _urlset(pages):
         alternates += f'<xhtml:link rel="alternate" hreflang="x-default" href="{esc(localized(path, default))}"/>'
         for lang in langs:
             parts.append(f"  <url><loc>{esc(localized(path, lang))}</loc><lastmod>{day}</lastmod>{alternates}</url>\n")
-    body = ('<?xml version="1.0" encoding="UTF-8"?>\n'
+    return ('<?xml version="1.0" encoding="UTF-8"?>\n'
             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n'
             + "".join(parts) + "</urlset>\n")
-    return Response(body, mimetype="application/xml")
+
+
+def _urlset(pages):
+    return Response(_urlset_xml(pages), mimetype="application/xml")
+
+
+def _sitemap_fingerprint(base):
+    conn = db()
+    ar = tuple(conn.execute("SELECT MAX(week), COUNT(*), MAX(scanned_at), SUM(unsure) FROM adoption_results").fetchone())
+    try:
+        ao = tuple(conn.execute("SELECT COUNT(*), MAX(domain) FROM adoption_optout").fetchone())
+    except Exception:
+        ao = (0, None)
+    payload = json.dumps([
+        base,
+        ar,
+        ao,
+        _safe_mtime(adoption.OPTOUT_FILE),
+        _safe_mtime(os.path.join(BASE_DIR, "data", "family_dns_blocked.json")),
+        _safe_mtime(__file__),
+        len(refresh_site_human_traffic()),
+    ], default=str)
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:24]
+
+
+def _build_sitemap_bundle(base):
+    """يبني فهرس الخرائط وكل ملفاته الفرعية في تمريرة واحدة لتفادي تكرار مسح قاعدة البيانات."""
+    pages = _sitemap_pages()
+    domains = _sitemap_domains()
+    optout = adoption.load_optout(conn=db())
+    files = {"sitemap-pages.xml": _urlset_xml(pages, base)}
+    entries = [(f"{base}/sitemap-pages.xml", max(day for _, day, _ in pages))]
+    for i in range(0, len(domains), SITEMAP_CHUNK):
+        chunk = domains[i:i + SITEMAP_CHUNK]
+        name = f"sitemap-sites-{i // SITEMAP_CHUNK + 1}.xml"
+        files[name] = _urlset_xml([(f"/site/{d}", day, ("en", "ar")) for d, day in chunk], base)
+        entries.append((f"{base}/{name}", max(day for _, day in chunk)))
+    for name, url, day, xml_body in exposure_web.sitemap_chunks(db(), base, optout):
+        files[name] = xml_body
+        entries.append((url, day))
+    files["sitemap.xml"] = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        + "".join(f"  <sitemap><loc>{url}</loc><lastmod>{day}</lastmod></sitemap>\n" for url, day in entries)
+        + "</sitemapindex>\n"
+    )
+    return files
+
+
+def _sitemap_cache_path(data_dir):
+    return os.path.join(data_dir, "sitemap_cache.json")
+
+
+def _get_sitemap_bundle(base):
+    if current_app.config.get("TESTING") and not current_app.config.get("SITEMAP_CACHE_ENABLED"):
+        return _build_sitemap_bundle(base)
+    data_dir = current_app.config["DATA_DIR"]
+    ttl = int(current_app.config.get("SITEMAP_CACHE_TTL", SITEMAP_CACHE_TTL))
+    fp = _sitemap_fingerprint(base)
+    now = time.time()
+    hit = _SITEMAP_CACHE.get(data_dir)
+    if hit and hit["fp"] == fp and (now - hit["at"]) < ttl:
+        return hit["files"]
+    with _SITEMAP_CACHE_LOCK:
+        hit = _SITEMAP_CACHE.get(data_dir)
+        if hit and hit["fp"] == fp and (now - hit["at"]) < ttl:
+            return hit["files"]
+        cache_path = _sitemap_cache_path(data_dir)
+        try:
+            with open(cache_path, encoding="utf-8") as f:
+                disk = json.load(f)
+            if (isinstance(disk, dict) and disk.get("fp") == fp
+                    and (now - float(disk.get("at", 0))) < ttl and isinstance(disk.get("files"), dict)):
+                _SITEMAP_CACHE[data_dir] = {"fp": fp, "at": float(disk["at"]), "files": disk["files"]}
+                return disk["files"]
+        except (OSError, ValueError, TypeError):
+            pass
+        files = _build_sitemap_bundle(base)
+        entry = {"fp": fp, "at": now, "files": files}
+        _SITEMAP_CACHE[data_dir] = entry
+        tmp = f"{cache_path}.{os.getpid()}.{threading.get_ident()}.tmp"
+        try:
+            os.makedirs(data_dir, exist_ok=True)
+            with open(tmp, "w", encoding="utf-8") as f:
+                json.dump(entry, f, ensure_ascii=False)
+            os.replace(tmp, cache_path)
+        except OSError:
+            try:
+                os.unlink(tmp)
+            except OSError:
+                pass
+        return files
+
+
+def _sitemap_response(name):
+    bundle = _get_sitemap_bundle(public_base())
+    body = bundle.get(name)
+    if body is None:
+        abort(404)
+    ttl = int(current_app.config.get("SITEMAP_CACHE_TTL", SITEMAP_CACHE_TTL))
+    resp = Response(body, mimetype="application/xml")
+    resp.headers["Cache-Control"] = f"public, max-age={ttl}"
+    resp.set_etag(hashlib.sha256(body.encode("utf-8")).hexdigest()[:16])
+    return resp.make_conditional(request)
 
 
 @bp.get("/sitemap.xml")
 def sitemap():
     """فهرس خرائط: صفحات الموقع + ملف لكل 2500 نطاق. lastmod لكل جزء = أحدث تاريخ فيه."""
-    base = public_base()
-    pages = _sitemap_pages()
-    domains = _sitemap_domains()
-    entries = [(f"{base}/sitemap-pages.xml", max(day for _, day, _ in pages))]
-    for i in range(0, len(domains), SITEMAP_CHUNK):
-        chunk = domains[i:i + SITEMAP_CHUNK]
-        entries.append((f"{base}/sitemap-sites-{i // SITEMAP_CHUNK + 1}.xml", max(day for _, day in chunk)))
-    entries += exposure_web.sitemap_entries(db(), base, adoption.load_optout(conn=db()))
-    body = ('<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-            + "".join(f"  <sitemap><loc>{url}</loc><lastmod>{day}</lastmod></sitemap>\n" for url, day in entries)
-            + "</sitemapindex>\n")
-    return Response(body, mimetype="application/xml")
+    return _sitemap_response("sitemap.xml")
 
 
 @bp.get("/sitemap-pages.xml")
 def sitemap_pages():
-    return _urlset(_sitemap_pages())
+    return _sitemap_response("sitemap-pages.xml")
 
 
 @bp.get("/sitemap-sites-<int:n>.xml")
 def sitemap_sites(n):
-    chunk = _sitemap_domains()[(n - 1) * SITEMAP_CHUNK:n * SITEMAP_CHUNK] if n >= 1 else []
-    if not chunk:
+    if n < 1:
         abort(404)
-    return _urlset([(f"/site/{d}", day, ("en", "ar")) for d, day in chunk])
+    return _sitemap_response(f"sitemap-sites-{n}.xml")
 
 
 @bp.get("/<key>.txt")
@@ -5086,7 +5190,7 @@ pq_index.register(bp, {"base_dir": BASE_DIR, "db": db, "lang": current_lang, "cl
 import exposure_web  # noqa: E402  Quantum Exposure Registry (/exposure, self-contained module)
 exposure_web.register(bp, {"db": db, "lang": current_lang, "base": public_base, "de_pages": DE_PAGES, "site_known": site_pages_known,
                            "de_endpoints": i18n.DE_ENDPOINTS, "data_dir": lambda: current_app.config["DATA_DIR"],
-                           "salt": lambda: current_app.config["HASH_SALT"]})
+                           "salt": lambda: current_app.config["HASH_SALT"], "sitemap_response": _sitemap_response})
 
 app = create_app()
 
