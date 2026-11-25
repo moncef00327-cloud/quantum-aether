@@ -1,15 +1,22 @@
-"""A2A (Agent2Agent, protocol 0.3) agent card + stateless JSON-RPC endpoint, 2026-11-21.
+"""A2A (Agent2Agent, protocol 0.3) agent card + JSON-RPC endpoint, 2026-11-21.
 
 Lets other AI agents discover Quantum Aether and call it directly (inbound only; we never message other agents).
 Skills:
-  tls-evidence  free, read-only: stored post-quantum TLS evidence for a domain (never scans)
-  tls-scan      free, rate-limited: new TLS measurement (same limits and code path as the MCP scan_tls tool)
-  paid-data     how to buy the full report / sector snapshot via x402 (payment itself happens over HTTP or MCP)
-Only `message/send` is implemented (no streaming, no tasks, no push notifications); replies are complete Messages.
+  tls-evidence     free, read-only: stored post-quantum TLS evidence for a domain (never scans)
+  tls-scan         free, rate-limited: new TLS measurement (same limits and code path as the MCP scan_tls tool)
+  tls-attestation  how to preview/buy the paid Auditor-Ready PDF + CycloneDX 1.6 CBOM attestation (5.00 USDC x402)
+  paid-data        how to buy attestation / full report / sector snapshot via x402 (payment happens over HTTP or MCP)
+  agent-affiliate  programmatic AI Agent Affiliate Programme (30% recurring monitoring commission)
+Supported JSON-RPC methods (A2A 0.3.0): `message/send`, `tasks/get`, and `tasks/cancel`.
 """
+import base64
+import datetime as dt
+import json
 import re
+import sqlite3
 import uuid
 
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from flask import current_app, jsonify, request
 from werkzeug.exceptions import HTTPException
 
@@ -207,11 +214,122 @@ def _read_request(message):
     return skill, domain
 
 
+def _b64u_encode(raw: bytes) -> str:
+    return base64.urlsafe_b64encode(raw).rstrip(b"=").decode("ascii")
+
+
+def _b64u_decode(text: str) -> bytes:
+    pad = "=" * ((4 - len(text) % 4) % 4)
+    return base64.urlsafe_b64decode((text + pad).encode("ascii"))
+
+
+def _canonical_card_bytes(card_obj: dict) -> bytes:
+    unsigned = {k: v for k, v in card_obj.items() if k != "signatures"}
+    return json.dumps(unsigned, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+
+
+def sign_agent_card(card_obj: dict, services: dict, base_url: str) -> dict:
+    """Return a copy of the Agent Card signed with detached JWS (RFC 7515 + RFC 8785 JCS) using active Ed25519 key."""
+    out = dict(card_obj)
+    try:
+        priv, active_kid, _, _ = receipts.load_signing_bundle(**receipts.key_config_from_app(services))
+        protected_hdr = {
+            "alg": "EdDSA",
+            "kid": active_kid,
+            "typ": "JOSE",
+            "jku": base_url.rstrip("/") + "/.well-known/jwks.json",
+        }
+        protected_b64 = _b64u_encode(
+            json.dumps(protected_hdr, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        )
+        payload_b64 = _b64u_encode(_canonical_card_bytes(out))
+        sig_b64 = _b64u_encode(priv.sign(f"{protected_b64}.{payload_b64}".encode("ascii")))
+        out["signatures"] = [{"protected": protected_b64, "signature": sig_b64}]
+    except Exception:
+        pass
+    return out
+
+
+def verify_agent_card_signature(signed_card: dict, jwks_doc: dict) -> dict:
+    """Verify the first detached EdDSA AgentCardSignature against a JWKS document. Raises ValueError on failure."""
+    sigs = signed_card.get("signatures")
+    if not isinstance(sigs, list) or not sigs:
+        raise ValueError("Agent card has no signatures")
+    entry = sigs[0]
+    protected_b64 = entry.get("protected") or ""
+    sig_b64 = entry.get("signature") or ""
+    hdr = json.loads(_b64u_decode(protected_b64).decode("utf-8"))
+    if hdr.get("alg") not in ("EdDSA", "Ed25519"):
+        raise ValueError(f"Unsupported alg: {hdr.get('alg')}")
+    kid = hdr.get("kid")
+    keys = {k.get("kid"): k for k in (jwks_doc.get("keys") or []) if isinstance(k, dict)}
+    jwk = keys.get(kid)
+    if not jwk or jwk.get("kty") != "OKP" or jwk.get("crv") != "Ed25519":
+        raise ValueError(f"Signing key {kid!r} not found in JWKS")
+    pub = Ed25519PublicKey.from_public_bytes(_b64u_decode(jwk["x"]))
+    payload_b64 = _b64u_encode(_canonical_card_bytes(signed_card))
+    pub.verify(_b64u_decode(sig_b64), f"{protected_b64}.{payload_b64}".encode("ascii"))
+    return hdr
+
+
+def _utc_now() -> str:
+    return dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _ensure_tasks_table(conn) -> None:
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS a2a_tasks ("
+        "id TEXT PRIMARY KEY, context_id TEXT, task_json TEXT NOT NULL, created_at TEXT NOT NULL)"
+    )
+
+
+def _store_completed_task(conn, task_id: str, context_id: str, user_msg: dict, agent_msg: dict) -> None:
+    if not task_id:
+        return
+    now = _utc_now()
+    task = {
+        "id": task_id,
+        "contextId": context_id,
+        "kind": "task",
+        "status": {
+            "state": "completed",
+            "timestamp": now,
+            "message": agent_msg,
+        },
+        "history": [user_msg, agent_msg],
+    }
+    try:
+        _ensure_tasks_table(conn)
+        with conn:
+            conn.execute(
+                "INSERT OR REPLACE INTO a2a_tasks (id, context_id, task_json, created_at) VALUES (?, ?, ?, ?)",
+                (task_id, context_id, json.dumps(task, ensure_ascii=False), now),
+            )
+            conn.execute(
+                "DELETE FROM a2a_tasks WHERE id NOT IN "
+                "(SELECT id FROM a2a_tasks ORDER BY created_at DESC LIMIT 500)"
+            )
+    except sqlite3.Error:
+        pass
+
+
+def _lookup_task(conn, task_id: str) -> dict | None:
+    try:
+        _ensure_tasks_table(conn)
+        row = conn.execute("SELECT task_json FROM a2a_tasks WHERE id = ?", (task_id,)).fetchone()
+        if not row:
+            return None
+        return json.loads(row[0])
+    except (sqlite3.Error, ValueError):
+        return None
+
+
 def register(bp, services, version):
     base = services["base"]
 
     def well_known():
-        resp = jsonify(card(base(), version))
+        b = base()
+        resp = jsonify(sign_agent_card(card(b, version), services, b))
         resp.headers["Access-Control-Allow-Origin"] = "*"
         resp.headers["Cache-Control"] = "public, max-age=3600"
         return resp
@@ -219,8 +337,11 @@ def register(bp, services, version):
     bp.add_url_rule("/.well-known/agent-card.json", "a2a_agent_card", well_known)
     bp.add_url_rule("/.well-known/agent.json", "a2a_agent_card_legacy", well_known)
 
-    def err(code, message, rid=None, status=200):
-        return jsonify(jsonrpc="2.0", id=rid, error={"code": code, "message": message}), status
+    def err(code, message, rid=None, status=200, data=None):
+        e = {"code": code, "message": message}
+        if data is not None:
+            e["data"] = data
+        return jsonify(jsonrpc="2.0", id=rid, error=e), status
 
     @bp.route("/a2a", methods=["GET", "POST", "OPTIONS"])
     def a2a_endpoint():
@@ -231,8 +352,8 @@ def register(bp, services, version):
             return resp
         if request.method == "GET":
             b = base()
-            info = dict(card(b, version),
-                        how_to_call="POST JSON-RPC 2.0 method 'message/send' to this URL",
+            info = dict(sign_agent_card(card(b, version), services, b),
+                        how_to_call="POST JSON-RPC 2.0 methods 'message/send', 'tasks/get', or 'tasks/cancel' to this URL",
                         services=services_offer(b, price_usd=current_app.config["PRICE"],
                                                 sector_price_usd=current_app.config.get("X402_SECTOR_PRICE") or "0.50"))
             resp = jsonify(info)
@@ -242,17 +363,55 @@ def register(bp, services, version):
         body = request.get_json(silent=True)
         if not isinstance(body, dict) or body.get("jsonrpc") != "2.0":
             return err(-32600, "Invalid JSON-RPC request")
-        rid, method, params = body.get("id"), body.get("method"), body.get("params") or {}
+        rid, method, params = body.get("id"), body.get("method"), body.get("params")
+        if params is None:
+            params = {}
+        if not isinstance(params, dict):
+            return err(-32602, "params must be an object", rid)
+
+        if method == "tasks/get":
+            task_id = params.get("id")
+            if not isinstance(task_id, str) or not task_id.strip():
+                return err(-32602, "params.id is required", rid)
+            task_id = task_id.strip()
+            task = _lookup_task(services["db"](), task_id)
+            if task is None:
+                return err(-32001, "Task not found", rid, data={"taskId": task_id})
+            hist_len = params.get("historyLength")
+            if isinstance(hist_len, int) and not isinstance(hist_len, bool) and hist_len >= 0:
+                hist = task.get("history") or []
+                task = dict(task, history=[] if hist_len == 0 else hist[-hist_len:])
+            return jsonify(jsonrpc="2.0", id=rid, result=task)
+
+        if method == "tasks/cancel":
+            task_id = params.get("id")
+            if not isinstance(task_id, str) or not task_id.strip():
+                return err(-32602, "params.id is required", rid)
+            task_id = task_id.strip()
+            task = _lookup_task(services["db"](), task_id)
+            if task is None:
+                return err(-32001, "Task not found", rid, data={"taskId": task_id})
+            return err(-32002, "Task is not cancelable", rid, data={"taskId": task_id, "state": "completed"})
+
         if method != "message/send":
-            return err(-32601, "Only message/send is supported (no streaming, tasks or push notifications)", rid)
-        message = params.get("message") if isinstance(params, dict) else None
+            return err(-32601, "Supported methods: message/send, tasks/get, tasks/cancel (no streaming or push notifications)", rid)
+        message = params.get("message")
         if not isinstance(message, dict) or message.get("role") != "user":
             return err(-32602, "params.message with role 'user' is required", rid)
-        ctx = message.get("contextId") if isinstance(message.get("contextId"), str) else None
+        ctx = message.get("contextId") if isinstance(message.get("contextId"), str) else str(uuid.uuid4())
+        req_task_id = message.get("taskId") if isinstance(message.get("taskId"), str) and message.get("taskId").strip() else None
         skill, domain = _read_request(message)
         b = base()
         price_usd = str(current_app.config["PRICE"])
         sector_price_usd = str(current_app.config.get("X402_SECTOR_PRICE") or "0.50")
+
+        def _reply(text_msg, data_obj):
+            agent_msg = _message(text_msg, data_obj, ctx)
+            conn = services["db"]()
+            _store_completed_task(conn, agent_msg["messageId"], ctx, message, agent_msg)
+            if req_task_id and req_task_id != agent_msg["messageId"]:
+                _store_completed_task(conn, req_task_id, ctx, message, agent_msg)
+            return jsonify(jsonrpc="2.0", id=rid, result=agent_msg)
         def _audit(action, dom="", status="ok"):
             fn = services.get("audit")
             if fn:
@@ -269,41 +428,41 @@ def register(bp, services, version):
             att = dict(offer["tls_attestation"], example_request={"domain": domain or "example.com"},
                        mcp=b + "/mcp", services=offer)
             _audit("tls-attestation", domain or "", "ok")
-            return jsonify(jsonrpc="2.0", id=rid, result=_message(
+            return _reply(
                 "Auditor-Ready TLS Attestation (5.00 USDC on Base via x402 v2; NOT read-only — triggers a fresh "
                 "port-443 TLS measurement and requires an x402-compatible client with a funded buyer wallet and "
                 "payment authorization; unpaid calls return HTTP 402 and never charge). Delivers an Ed25519 JWS "
                 "receipt, CycloneDX 1.6 CBOM, printable Auditor PDF, and bundle signature via POST "
                 f"{b}/api/v1/attestation or MCP tool get_tls_attestation. Preview free archived samples first: "
                 f"{att['sample_pdf']} and {att['sample_json']}. External observation, not a compliance certification.",
-                att, ctx))
+                att)
         if skill == "agent-affiliate":
             offer = services_offer(b, domain=domain, price_usd=price_usd, sector_price_usd=sector_price_usd)
             data = dict(offer["partner_affiliate"], mcp=b + "/mcp", services=offer)
             _audit("agent-affiliate", domain or "", "ok")
-            return jsonify(jsonrpc="2.0", id=rid, result=_message(
+            return _reply(
                 "AI Agent Affiliate Programme: call MCP tool register_agent_affiliate or POST "
                 f"{b}/api/v1/agent/affiliate/register with name, contact_email, payout_method (usdc|paypal), "
                 "payout_destination, and consent_terms=true to receive an instant ?ref=CODE link. Earns 30% of "
                 "monitoring payments for 12 months and 20% of one-time reports/audits; paid monthly manually by "
-                f"the owner after a 30-day hold (min $50). Terms: {b}/partners?lang=en", data, ctx))
+                f"the owner after a 30-day hold (min $50). Terms: {b}/partners?lang=en", data)
         if skill == "paid-data":
             offer = services_offer(b, domain=domain, price_usd=price_usd, sector_price_usd=sector_price_usd)
             data = dict(offer, mcp=b + "/mcp")
             _audit("paid-data", domain or "", "ok")
-            return jsonify(jsonrpc="2.0", id=rid, result=_message(
+            return _reply(
                 "Paid data is bought per call with x402 (USDC on Base) over HTTP or MCP (unpaid calls return the price "
                 "challenge and never charge): Auditor-Ready PDF + CycloneDX CBOM attestation (5.00 USDC; free sample "
                 f"PDF at {offer['tls_attestation']['sample_pdf']}), full report, or weekly sector snapshot. Also "
                 f"available: 14-day free daily monitoring trial (Starter 29 EUR/mo, Business 99 EUR/mo at "
                 f"{offer['monitoring']['trial_url']}), MSP Partner Pilot (290 EUR at {offer['msp_pilot']['url']}), and "
-                f"organization compliance audit (490 EUR at {offer['organization_audit']['url']}).", data, ctx))
+                f"organization compliance audit (490 EUR at {offer['organization_audit']['url']}).", data)
         if not domain:
             _audit(skill, "", "missing_domain")
-            return jsonify(jsonrpc="2.0", id=rid, result=_message(
+            return _reply(
                 "Send a public hostname, e.g. 'Is example.com post-quantum ready?' or {\"skill\":\"tls-scan\",\"domain\":\"example.com\"}.",
                 {"skills": list(VALID_SKILLS),
-                 "services": services_offer(b, price_usd=price_usd, sector_price_usd=sector_price_usd)}, ctx))
+                 "services": services_offer(b, price_usd=price_usd, sector_price_usd=sector_price_usd)})
         try:
             domain = quantum_vuln_scanner.normalize_domain(domain)
             if skill == "tls-scan":
@@ -334,15 +493,14 @@ def register(bp, services, version):
                 _audit("tls-evidence", domain, "ok")
         except quantum_vuln_scanner.ScanError as exc:
             _audit(skill, domain, f"error:{exc.code}")
-            return jsonify(jsonrpc="2.0", id=rid, result=_message(f"Could not measure {domain}: {exc}",
-                                                                   {"error": exc.code}, ctx))
+            return _reply(f"Could not measure {domain}: {exc}", {"error": exc.code})
         except HTTPException as exc:
             if exc.code == 429:
                 stored = dict(badge_evidence.for_domain(services["db"](), domain), verification_url=b + "/verify/" + domain)
                 _attach_receipt(stored, "tls-evidence")
                 _audit(skill, domain, "rate_limited")
-                return jsonify(jsonrpc="2.0", id=rid, result=_message(
+                return _reply(
                     "Scan rate limit reached; returning the latest stored evidence instead (no new probe was made).",
-                    {"error": "rate_limited", "retry_after_seconds": 3600, "stored_evidence": stored}, ctx))
+                    {"error": "rate_limited", "retry_after_seconds": 3600, "stored_evidence": stored})
             raise
-        return jsonify(jsonrpc="2.0", id=rid, result=_message(text, data, ctx))
+        return _reply(text, data)

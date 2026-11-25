@@ -85,9 +85,48 @@ class A2ATests(unittest.TestCase):
         r = self.send(data={"skill": "paid-data"}).json["result"]
         self.assertIn("x402", r["parts"][0]["text"])
         self.assertIn("sector_snapshot", r["parts"][1]["data"])
-        self.assertEqual(self.send("hi", method="tasks/get").json["error"]["code"], -32601)
+        self.assertEqual(self.send("hi", method="tasks/pushNotificationConfig/set").json["error"]["code"], -32601)
         self.assertEqual(self.client.post("/a2a", json={"x": 1}).json["error"]["code"], -32600)
         self.assertIn("hostname", self.send("hello").json["result"]["parts"][0]["text"])
+
+    def test_tasks_get_tasks_cancel_and_signed_agent_card(self):
+        # 1) Signed Agent Card verifies offline against /.well-known/jwks.json
+        jwks = self.client.get("/.well-known/jwks.json").json
+        card = self.client.get("/.well-known/agent-card.json").json
+        self.assertTrue(card.get("signatures"))
+        hdr = a2a_agent.verify_agent_card_signature(card, jwks)
+        self.assertEqual(hdr["alg"], "EdDSA")
+        self.assertEqual(hdr["jku"], "https://ather-quantum.com/.well-known/jwks.json")
+
+        # Tampering with the card must fail verification
+        tampered = dict(card, name="Tampered Agent")
+        with self.assertRaises(Exception):
+            a2a_agent.verify_agent_card_signature(tampered, jwks)
+
+        # 2) tasks/get with missing id -> -32602; unknown id -> -32001 (A2A 0.3.0 TaskNotFound)
+        r_missing = self.client.post("/a2a", json={"jsonrpc": "2.0", "id": 10, "method": "tasks/get", "params": {}})
+        self.assertEqual(r_missing.json["error"]["code"], -32602)
+
+        r_unknown = self.client.post("/a2a", json={"jsonrpc": "2.0", "id": 11, "method": "tasks/get", "params": {"id": "nonexistent-task"}})
+        self.assertEqual(r_unknown.status_code, 200)
+        self.assertEqual(r_unknown.json["error"]["code"], -32001)
+
+        # 3) Completed message/send is retrievable via tasks/get (and historyLength works)
+        msg = self.send("Is example.com post-quantum ready?").json["result"]
+        tid = msg["messageId"]
+        r_task = self.client.post("/a2a", json={"jsonrpc": "2.0", "id": 12, "method": "tasks/get", "params": {"id": tid, "historyLength": 1}})
+        self.assertEqual(r_task.status_code, 200)
+        task = r_task.json["result"]
+        self.assertEqual(task["kind"], "task")
+        self.assertEqual(task["id"], tid)
+        self.assertEqual(task["status"]["state"], "completed")
+        self.assertEqual(len(task["history"]), 1)
+
+        # 4) tasks/cancel: unknown -> -32001, completed -> -32002 (TaskNotCancelable)
+        r_c_miss = self.client.post("/a2a", json={"jsonrpc": "2.0", "id": 13, "method": "tasks/cancel", "params": {"id": "missing"}})
+        self.assertEqual(r_c_miss.json["error"]["code"], -32001)
+        r_c_done = self.client.post("/a2a", json={"jsonrpc": "2.0", "id": 14, "method": "tasks/cancel", "params": {"id": tid}})
+        self.assertEqual(r_c_done.json["error"]["code"], -32002)
 
     def test_listed_for_agents(self):
         self.assertIn("/.well-known/agent-card.json", self.client.get("/llms.txt").get_data(as_text=True))
