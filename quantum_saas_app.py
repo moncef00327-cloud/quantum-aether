@@ -4901,7 +4901,7 @@ def _security_headers(response):
         # Result pages carry a visitor-level offer variant; never let a shared cache mix arms.
         response.headers['Cache-Control'] = 'private, no-store'
     if request.path.startswith(('/scan/', '/api/v1/orders', '/api/paypal/', '/api/crypto/', '/api/v1/crypto/',
-                                '/api/monitor/')):
+                                '/api/monitor/', '/api/v1/attestation/')):
         response.headers['Referrer-Policy'] = 'no-referrer'
     if request.path == '/research':
         # صفحة بحث داخلية وليست محتوى عامًا.
@@ -5029,6 +5029,8 @@ import x402_attestation  # noqa: E402  paid, portable signed PQ-TLS attestation 
 x402_attestation.register(bp, {
     "db": db, "base": public_base, "perform_scan": perform_scan, "scan_summary": scan_summary,
     "normalize_domain": quantum_vuln_scanner.normalize_domain, "scan_error": quantum_vuln_scanner.ScanError,
+    "data_dir": lambda: current_app.config["DATA_DIR"],
+    "sign": _sign_legacy_evidence,
     "issue_receipt": lambda result, scan_id: receipts.issue_and_store_receipt(
         {"base": public_base, "db": db, "data_dir": lambda: current_app.config["DATA_DIR"]}, result, scan_id=scan_id),
 })
