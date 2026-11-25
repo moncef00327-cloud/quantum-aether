@@ -123,8 +123,9 @@ def already_sent(conn, email, domain):
 
 
 def sent_last_24h(conn):
-    since = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(hours=24)).strftime("%Y-%m-%dT%H:%M:%SZ")
-    return conn.execute("SELECT COUNT(*) FROM outreach_sent WHERE sent_at >= ?", (since,)).fetchone()[0]
+    """Count B2B emails sent today (UTC calendar day, strictly independent of A2A outreach)."""
+    today = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d")
+    return conn.execute("SELECT COUNT(*) FROM outreach_sent WHERE substr(sent_at, 1, 10) = ?", (today,)).fetchone()[0]
 
 
 def resend_send(to, mail, http):

@@ -44,7 +44,6 @@ DB_PATH = os.path.join(DATA_DIR, "quantum_saas.db")
 TARGETS_PATH = "/root/outreach/a2a_targets.json"
 PAUSE_FILES = [
     os.path.join(DATA_DIR, "a2a_outreach.paused"),
-    os.path.join(DATA_DIR, "outreach.paused"),
 ]
 SITE = "https://ather-quantum.com"
 OUR_CARD = f"{SITE}/.well-known/agent-card.json"
@@ -272,8 +271,9 @@ def is_blocked_or_sent(conn: sqlite3.Connection, endpoint: str, host: str) -> bo
 
 
 def sent_last_24h(conn: sqlite3.Connection) -> int:
-    since = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(hours=24)).strftime("%Y-%m-%dT%H:%M:%SZ")
-    return int(conn.execute("SELECT COUNT(*) FROM a2a_outreach_sent WHERE sent_at >= ?", (since,)).fetchone()[0])
+    """Count A2A outreach attempts today (UTC calendar day, strictly independent of B2B email outreach)."""
+    today = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d")
+    return int(conn.execute("SELECT COUNT(*) FROM a2a_outreach_sent WHERE substr(sent_at, 1, 10) = ?", (today,)).fetchone()[0])
 
 
 def build_a2a_pitch(summary: dict, host: str, obs: dict, *, date_iso: str | None = None, method: str | None = None) -> dict:
