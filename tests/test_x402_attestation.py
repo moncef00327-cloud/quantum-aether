@@ -9,6 +9,7 @@ from unittest.mock import Mock, patch
 from urllib.parse import urlsplit
 
 import quantum_saas_app
+import receipts
 import signed_receipts
 from tests.test_app import RESULT
 
@@ -147,6 +148,87 @@ class X402AttestationTests(unittest.TestCase):
             self.assertIn("/api/v1/attestation/sample.pdf", pricing, lang)
             partners_html = self.client.get(f"/partners?lang={lang}").get_data(as_text=True)
             self.assertIn("register_agent_affiliate", partners_html, lang)
+
+    def test_metadata_unifies_read_only_false_payment_reqs_and_mcp_e2e_offline_verify(self):
+        # 1) read_only=False & payment requirements consistent across EVERY discovery surface
+        svc = self.client.get("/.well-known/agent-service.json").get_json()
+        self.assertIs(svc["endpoints"]["attestation"]["read_only"], False)
+        self.assertIs(svc["endpoints"]["attestation"]["starts_scan"], True)
+        att_meta = svc["pricing"]["attestation"]
+        self.assertIs(att_meta["read_only"], False)
+        self.assertIs(att_meta["starts_scan"], True)
+        self.assertIs(att_meta["payment_authorization_required"], True)
+        self.assertIs(att_meta["buyer_wallet_required"], True)
+        self.assertIn("spend", att_meta["spend_policy_note"].lower())
+
+        for card_path in ("/.well-known/mcp/server-card.json", "/mcp/server-card"):
+            card = self.client.get(card_path).get_json()
+            self.assertIs(card["attestation"]["read_only"], False, card_path)
+            self.assertIs(card["attestation"]["buyer_wallet_required"], True, card_path)
+            tool_card = next(t for t in card["tools"] if t["name"] == "get_tls_attestation")
+            self.assertIs(tool_card["annotations"]["readOnlyHint"], False, card_path)
+            self.assertIn("buyer wallet", tool_card["description"].lower(), card_path)
+            self.assertIn("spend", tool_card["description"].lower(), card_path)
+
+        cat = self.client.get("/.well-known/api-catalog").get_json()
+        self.assertIn("https://ather-quantum.com/api/v1/attestation", {i["anchor"] for i in cat["linkset"]})
+
+        oa = self.client.get("/openapi.yaml").get_data(as_text=True)
+        for token in ("AttestationBundleV2:", "bundle_jws:", "auditor_pdf:", "/api/v1/attestation/sample:"):
+            self.assertIn(token, oa)
+
+        # 2) Unpaid MCP call returns 402 challenge as isError=True and NEVER scans
+        r_unpaid = self.client.post("/mcp", json={
+            "jsonrpc": "2.0", "id": 10, "method": "tools/call",
+            "params": {"name": "get_tls_attestation", "arguments": {"domain": "example.com"}},
+        }).get_json()["result"]
+        self.assertTrue(r_unpaid["isError"])
+        challenge = r_unpaid["structuredContent"]
+        self.assertEqual(challenge["accepts"][0]["amount"], "5000000")
+        self.scanner.assert_not_called()
+
+        # 3) Mocked paid MCP call settles and delivers a locally verifiable bundle (JWKS + PDF SHA-256)
+        pay_meta = {
+            "x402/payment": {
+                "x402Version": 2,
+                "resource": challenge["resource"],
+                "accepted": challenge["accepts"][0],
+            }
+        }
+        verified = Mock(); verified.raise_for_status.return_value = None; verified.json.return_value = {"isValid": True}
+        settled = Mock(); settled.raise_for_status.return_value = None; settled.json.return_value = {
+            "success": True, "transaction": "0x" + "cd" * 32, "network": "eip155:8453"
+        }
+        with patch("x402_pay.requests.post", side_effect=[verified, settled]):
+            r_paid = self.client.post("/mcp", json={
+                "jsonrpc": "2.0", "id": 11, "method": "tools/call",
+                "params": {"name": "get_tls_attestation", "arguments": {"domain": "example.com"}, "_meta": pay_meta},
+            }).get_json()["result"]
+
+        self.assertFalse(r_paid["isError"])
+        bundle = r_paid["structuredContent"]
+        self.assertEqual(bundle["version"], "2")
+        self.assertEqual(bundle["cbom"]["bomFormat"], "CycloneDX")
+        self.assertEqual(r_paid["_meta"]["x402/payment-response"]["transaction"], "0x" + "cd" * 32)
+
+        # Verify BOTH signatures offline against live /.well-known/jwks.json
+        jwks = self.client.get("/.well-known/jwks.json").get_json()
+        rcpt_claims = receipts.verify_receipt(
+            bundle["signed_receipt"]["signed_receipt_jws"],
+            "example.com:443",
+            jwks_doc=jwks,
+            require_pass=False,
+        )
+        self.assertEqual(rcpt_claims["sub"], "example.com:443")
+
+        bhdr, bclaims = signed_receipts.verify_receipt(self.tmp.name, bundle["integrity"]["bundle_jws"])
+        self.assertEqual(bhdr["alg"], "EdDSA")
+        self.assertEqual(bclaims["pdf_sha256"], bundle["auditor_pdf"]["sha256"])
+
+        dl = urlsplit(bundle["auditor_pdf"]["download_url"])
+        pdf_r = self.client.get(f"{dl.path}?{dl.query}")
+        self.assertEqual(pdf_r.status_code, 200)
+        self.assertEqual(hashlib.sha256(pdf_r.data).hexdigest(), bundle["auditor_pdf"]["sha256"])
 
 
 if __name__ == "__main__":

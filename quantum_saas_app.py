@@ -587,13 +587,13 @@ def scan_summary(scan_id, result):
         "certificate_key": f"{cert.get('key_algorithm')}-{cert.get('key_bits')}",
         "certificate_valid": bool(cert.get("verified")),
         "findings_in_full_report": len(result["findings"]),
-        "scan_url": public_base() + url_for(".scan_page", scan_id=scan_id),
+        "scan_url": public_base() + url_for("site.scan_page", scan_id=scan_id),
         "full_report_price": {"amount": current_app.config["PRICE"], "currency": current_app.config["CURRENCY"]},
     }
 
 
 def report_url(scan):
-    return url_for(".report", token=scan["report_token"], lang=current_lang())
+    return url_for("site.report", token=scan["report_token"], lang=current_lang())
 
 
 def paid_scan_or_404(token):

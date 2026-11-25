@@ -416,33 +416,65 @@ paths:
   /api/v1/attestation:
     get:
       operationId: getTlsAttestation
-      summary: Paid auditor-ready signed PQ-TLS attestation bundle — PDF + CycloneDX 1.6 CBOM + Ed25519 JWS (x402, USDC on Base)
+      summary: Paid, non-read-only auditor-ready PQ-TLS attestation bundle — PDF + CycloneDX 1.6 CBOM + Ed25519 JWS (x402, 5.00 USDC on Base)
       description: >
-        Returns HTTP 402 with a PAYMENT-REQUIRED x402 v2 challenge when unpaid; retry with the
-        x402 PAYMENT-SIGNATURE header. Once settled, returns a structured, auditor-ready evidence
-        bundle (v2) not available for free: (1) a fresh Ed25519 JWS signed TLS receipt,
-        (2) a CycloneDX 1.6 Cryptographic Bill of Materials (CBOM), (3) a token-protected download
-        URL for a printable auditor PDF report with timestamp, methodology, explicit limits, and
-        SHA-256 digest, and (4) a bundle-level Ed25519 JWS (integrity.bundle_jws) binding the PDF
-        and CBOM. Measurement limits: one vantage, one public IPv4 endpoint, port 443; may not
-        represent an origin behind a CDN. Supporting transport evidence (e.g. NIS2/DORA), not a
-        legal compliance certification. The basic scan and its signed receipt are free (POST /api/v1/scan).
-        Calling without a signed payment never charges. Also available as MCP tool get_tls_attestation. Price 5.00 USDC.
+        Paid, non-read-only endpoint (starts a fresh external TLS probe; read_only=false).
+        Requires an x402 v2 compatible HTTP/MCP client with a funded Base USDC buyer wallet
+        (5.00 USDC per domain, exact scheme). Returns HTTP 402 with a PAYMENT-REQUIRED challenge
+        when unpaid and never charges or scans without a valid signed payment. Agents must not
+        auto-retry paid requests without explicit spend authorization.
+        Once settled, returns AttestationBundleV2: (1) signed_receipt (fresh Ed25519 JWS TLS receipt),
+        (2) cbom (CycloneDX 1.6 Cryptographic Bill of Materials), (3) auditor_pdf (token-protected
+        download URL for a printable auditor PDF report with timestamp, methodology, explicit limits,
+        and SHA-256 digest), and (4) integrity.bundle_jws (bundle-level Ed25519 JWS verifiable offline
+        against /.well-known/jwks.json). Preview the format for free at GET /api/v1/attestation/sample
+        and GET /api/v1/attestation/sample.pdf. Measurement limits: one vantage, one public IPv4 endpoint,
+        port 443; may not represent an origin behind a CDN. Supporting transport evidence (e.g. NIS2/DORA),
+        not a legal compliance certification. Basic scan and signed receipt stay free (POST /api/v1/scan).
+        Also exposed as the MCP tool get_tls_attestation (readOnlyHint: false).
       parameters:
         - name: domain
           in: query
           required: true
           schema: { type: string, example: example.com }
       responses:
-        "200": { description: Payment settled; v2 auditor attestation bundle (JSON + auditor_pdf URL + CBOM + bundle_jws) with PAYMENT-RESPONSE header. }
+        "200":
+          description: Payment settled; v2 auditor attestation bundle with PAYMENT-RESPONSE header.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AttestationBundleV2" }
         "400": { description: Invalid domain. }
-        "402": { description: Payment required or payment invalid; see PAYMENT-REQUIRED header. }
+        "402": { description: Payment required or payment invalid; see PAYMENT-REQUIRED header. Never charges or scans. }
         "429": { description: Rate limit exceeded. }
         "503": { description: Base USDC receiver not configured or facilitator unavailable. }
+  /api/v1/attestation/sample:
+    get:
+      operationId: getTlsAttestationSample
+      summary: Free read-only archived sample JSON of AttestationBundleV2 (never scans, is_example=true)
+      responses:
+        "200":
+          description: Archived sample attestation bundle for format preview only (is_example=true, is_live=false).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AttestationBundleV2" }
+  /api/v1/attestation/sample.pdf:
+    get:
+      operationId: getTlsAttestationSamplePdf
+      summary: Free read-only archived sample printable Auditor PDF (never scans)
+      responses:
+        "200":
+          description: Archived sample PDF marked clearly as not a live measurement.
+          content:
+            application/pdf: {}
   /api/v1/attestation/{att_id}.pdf:
     get:
       operationId: downloadTlsAttestationPdf
       summary: Download the printable auditor PDF for a paid attestation bundle (token-protected)
+      description: >
+        Token-protected download URL returned inside auditor_pdf.download_url of a paid AttestationBundleV2.
+        Served with Cache-Control: no-store, X-Robots-Tag: noindex, Referrer-Policy: no-referrer, and
+        X-Attestation-SHA256. The token has no short automatic TTL while the artifact is retained on the server;
+        treat the download URL and token as confidential bearer credentials.
       parameters:
         - name: att_id
           in: path
@@ -454,7 +486,7 @@ paths:
           schema: { type: string }
       responses:
         "200":
-          description: Printable auditor PDF with X-Attestation-SHA256 header.
+          description: Printable auditor PDF with X-Attestation-SHA256 header matching auditor_pdf.sha256.
           content:
             application/pdf: {}
         "403": { description: Missing or invalid download token. }
@@ -605,6 +637,41 @@ components:
             receipt_url: { type: string, format: uri }
             policy_uri: { type: string, format: uri }
             cli: { type: string }
+    AttestationBundleV2:
+      type: object
+      required: [type, version, att_id, issued_at, domain, scan, signed_receipt, cbom, methodology, auditor_pdf]
+      properties:
+        type: { type: string, enum: [qa-pq-tls-attestation] }
+        version: { type: string, enum: ["2"] }
+        att_id: { type: string, example: qa_att_0123456789abcdef01234567 }
+        issued_at: { type: string, format: date-time }
+        domain: { type: string, example: example.com }
+        scan: { $ref: "#/components/schemas/ScanSummary" }
+        signed_receipt: { $ref: "#/components/schemas/SignedReceiptResponse" }
+        cbom: { type: object, description: CycloneDX 1.6 JSON Cryptographic Bill of Materials for the observed TLS endpoint. }
+        methodology: { type: object, description: Documented probe methodology, vantage, observation states, and explicit measurement limits. }
+        auditor_pdf:
+          type: object
+          properties:
+            download_url: { type: string, format: uri, description: Token-protected download URL (/api/v1/attestation/{att_id}.pdf?token=...). Retained on server with no short automatic TTL; treat token as secret. }
+            filename: { type: string, example: qa-attestation-example.com-2026-11-25.pdf }
+            content_type: { type: string, enum: [application/pdf] }
+            size_bytes: { type: integer }
+            sha256: { type: string, description: Hex SHA-256 digest of the PDF file for offline integrity verification. }
+            renderer: { type: string, enum: [weasyprint, builtin-pdf] }
+        integrity:
+          type: object
+          properties:
+            bundle_sha256: { type: string, description: Canonical SHA-256 digest of core attestation metadata, receipt_jti, cbom_serial, and pdf_sha256. }
+            pdf_sha256: { type: string }
+            bundle_jws: { type: string, nullable: true, description: Compact Ed25519 JWS (verifiable offline via /.well-known/jwks.json) binding att_id, receipt_jti, cbom_serial, bundle_sha256, and pdf_sha256. }
+        verification:
+          type: object
+          properties:
+            jwks: { type: string, format: uri }
+            policy: { type: string, format: uri }
+            how: { type: string }
+        scope: { type: string }
     AgentAffiliateRequest:
       type: object
       required: [name, contact_email, payout_method, consent_terms]
