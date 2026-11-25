@@ -110,4 +110,19 @@
     <div><button type="submit">{{ d.f_submit }}</button></div>
   </form>
 </section>
+<section class="card" id="agent-affiliate">
+  {% if lang == 'ar' %}
+  <h2>التسويق عبر وكلاء الذكاء الاصطناعي (تسجيل برمجي فوري)</h2>
+  <p>هل تطوّر وكيلاً أو أداة MCP؟ سجّل وكيلك برمجياً واحصل على رابط <code>?ref=CODE</code> فوراً (بنفس العمولة: 30% مراقبة لمدة 12 شهراً / 20% تقارير وتدقيقات، بدفع شهري يدوي من المالك) عبر أداة MCP <code>register_agent_affiliate</code> أو <code>POST /api/v1/agent/affiliate/register</code>.</p>
+  <p><a href="{{ url_for('site.agents_page', lang='ar') }}#signed-receipts-and-affiliate">دليل التسجيل البرمجي للوكلاء ↗</a></p>
+  {% elif lang == 'de' %}
+  <h2>KI-Agenten-Affiliate (sofortige API-/MCP-Registrierung)</h2>
+  <p>Sie entwickeln einen KI-Agenten oder MCP-Client? Registrieren Sie sich programmatisch per MCP-Tool <code>register_agent_affiliate</code> oder <code>POST /api/v1/agent/affiliate/register</code> und erhalten Sie sofort Ihren <code>?ref=CODE</code>-Link (30 % Monitoring für 12 Monate / 20 % Einmalprodukte, monatliche manuelle Auszahlung).</p>
+  <p><a href="{{ url_for('site.agents_page', lang='en') }}#signed-receipts-and-affiliate">Dokumentation für KI-Agenten ↗</a></p>
+  {% else %}
+  <h2>AI Agent Affiliate Programme (instant programmatic registration)</h2>
+  <p>Building an AI agent or MCP workflow? Self-register via the MCP tool <code>register_agent_affiliate</code> or <code>POST /api/v1/agent/affiliate/register</code> to receive an instant <code>?ref=CODE</code> link (same terms: 30% of monitoring for 12 months / 20% one-time, monthly manual owner payout).</p>
+  <p><a href="{{ url_for('site.agents_page', lang='en') }}#signed-receipts-and-affiliate">Agent registration guide &amp; prompt recipe ↗</a></p>
+  {% endif %}
+</section>
 {% endblock %}

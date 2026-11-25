@@ -89,7 +89,8 @@ def _methodology_block(base: str) -> dict:
 
 
 def _render_auditor_html(att_id: str, domain: str, issued_at: str, summary: dict, raw: dict,
-                         signed_receipt: dict, cbom: dict, methodology: dict, base: str) -> str:
+                         signed_receipt: dict, cbom: dict, methodology: dict, base: str,
+                         is_sample: bool = False) -> str:
     esc = htmlmod.escape
     rcpt = signed_receipt.get("receipt") or {}
     jti = rcpt.get("jti") or "-"
@@ -103,6 +104,13 @@ def _render_auditor_html(att_id: str, domain: str, issued_at: str, summary: dict
         "UNDETERMINED" if obs == "undetermined" else "NO (Classical Only)")
     verdict_cls = "pass" if summary.get("post_quantum_key_exchange") and summary.get("certificate_valid", True) else (
         "warn" if grade in ("B", "C") else "fail")
+    sample_banner = (
+        '<div style="background:#fef3c7;border:2px solid #d97706;color:#78350f;padding:8px 10px;'
+        'border-radius:6px;margin-bottom:10px;font-weight:700;font-size:9pt">'
+        'ARCHIVED SAMPLE — NOT A LIVE MEASUREMENT · For format preview only. '
+        'Live signed attestations ($5.00 USDC via x402) contain a fresh scan and live Ed25519 JWS signatures.'
+        '</div>'
+    ) if is_sample else ""
 
     cert = raw.get("certificate") or {}
     endpoints = raw.get("endpoints") or []
@@ -171,6 +179,7 @@ def _render_auditor_html(att_id: str, domain: str, issued_at: str, summary: dict
 </style>
 </head>
 <body>
+  {sample_banner}
   <div class="hdr">
     <div>
       <div class="brand">Quantum Aether · Post-Quantum TLS Attestation</div>
@@ -231,9 +240,12 @@ def _render_auditor_html(att_id: str, domain: str, issued_at: str, summary: dict
 
 
 def _render_auditor_pdf_bytes(att_id: str, domain: str, issued_at: str, summary: dict, raw: dict,
-                              signed_receipt: dict, cbom: dict, methodology: dict, base: str) -> tuple[bytes, str]:
+                              signed_receipt: dict, cbom: dict, methodology: dict, base: str,
+                              is_sample: bool = False) -> tuple[bytes, str]:
     """Render auditor PDF via WeasyPrint CLI when available, falling back to pure-Python PDF 1.4."""
-    html_str = _render_auditor_html(att_id, domain, issued_at, summary, raw, signed_receipt, cbom, methodology, base)
+    html_str = _render_auditor_html(
+        att_id, domain, issued_at, summary, raw, signed_receipt, cbom, methodology, base, is_sample=is_sample
+    )
     weasy = shutil.which("weasyprint")
     if weasy:
         with tempfile.TemporaryDirectory() as td:
@@ -300,6 +312,80 @@ def register(bp, deps):
     ScanError = deps["scan_error"]
     data_dir_fn = deps.get("data_dir")
     sign_fn = deps.get("sign")
+    sample_fn = deps.get("sample")
+
+    def _build_sample():
+        raw = sample_fn() if sample_fn else {
+            "domain": "github.com", "ip": "140.82.121.4", "port": 443,
+            "scanned_at": "2026-11-03T12:00:00+00:00", "scanner_version": "2.0", "grade": "B",
+            "key_exchange": {"version": "TLSv1.3", "cipher": "TLS_AES_128_GCM_SHA256", "group": "x25519", "pq": False},
+            "certificate": {"verified": True, "chain_valid": True, "hostname_match": True,
+                            "key_algorithm": "ECDSA", "key_bits": 256, "subject": "github.com",
+                            "issuer": "Sectigo", "not_after": "2027-02-01T00:00:00+00:00", "days_left": 68},
+            "legacy_tls_enabled": False,
+        }
+        domain = raw.get("domain") or "github.com"
+        issued_at = (raw.get("scanned_at") or "2026-11-03T12:00:00Z")[:19].replace("+00:00", "") + "Z"
+        base = public_base()
+        summary = scan_summary("archived-sample", raw)
+        cbom_doc = qrisk.cbom(raw)
+        meth = _methodology_block(base)
+        sample_receipt = {
+            "receipt": {
+                "jti": "qa_rcpt_archived_sample",
+                "sub": f"{domain}:443",
+                "policy": {"id": "qa-pqc-transport", "version": "1.0", "result": "FAIL", "grade": summary.get("grade") or "B"},
+            },
+            "signed_receipt_jws": "SAMPLE_ONLY.NOT_A_LIVE_SIGNATURE.RUN_LIVE_ATTESTATION_FOR_REAL_ED25519_JWS",
+            "verify": {"jwks_uri": base + "/.well-known/jwks.json", "policy_uri": base + "/policies/qa-pqc-transport/1.0"},
+        }
+        pdf_bytes, renderer = _render_auditor_pdf_bytes(
+            "qa_att_archived_sample", domain, issued_at, summary, raw, sample_receipt, cbom_doc, meth, base, is_sample=True
+        )
+        return domain, issued_at, base, summary, cbom_doc, meth, sample_receipt, pdf_bytes, renderer
+
+    @bp.get("/api/v1/attestation/sample")
+    def api_v1_attestation_sample():
+        """Free read-only archived sample of the v2 Auditor Attestation Bundle (never scans)."""
+        domain, issued_at, base, summary, cbom_doc, meth, sample_receipt, pdf_bytes, renderer = _build_sample()
+        pdf_sha256 = hashlib.sha256(pdf_bytes).hexdigest()
+        resp = jsonify({
+            "type": "qa-pq-tls-attestation",
+            "version": "2",
+            "is_example": True,
+            "is_live": False,
+            "example_notice": "Archived sample for format preview only. Never triggers a live scan; live paid attestations ($5.00 USDC via x402) include fresh measurements and live Ed25519 JWS signatures.",
+            "att_id": "qa_att_archived_sample",
+            "issued_at": issued_at,
+            "domain": domain,
+            "scan": summary,
+            "signed_receipt": sample_receipt,
+            "cbom": cbom_doc,
+            "methodology": meth,
+            "auditor_pdf": {
+                "download_url": f"{base}/api/v1/attestation/sample.pdf",
+                "filename": f"qa-attestation-sample-{domain}.pdf",
+                "content_type": "application/pdf",
+                "size_bytes": len(pdf_bytes),
+                "sha256": pdf_sha256,
+                "renderer": renderer,
+            },
+            "live_endpoint": f"{base}/api/v1/attestation?domain={domain}",
+            "price_usd": PRICE_USD,
+        })
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["Cache-Control"] = "public, max-age=300"
+        return resp
+
+    @bp.get("/api/v1/attestation/sample.pdf")
+    def api_v1_attestation_sample_pdf():
+        """Free read-only archived sample of the printable Auditor PDF (never scans)."""
+        domain, _, _, _, _, _, _, pdf_bytes, _ = _build_sample()
+        resp = Response(pdf_bytes, mimetype="application/pdf")
+        resp.headers["Content-Disposition"] = f'inline; filename="qa-attestation-sample-{domain}.pdf"'
+        resp.headers["Cache-Control"] = "public, max-age=300"
+        resp.headers["X-Robots-Tag"] = "noindex"
+        return resp
 
     @bp.get("/api/v1/attestation")
     def api_v1_attestation():

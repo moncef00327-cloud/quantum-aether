@@ -121,6 +121,33 @@ class X402AttestationTests(unittest.TestCase):
         self.assertEqual(r_mcp.status_code, 200)
         self.assertTrue(r_mcp.get_json()["result"]["isError"])  # x402 PaymentRequired challenge
 
+    def test_sample_attestation_pdf_json_and_commercial_crosslinks(self):
+        # Sample endpoints are free, read-only, clearly labeled as examples, and never scan
+        r_json = self.client.get("/api/v1/attestation/sample")
+        self.assertEqual(r_json.status_code, 200)
+        sj = r_json.get_json()
+        self.assertTrue(sj["is_example"])
+        self.assertFalse(sj["is_live"])
+        self.assertEqual(sj["cbom"]["bomFormat"], "CycloneDX")
+        self.assertTrue(sj["auditor_pdf"]["download_url"].endswith("/api/v1/attestation/sample.pdf"))
+
+        r_pdf = self.client.get("/api/v1/attestation/sample.pdf")
+        self.assertEqual(r_pdf.status_code, 200)
+        self.assertEqual(r_pdf.mimetype, "application/pdf")
+        self.assertTrue(r_pdf.data.startswith(b"%PDF"))
+        self.scanner.assert_not_called()
+
+        # Cross-links visible on /agents, /pricing, and /partners
+        for lang in ("en", "ar"):
+            self.assertIn("/api/v1/attestation/sample.pdf", self.client.get(f"/agents?lang={lang}").get_data(as_text=True))
+        for lang in ("en", "de", "ar"):
+            pricing = self.client.get(f"/pricing?lang={lang}").get_data(as_text=True)
+            self.assertIn("290 €", pricing, lang)
+            self.assertIn("5.00 USDC", pricing, lang)
+            self.assertIn("/api/v1/attestation/sample.pdf", pricing, lang)
+            partners_html = self.client.get(f"/partners?lang={lang}").get_data(as_text=True)
+            self.assertIn("register_agent_affiliate", partners_html, lang)
+
 
 if __name__ == "__main__":
     unittest.main()

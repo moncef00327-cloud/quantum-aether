@@ -43,6 +43,8 @@
   <ul class="small">
     <li><a href="{{ url_for('site.agency_page', lang=lang) }}#buy">{{ commercial.pack }}</a> · <bdi>{{ pack_price }} {{ pack_currency }}</bdi> · {{ commercial.pack_desc.format(n=credits) }}{% if not payments_enabled %} ({{ commercial.unavailable }}){% endif %}</li>
     <li><a href="{{ url_for('site.audit_page', lang=lang) }}" data-ev="audit_cta">{{ audit_cta }}</a> · <bdi>{{ audit_price }} {{ audit_currency }}</bdi></li>
+    <li><a href="{{ url_for('site.partners_page', lang=lang) }}#msp-pilot">{{ 'عرض بايلوت مزوّدي الخدمات (MSP Pilot — حتى 50 مضيفاً، PDF + إيصالات موقّعة)' if lang == 'ar' else ('IT-Dienstleister MSP Pilot (bis 50 Hostnamen, Ampel-PDF + signierte Belege)' if lang == 'de' else 'IT Service Provider & MSP Pilot (up to 50 hostnames, Ampel PDF + signed receipts)') }}</a> · <bdi dir="ltr">290 €</bdi></li>
+    <li><a href="{{ url_for('site.agents_page', lang='ar' if lang == 'ar' else 'en') }}#attestation">{{ 'حزمة إثبات TLS للمورّدين عبر API/MCP (PDF موقّع للمدقّق + CycloneDX 1.6 CBOM، x402)' if lang == 'ar' else ('Vendor TLS Attestation API/MCP (signiertes Prüfer-PDF + CycloneDX 1.6 CBOM, x402)' if lang == 'de' else 'Vendor TLS Attestation API/MCP (auditor PDF + CycloneDX 1.6 CBOM, x402)') }}</a> · <bdi dir="ltr">5.00 USDC</bdi> · <a href="/api/v1/attestation/sample.pdf" target="_blank" rel="noopener">{{ 'نموذج PDF ↗' if lang == 'ar' else ('Beispiel-PDF ↗' if lang == 'de' else 'Sample PDF ↗') }}</a></li>
     <li>{{ commercial.report }} · <bdi>{{ price }} {{ currency }}</bdi> · <a href="{{ url_for('site.index', lang=lang) }}">{{ commercial.scan }}</a></li>
   </ul>
 </section>

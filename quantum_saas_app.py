@@ -5031,6 +5031,7 @@ x402_attestation.register(bp, {
     "normalize_domain": quantum_vuln_scanner.normalize_domain, "scan_error": quantum_vuln_scanner.ScanError,
     "data_dir": lambda: current_app.config["DATA_DIR"],
     "sign": _sign_legacy_evidence,
+    "sample": sample_result,
     "issue_receipt": lambda result, scan_id: receipts.issue_and_store_receipt(
         {"base": public_base, "db": db, "data_dir": lambda: current_app.config["DATA_DIR"]}, result, scan_id=scan_id),
 })
