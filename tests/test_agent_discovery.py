@@ -75,26 +75,29 @@ class AgentDiscoveryTests(unittest.TestCase):
    response=self.rpc('initialize',{'protocolVersion':protocol,'capabilities':{},'clientInfo':{'name':'independent-buyer','version':'1.0'}})
    self.assertEqual(response.status_code,200);result=response.json['result']
    self.assertIn(result['protocolVersion'],agent_discovery.PROTOCOLS)
-   self.assertEqual(result['capabilities'],{'tools':{'listChanged':False}})
+   self.assertEqual(result['capabilities'],{'tools':{'listChanged':False},'resources':{'subscribe':False,'listChanged':False},'prompts':{'listChanged':False}})
    self.assertIn('get_full_report',result['instructions'])
+   self.assertIn('generate_pq_config',result['instructions'])
    self.assertNotIn('Mcp-Session-Id',response.headers)
   self.scanner.assert_not_called()
 
  def test_tools_are_discoverable_and_read_only_calls_never_scan(self):
   tools=self.rpc('tools/list').json['result']['tools']
-  expected={'scan_tls','get_tls_evidence','exposure_window','get_methodology','get_example_result','get_service_info','get_full_report','get_sector_snapshot','get_tls_attestation',
+  expected={'scan_tls','get_tls_evidence','exposure_window','get_methodology','get_example_result','get_service_info','generate_pq_config','get_full_report','get_sector_snapshot','get_tls_attestation',
             'create_full_report_order','verify_full_report_payment','register_agent_affiliate'}
   self.assertEqual({t['name'] for t in tools},expected)
   paid=next(t for t in tools if t['name']=='get_full_report')['description']
   self.assertIn('x402',paid);self.assertIn('$'+str(self.app.config['PRICE'])+' USDC',paid);self.assertNotIn('{price}',paid)
   read_only=[t for t in tools if t.get('annotations',{}).get('readOnlyHint') is True]
   self.assertEqual({t['name'] for t in read_only},
-                   {'get_tls_evidence','exposure_window','get_methodology','get_example_result','get_service_info','get_sector_snapshot'})
+                   {'get_tls_evidence','exposure_window','get_methodology','get_example_result','get_service_info','generate_pq_config','get_sector_snapshot'})
   self.assertEqual({t['name'] for t in tools if not t.get('annotations',{}).get('readOnlyHint')},
                    {'scan_tls','get_full_report','get_tls_attestation','create_full_report_order','verify_full_report_payment','register_agent_affiliate'})
   for tool in read_only:
    if tool['name']=='get_sector_snapshot':continue  # paid read-only: returns an x402 challenge (tests/test_x402_sector.py)
-   arguments={'domain':'example.com'} if tool['name'] in ('get_tls_evidence','exposure_window') else {}
+   if tool['name'] in ('get_tls_evidence','exposure_window'):arguments={'domain':'example.com'}
+   elif tool['name']=='generate_pq_config':arguments={'server':'nginx'}
+   else:arguments={}
    response=self.rpc('tools/call',{'name':tool['name'],'arguments':arguments})
    self.assertEqual(response.status_code,200)
    self.assertFalse(response.json['result']['isError'])
@@ -228,7 +231,7 @@ class AgentDiscoveryTests(unittest.TestCase):
   for method,key in (('resources/list','resources'),('resources/templates/list','resourceTemplates'),('prompts/list','prompts')):
    r=self.rpc(method)
    self.assertEqual(r.status_code,200,method)
-   self.assertEqual(r.json['result'],{key:[]})
+   self.assertTrue(r.json['result'][key],method)
   unknown=self.rpc('nonexistent/method')
   self.assertEqual(unknown.status_code,404)
   self.assertEqual(unknown.json['error']['code'],-32601)
@@ -276,5 +279,66 @@ class AgentDiscoveryTests(unittest.TestCase):
   steps_free=res_free['structuredContent']['recommended_next_steps']
   self.assertIn('monitoring_trial',steps_free)
   self.assertNotIn('x402_attestation',steps_free)
+
+ def test_generate_pq_config_tool_and_validation(self):
+  res=self.rpc('tools/call',{'name':'generate_pq_config','arguments':{'server':'nginx','lang':'de'}}).json['result']
+  self.assertFalse(res['isError'])
+  sc=res['structuredContent']
+  self.assertEqual(sc['server'],'nginx')
+  self.assertEqual(sc['lang'],'de')
+  self.assertTrue(sc['ready'])
+  self.assertIn('X25519MLKEM768',json.dumps(sc['steps']))
+  self.assertIn('/partners',sc['recommended_next_steps']['msp_pilot']['url'])
+  # Also works on /mcp/free without x402 links
+  res_free=self.client.post('/mcp/free',json={'jsonrpc':'2.0','id':12,'method':'tools/call','params':{'name':'generate_pq_config','arguments':{'server':'cloudflare','lang':'ar'}}}).json['result']
+  self.assertFalse(res_free['isError'])
+  self.assertNotIn('x402_attestation',res_free['structuredContent']['recommended_next_steps'])
+  # Invalid server rejected with -32602
+  bad=self.rpc('tools/call',{'name':'generate_pq_config','arguments':{'server':'invalid-server'}}).json
+  self.assertEqual(bad['error']['code'],-32602)
+  self.scanner.assert_not_called()
+
+ def test_mcp_resources_and_prompts_full_lifecycle(self):
+  res_list=self.rpc('resources/list').json['result']['resources']
+  uris={r['uri'] for r in res_list}
+  self.assertTrue({'qa://methodology','qa://policy/qa-pqc-transport/1.0','qa://deadlines/pqc','qa://msp-pilot','qa://pricing'}<=uris)
+  for uri in list(uris)+['qa://config/nginx','qa://evidence/example.com']:
+   rr=self.rpc('resources/read',{'uri':uri})
+   self.assertEqual(rr.status_code,200,uri)
+   contents=rr.json['result']['contents']
+   self.assertEqual(contents[0]['uri'],uri)
+   self.assertEqual(contents[0]['mimeType'],'application/json')
+   parsed=json.loads(contents[0]['text'])
+   self.assertIsInstance(parsed,dict)
+  missing=self.rpc('resources/read',{'uri':'qa://does-not-exist'}).json
+  self.assertEqual(missing['error']['code'],-32002)
+
+  plist=self.rpc('prompts/list').json['result']['prompts']
+  pnames={p['name'] for p in plist}
+  self.assertEqual(pnames,{'audit_domain_pqc','generate_pqc_remediation','msp_pilot_assessment','verify_tls_receipt'})
+  p1=self.rpc('prompts/get',{'name':'audit_domain_pqc','arguments':{'domain':'example.com','framework':'BSI TR-02102-2'}}).json['result']
+  self.assertIn('example.com',p1['messages'][0]['content']['text'])
+  self.assertIn('generate_pq_config',p1['messages'][0]['content']['text'])
+  p2=self.rpc('prompts/get',{'name':'msp_pilot_assessment','arguments':{'lang':'de'}}).json['result']
+  self.assertIn('290 EUR',p2['messages'][0]['content']['text'])
+  p3=self.rpc('prompts/get',{'name':'generate_pqc_remediation','arguments':{'server':'caddy'}}).json['result']
+  self.assertIn('caddy',p3['messages'][0]['content']['text'])
+  p4=self.rpc('prompts/get',{'name':'verify_tls_receipt','arguments':{'target_or_jti':'rcpt_123'}}).json['result']
+  self.assertIn('rcpt_123',p4['messages'][0]['content']['text'])
+  bad_p=self.rpc('prompts/get',{'name':'audit_domain_pqc','arguments':{}}).json
+  self.assertEqual(bad_p['error']['code'],-32602)
+
+  card=self.client.get('/.well-known/mcp/server-card.json').json
+  self.assertTrue(card['capabilities']['resources'])
+  self.assertTrue(card['capabilities']['prompts'])
+  self.assertGreaterEqual(len(card['prompts']),4)
+  self.assertGreaterEqual(len(card['resources']),5)
+
+  agents_html=self.client.get('/agents?lang=en').text
+  self.assertIn('cursor://anysphere.cursor-deeplink/mcp/install',agents_html)
+  self.assertIn('vscode:mcp/install?',agents_html)
+  self.assertIn('claude mcp add --transport http quantum-aether',agents_html)
+  self.scanner.assert_not_called()
+
 
 

@@ -61,7 +61,15 @@ The repository also preserves Qiskit Bell/GHZ experiments, a digital A/C/G/T arc
 
 ## MCP server (Model Context Protocol)
 
-This repository includes a **Model Context Protocol (MCP) server** in [`mcp/`](mcp/), published on PyPI as [`quantum-aether-mcp`](https://pypi.org/project/quantum-aether-mcp/) and in the official MCP Registry as `io.github.moncef00327-cloud/quantum-aether`. It lets any MCP client (Claude Desktop, Cursor and others) check a website's post-quantum TLS readiness as a native tool.
+Connect instantly to the **remote stateless Streamable HTTP MCP server** (`https://ather-quantum.com/mcp`, or free-tools-only `https://ather-quantum.com/mcp/free`) — no API key, no signup, and full support for **13 MCP tools** (including `scan_tls`, `get_tls_evidence`, `exposure_window`, `generate_pq_config`, `get_tls_attestation`, and `register_agent_affiliate`), **5 read-only MCP Resources + 2 URI templates** (`qa://methodology`, `qa://policy/qa-pqc-transport/1.0`, `qa://deadlines/pqc`, `qa://msp-pilot`, `qa://pricing`, `qa://config/{server}`, `qa://evidence/{domain}`), and **4 guided MCP Prompts** (`audit_domain_pqc`, `generate_pqc_remediation`, `msp_pilot_assessment`, `verify_tls_receipt`):
+
+- **Claude Code (1 line):**
+  ```bash
+  claude mcp add --transport http quantum-aether https://ather-quantum.com/mcp
+  ```
+- **Cursor / VS Code (1-click links):** see [`https://ather-quantum.com/agents#mcp`](https://ather-quantum.com/agents#mcp) or paste `https://ather-quantum.com/mcp` as a Streamable HTTP MCP server.
+
+This repository also includes a **local stdio MCP wrapper** in [`mcp/`](mcp/), published on PyPI as [`quantum-aether-mcp`](https://pypi.org/project/quantum-aether-mcp/) and in the official MCP Registry as `io.github.moncef00327-cloud/quantum-aether`. It lets any MCP client (Claude Desktop, Cursor and others) check a website's post-quantum TLS readiness as a native tool.
 
 - **Implementation:** Python, built on the official MCP Python SDK (`mcp`, FastMCP), stdio transport. Source: [`mcp/quantum_aether_mcp/`](mcp/quantum_aether_mcp/)
 - **No API key:** it wraps the public Quantum Aether scan API.
