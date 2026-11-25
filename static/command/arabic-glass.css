@@ -161,28 +161,42 @@ body:has(.app) {
   margin-top: 10px;
 }
 
-/* Unified glass bottom discovery links + glass footer across EVERY page (no giant blank void!) */
-[data-qa-command-seo] {
-  margin: 18px 0 12px;
-}
-
-.seo-discovery-links[hidden] {
+/* Hide the legacy short React footer on Command homepage so the full unified glass footer is shown cleanly */
+#command-root #workspace-content > .content > footer:not(.qa-unified-footer) {
   display: none !important;
 }
 
-.seo-discovery-links {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px 14px;
-  border-radius: 18px;
+.qa-unified-footer[hidden] {
+  display: none !important;
+}
+
+.qa-unified-footer .seo-discovery-links {
+  justify-content: flex-start;
+  padding: 0 0 10px;
+  margin: 0 0 4px;
+  border: 0;
+  border-bottom: 1px solid rgba(167, 199, 241, .22);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.app main footer.qa-unified-footer,
+[data-qa-command-footer] footer.qa-unified-footer {
+  display: grid;
+  gap: 10px;
+  margin: 18px 0 calc(20px + env(safe-area-inset-bottom, 0px)) !important;
+  padding: 18px 20px !important;
+  border-radius: clamp(16px, 1.8vw, 24px);
   background: var(--glass-surface);
   border: 1px solid var(--glass-line);
   box-shadow: var(--glass-shadow);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
+  text-align: start;
+  line-height: 1.75;
 }
 
 .seo-discovery-links a {

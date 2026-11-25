@@ -1,7 +1,7 @@
 (function () {
   var commandSearch = document.querySelector("[data-qa-command-search]");
-  var commandSeo = document.querySelector("[data-qa-command-seo]");
-  if (commandSearch || commandSeo) {
+  var commandFooter = document.querySelector("[data-qa-command-footer]");
+  if (commandSearch || commandFooter) {
     var commandRoot = document.getElementById("command-root");
     var syncCommandSearch = function () {
       var curLang = document.documentElement.lang === "ar" ? "ar" : "en";
@@ -15,15 +15,12 @@
           bar.hidden = bar.getAttribute("data-lang") !== curLang;
         });
       }
-      if (commandSeo) {
-        var footer = target && target.querySelector(":scope > footer");
-        if (target && footer && commandSeo.parentNode !== target) {
-          target.insertBefore(commandSeo, footer);
-        } else if (target && !footer && commandSeo.parentNode !== target) {
-          target.appendChild(commandSeo);
+      if (commandFooter) {
+        if (target && commandFooter.parentNode !== target) {
+          target.appendChild(commandFooter);
         }
-        commandSeo.querySelectorAll("[data-qa-seo-bar]").forEach(function (nav) {
-          nav.hidden = nav.getAttribute("data-lang") !== curLang;
+        commandFooter.querySelectorAll("[data-qa-footer-bar]").forEach(function (ft) {
+          ft.hidden = ft.getAttribute("data-lang") !== curLang;
         });
       }
     };
