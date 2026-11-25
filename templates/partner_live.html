@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="{{ lang }}" dir="{{ 'rtl' if lang == 'ar' else 'ltr' }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <title>{{ 'لوحة الشريك المباشرة' if lang == 'ar' else 'Live Partner Stats' }} — {{ partner.code }} | Quantum Aether</title>
+  <style>
+    :root { --bg:#0b1120; --card:#111a2e; --border:#1e293b; --text:#e2e8f0; --muted:#94a3b8; --accent:#38bdf8; --ok:#22c55e; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); line-height:1.55; padding:16px; }
+    .wrap { max-width:760px; margin:0 auto; }
+    .top { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:10px; margin-bottom:16px; }
+    h1 { margin:0; font-size:1.3rem; }
+    .badge { display:inline-block; padding:3px 10px; border-radius:999px; font-size:.8rem; background:rgba(34,197,94,.16); color:var(--ok); border:1px solid rgba(34,197,94,.35); font-weight:600; }
+    .btn { background:var(--accent); color:#041322; border:0; border-radius:8px; padding:7px 14px; font-weight:700; cursor:pointer; text-decoration:none; font-size:.88rem; }
+    .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-bottom:18px; }
+    @media (min-width:600px) { .grid { grid-template-columns:repeat(4,minmax(0,1fr)); } }
+    .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px; }
+    .label { font-size:.8rem; color:var(--muted); margin-bottom:4px; }
+    .val { font-size:1.7rem; font-weight:800; color:#fff; }
+    .sub { font-size:.78rem; color:var(--muted); margin-top:2px; }
+    .section { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:16px; }
+    .section h2 { margin:0 0 12px; font-size:1.02rem; color:var(--accent); }
+    table { width:100%; border-collapse:collapse; font-size:.92rem; }
+    th, td { padding:8px 6px; border-bottom:1px solid var(--border); text-align:start; }
+    th { color:var(--muted); font-weight:600; font-size:.82rem; }
+    .bar-bg { background:#0f172a; border-radius:6px; height:10px; overflow:hidden; min-width:80px; }
+    .bar-fill { background:linear-gradient(90deg,#38bdf8,#22c55e); height:100%; border-radius:6px; }
+    .linkbox { background:#09101f; border:1px solid var(--border); border-radius:8px; padding:10px 12px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.82rem; word-break:break-all; direction:ltr; text-align:left; margin-top:6px; }
+    .muted { color:var(--muted); font-size:.84rem; }
+    .meta-row { display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px; font-size:.8rem; color:var(--muted); margin-top:12px; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <h1>{{ partner.name }} <span class="badge">{{ partner.code }} · {{ partner.status }}</span></h1>
+      <div class="muted">{{ 'إحصائيات الزيارات والنقرات والإحالات المباشرة (رابط خاص)' if lang == 'ar' else 'Live clicks, visits & referrals (private dashboard)' }}</div>
+    </div>
+    <div>
+      <button class="btn" onclick="location.reload()">{{ 'تحديث الآن' if lang == 'ar' else 'Refresh' }}</button>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="label">{{ 'إجمالي النقرات' if lang == 'ar' else 'Total clicks' }}</div>
+      <div class="val">{{ stats.total_clicks }}</div>
+      <div class="sub">{{ 'آخر 7 أيام: ' ~ stats.last_7d_clicks if lang == 'ar' else 'Last 7d: ' ~ stats.last_7d_clicks }}</div>
+    </div>
+    <div class="card">
+      <div class="label">{{ 'نقرات اليوم (UTC)' if lang == 'ar' else 'Clicks today (UTC)' }}</div>
+      <div class="val">{{ stats.today_clicks }}</div>
+      <div class="sub">{{ stats.today }}</div>
+    </div>
+    <div class="card">
+      <div class="label">{{ 'التحويلات / التسجيلات' if lang == 'ar' else 'Referrals / signups' }}</div>
+      <div class="val">{{ stats.referrals_count }}</div>
+      <div class="sub">{{ 'كوكي 60 يوماً مفعّل' if lang == 'ar' else '60-day cookie active' }}</div>
+    </div>
+    <div class="card">
+      <div class="label">{{ 'العمولة (معلّق / مستحق)' if lang == 'ar' else 'Commission (pending / due)' }}</div>
+      <div class="val">${{ '%.2f'|format(stats.commission_pending + stats.commission_due) }}</div>
+      <div class="sub">{{ 'مستحق: $' ~ ('%.2f'|format(stats.commission_due)) if lang == 'ar' else 'Due: $' ~ ('%.2f'|format(stats.commission_due)) }}</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>{{ 'النقرات اليومية' if lang == 'ar' else 'Daily clicks' }}</h2>
+    {% if stats.daily %}
+    <table>
+      <thead>
+        <tr>
+          <th>{{ 'التاريخ (UTC)' if lang == 'ar' else 'Date (UTC)' }}</th>
+          <th>{{ 'النقرات' if lang == 'ar' else 'Clicks' }}</th>
+          <th style="width:55%">{{ 'التوزيع' if lang == 'ar' else 'Activity' }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in stats.daily %}
+        <tr>
+          <td dir="ltr">{{ row.day }}</td>
+          <td><strong>{{ row.n }}</strong></td>
+          <td>
+            <div class="bar-bg"><div class="bar-fill" style="width:{{ (row.n * 100 // stats.peak_clicks) if stats.peak_clicks else 0 }}%"></div></div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="muted">{{ 'لا نقرات مسجّلة بعد.' if lang == 'ar' else 'No clicks recorded yet.' }}</div>
+    {% endif %}
+  </div>
+
+  <div class="section">
+    <h2>{{ 'الإحالات والتسجيلات المنسوبة' if lang == 'ar' else 'Attributed referrals' }}</h2>
+    {% if stats.referrals %}
+    <table>
+      <thead>
+        <tr>
+          <th>{{ 'النوع' if lang == 'ar' else 'Kind' }}</th>
+          <th>{{ 'التاريخ (UTC)' if lang == 'ar' else 'Recorded (UTC)' }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in stats.referrals %}
+        <tr>
+          <td>{{ r.kind }}</td>
+          <td dir="ltr">{{ r.created_at }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="muted">{{ 'لا تحويلات مدفوعة أو تسجيلات تجربة منسوبة حتى الآن. كل زائر يفتح رابط الشريك يُحفظ له كوكي تلقائي لمدة 60 يوماً.' if lang == 'ar' else 'No attributed trials or paid conversions yet. Every visitor clicking the partner link receives an automatic 60-day attribution cookie.' }}</div>
+    {% endif %}
+  </div>
+
+  <div class="section">
+    <h2>{{ 'روابط الشريك النشطة' if lang == 'ar' else 'Active referral links' }}</h2>
+    <div class="muted">{{ 'الصفحة الرئيسية (الفحص المجاني):' if lang == 'ar' else 'Homepage (free scan):' }}</div>
+    <div class="linkbox">{{ base }}/?ref={{ partner.code }}</div>
+    <div class="muted" style="margin-top:10px">{{ 'تجربة المراقبة المجانية 14 يوماً:' if lang == 'ar' else '14-day free monitoring trial:' }}</div>
+    <div class="linkbox">{{ base }}/monitoring?ref={{ partner.code }}#trial-form</div>
+  </div>
+
+  <div class="meta-row">
+    <span>{{ 'آخر تحديث (UTC): ' if lang == 'ar' else 'Updated (UTC): ' }}{{ stats.checked_at }}</span>
+    <span><a href="?lang={{ 'en' if lang == 'ar' else 'ar' }}" style="color:var(--accent)">{{ 'English' if lang == 'ar' else 'العربية' }}</a> · <a href="?format=json" style="color:var(--accent)">JSON</a></span>
+  </div>
+</div>
+</body>
+</html>

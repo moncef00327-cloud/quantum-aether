@@ -11,11 +11,13 @@ created while the cookie is present (report order, pack, audit, monitoring trial
 test orders earn nothing.
 """
 import datetime as dt
+import hashlib
+import hmac
 import re
 import secrets
 import sqlite3
 
-from flask import abort, g, has_request_context, jsonify, make_response, redirect, render_template, request, url_for
+from flask import abort, current_app, g, has_request_context, jsonify, make_response, redirect, render_template, request, url_for
 
 COOKIE = "qa_ref"
 COOKIE_DAYS = 60
@@ -221,6 +223,46 @@ def new_code(conn, name):
         if not conn.execute("SELECT 1 FROM partners WHERE code = ?", (code,)).fetchone():
             return code
     return "P" + secrets.token_hex(4).upper()
+
+
+def _stats_secret(cfg: dict) -> str:
+    """Return a stable HMAC secret for private partner stats links (explicit SECRET_KEY or DATA_DIR/partner_stats.key)."""
+    explicit = str(cfg.get("SECRET_KEY") or "").strip()
+    if explicit:
+        return explicit
+    data_dir = str(cfg.get("DATA_DIR") or "").strip()
+    if not data_dir:
+        return ""
+    import os
+    from pathlib import Path
+    key_path = Path(data_dir) / "partner_stats.key"
+    if key_path.exists():
+        val = key_path.read_text(encoding="utf-8").strip()
+        if val:
+            return val
+    key_path.parent.mkdir(parents=True, exist_ok=True)
+    val = secrets.token_hex(32)
+    tmp = key_path.with_suffix(".key.tmp")
+    fd = os.open(str(tmp), os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as fh:
+        fh.write(val + "\n")
+    try:
+        os.chmod(tmp, 0o600)
+        os.replace(tmp, key_path)
+    except OSError:
+        tmp.unlink(missing_ok=True)
+        if key_path.exists():
+            return key_path.read_text(encoding="utf-8").strip()
+        raise
+    return val
+
+
+def stats_token(code: str, secret: str) -> str:
+    """Deterministic HMAC-SHA256 token (24 hex chars) authorizing private live stats for one partner code."""
+    clean = (code or "").strip().upper()
+    if not clean or not secret:
+        return ""
+    return hmac.new(secret.encode("utf-8"), f"qa-partner-stats:{clean}".encode("utf-8"), hashlib.sha256).hexdigest()[:24]
 
 
 def _affiliate_payload(code: str, payout_method: str, payout_destination: str, base_url: str, already_registered: bool = False) -> dict:
@@ -572,3 +614,70 @@ def register(bp, deps):
         resp.headers["Access-Control-Allow-Origin"] = "*"
         resp.headers["Cache-Control"] = "no-store"
         return resp, status
+
+    @bp.get("/partners/live/<code>/<token>")
+    def partner_live_stats(code, token):
+        clean_code = (code or "").strip().upper()
+        if not CODE_RE.match(clean_code):
+            abort(404)
+        secret = _stats_secret(current_app.config)
+        expected = stats_token(clean_code, secret)
+        if not expected or not hmac.compare_digest(str(token or ""), expected):
+            abort(404)
+        conn = deps["db"]()
+        init(conn)
+        row = conn.execute(
+            "SELECT id, code, name, lang, status, approved_at, created_at FROM partners WHERE code = ? AND status = 'ACTIVE'",
+            (clean_code,),
+        ).fetchone()
+        if not row:
+            abort(404)
+        partner = {
+            "id": row[0], "code": row[1], "name": row[2],
+            "lang": (row[3] or "en").lower(), "status": row[4],
+            "approved_at": row[5], "created_at": row[6],
+        }
+        now_utc = dt.datetime.now(dt.timezone.utc)
+        today = now_utc.date().isoformat()
+        cutoff_7d = (now_utc.date() - dt.timedelta(days=6)).isoformat()
+        daily_rows = conn.execute(
+            "SELECT day, n FROM partner_clicks WHERE code = ? ORDER BY day DESC LIMIT 60",
+            (clean_code,),
+        ).fetchall()
+        daily = [{"day": r[0], "n": int(r[1] or 0)} for r in daily_rows]
+        total_clicks = sum(r["n"] for r in daily)
+        today_clicks = sum(r["n"] for r in daily if r["day"] == today)
+        last_7d_clicks = sum(r["n"] for r in daily if r["day"] >= cutoff_7d)
+        peak_clicks = max((r["n"] for r in daily), default=0)
+
+        ref_rows = conn.execute(
+            "SELECT kind, created_at FROM referrals WHERE code = ? ORDER BY created_at DESC LIMIT 50",
+            (clean_code,),
+        ).fetchall()
+        refs = [{"kind": r[0], "created_at": r[1]} for r in ref_rows]
+        comm = commissions(conn, now=now_utc).get(clean_code, {"items": [], "due": 0.0, "pending": 0.0})
+
+        stats = {
+            "today": today,
+            "checked_at": now_utc.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "total_clicks": total_clicks,
+            "today_clicks": today_clicks,
+            "last_7d_clicks": last_7d_clicks,
+            "peak_clicks": peak_clicks,
+            "daily": daily,
+            "referrals_count": len(refs),
+            "referrals": refs,
+            "commission_pending": round(float(comm.get("pending") or 0.0), 2),
+            "commission_due": round(float(comm.get("due") or 0.0), 2),
+        }
+        base_url = (deps["base"]() if deps.get("base") else "https://ather-quantum.com").rstrip("/")
+        if request.args.get("format") == "json":
+            resp = jsonify({"partner": partner, "stats": stats, "referral_url": f"{base_url}/?ref={clean_code}"})
+        else:
+            q_lang = (request.args.get("lang") or "").lower()
+            lang = q_lang if q_lang in ("ar", "en") else ("ar" if partner["lang"] == "ar" else "en")
+            resp = make_response(render_template("partner_live.html", partner=partner, stats=stats, lang=lang, base=base_url))
+        resp.headers["Cache-Control"] = "no-store"
+        resp.headers["X-Robots-Tag"] = "noindex, nofollow"
+        resp.headers["Referrer-Policy"] = "no-referrer"
+        return resp

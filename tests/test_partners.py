@@ -222,6 +222,37 @@ class PartnerTests(unittest.TestCase):
         self.assertEqual(self.client.post("/api/v1/agent/affiliate/register", json=payload).status_code, 200)
         self.assertEqual(len(self.sent_mail), 3)
 
+    def test_partner_live_stats_dashboard(self):
+        payload = {"name": "Live Partner", "contact_email": "live@example.com", "payout_method": "paypal", "consent_terms": True}
+        reg = self.client.post("/api/v1/agent/affiliate/register", json=payload).get_json()
+        code = reg["code"]
+        self.client.get(f"/?ref={code}")
+        self.client.get(f"/?ref={code}")
+
+        tok = partners.stats_token(code, partners._stats_secret(self.app.config))
+        self.assertEqual(len(tok), 24)
+
+        # Wrong token or unknown code -> 404
+        self.assertEqual(self.client.get(f"/partners/live/{code}/badtoken0000000000000000").status_code, 404)
+        self.assertEqual(self.client.get(f"/partners/live/NOPE99/{tok}").status_code, 404)
+
+        # Valid token -> 200 HTML with noindex, no-store, no-referrer, and live click count
+        r_html = self.client.get(f"/partners/live/{code}/{tok}?lang=ar")
+        self.assertEqual(r_html.status_code, 200)
+        self.assertEqual(r_html.headers.get("Cache-Control"), "no-store")
+        self.assertEqual(r_html.headers.get("X-Robots-Tag"), "noindex, nofollow")
+        self.assertEqual(r_html.headers.get("Referrer-Policy"), "no-referrer")
+        body = r_html.get_data(as_text=True)
+        self.assertIn("Live Partner", body)
+        self.assertIn(code, body)
+
+        # JSON format works too
+        r_json = self.client.get(f"/partners/live/{code}/{tok}?format=json")
+        self.assertEqual(r_json.status_code, 200)
+        j = r_json.get_json()
+        self.assertEqual(j["partner"]["code"], code)
+        self.assertEqual(j["stats"]["total_clicks"], 2)
+
 
 if __name__ == "__main__":
     unittest.main()
