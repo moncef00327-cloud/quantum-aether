@@ -472,13 +472,19 @@ def register(bp, services):
  @bp.get('/.well-known/mcp.json')
  def agent_registry_metadata():
   # Honest remote registration metadata: this endpoint does not claim catalog acceptance.
+  b=base().rstrip('/')
   resp=jsonify({'$schema':'https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json',
    'name':'io.github.moncef00327-cloud/quantum-aether','title':'Quantum Aether','version':VERSION,
-   'description':'Post-quantum TLS readiness & Ed25519 JWS signed receipts (v1); x402 USDC on Base; programmatic AI agent affiliate programme (register_agent_affiliate, 30% monitoring / 20% one-time, monthly manual owner payout).',
+   'description':'Post-quantum TLS readiness, Ed25519 signed receipts, PQ-TLS config generator, and x402 CBOM',
+   'websiteUrl':b+'/agents',
+   'icons':[
+    {'src':b+'/apple-touch-icon.png','mimeType':'image/png','sizes':['180x180']},
+    {'src':b+'/static/favicon.svg','mimeType':'image/svg+xml','sizes':['any']},
+   ],
    'repository':{'url':'https://github.com/moncef00327-cloud/quantum-aether','source':'github','subfolder':'mcp'},
    'packages':[{'registryType':'pypi','identifier':'quantum-aether-mcp','version':PACKAGE_VERSION,'transport':{'type':'stdio'}},
     {'registryType':'npm','identifier':'quantum-aether','version':PACKAGE_VERSION}],
-   'remotes':[{'type':'streamable-http','url':base()+'/mcp'}]})
+   'remotes':[{'type':'streamable-http','url':b+'/mcp'}]})
   resp.headers['Access-Control-Allow-Origin']='*'
   resp.headers['Cache-Control']='public, max-age=300'
   return resp

@@ -1,9 +1,12 @@
 name: Publish to MCP Registry
 
-# Manual: publishes mcp/server.json to registry.modelcontextprotocol.io (GitHub OIDC, no stored secret).
+# Publishes mcp/server.json to registry.modelcontextprotocol.io (GitHub OIDC, no stored secret).
 # server.json "version" must be new; the PyPI package it names must already exist with the mcp-name tag in its README.
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['mcp/server.json']
 
 permissions:
   id-token: write

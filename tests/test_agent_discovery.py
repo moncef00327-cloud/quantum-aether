@@ -338,6 +338,11 @@ class AgentDiscoveryTests(unittest.TestCase):
   self.assertIn('cursor://anysphere.cursor-deeplink/mcp/install',agents_html)
   self.assertIn('vscode:mcp/install?',agents_html)
   self.assertIn('claude mcp add --transport http quantum-aether',agents_html)
+
+  mcp_meta=self.client.get('/.well-known/mcp.json').json
+  self.assertEqual(mcp_meta['websiteUrl'],'https://ather-quantum.com/agents')
+  self.assertEqual(mcp_meta['icons'][0]['src'],'https://ather-quantum.com/apple-touch-icon.png')
+  self.assertEqual(mcp_meta['icons'][0]['mimeType'],'image/png')
   self.scanner.assert_not_called()
 
 
