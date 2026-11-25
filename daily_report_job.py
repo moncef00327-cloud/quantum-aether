@@ -224,15 +224,21 @@ def build(c, day, shown_recently=None, out_prospects=None):
         a2a_y = a2a_all = 0
         a2a_replies = []
     try:
-        in_calls = dict(c.execute(
-            "SELECT protocol, COUNT(*) FROM agent_calls WHERE substr(ts,1,10)=? GROUP BY protocol", (y,)
-        ).fetchall())
+        real_calls = c.execute(
+            "SELECT protocol, action, status, COUNT(*) n FROM agent_calls "
+            "WHERE substr(ts,1,10)=? AND action != 'initialize' "
+            "GROUP BY protocol, action, status ORDER BY n DESC LIMIT 10",
+            (y,),
+        ).fetchall()
+        init_calls = one(c, "SELECT COUNT(*) FROM agent_calls WHERE substr(ts,1,10)=? AND action = 'initialize'", (y,))
     except Exception:
-        in_calls = {}
-    in_str = " · ".join(f"{k}={v}" for k, v in sorted(in_calls.items())) if in_calls else "0"
+        real_calls = []
+        init_calls = 0
+    real_total = sum(int(r["n"] or 0) for r in real_calls)
+    real_str = " · ".join(f"{r['protocol']}/{r['action']}={r['n']}" for r in real_calls[:6]) if real_calls else "0"
     L += ["• المراسلات والإيصالات الموقّعة أمس:",
           f"    رسائل outreach مرسلة: {sent_y} (ارتداد: {bounced_y})  |  حملة A2A: {a2a_y} (الإجمالي: {a2a_all})  |  إيصالات موقّعة v1: {rcpt_y}  |  ردود بريد: {len(inbound_rows)}",
-          f"    استدعاءات الوكلاء الواردة لخادمنا أمس (agent_calls): {in_str}"]
+          f"    استدعاءات أدوات الوكلاء الحقيقية أمس: {real_total} ({real_str})  |  فحوصات صحة أدلّة (initialize): {init_calls}"]
     for ir in inbound_rows:
         L.append(f"    ↩ {(ir['subject'] or '(بدون عنوان)')[:90]}")
     for ar in a2a_replies:

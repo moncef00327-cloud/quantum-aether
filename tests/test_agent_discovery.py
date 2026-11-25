@@ -261,3 +261,20 @@ class AgentDiscoveryTests(unittest.TestCase):
   full=self.client.post('/mcp',json={'jsonrpc':'2.0','id':4,'method':'tools/list'}).json['result']['tools']
   self.assertIn('get_sector_snapshot',{t['name'] for t in full})
 
+ def test_mcp_scan_includes_human_and_x402_conversion_next_steps(self):
+  res=self.client.post('/mcp',json={'jsonrpc':'2.0','id':10,'method':'tools/call','params':{'name':'scan_tls','arguments':{'domain':'example.com'}}}).json['result']
+  sc=res['structuredContent']
+  steps=sc['recommended_next_steps']
+  self.assertIn('/monitoring?domain=example.com#trial-form',steps['monitoring_trial']['url'])
+  self.assertIn('/api/v1/attestation/sample.pdf',steps['sample_auditor_pdf']['url'])
+  self.assertIn('/scan/',steps['full_report_checkout']['url'])
+  self.assertEqual(steps['x402_attestation']['mcp_tool'],'get_tls_attestation')
+  self.assertIn('Next steps:',res['content'][0]['text'])
+
+  # /mcp/free keeps human links but omits x402 payment tools
+  res_free=self.client.post('/mcp/free',json={'jsonrpc':'2.0','id':11,'method':'tools/call','params':{'name':'get_tls_evidence','arguments':{'domain':'example.com'}}}).json['result']
+  steps_free=res_free['structuredContent']['recommended_next_steps']
+  self.assertIn('monitoring_trial',steps_free)
+  self.assertNotIn('x402_attestation',steps_free)
+
+

@@ -40,6 +40,10 @@ class DailyReportJobTests(unittest.TestCase):
             INSERT INTO partner_clicks VALUES ('RAHAFALT21', '2026-11-24', 5);
             INSERT INTO partners VALUES (1, 'RAHAFALT21', 'ACTIVE', '2026-11-24T08:00:00Z');
             INSERT INTO pilot_leads VALUES (1, '2026-11-24T15:00:00Z');
+            CREATE TABLE agent_calls (id INTEGER PRIMARY KEY, ts TEXT, protocol TEXT, action TEXT, client_name TEXT, domain TEXT, status TEXT);
+            INSERT INTO agent_calls VALUES (1, '2026-11-24T10:00:00Z', 'mcp', 'initialize', 'glama/1.0', '', 'ok');
+            INSERT INTO agent_calls VALUES (2, '2026-11-24T10:01:00Z', 'mcp', 'initialize', 'mcpbeat/0.1', '', 'ok');
+            INSERT INTO agent_calls VALUES (3, '2026-11-24T10:05:00Z', 'mcp', 'scan_tls', 'ClaudeDesktop/2.0', 'example.com', 'ok');
             """
         )
         text = daily_report_job.build(c, "2026-11-24")
@@ -47,6 +51,8 @@ class DailyReportJobTests(unittest.TestCase):
         self.assertIn("طلبات MSP Pilot (290 €): 1 (الإجمالي: 1)", text)
         self.assertIn("شركاء جدد: 1 (نشطون: 1)", text)
         self.assertIn("RAHAFALT21=5", text)
+        self.assertIn("استدعاءات أدوات الوكلاء الحقيقية أمس: 1 (mcp/scan_tls=1)", text)
+        self.assertIn("فحوصات صحة أدلّة (initialize): 2", text)
 
 
 if __name__ == "__main__":

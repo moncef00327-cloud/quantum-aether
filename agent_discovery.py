@@ -89,6 +89,23 @@ def listed_tools():
               annotations={'destructiveHint':False,'openWorldHint':True,**t.get('annotations',{})}) for t in TOOLS]
 
 
+def _next_steps_for_mcp(base_url, domain, *, scan_id=None, free_only=False):
+ b=base_url.rstrip('/')
+ clean_dom=(domain or '').split(':')[0].strip().lower()
+ q=f'?domain={quote(clean_dom,safe="")}' if clean_dom else ''
+ steps={
+  'monitoring_trial':{'label':'Daily PQ-TLS regression monitoring (14-day free trial, then 29 EUR/mo Starter or 99 EUR/mo Business)','url':f'{b}/monitoring{q}#trial-form'},
+  'sample_auditor_pdf':{'label':'Free archived Auditor PDF + CycloneDX 1.6 CBOM sample (no signup)','url':f'{b}/api/v1/attestation/sample.pdf'},
+  'msp_pilot':{'label':'IT-Dienstleister / MSP Partner Pilot (up to 50 hostnames, German Ampel PDF + signed receipts, 290 EUR)','url':f'{b}/partners'},
+  'org_audit':{'label':'Organization subdomain PQ-TLS & NIS2/DORA audit (490 EUR)','url':f'{b}/audit{q}'},
+ }
+ if scan_id:
+  steps['full_report_checkout']={'label':'Full remediation report ($49 via PayPal or USDC/USDT)','url':f'{b}/scan/{scan_id}'}
+ if not free_only:
+  steps['x402_attestation']={'label':'Auditor-Ready Signed PDF + CycloneDX 1.6 CBOM bundle ($5.00 USDC on Base via x402)','mcp_tool':'get_tls_attestation','http':f'{b}/api/v1/attestation{q}'}
+ return steps
+
+
 def sector_price_usd():
  return str(current_app.config.get('X402_SECTOR_PRICE') or '0.50')
 
@@ -637,9 +654,23 @@ def register(bp, services):
      if status>=400:value={'http_status':status,**value};tool_is_error=True
     else:value=manifest(base())
     if name not in ('get_full_report','get_sector_snapshot','get_tls_attestation'):
+     if not tool_is_error and name in ('scan_tls','get_tls_evidence','exposure_window') and isinstance(value,dict) and domain:
+      sid=value.get('scan_id') or (value.get('receipt',{}).get('scan',{}).get('scan_id') if isinstance(value.get('receipt'),dict) else None)
+      steps=_next_steps_for_mcp(base(),domain,scan_id=sid,free_only=free)
+      value['recommended_next_steps']=steps
+      grade=value.get('grade') or (value.get('receipt',{}).get('policy_verdict',{}).get('grade') if isinstance(value.get('receipt'),dict) else None)
+      if custom_text is not None and grade!='A':
+       extra=[f"Next steps: start a free 14-day daily monitoring trial ({steps['monitoring_trial']['url']}), preview a free Auditor PDF + CBOM sample ({steps['sample_auditor_pdf']['url']})"]
+       if sid:
+        extra.append(f"get the full $49 remediation report ({steps['full_report_checkout']['url']})")
+       if not free:
+        extra.append("or call get_tls_attestation ($5.00 USDC via x402) for a live signed Auditor PDF + CycloneDX 1.6 CBOM bundle")
+       custom_text=custom_text+"\n"+"; ".join(extra)+"."
      text_out=custom_text if custom_text is not None else json.dumps(value,ensure_ascii=False)
      result={'content':[{'type':'text','text':text_out}],'structuredContent':value,'isError':tool_is_error}
-    if audit_fn:audit_fn('mcp',name,client_name,domain,'error' if result.get('isError') else 'ok')
+    if audit_fn:
+     audit_status='payment_required' if (name in ('get_full_report','get_sector_snapshot','get_tls_attestation') and result.get('isError') and status==402) else ('error' if result.get('isError') else 'ok')
+     audit_fn('mcp',name,client_name,domain,audit_status)
    except quantum_vuln_scanner.ScanError as exc:
     if audit_fn:audit_fn('mcp',name,client_name,domain,f'error:{exc.code}')
     value={'error':exc.code,'message':str(exc)}
