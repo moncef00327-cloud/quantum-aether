@@ -1,4 +1,5 @@
-/* Unified Quantum Aether Glass Theme: one shared ambient light canvas on the parent, calm frosted glass surfaces, zero clipped double borders. */
+/* Unified Quantum Aether Glass Theme: seamless edge-to-edge aurora (including behind iOS Dynamic Island), feathered top/bottom ribbons, zero hard seams. */
+html,
 body:has(.app) {
   background: #071426;
 }
@@ -28,19 +29,19 @@ body:has(.app) {
   background: var(--glass-night);
 }
 
-/* Single continuous synchronized luminous aurora on parent .app (top -> middle -> bottom) */
+/* Single continuous synchronized luminous aurora on parent .app extending past Dynamic Island & safe areas */
 .app::before {
   content: "";
   position: fixed;
-  inset: 0;
+  inset: -80px;
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 68% 42% at 14% 10%, rgba(85, 229, 244, .22), transparent 66%),
-    radial-gradient(ellipse 65% 44% at 88% 22%, rgba(182, 154, 255, .24), transparent 68%),
+    radial-gradient(ellipse 68% 42% at 18% 12%, rgba(85, 229, 244, .22), transparent 66%),
+    radial-gradient(ellipse 65% 44% at 86% 24%, rgba(182, 154, 255, .24), transparent 68%),
     radial-gradient(ellipse 72% 46% at 22% 58%, rgba(182, 154, 255, .18), rgba(242, 166, 223, .09) 44%, transparent 72%),
     radial-gradient(ellipse 76% 42% at 80% 86%, rgba(85, 229, 244, .20), rgba(182, 154, 255, .14) 46%, transparent 74%),
-    radial-gradient(ellipse 84% 34% at 42% 100%, rgba(242, 166, 223, .17), rgba(182, 154, 255, .12) 48%, transparent 76%);
+    radial-gradient(ellipse 84% 34% at 42% 98%, rgba(242, 166, 223, .17), rgba(182, 154, 255, .12) 48%, transparent 76%);
 }
 
 /* Keep <aside> position:fixed (never override to relative, which would steal flex width on mobile!) */
@@ -49,26 +50,50 @@ body:has(.app) {
   z-index: 1;
 }
 
-/* Shared seamless top + bottom ribbon glow blended into the parent aurora */
+/* Feathered top & bottom scrolling ribbon layers (masked smoothly to 0% alpha — zero top/bottom/side cut lines!) */
 .app #workspace-content {
-  background-color: transparent;
-  background-image:
-    linear-gradient(to bottom, rgba(7, 20, 38, .08) 0, rgba(7, 20, 38, .52) 26rem, transparent 46rem),
-    radial-gradient(ellipse 95% 55% at 50% 0%, transparent 45%, rgba(7, 20, 38, .84) 100%),
-    url("arabic-glass-ribbons.webp"),
-    radial-gradient(ellipse 95% 46% at 50% 100%, rgba(182, 154, 255, .22), rgba(85, 229, 244, .16) 42%, transparent 78%),
-    url("arabic-glass-ribbons.webp");
-  background-position: center top, center top, center top, center bottom, center bottom;
-  background-size: 100% 46rem, 100% 46rem, max(100%, 1200px) auto, 100% 34rem, max(100%, 1200px) auto;
+  position: relative;
+  overflow-x: clip;
+  background: transparent;
+}
+
+.app #workspace-content > * {
+  position: relative;
+  z-index: 1;
+}
+
+.app #workspace-content::before,
+.app #workspace-content::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: url("arabic-glass-ribbons.webp");
+  background-size: cover;
   background-repeat: no-repeat;
 }
 
-.app[dir="rtl"] #workspace-content {
-  background-position: center top, center top, left top, center bottom, right bottom;
+.app #workspace-content::before {
+  top: 0;
+  height: clamp(28rem, 48vw, 44rem);
+  opacity: .72;
+  background-position: left top;
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, .55) 0%, #000 18%, #000 50%, transparent 100%);
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, .55) 0%, #000 18%, #000 50%, transparent 100%);
 }
 
-.app[dir="ltr"] #workspace-content {
-  background-position: center top, center top, center top, center bottom, center bottom;
+.app[dir="ltr"] #workspace-content::before {
+  background-position: center top;
+}
+
+.app #workspace-content::after {
+  bottom: 0;
+  height: clamp(22rem, 36vw, 34rem);
+  opacity: .42;
+  background-position: center bottom;
+  -webkit-mask-image: linear-gradient(to top, rgba(0, 0, 0, .65) 0%, #000 22%, #000 52%, transparent 100%);
+  mask-image: linear-gradient(to top, rgba(0, 0, 0, .65) 0%, #000 22%, #000 52%, transparent 100%);
 }
 
 .app #workspace-content > header {
@@ -509,24 +534,20 @@ body:has(.app) {
 }
 
 @media (max-width: 680px) {
-  .app #workspace-content {
-    background-image:
-      linear-gradient(to bottom, rgba(7, 20, 38, .16) 0, rgba(7, 20, 38, .66) 16rem, transparent 34rem),
-      radial-gradient(ellipse 115% 45% at 50% 4%, transparent 48%, rgba(7, 20, 38, .88) 100%),
-      url("arabic-glass-ribbons.webp"),
-      linear-gradient(to top, rgba(7, 20, 38, .22) 0, rgba(7, 20, 38, .72) 16rem, transparent 32rem),
-      url("arabic-glass-ribbons.webp");
-    background-position: center top, center top, center top, center bottom, center bottom;
-    background-size: 100% 34rem, 100% 34rem, max(165%, 640px) auto, 100% 32rem, max(165%, 640px) auto;
-    background-repeat: no-repeat;
+  .app #workspace-content::before {
+    height: 30rem;
+    opacity: .68;
+    background-position: center top;
+    -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, .28) 0%, #000 22%, #000 50%, transparent 100%);
+    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, .28) 0%, #000 22%, #000 50%, transparent 100%);
   }
 
-  .app[dir="rtl"] #workspace-content {
-    background-position: center top, center top, left -2rem top -2rem, center bottom, center bottom -1rem;
-  }
-
-  .app[dir="ltr"] #workspace-content {
-    background-position: center top, center top, center -2rem, center bottom, center bottom -1rem;
+  .app #workspace-content::after {
+    height: 24rem;
+    opacity: .42;
+    background-position: center bottom;
+    -webkit-mask-image: linear-gradient(to top, rgba(0, 0, 0, .35) 0%, #000 24%, #000 52%, transparent 100%);
+    mask-image: linear-gradient(to top, rgba(0, 0, 0, .35) 0%, #000 24%, #000 52%, transparent 100%);
   }
 
   #command-root .app .qa-neon .qa-hero-content {
