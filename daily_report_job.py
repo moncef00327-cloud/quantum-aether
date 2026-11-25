@@ -210,10 +210,24 @@ def build(c, day, shown_recently=None, out_prospects=None):
         rcpt_y = one(c, "SELECT COUNT(*) FROM receipts WHERE date(iat,'unixepoch')=?", (y,))
     except Exception:
         rcpt_y = 0
+    try:
+        a2a_y = one(c, "SELECT COUNT(*) FROM a2a_outreach_sent WHERE substr(sent_at,1,10)=? AND http_status BETWEEN 200 AND 299", (y,))
+        a2a_all = one(c, "SELECT COUNT(*) FROM a2a_outreach_sent WHERE http_status BETWEEN 200 AND 299")
+        a2a_replies = c.execute(
+            "SELECT agent_name, host, reply_excerpt FROM a2a_outreach_sent "
+            "WHERE substr(sent_at,1,10)=? AND http_status BETWEEN 200 AND 299 AND reply_excerpt != '' "
+            "ORDER BY sent_at DESC LIMIT 3",
+            (y,),
+        ).fetchall()
+    except Exception:
+        a2a_y = a2a_all = 0
+        a2a_replies = []
     L += ["• المراسلات والإيصالات الموقّعة أمس:",
-          f"    رسائل outreach مرسلة: {sent_y} (ارتداد: {bounced_y})  |  إيصالات موقّعة v1: {rcpt_y}  |  ردود واردة: {len(inbound_rows)}"]
+          f"    رسائل outreach مرسلة: {sent_y} (ارتداد: {bounced_y})  |  حملة A2A: {a2a_y} (الإجمالي: {a2a_all})  |  إيصالات موقّعة v1: {rcpt_y}  |  ردود بريد: {len(inbound_rows)}"]
     for ir in inbound_rows:
         L.append(f"    ↩ {(ir['subject'] or '(بدون عنوان)')[:90]}")
+    for ar in a2a_replies:
+        L.append(f"    🤖 [{ar['agent_name'] or ar['host']}] {(ar['reply_excerpt'] or '')[:90]}")
     L.append("")
 
     # 8) شهادات التدقيق المدفوعة والشركاء وطلبات البايلوت (قراءة فقط من SQLite)
