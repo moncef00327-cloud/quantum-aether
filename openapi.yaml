@@ -413,6 +413,30 @@ paths:
               schema: { $ref: "#/components/schemas/SignedReceiptResponse" }
         "404":
           description: Unknown receipt ID.
+  /api/v1/attestation:
+    get:
+      operationId: getTlsAttestation
+      summary: Paid portable signed PQ-TLS attestation bundle for one domain (x402, USDC on Base)
+      description: >
+        Returns HTTP 402 with a PAYMENT-REQUIRED x402 v2 challenge when unpaid; retry with the
+        x402 PAYMENT-SIGNATURE header. Once settled, returns a portable, offline-verifiable evidence
+        bundle: a fresh Ed25519 JWS signed observation of the domain's public TLS endpoint (hybrid
+        post-quantum key exchange) plus verification pointers and explicit scope. Measurement limits:
+        one vantage, one public IPv4 endpoint, port 443; may not represent an origin behind a CDN.
+        A measurement evidence bundle (e.g. NIS2/DORA transport), not a legal compliance certification.
+        The basic scan and its signed receipt are free (POST /api/v1/scan). Calling without a signed
+        payment never charges. Also available as the MCP tool get_tls_attestation. Price 5.00 USDC.
+      parameters:
+        - name: domain
+          in: query
+          required: true
+          schema: { type: string, example: example.com }
+      responses:
+        "200": { description: Payment settled; signed attestation bundle with PAYMENT-RESPONSE header. }
+        "400": { description: Invalid domain. }
+        "402": { description: Payment required or payment invalid; see PAYMENT-REQUIRED header. }
+        "429": { description: Rate limit exceeded. }
+        "503": { description: Base USDC receiver not configured or facilitator unavailable. }
   /api/v1/agent/affiliate/register:
     post:
       operationId: registerAgentAffiliate
