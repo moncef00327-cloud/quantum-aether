@@ -431,20 +431,24 @@ def run_batch(
                 })
                 continue
 
-            # 3) Send ONE A2A JSON-RPC 2.0 call (auto-fallback between message/send and SendMessage on -32601)
+            # 3) Send ONE A2A JSON-RPC 2.0 call (with A2A-Version header + auto-fallback on -32601 / -32009)
             if summary_out["sent"] > 0 and pause_s > 0:
                 sleep_fn(pause_s)
+
+            def _post_with_version(pld):
+                hdrs = {"A2A-Version": "1.0"} if pld["method"] == "SendMessage" else {"A2A-Version": "0.3"}
+                try:
+                    return card_fetcher(endpoint, method="POST", body=pld, timeout=20.0, extra_headers=hdrs)
+                except TypeError:
+                    return card_fetcher(endpoint, method="POST", body=pld, timeout=20.0)
+
             try:
-                status, resp = card_fetcher(endpoint, method="POST", body=payload, timeout=20.0)
-                if (
-                    status == 200
-                    and isinstance(resp, dict)
-                    and isinstance(resp.get("error"), dict)
-                    and resp["error"].get("code") == -32601
-                ):
+                status, resp = _post_with_version(payload)
+                err_code = resp.get("error", {}).get("code") if (status == 200 and isinstance(resp, dict) and isinstance(resp.get("error"), dict)) else None
+                if err_code in (-32601, -32009):
                     alt = "message/send" if payload["method"] == "SendMessage" else "SendMessage"
                     payload = build_a2a_pitch(info, ep_host, obs, method=alt)
-                    status, resp = card_fetcher(endpoint, method="POST", body=payload, timeout=20.0)
+                    status, resp = _post_with_version(payload)
             except Exception:
                 summary_out["errors"] += 1
                 consecutive_errors += 1

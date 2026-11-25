@@ -121,10 +121,10 @@ class A2AOutreachTests(unittest.TestCase):
             }
             methods_called = []
 
-            def fake_http(url, *, method="GET", body=None, timeout=15.0):
+            def fake_http(url, *, method="GET", body=None, timeout=15.0, extra_headers=None):
                 if method == "GET":
                     return 200, cards[url]
-                methods_called.append((url, body["method"]))
+                methods_called.append((url, body["method"], (extra_headers or {}).get("A2A-Version")))
                 if "fb.example.org" in url and body["method"] == "message/send":
                     return 200, {"jsonrpc": "2.0", "id": body["id"], "error": {"code": -32601, "message": "Method not found"}}
                 return 200, {"jsonrpc": "2.0", "id": body["id"], "result": {"parts": [{"text": "Accepted via SendMessage"}]}}
@@ -137,9 +137,9 @@ class A2AOutreachTests(unittest.TestCase):
             )
             self.assertEqual(res["sent"], 2)
             self.assertEqual(methods_called, [
-                ("https://v1.example.org/a2a/", "SendMessage"),
-                ("https://fb.example.org/a2a", "message/send"),
-                ("https://fb.example.org/a2a", "SendMessage"),
+                ("https://v1.example.org/a2a/", "SendMessage", "1.0"),
+                ("https://fb.example.org/a2a", "message/send", "0.3"),
+                ("https://fb.example.org/a2a", "SendMessage", "1.0"),
             ])
 
 

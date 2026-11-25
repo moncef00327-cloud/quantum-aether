@@ -30,8 +30,17 @@ def _utc_now() -> str:
     return dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def _http_json(url: str, *, method: str = "GET", body: dict | None = None, timeout: float = 15.0) -> tuple[int, dict | str]:
+def _http_json(
+    url: str,
+    *,
+    method: str = "GET",
+    body: dict | None = None,
+    timeout: float = 15.0,
+    extra_headers: dict | None = None,
+) -> tuple[int, dict | str]:
     headers = {"User-Agent": USER_AGENT, "Accept": "application/json"}
+    if extra_headers:
+        headers.update(extra_headers)
     data = None
     if body is not None:
         headers["Content-Type"] = "application/json"
