@@ -22,6 +22,8 @@ from werkzeug.exceptions import HTTPException
 
 import agent_audit
 import badge_evidence
+import config_gen
+import deadlines
 import quantum_vuln_scanner
 import receipts
 import sector_snapshot
@@ -29,11 +31,20 @@ import signed_receipts
 
 PROTOCOL = "0.3.0"
 HOST_RE = re.compile(r"(?<![@\w.-])((?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63})(?![\w-])", re.I)
-SCAN_WORDS = re.compile(r"\b(scan|rescan|measure|check now|fresh|افحص|فحص)\b", re.I)
-AFFILIATE_WORDS = re.compile(r"\b(affiliate|referral|partner|commission|ref\s*code|عمولة|إحالة|شراكة|شريك)\b", re.I)
+SCAN_WORDS = re.compile(r"\b(scan|rescan|measure|check now|fresh|live\s+scan|افحص|فحص\s+مباشر|فحص\s+الآن|prüf(?:en|e)?\s+jetzt)\b", re.I)
+AFFILIATE_WORDS = re.compile(r"\b(affiliate|referral|partner\s+program|commission|ref\s*code|عمولة|إحالة|شراكة|شريك)\b", re.I)
 ATTESTATION_WORDS = re.compile(r"\b(attestation|cbom|cyclonedx|auditor\s+pdf|audit\s+pdf|sample\.pdf|شهادة\s+تدقيق|ملف\s+المدقق)\b", re.I)
 MSP_PILOT_WORDS = re.compile(r"\b(msp|pilot|it[- ]?dienstleister|white[- ]?label|ampel|50\s+hostnames?|290\s*€|290\s*eur|بايلوت)\b", re.I)
-VALID_SKILLS = ("tls-evidence", "tls-scan", "tls-attestation", "msp-pilot", "paid-data", "agent-affiliate")
+QA_CONFIG_WORDS = re.compile(r"\b(nginx|apache|haproxy|caddy|cloudfront|cloudflare|node\.?js|golang|openssl|config(?:ure|uration)?|konfigur\w*|إعداد(?:ات)?|تفعيل|كيف\s+أفعل|إصلاح)\b", re.I)
+QA_DEADLINE_WORDS = re.compile(r"\b(bsi|tr-?02102|nis2|dora|nist|cnsa|ncsc|sama|deadline\w*|compliance|roadmap|frist\w*|richtlinie|مواعيد|موعد|امتثال|قانون|معايير)\b", re.I)
+QA_RECEIPT_WORDS = re.compile(r"\b(receipt\w*|jws|jwks|ed25519|offline\s+verif\w*|signatur\w*|إيصال(?:ات)?|توقيع|التحقق)\b", re.I)
+QA_MCP_WORDS = re.compile(r"\b(mcp|a2a|acp|cursor|claude|vs\s*code|vscode|api\b|openapi|llms\.txt|وكيل|وكلاء|واجهة\s+برمج|برمج(?:ي|ة))\b", re.I)
+QA_PRICING_WORDS = re.compile(r"\b(pricing|prices?|plans?|cost|monitoring|trial|starter|business|audit|490|29\s*€|99\s*€|سعر|أسعار|باقة|باقات|مراقبة|تجربة|تكلفة|preise?|pakete?|kosten|überwachung|testphase)\b", re.I)
+QA_CONCEPT_WORDS = re.compile(r"\b(what\s+is|how\s+does|explain|hndl|harvest\s+now|ml-?kem|kyber|post[- ]?quantum|was\s+ist|wie\s+funktioniert|erklär\w*|ما\s+هو|ما\s+هي|كيف\s+يعمل|ما\s+بعد\s+الكم|التشفير\s+الكم)\b", re.I)
+QA_NAV_WORDS = re.compile(r"\b(study|banks?|insurers?|countries|hosting|exposure|prooflab|adoption|tracker|دراسة|بنوك|مصارف|تأمين|دول|استضافة|تتبع|مؤشر)\b", re.I)
+ARABIC_RE = re.compile(r"[\u0600-\u06FF]")
+GERMAN_RE = re.compile(r"\b(welche|preise?|kosten|überwachung|frist\w*|konfigur\w*|prüf\w*|hilfe|pakete?|was\s+ist|wie\s+funktioniert|beinhaltet|gibt\s+es)\b", re.I)
+VALID_SKILLS = ("tls-evidence", "tls-scan", "tls-attestation", "msp-pilot", "paid-data", "agent-affiliate", "qa-assistant")
 
 
 def services_offer(base, domain=None, scan_id=None, price_usd="49", sector_price_usd="0.50", attestation_price_usd="5.00"):
@@ -188,7 +199,229 @@ def card(base, version):
                             "reports/audits, paid monthly manually by the owner (PayPal or USDC, 30-day hold, min $50).",
              "tags": ["affiliate", "referral", "partner", "commission", "monetization", "mcp"],
              "examples": ['{"skill":"agent-affiliate"}', "How do AI agents earn referral commission?"]},
+            {"id": "qa-assistant", "name": "Search & Q&A inquiry assistant (AR / EN / DE)",
+             "description": "Answers questions in Arabic, English, or German about post-quantum TLS (X25519MLKEM768), "
+                            "server configs (nginx, Apache, Caddy, HAProxy, Go, Node.js, CloudFront, Cloudflare), "
+                            "BSI TR-02102-2 / NIS2 / DORA / NIST deadlines, Ed25519 signed receipts, MCP/A2A integration, "
+                            "monitoring plans, and the 290 EUR MSP Pilot — with direct links and copy-paste snippets. Free.",
+             "tags": ["qa", "search", "faq", "config", "bsi", "nis2", "dora", "pricing", "mcp", "multilingual"],
+             "examples": ['{"skill":"qa-assistant","lang":"en"}', "How to configure nginx for X25519MLKEM768?", "ما هي مواعيد BSI وNIS2؟"]},
         ],
+    }
+
+
+def _detect_lang(joined: str, data: dict) -> str:
+    explicit = str(data.get("lang") or "").strip().lower()
+    if ARABIC_RE.search(joined):
+        return "ar"
+    if explicit in ("ar", "en", "de"):
+        return explicit
+    if GERMAN_RE.search(joined):
+        return "de"
+    return "en"
+
+
+def _match_server_key(joined: str) -> str | None:
+    low = joined.lower()
+    mapping = [
+        ("nginx", "nginx"),
+        ("apache", "apache"),
+        ("haproxy", "haproxy"),
+        ("caddy", "caddy"),
+        ("cloudfront", "cloudfront"),
+        ("cloudflare", "cloudflare"),
+        ("node", "node"),
+        ("golang", "go"),
+        (" go ", "go"),
+    ]
+    padded = f" {low} "
+    for needle, key in mapping:
+        if needle in padded and key in config_gen.SERVERS:
+            return key
+    return None
+
+
+def _qa_answer(joined: str, base: str, lang: str, offer: dict, domain: str | None = None):
+    """Deterministic trilingual Q&A & site-search responder backed by real site modules."""
+    b = base.rstrip("/")
+    l = lang if lang in ("ar", "en", "de") else "en"
+    lq = f"?lang={l}"
+    en_or_l = l if l != "de" else "en"
+
+    # 1) Server / CDN configuration generator
+    srv = _match_server_key(joined)
+    if srv or QA_CONFIG_WORDS.search(joined):
+        srv_key = srv or "nginx"
+        spec = config_gen.SERVERS[srv_key]
+        chosen_key, var = config_gen.variant(srv_key, "")
+        code_blocks = [st["code"] for st in var["steps"] if st.get("code") and st["kind"] in (config_gen.S_CONFIG, config_gen.S_RELOAD)]
+        note = next((st["note"][l] for st in var["steps"] if st.get("note")), "")
+        code = "\n\n".join(code_blocks) if code_blocks else config_gen.VERIFY
+        text = {
+            "ar": f"لتفعيل تبادل المفاتيح الهجين X25519MLKEM768 على {spec['name']} ({var['label']['ar']}): {note or 'طبّق الإعداد أدناه ثم أعد التحميل وتحقق بالفحص.'}",
+            "de": f"So aktivieren Sie den hybriden Schlüsselaustausch X25519MLKEM768 auf {spec['name']} ({var['label']['de']}): {note or 'Konfiguration anwenden, neu laden und per Check verifizieren.'}",
+            "en": f"To enable hybrid X25519MLKEM768 on {spec['name']} ({var['label']['en']}): {note or 'Apply the configuration below, reload, and verify with a live scan.'}",
+        }[l]
+        actions = [
+            {"label": {"ar": f"مولّد إعدادات {spec['name']} الكامل ↗", "de": f"{spec['name']}-Konfigurator öffnen ↗", "en": f"Open {spec['name']} config generator ↗"}[l],
+             "url": f"{b}/tools/pq-tls-config/{srv_key}{lq}"},
+            {"label": {"ar": "دليل التنفيذ الكامل ↗", "de": "Vollständige Anleitung ↗", "en": "Full step-by-step guide ↗"}[l],
+             "url": f"{b}/guides/{spec['guide']}?lang={en_or_l}"},
+        ]
+        if domain:
+            actions.insert(0, {"label": {"ar": f"افحص {domain} الآن", "de": f"{domain} jetzt prüfen", "en": f"Scan {domain} now"}[l], "scan_domain": domain})
+        return text, {
+            "topic": "config", "lang": l, "server": srv_key, "variant": chosen_key,
+            "code_label": f"{spec['name']} · X25519MLKEM768", "code": code,
+            "actions": actions, "services": offer,
+        }
+
+    # 2) Deadlines & compliance (BSI / NIS2 / DORA / NIST / CNSA 2.0 / NCSC)
+    if QA_DEADLINE_WORDS.search(joined):
+        dtxt = deadlines.TEXT[l] if l in deadlines.TEXT else deadlines.TEXT["en"]
+        pts = list(dtxt["short"][:3]) + [
+            f"{y}: {dtxt['milestones'][k]}" for y, k in deadlines.MILESTONES if y in ("2026", "2030", "2035")
+        ]
+        text = {
+            "ar": "المواعيد الرسمية للانتقال إلى التشفير ما بعد الكم (BSI TR-02102-2 وNIS2 وDORA وNIST وEU): لا يوجد قانون اليوم يُلزم موقعاً خاصاً، لكن الاتحاد الأوروبي يبدأ الانتقال في 2026، والأنظمة عالية الأهمية حتى 2030–2031، والإلغاء الكامل للتشفير التقليدي في 2035. تبادل المفاتيح (X25519MLKEM768) يمكن تفعيله اليوم فوراً.",
+            "de": "Offizielle Post-Quantum-Fristen (BSI TR-02102-2, NIS2, DORA, EU-Roadmap, NIST): Kein Gesetz erzwingt PQ-TLS heute für private Websites, aber die EU startet 2026, hochkritische Systeme folgen bis 2030–2031, und klassische Verfahren laufen bis 2035 aus. Den Schlüsselaustausch (X25519MLKEM768) können Sie bereits heute aktivieren.",
+            "en": "Official PQC timelines (BSI TR-02102-2, NIS2, DORA, EU roadmap, NIST IR 8547): no law forces private sites today, but EU member states start transitions in 2026, high-risk systems migrate by 2030–2031, and classical algorithms phase out by 2035. Key exchange (X25519MLKEM768) is fixable today.",
+        }[l]
+        return text, {
+            "topic": "deadlines", "lang": l, "points": pts,
+            "actions": [
+                {"label": {"ar": "صفحة المواعيد الرسمية والمصادر ↗", "de": "Offizielle Fristen & Quellen ↗", "en": "Official deadlines & sources ↗"}[l], "url": f"{b}/deadlines{lq}"},
+                {"label": {"ar": "عرض MSP Pilot (290 €) ↗", "de": "MSP Pilot (290 €) ansehen ↗", "en": "MSP Partner Pilot (290 €) ↗"}[l], "url": f"{b}/partners{lq}#msp-pilot"},
+                {"label": {"ar": "عينة تقرير PDF للمدقق ↗", "de": "Kostenlose Auditor-PDF-Probe ↗", "en": "Free sample Auditor PDF ↗"}[l], "url": f"{b}/api/v1/attestation/sample.pdf"},
+            ],
+            "services": offer,
+        }
+
+    # 3) Signed receipts & offline verification
+    if QA_RECEIPT_WORDS.search(joined):
+        text = {
+            "ar": "كل فحص عبر الموقع أو API أو MCP أو A2A يُصدر إيصالاً موقّعاً رقمياً v1 بصيغة Ed25519 JWS (صالح 24 ساعة وفق سياسة qa-pqc-transport 1.0) قابل للتحقق محلياً دون اتصال عبر /.well-known/jwks.json أو أداة tools/qa_verify.py في خطوط CI/CD.",
+            "de": "Jeder Scan über Web, API, MCP oder A2A erzeugt eine 24h gültige, offline verifizierbare Ed25519-JWS-Quittung (v1, Policy qa-pqc-transport 1.0), prüfbar gegen /.well-known/jwks.json und tools/qa_verify.py in CI/CD.",
+            "en": "Every scan via Web, API, MCP, or A2A issues a 24h offline-verifiable Ed25519 compact JWS receipt (v1, policy qa-pqc-transport 1.0), verifiable against /.well-known/jwks.json or tools/qa_verify.py in CI/CD.",
+        }[l]
+        return text, {
+            "topic": "signed-receipts", "lang": l,
+            "code_label": "Offline CI verification (Ed25519 JWS)",
+            "code": f"curl -sS -X POST {b}/api/v1/scan -H 'Content-Type: application/json' -d '{{\"host\":\"cloudflare.com\",\"port\":443}}' | python3 tools/qa_verify.py --host cloudflare.com --port 443",
+            "actions": [
+                {"label": "JWKS (/.well-known/jwks.json) ↗", "url": f"{b}/.well-known/jwks.json"},
+                {"label": "Policy v1.0 ↗", "url": f"{b}{receipts.POLICY_PATH}"},
+                {"label": {"ar": "توثيق الوكلاء وAPI ↗", "de": "API & Agenten-Doku ↗", "en": "API & Agents docs ↗"}[l], "url": f"{b}/agents?lang={en_or_l}"},
+            ],
+            "services": offer,
+        }
+
+    # 4) MCP / A2A / API / Developer tools
+    if QA_MCP_WORDS.search(joined):
+        text = {
+            "ar": "يدعم Quantum Aether بروتوكولات MCP (13 أداة + 5 موارد + 4 قوالب جاهزة على /mcp) وA2A 0.3.0 الموقّع (على /a2a) وACP وHTTP REST بدون مفتاح API للبحث والفحص المجاني.",
+            "de": "Quantum Aether unterstützt Remote-MCP (13 Tools, 5 Resources, 4 Prompts unter /mcp), signiertes A2A 0.3.0 (/a2a), ACP sowie HTTP REST — kostenlos und ohne API-Key für Basis-Checks.",
+            "en": "Quantum Aether exposes remote Streamable HTTP MCP (13 tools, 5 resources, 4 prompts at /mcp), signed A2A 0.3.0 (/a2a), ACP, and HTTP REST — no API key required for free lookups and scans.",
+        }[l]
+        return text, {
+            "topic": "mcp-a2a", "lang": l,
+            "code_label": "Claude Code (1-line MCP install)",
+            "code": f"claude mcp add --transport http quantum-aether {b}/mcp",
+            "actions": [
+                {"label": {"ar": "صفحة MCP والربط بضغطة واحدة ↗", "de": "MCP & 1-Klick-Installation ↗", "en": "MCP 1-click install & docs ↗"}[l], "url": f"{b}/agents?lang={en_or_l}#mcp"},
+                {"label": "A2A Agent Card ↗", "url": f"{b}/.well-known/agent-card.json"},
+                {"label": "OpenAPI ↗", "url": f"{b}/openapi.yaml"},
+            ],
+            "services": offer,
+        }
+
+    # 5) Pricing, Monitoring & Plans
+    if QA_PRICING_WORDS.search(joined):
+        pts = {
+            "ar": [
+                "الفحص الفوري + الإيصال الموقّع Ed25519: مجاني (0 €).",
+                "المراقبة اليومية الآلية: تجربة مجانية 14 يوماً (حتى 10 نطاقات)، ثم Starter بـ 29 €/شهر أو Business بـ 99 €/شهر (حتى 100 نطاق).",
+                "MSP Pilot لمزودي خدمات IT: حتى 50 نطاقاً مع تقرير PDF Ampel ألماني وإيصالات موقّعة بـ 290 € مرة واحدة.",
+                "التقرير الكامل: 49 $ · حزمة المدقّق (PDF + CycloneDX CBOM عبر x402): 5.00 USDC · تدقيق المؤسسة الكامل: 490 €.",
+            ],
+            "de": [
+                "Sofort-Check + signierte Ed25519-Quittung: kostenlos (0 €).",
+                "Tägliches Monitoring: 14 Tage kostenlos testen (bis 10 Domains), danach Starter 29 €/Monat oder Business 99 €/Monat (bis 100 Domains).",
+                "IT-Dienstleister / MSP Pilot: bis 50 Hostnamen, deutsches Ampel-PDF + signierte Quittungen + optionales Logo für 290 € einmalig.",
+                "Vollbericht: 49 $ · Auditor-PDF + CycloneDX CBOM (x402): 5,00 USDC · Organisations-Audit: 490 €.",
+            ],
+            "en": [
+                "Instant TLS check + Ed25519 signed receipt: free ($0).",
+                "Daily PQ-TLS monitoring: 14-day free trial (up to 10 domains), then Starter 29 €/mo or Business 99 €/mo (up to 100 domains).",
+                "IT-Dienstleister / MSP Pilot: up to 50 hostnames, German Ampel PDF + signed receipts + optional logo for 290 € one-time.",
+                "Full remediation report: $49 · Auditor PDF + CycloneDX CBOM (x402): 5.00 USDC · Organization audit: 490 €.",
+            ],
+        }[l]
+        text = {
+            "ar": "ملخص الأسعار والباقات المتوفرة حالياً في Quantum Aether:",
+            "de": "Übersicht der aktuellen Quantum-Aether-Tarife und Pakete:",
+            "en": "Here is the current Quantum Aether pricing and plan overview:",
+        }[l]
+        return text, {
+            "topic": "pricing", "lang": l, "points": pts,
+            "actions": [
+                {"label": {"ar": "ابدأ تجربة المراقبة 14 يوماً مجاناً ↗", "de": "14 Tage kostenlos testen ↗", "en": "Start 14-day free monitoring trial ↗"}[l], "url": f"{b}/monitoring{lq}#trial-form"},
+                {"label": {"ar": "عرض MSP Pilot (290 €) ↗", "de": "MSP Pilot (290 €) ↗", "en": "MSP Pilot (290 €) ↗"}[l], "url": f"{b}/partners{lq}#msp-pilot"},
+                {"label": {"ar": "صفحة الأسعار الكاملة ↗", "de": "Alle Preise ansehen ↗", "en": "Full pricing page ↗"}[l], "url": f"{b}/pricing{lq}"},
+            ],
+            "services": offer,
+        }
+
+    # 6) Concept / What is PQ-TLS & HNDL
+    if QA_CONCEPT_WORDS.search(joined):
+        text = {
+            "ar": "تشفير TLS لما بعد الكم (مثل X25519MLKEM768 وفق معيار NIST FIPS 203) يحمي حركة HTTPS اليوم ضد خطر «اجمع الآن وفكّ التشفير لاحقاً» (Harvest Now, Decrypt Later). متصفحات Chrome وFirefox وEdge تدعمه افتراضياً؛ تحتاج فقط لتفعيله على الخادم أو الـ CDN.",
+            "de": "Post-Quantum-TLS (hybrid X25519MLKEM768 nach NIST FIPS 203) schützt heutigen HTTPS-Datenverkehr gegen «Harvest Now, Decrypt Later». Chrome, Firefox und Edge unterstützen es standardmäßig — es muss nur am Server oder CDN aktiviert werden.",
+            "en": "Post-quantum TLS (hybrid X25519MLKEM768, NIST FIPS 203) protects today's HTTPS traffic against 'Harvest Now, Decrypt Later'. Chrome, Firefox, and Edge already use it by default; you only need to enable it on your server or CDN.",
+        }[l]
+        return text, {
+            "topic": "concept", "lang": l,
+            "actions": [
+                {"label": {"ar": "دراسة أكبر 1,000 موقع ↗", "de": "Top-1.000-Studie ↗", "en": "Top 1,000 websites study ↗"}[l], "url": f"{b}/study/top-1000-post-quantum-tls{lq}"},
+                {"label": {"ar": "أدلة التنفيذ العملية ↗", "de": "Praxisanleitungen ↗", "en": "Practical guides ↗"}[l], "url": f"{b}/guides?lang={en_or_l}"},
+                {"label": {"ar": "فحص cloudflare.com كمثال", "de": "cloudflare.com als Beispiel prüfen", "en": "Check cloudflare.com example"}[l], "prompt": "Is cloudflare.com post-quantum ready?"},
+            ],
+            "services": offer,
+        }
+
+    # 7) Site search / observatory datasets
+    if QA_NAV_WORDS.search(joined):
+        text = {
+            "ar": "روابط سريعة لأقسام الرصد والبيانات المفتوحة في Quantum Aether:",
+            "de": "Direktzugriff auf die Messdaten und Tracker von Quantum Aether:",
+            "en": "Quick links to Quantum Aether observatory datasets and trackers:",
+        }[l]
+        return text, {
+            "topic": "search", "lang": l,
+            "actions": [
+                {"label": {"ar": "متتبّع التبنّي الأسبوعي ↗", "de": "Wöchentlicher Tracker ↗", "en": "Weekly adoption tracker ↗"}[l], "url": f"{b}/adoption{lq}"},
+                {"label": {"ar": "البنوك الأسبوعية ↗", "de": "Banken-Tracker ↗", "en": "Weekly banks tracker ↗"}[l], "url": f"{b}/banks/weekly{lq}"},
+                {"label": {"ar": "الدول والاستضافة ↗", "de": "Länder & Hosting ↗", "en": "Countries & hosting ↗"}[l], "url": f"{b}/adoption/countries{lq}"},
+                {"label": {"ar": "سجل نافذة التعرّض ↗", "de": "Exposure Registry ↗", "en": "Exposure Registry ↗"}[l], "url": f"{b}/exposure?lang={en_or_l}"},
+            ],
+            "services": offer,
+        }
+
+    # 8) General inquiry fallback (preserves 'hostname' in English for A2A callers + contact option for humans)
+    text = {
+        "ar": "يمكنني فحص أي نطاق عام (اكتب مثلاً: cloudflare.com أو «افحص example.com»)، أو الإجابة فوراً عن الأسعار، عرض MSP Pilot (290 €)، إعدادات Nginx/Cloudflare، ومواعيد BSI/NIS2/DORA. إذا كان لديك استفسار مخصص، تواصل مع فريقنا مباشرة من الزر أدناه.",
+        "de": "Ich kann jede öffentliche Domain prüfen (z. B. «cloudflare.com» oder «scan example.com») oder sofort Fragen zu Preisen, dem 290-€-MSP-Piloten, nginx/Cloudflare-Konfiguration sowie BSI/NIS2/DORA-Fristen beantworten. Für individuelle Anfragen schreiben Sie direkt unserem Team.",
+        "en": "Send a public hostname, e.g. 'Is example.com post-quantum ready?' or {\"skill\":\"tls-scan\",\"domain\":\"example.com\"}, or ask about pricing, the 290 EUR MSP Pilot, nginx/Cloudflare config, BSI/NIS2 deadlines, Ed25519 receipts, or MCP/A2A integration.",
+    }[l]
+    return text, {
+        "topic": "help", "lang": l, "allow_contact": True,
+        "skills": list(VALID_SKILLS),
+        "actions": [
+            {"label": {"ar": "عرض MSP Pilot (290 €) ↗", "de": "MSP Pilot (290 €) ↗", "en": "MSP Pilot (290 €) ↗"}[l], "url": f"{b}/partners{lq}#msp-pilot"},
+            {"label": {"ar": "الأسعار والمراقبة ↗", "de": "Preise & Monitoring ↗", "en": "Pricing & monitoring ↗"}[l], "url": f"{b}/pricing{lq}"},
+            {"label": {"ar": "مولّد إعدادات الخوادم ↗", "de": "TLS-Konfigurator ↗", "en": "PQ-TLS config generator ↗"}[l], "url": f"{b}/tools/pq-tls-config{lq}"},
+        ],
+        "services": offer,
     }
 
 
@@ -203,7 +436,7 @@ def _message(text, data, context_id=None):
 
 
 def _read_request(message):
-    """-> (skill, domain) from text and/or data parts."""
+    """-> (skill, domain, joined_text, data_dict) from text and/or data parts."""
     text, data = [], {}
     for p in message.get("parts") or []:
         if not isinstance(p, dict):
@@ -217,7 +450,8 @@ def _read_request(message):
     domain = data.get("domain") if isinstance(data.get("domain"), str) else None
     if not domain:
         m = HOST_RE.search(joined)
-        domain = m.group(1) if m else None
+        if m and m.group(1).lower() not in ("node.js", "llms.txt", "sample.pdf"):
+            domain = m.group(1)
     if not skill:
         if MSP_PILOT_WORDS.search(joined):
             skill = "msp-pilot"
@@ -225,13 +459,22 @@ def _read_request(message):
             skill = "tls-attestation"
         elif AFFILIATE_WORDS.search(joined) and not domain:
             skill = "agent-affiliate"
-        elif re.search(r"\b(buy|price|pay|report|x402|sector|snapshot|شراء|سعر|تقرير)\b", joined, re.I) and not domain:
+        elif re.search(r"\b(buy|pay|report|x402|sector|snapshot|شراء|تقرير)\b", joined, re.I) and not domain and not QA_PRICING_WORDS.search(joined):
             skill = "paid-data"
+        elif (QA_CONFIG_WORDS.search(joined) or QA_DEADLINE_WORDS.search(joined)
+              or QA_RECEIPT_WORDS.search(joined) or QA_MCP_WORDS.search(joined)
+              or QA_PRICING_WORDS.search(joined) or QA_CONCEPT_WORDS.search(joined)
+              or QA_NAV_WORDS.search(joined)) and not domain:
+            skill = "qa-assistant"
+        elif domain and QA_CONFIG_WORDS.search(joined) and not SCAN_WORDS.search(joined):
+            skill = "qa-assistant"
         elif SCAN_WORDS.search(joined):
             skill = "tls-scan"
-        else:
+        elif domain:
             skill = "tls-evidence"
-    return skill, domain
+        else:
+            skill = "qa-assistant"
+    return skill, domain, joined, data
 
 
 def _b64u_encode(raw: bytes) -> str:
@@ -420,7 +663,8 @@ def register(bp, services, version):
             return err(-32602, "params.message with role 'user' is required", rid)
         ctx = message.get("contextId") if isinstance(message.get("contextId"), str) else str(uuid.uuid4())
         req_task_id = message.get("taskId") if isinstance(message.get("taskId"), str) and message.get("taskId").strip() else None
-        skill, domain = _read_request(message)
+        skill, domain, joined, req_data = _read_request(message)
+        lang = _detect_lang(joined, req_data)
         b = base()
         price_usd = str(current_app.config["PRICE"])
         sector_price_usd = str(current_app.config.get("X402_SECTOR_PRICE") or "0.50")
@@ -445,19 +689,42 @@ def register(bp, services, version):
 
         if skill == "msp-pilot":
             offer = services_offer(b, domain=domain, price_usd=price_usd, sector_price_usd=sector_price_usd)
-            pilot = dict(offer["msp_pilot"], mcp=b + "/mcp", services=offer)
+            actions = [
+                {"label": {"ar": "احجز / اطلب تفاصيل MSP Pilot ↗", "de": "MSP Pilot (290 €) anfragen ↗", "en": "Request MSP Pilot (290 €) ↗"}[lang],
+                 "url": f"{b}/partners?lang={lang}#msp-pilot"},
+                {"label": {"ar": "معاينة عينة PDF للمدقق مجاناً ↗", "de": "Kostenlose PDF-Probe ansehen ↗", "en": "Preview free sample PDF ↗"}[lang],
+                 "url": offer["msp_pilot"]["sample_pdf"]},
+            ]
+            pilot = dict(offer["msp_pilot"], mcp=b + "/mcp", lang=lang, actions=actions, services=offer)
             _audit("msp-pilot", domain or "", "ok")
-            return _reply(
-                "IT-Dienstleister / MSP Partner Pilot (290 EUR one-time, 3 partner slots): up to 50 client hostnames "
-                "measured for post-quantum TLS (X25519MLKEM768 / BSI TR-02102-2 / NIS2), delivered as a German Ampel "
-                "PDF report (optional partner white-label logo) + offline-verifiable Ed25519 JWS signed receipts. "
-                f"Book or request details (no upfront payment): {pilot['url']} (DE) / {pilot['url_en']} (EN). "
-                f"Free archived single-host sample PDF: {pilot['sample_pdf']}.",
-                pilot)
+            if lang == "ar":
+                txt = (
+                    "عرض MSP / IT-Dienstleister Pilot (290 € لمرة واحدة · 3 مقاعد للشركاء): "
+                    "فحص حتى 50 نطاقاً لعملائك وفق X25519MLKEM768 وBSI TR-02102-2 وNIS2، مع تقرير PDF بنظام الإشارات (Ampel) "
+                    "وإيصالات Ed25519 موقّعة قابلة للتحقق دون اتصال + شعار شريكك اختيارياً. لا يوجد دفع مسبق."
+                )
+            elif lang == "de":
+                txt = (
+                    "IT-Dienstleister / MSP Partner-Pilot (290 € einmalig · 3 Partner-Plätze): "
+                    "Prüfung von bis zu 50 Kunden-Hostnamen auf X25519MLKEM768 / BSI TR-02102-2 / NIS2 als deutsches "
+                    "Ampel-PDF (optional mit Partner-Logo) plus offline prüfbare Ed25519-Quittungen. Keine Vorauszahlung."
+                )
+            else:
+                txt = (
+                    "IT-Dienstleister / MSP Partner Pilot (290 EUR one-time, 3 partner slots): up to 50 client hostnames "
+                    "measured for post-quantum TLS (X25519MLKEM768 / BSI TR-02102-2 / NIS2), delivered as a German Ampel "
+                    "PDF report (optional partner white-label logo) + offline-verifiable Ed25519 JWS signed receipts. "
+                    f"Book or request details (no upfront payment): {pilot['url']} (DE) / {pilot['url_en']} (EN). "
+                    f"Free archived single-host sample PDF: {pilot['sample_pdf']}."
+                )
+            return _reply(txt, pilot)
         if skill == "tls-attestation":
             offer = services_offer(b, domain=domain, price_usd=price_usd, sector_price_usd=sector_price_usd)
             att = dict(offer["tls_attestation"], example_request={"domain": domain or "example.com"},
-                       mcp=b + "/mcp", services=offer)
+                       mcp=b + "/mcp", actions=[
+                           {"label": {"ar": "عينة Auditor PDF المجانية ↗", "de": "Kostenlose Auditor-PDF-Probe ↗", "en": "Free sample Auditor PDF ↗"}[lang], "url": offer["tls_attestation"]["sample_pdf"]},
+                           {"label": {"ar": "توثيق Attestation API ↗", "de": "Attestation-API-Doku ↗", "en": "Attestation API docs ↗"}[lang], "url": f"{b}/agents?lang={'ar' if lang == 'ar' else 'en'}#attestation"},
+                       ], services=offer)
             _audit("tls-attestation", domain or "", "ok")
             return _reply(
                 "Auditor-Ready TLS Attestation (5.00 USDC on Base via x402 v2; NOT read-only — triggers a fresh "
@@ -469,7 +736,9 @@ def register(bp, services, version):
                 att)
         if skill == "agent-affiliate":
             offer = services_offer(b, domain=domain, price_usd=price_usd, sector_price_usd=sector_price_usd)
-            data = dict(offer["partner_affiliate"], mcp=b + "/mcp", services=offer)
+            data = dict(offer["partner_affiliate"], mcp=b + "/mcp", actions=[
+                {"label": {"ar": "صفحة برنامج الشركاء 30% ↗", "de": "Partnerprogramm (30 %) ↗", "en": "Partner programme (30%) ↗"}[lang], "url": f"{b}/partners?lang={lang}"},
+            ], services=offer)
             _audit("agent-affiliate", domain or "", "ok")
             return _reply(
                 "AI Agent Affiliate Programme: call MCP tool register_agent_affiliate or POST "
@@ -479,7 +748,10 @@ def register(bp, services, version):
                 f"the owner after a 30-day hold (min $50). Terms: {b}/partners?lang=en", data)
         if skill == "paid-data":
             offer = services_offer(b, domain=domain, price_usd=price_usd, sector_price_usd=sector_price_usd)
-            data = dict(offer, mcp=b + "/mcp")
+            data = dict(offer, mcp=b + "/mcp", actions=[
+                {"label": {"ar": "الأسعار والباقات ↗", "de": "Preise ansehen ↗", "en": "View pricing ↗"}[lang], "url": f"{b}/pricing?lang={lang}"},
+                {"label": {"ar": "عينة PDF المجانية ↗", "de": "Kostenlose PDF-Probe ↗", "en": "Free sample PDF ↗"}[lang], "url": offer["tls_attestation"]["sample_pdf"]},
+            ])
             _audit("paid-data", domain or "", "ok")
             return _reply(
                 "Paid data is bought per call with x402 (USDC on Base) over HTTP or MCP (unpaid calls return the price "
@@ -488,25 +760,36 @@ def register(bp, services, version):
                 f"available: 14-day free daily monitoring trial (Starter 29 EUR/mo, Business 99 EUR/mo at "
                 f"{offer['monitoring']['trial_url']}), MSP Partner Pilot (290 EUR at {offer['msp_pilot']['url']}), and "
                 f"organization compliance audit (490 EUR at {offer['organization_audit']['url']}).", data)
-        if not domain:
-            _audit(skill, "", "missing_domain")
-            return _reply(
-                "Send a public hostname, e.g. 'Is example.com post-quantum ready?' or {\"skill\":\"tls-scan\",\"domain\":\"example.com\"}.",
-                {"skills": list(VALID_SKILLS),
-                 "services": services_offer(b, price_usd=price_usd, sector_price_usd=sector_price_usd)})
+        if skill == "qa-assistant" or not domain:
+            offer = services_offer(b, domain=domain, price_usd=price_usd, sector_price_usd=sector_price_usd)
+            qa_text, qa_data = _qa_answer(joined, b, lang, offer, domain=domain)
+            _audit("qa-assistant", domain or "", qa_data.get("topic", "ok"))
+            return _reply(qa_text, qa_data)
         try:
             domain = quantum_vuln_scanner.normalize_domain(domain)
             if skill == "tls-scan":
                 scan_id, raw = services["scan"](domain, "a2a")
                 offer = services_offer(b, domain=domain, scan_id=scan_id, price_usd=price_usd, sector_price_usd=sector_price_usd)
-                data = dict(services["summary"](scan_id, raw), services=offer)
+                data = dict(services["summary"](scan_id, raw), services=offer, actions=[
+                    {"label": {"ar": "فتح صفحة نتيجة الفحص والإيصال ↗", "de": "Prüfergebnis & Quittung öffnen ↗", "en": "Open scan report & receipt ↗"}[lang],
+                     "url": f"{b}/scan/{scan_id}?lang={lang}"},
+                    {"label": {"ar": "مراقبة يومية مجانية 14 يوماً ↗", "de": "14 Tage kostenlos überwachen ↗", "en": "14-day free monitoring ↗"}[lang],
+                     "url": offer["monitoring"]["trial_url"]},
+                ])
                 _attach_receipt(data, "tls-scan")
                 _, _, _, dual = receipts.issue_and_store_receipt(services, raw, scan_id=scan_id, endpoint_type="a2a")
                 data.update(dual)
                 pq = data.get("post_quantum_key_exchange")
-                text = (f"{domain}: grade {data.get('grade')}, key exchange {data.get('key_exchange_group') or 'unknown'}"
-                        f"{' (post-quantum)' if pq else ''}. Full report via x402: use scan_id {scan_id}. "
-                        f"Daily monitoring (14-day free trial, from 29 EUR/mo): {offer['monitoring']['trial_url']}")
+                if lang == "ar":
+                    text = (f"نتيجة فحص {domain}: الدرجة {data.get('grade')}، تبادل المفاتيح {data.get('key_exchange_group') or 'غير محدد'}"
+                            f"{' (مقاوم للكم ✓)' if pq else ' (تقليدي فقط)'}. تم إصدار إيصال Ed25519 موقّع v1.")
+                elif lang == "de":
+                    text = (f"Scan-Ergebnis für {domain}: Note {data.get('grade')}, Schlüsselaustausch {data.get('key_exchange_group') or 'unbekannt'}"
+                            f"{' (Post-Quantum ✓)' if pq else ' (nur klassisch)'}. Signierte Ed25519-Quittung v1 erstellt.")
+                else:
+                    text = (f"{domain}: grade {data.get('grade')}, key exchange {data.get('key_exchange_group') or 'unknown'}"
+                            f"{' (post-quantum)' if pq else ''}. Full report via x402: use scan_id {scan_id}. "
+                            f"Daily monitoring (14-day free trial, from 29 EUR/mo): {offer['monitoring']['trial_url']}")
                 _audit("tls-scan", domain, "ok")
             else:
                 offer = services_offer(b, domain=domain, price_usd=price_usd, sector_price_usd=sector_price_usd)
@@ -514,13 +797,34 @@ def register(bp, services, version):
                             verification_url=b + "/verify/" + domain, services=offer)
                 _attach_receipt(data, "tls-evidence")
                 if data.get("state") == "not_scanned":
-                    text = f"No stored evidence for {domain} yet (not proof of anything). Ask to 'scan {domain}' for a measurement."
+                    data["actions"] = [
+                        {"label": {"ar": f"افحص {domain} مباشرة الآن", "de": f"{domain} jetzt live prüfen", "en": f"Run live scan on {domain}"}[lang], "scan_domain": domain},
+                    ]
+                    text = {
+                        "ar": f"لا يوجد قياس مخزّن لـ {domain} بعد (وهذا ليس دليلاً على أي خلل). اضغط الزر أدناه لإجراء فحص مباشر فوري.",
+                        "de": f"Für {domain} liegt noch kein gespeicherter Messwert vor. Klicken Sie unten für eine Live-Prüfung.",
+                        "en": f"No stored evidence for {domain} yet (not proof of anything). Ask to 'scan {domain}' for a measurement.",
+                    }[lang]
                 else:
-                    obs = {"observed_pq": "negotiates post-quantum key exchange", "observed_classical": "classical key exchange only",
-                           "undetermined": "undetermined"}.get(data.get("observation_status"), "see data")
-                    text = (f"{domain}: {obs} (group {data.get('group') or 'unknown'}, grade {data.get('grade')}), "
-                            f"checked {data.get('checked_at')}, evidence {data.get('state')}. Ask to 'scan' for a fresh measurement. "
-                            f"Daily monitoring (14-day free trial): {offer['monitoring']['trial_url']}")
+                    data["actions"] = [
+                        {"label": {"ar": f"فحص جديد لـ {domain}", "de": f"{domain} neu prüfen", "en": f"Re-scan {domain} now"}[lang], "scan_domain": domain},
+                        {"label": {"ar": "صفحة التحقق والأدلة ↗", "de": "Verifizierungsseite ↗", "en": "Verification page ↗"}[lang], "url": b + "/verify/" + domain},
+                        {"label": {"ar": "تجربة مراقبة 14 يوماً ↗", "de": "14 Tage kostenlos überwachen ↗", "en": "14-day free monitoring ↗"}[lang], "url": offer["monitoring"]["trial_url"]},
+                    ]
+                    if lang == "ar":
+                        obs = {"observed_pq": "يدعم تبادل المفاتيح لما بعد الكم ✓", "observed_classical": "تبادل مفاتيح تقليدي فقط",
+                               "undetermined": "غير محسوم"}.get(data.get("observation_status"), "انظر التفاصيل")
+                        text = f"{domain}: {obs} (المجموعة: {data.get('group') or 'غير محددة'}، الدرجة: {data.get('grade')})، آخر قياس: {data.get('checked_at')}."
+                    elif lang == "de":
+                        obs = {"observed_pq": "handelt Post-Quantum-Schlüsselaustausch aus ✓", "observed_classical": "nur klassischer Schlüsselaustausch",
+                               "undetermined": "nicht eindeutig"}.get(data.get("observation_status"), "siehe Daten")
+                        text = f"{domain}: {obs} (Gruppe {data.get('group') or 'unbekannt'}, Note {data.get('grade')}), geprüft {data.get('checked_at')}."
+                    else:
+                        obs = {"observed_pq": "negotiates post-quantum key exchange", "observed_classical": "classical key exchange only",
+                               "undetermined": "undetermined"}.get(data.get("observation_status"), "see data")
+                        text = (f"{domain}: {obs} (group {data.get('group') or 'unknown'}, grade {data.get('grade')}), "
+                                f"checked {data.get('checked_at')}, evidence {data.get('state')}. Ask to 'scan' for a fresh measurement. "
+                                f"Daily monitoring (14-day free trial): {offer['monitoring']['trial_url']}")
                 _audit("tls-evidence", domain, "ok")
         except quantum_vuln_scanner.ScanError as exc:
             _audit(skill, domain, f"error:{exc.code}")

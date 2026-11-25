@@ -37,7 +37,7 @@ class A2ATests(unittest.TestCase):
             self.assertEqual(c["securitySchemes"], {})
             self.assertEqual(
                 {s["id"] for s in c["skills"]},
-                {"tls-evidence", "tls-scan", "tls-attestation", "msp-pilot", "paid-data", "agent-affiliate"},
+                {"tls-evidence", "tls-scan", "tls-attestation", "msp-pilot", "paid-data", "agent-affiliate", "qa-assistant"},
             )
             self.assertFalse(c["capabilities"]["streaming"])
 
@@ -165,6 +165,51 @@ class A2ATests(unittest.TestCase):
             self.assertIn("/.well-known/agent-card.json", link, path)
             self.assertIn("/.well-known/mcp.json", link, path)
             self.assertIn("/llms.txt", link, path)
+
+    def test_qa_assistant_multilingual_and_top_search_bar(self):
+        # Arabic nginx config inquiry
+        r_cfg = self.send("إعدادات nginx لتفعيل X25519MLKEM768", data={"lang": "ar"}).json["result"]
+        self.assertIn("X25519MLKEM768", r_cfg["parts"][0]["text"])
+        d_cfg = r_cfg["parts"][1]["data"]
+        self.assertEqual(d_cfg["topic"], "config")
+        self.assertEqual(d_cfg["server"], "nginx")
+        self.assertIn("ssl_ecdh_curve X25519MLKEM768", d_cfg["code"])
+
+        # German BSI/NIS2 deadlines inquiry
+        r_dl = self.send("Welche Fristen gelten für BSI, NIS2 und DORA?", data={"lang": "de"}).json["result"]
+        d_dl = r_dl["parts"][1]["data"]
+        self.assertEqual(d_dl["topic"], "deadlines")
+        self.assertTrue(d_dl["points"])
+        self.assertIn("/deadlines?lang=de", d_dl["actions"][0]["url"])
+
+        # English pricing inquiry
+        r_pr = self.send("What are the plans and pricing?", data={"lang": "en"}).json["result"]
+        d_pr = r_pr["parts"][1]["data"]
+        self.assertEqual(d_pr["topic"], "pricing")
+        self.assertTrue(any("290" in pt for pt in d_pr["points"]))
+
+        # Signed receipts inquiry
+        r_rc = self.send("How do I verify an Ed25519 signed receipt offline?").json["result"]
+        self.assertEqual(r_rc["parts"][1]["data"]["topic"], "signed-receipts")
+        self.assertIn("qa_verify.py", r_rc["parts"][1]["data"]["code"])
+
+        # MCP/A2A inquiry
+        r_mcp = self.send("How do I connect MCP in Cursor or Claude?").json["result"]
+        self.assertEqual(r_mcp["parts"][1]["data"]["topic"], "mcp-a2a")
+        self.assertIn("claude mcp add", r_mcp["parts"][1]["data"]["code"])
+
+        # Top-of-page A2A search & Q&A bar rendered cleanly in AR, EN, DE
+        for path, needle in (
+            ("/?lang=ar", "اسأل وكيل A2A"),
+            ("/?lang=en", "Ask A2A agent"),
+            ("/?lang=de", "A2A-Assistent fragen"),
+            ("/partners?lang=de", "data-qa-agent-bar"),
+        ):
+            html = self.client.get(path).get_data(as_text=True)
+            self.assertIn("data-qa-agent-bar", html, path)
+            self.assertIn(needle, html, path)
+            self.assertIn("/static/a2a-search.js", html, path)
+        self.scanner.assert_not_called()
 
 
 if __name__ == "__main__":
