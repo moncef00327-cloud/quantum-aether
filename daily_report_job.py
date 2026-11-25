@@ -215,6 +215,34 @@ def build(c, day, shown_recently=None, out_prospects=None):
     for ir in inbound_rows:
         L.append(f"    ↩ {(ir['subject'] or '(بدون عنوان)')[:90]}")
     L.append("")
+
+    # 8) شهادات التدقيق المدفوعة والشركاء وطلبات البايلوت (قراءة فقط من SQLite)
+    try:
+        att_y = one(c, "SELECT COUNT(*) FROM x402_attestations WHERE substr(issued_at,1,10)=?", (y,))
+        att_all = one(c, "SELECT COUNT(*) FROM x402_attestations")
+    except Exception:
+        att_y = att_all = 0
+    try:
+        p_clicks = c.execute("SELECT code, n FROM partner_clicks WHERE day=? ORDER BY n DESC, code LIMIT 10", (y,)).fetchall()
+    except Exception:
+        p_clicks = []
+    try:
+        p_new = one(c, "SELECT COUNT(*) FROM partners WHERE substr(created_at,1,10)=?", (y,))
+        p_active = one(c, "SELECT COUNT(*) FROM partners WHERE status='ACTIVE'")
+    except Exception:
+        p_new = p_active = 0
+    try:
+        pilot_y = one(c, "SELECT COUNT(*) FROM pilot_leads WHERE substr(created_at,1,10)=?", (y,))
+        pilot_all = one(c, "SELECT COUNT(*) FROM pilot_leads")
+    except Exception:
+        pilot_y = pilot_all = 0
+    clicks_str = " · ".join(f"{r['code']}={r['n']}" for r in p_clicks) if p_clicks else "لا نقرات"
+    L += [
+        "• شهادات التدقيق والشركاء (أمس):",
+        f"    شهادات Attestation (5 USDC): {att_y} (الإجمالي: {att_all})  |  طلبات MSP Pilot (290 €): {pilot_y} (الإجمالي: {pilot_all})",
+        f"    شركاء جدد: {p_new} (نشطون: {p_active})  |  نقرات روابط الشركاء: {clicks_str}",
+        "",
+    ]
     L.append("— تذكير: راجع الردود الواردة على reply@mail.ather-quantum.com أو في /admin.")
     return "\n".join(L)
 

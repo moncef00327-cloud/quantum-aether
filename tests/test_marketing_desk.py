@@ -59,6 +59,13 @@ class MarketingDeskTests(unittest.TestCase):
                 "INSERT INTO pageviews (day, path, referrer, visitor, is_bot, is_test) "
                 "VALUES ('2026-11-22', '/site/bank7.example.sa', 'google.com', 'vis1', 0, 0)"
             )
+            # Active partner for Employee 6 snippet
+            conn.execute(
+                "CREATE TABLE partners (id INTEGER PRIMARY KEY, code TEXT, name TEXT, lang TEXT, status TEXT)"
+            )
+            conn.execute(
+                "INSERT INTO partners (id, code, name, lang, status) VALUES (1, 'TESTPARTNER1', 'Partner One', 'ar', 'ACTIVE')"
+            )
         conn.close()
 
     def tearDown(self):
@@ -84,6 +91,15 @@ class MarketingDeskTests(unittest.TestCase):
         # Employee 4: inbound hot lead bank7 included, already-contacted bank5 excluded
         self.assertIn("bank7.example.sa", brief)
         self.assertNotIn("bank5.example.sa", brief)
+        # Employee 6: promotion studio + active partner snippet + sample PDF link
+        self.assertIn("6️⃣", brief)
+        self.assertIn("/api/v1/attestation/sample.pdf", brief)
+        self.assertIn("TESTPARTNER1", brief)
+        self.assertIn("https://ather-quantum.com/?ref=TESTPARTNER1", brief)
+        # DAILY_SPOTLIGHTS includes both attestation and agent-affiliate
+        paths = {p for p, *_ in marketing_desk.DAILY_SPOTLIGHTS}
+        self.assertIn("/agents#attestation", paths)
+        self.assertIn("/partners#agent-affiliate", paths)
         self.assertTrue(brief.rstrip().endswith("Quantum Aether Team"))
 
     def test_consecutive_days_never_repeat_radar_badges_or_leads(self):

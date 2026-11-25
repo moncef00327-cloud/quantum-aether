@@ -116,6 +116,35 @@ class RadarTest(unittest.TestCase):
         self.assertGreater(out["new"], 0)
         self.assertTrue(any("github" in e for e in out["errors"]))
 
+    def test_cbom_and_mcp_topics_are_matched_while_crypto_wallet_spam_is_rejected(self):
+        cbom_q = {
+            "source": "GitHub",
+            "url": "https://github.com/org/sec/issues/10",
+            "title": "How to generate a CycloneDX CBOM for post-quantum TLS?",
+            "text": "We need NIS2 evidence for ML-KEM TLS endpoints.",
+        }
+        self.assertTrue(radar.relevant(cbom_q))
+        self.assertEqual(radar.topic_of(cbom_q), "cbom")
+        self.assertIn("/api/v1/attestation/sample.pdf", radar.draft_reply(cbom_q, "cbom"))
+
+        mcp_q = {
+            "source": "Hacker News",
+            "url": "https://news.ycombinator.com/item?id=999",
+            "title": "How do you enable post-quantum TLS on remote MCP servers?",
+            "text": "Looking to test X25519MLKEM768 for our MCP endpoint.",
+        }
+        self.assertTrue(radar.relevant(mcp_q))
+        self.assertEqual(radar.topic_of(mcp_q), "mcp")
+        self.assertIn("securing-mcp-a2a-acp-agents-post-quantum-tls", radar.draft_reply(mcp_q, "mcp"))
+
+        spam = {
+            "source": "Hacker News",
+            "url": "https://news.ycombinator.com/item?id=998",
+            "title": "Post-quantum crypto wallet testnet launch with TLS",
+            "text": "New blockchain wallet token",
+        }
+        self.assertFalse(radar.relevant(spam))
+
 
 if __name__ == "__main__":
     unittest.main()

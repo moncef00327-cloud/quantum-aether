@@ -16,10 +16,11 @@ BASE = "https://ather-quantum.com"
 
 # HN وStack Exchange: البحث يطلب كل كلمات الاستعلام، فـ "post-quantum" وحدها تلتقط نقاشات TLS التي لا تذكر الكلمة.
 QUERIES = ["X25519MLKEM768", "MLKEM768", "ML-KEM TLS", "post-quantum TLS", "post quantum nginx",
-           "hybrid key exchange TLS", "post-quantum", "ML-KEM openssl"]
+           "hybrid key exchange TLS", "post-quantum", "ML-KEM openssl", "CBOM post-quantum", "CycloneDX TLS"]
 # GitHub بلا تسجيل دخول: 10 طلبات بحث بالدقيقة، فنترك GITHUB_PAUSE ثوانٍ بين الطلبات.
 GITHUB_QUERIES = ["X25519MLKEM768", "MLKEM768", "post-quantum TLS", "ClientHello ML-KEM",
-                  "ML-KEM openssl", "post-quantum nginx", "post-quantum cloudflare"]
+                  "ML-KEM openssl", "post-quantum nginx", "post-quantum cloudflare",
+                  "CycloneDX TLS", "CBOM TLS"]
 GITHUB_PAUSE = 7
 
 SCHEMA = """
@@ -40,9 +41,10 @@ CREATE TABLE IF NOT EXISTS radar_seen (
 ANALYSIS_COLUMNS = (("intent", "TEXT"), ("stack", "TEXT"), ("snippet", "TEXT"),
                     ("score", "INTEGER"), ("status", "TEXT DEFAULT 'new'"))
 
-CORE = re.compile(r"x25519mlkem768|mlkem|ml-kem|kyber|post[- ]?quantum|pqc|harvest now", re.I)
+CORE = re.compile(r"x25519mlkem768|mlkem|ml-kem|kyber|post[- ]?quantum|pqc|harvest now|cbom|cyclonedx", re.I)
 CONTEXT = re.compile(r"\btls\b|https|ssl|nginx|apache|caddy|haproxy|cloudflare|openssl|certificate|key exchange|web ?server"
-                     r"|let'?s encrypt|clienthello|client hello|handshake|key share|middlebox|load balancer|firewall", re.I)
+                     r"|let'?s encrypt|clienthello|client hello|handshake|key share|middlebox|load balancer|firewall"
+                     r"|cbom|cyclonedx|nis2|dora|\bmcp\b", re.I)
 NOISE = re.compile(r"^(bump|build\(deps|chore|update dependency|\[snyk\]|release v?\d)", re.I)
 # خارج نطاقنا: أدوات تجاوز الحجب (أصحابها ليسوا مشغّلي مواقع)، وتقارير آلية، وبلوك تشين.
 OFF_TOPIC = re.compile(r"vless|\breality\b|xray|v2ray|mihomo|clash|sing-box|hiddify|shadowsocks|trojan|订阅|节点"
@@ -62,18 +64,23 @@ QUESTION = re.compile(r"\?|\bhow\b|\benable\b|\bsupport\b|\berror\b|\bfail|\bnot
 # في GitHub نريد من يشغّل خادماً أو بنية TLS ويسأل عن تفعيله، لا نقاشات داخلية لمطوّري المكتبات
 WEBSERVER = re.compile(
     r"nginx|apache|httpd|caddy|haproxy|cloudflare|traefik|envoy|web ?server|reverse proxy|ingress"
-    r"|openssl|cloudfront|aws alb|azure|iis|f5|big-ip|fortinet|palo alto|kubernetes|istio|certbot|let'?s encrypt",
+    r"|openssl|cloudfront|aws alb|azure|iis|f5|big-ip|fortinet|palo alto|kubernetes|istio|certbot|let'?s encrypt"
+    r"|cbom|cyclonedx|\bmcp\b",
     re.I,
 )
 
 TOPICS = [("clienthello", re.compile(r"clienthello|client hello|middlebox|firewall|load balancer|fragment|oversized"
                                      r"|decode_error", re.I)),
+          ("cbom", re.compile(r"cbom|cyclonedx|nis2|dora", re.I)),
+          ("mcp", re.compile(r"\bmcp\b|model context protocol|\ba2a\b|agent2agent", re.I)),
           ("nginx", re.compile(r"nginx", re.I)), ("apache", re.compile(r"apache|httpd", re.I)),
           ("caddy", re.compile(r"caddy", re.I)), ("haproxy", re.compile(r"haproxy", re.I)),
           ("cloudflare", re.compile(r"cloudflare", re.I)), ("openssl", re.compile(r"openssl", re.I))]
 
 GUIDES = {
     "clienthello": f"{BASE}/guides/enable-x25519mlkem768-nginx",  # قسم "Large ClientHello"
+    "cbom": f"{BASE}/agents#attestation",
+    "mcp": f"{BASE}/guides/securing-mcp-a2a-acp-agents-post-quantum-tls",
     "nginx": f"{BASE}/guides/enable-x25519mlkem768-nginx",
     "openssl": f"{BASE}/guides/enable-x25519mlkem768-nginx",
     "apache": f"{BASE}/guides/post-quantum-tls-apache-caddy-haproxy-cloudflare",
@@ -87,6 +94,11 @@ HINTS = {
     "clienthello": "The X25519MLKEM768 key share makes the ClientHello about 1.2 KB larger, so it often spans two TCP "
                    "segments or TLS records. Middleboxes, firewalls or parsers that expect it in one packet drop or reset "
                    "the connection; updating that device, or temporarily offering X25519 alone, confirms the cause.",
+    "cbom": "A TLS CycloneDX 1.6 CBOM starts with observing the actual negotiated TLS 1.3 key-exchange group "
+            "(X25519MLKEM768 vs classical X25519/P-256) and certificate algorithm; you can inspect a free sample "
+            "CBOM + auditor PDF at https://ather-quantum.com/api/v1/attestation/sample.pdf .",
+    "mcp": "Remote MCP and A2A endpoints terminate TLS on port 443 like any HTTPS API, so verifying whether they "
+           "negotiate hybrid X25519MLKEM768 (and catching silent CDN/proxy downgrades) takes one ClientHello check.",
     "nginx": "nginx needs to be built against OpenSSL 3.5 or newer; then `ssl_ecdh_curve X25519MLKEM768:X25519:prime256v1;` "
              "in the server block enables the hybrid group with a classical fallback.",
     "openssl": "OpenSSL 3.5 ships ML-KEM natively, so X25519MLKEM768 is available as a group without the oqs-provider; "

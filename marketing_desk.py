@@ -53,8 +53,10 @@ SECTOR_LABELS = {
 # Daily rotating featured landing pages/guides so each day's posts link to fresh pages
 DAILY_SPOTLIGHTS = (
     ("/tools/post-quantum-tls-checker", "أداة فحص جاهزية TLS لما بعد الكم", "Free Post-Quantum TLS Checker", "Kostenloser Post-Quanten-TLS-Checker"),
+    ("/agents#attestation", "شهادة TLS الموقّعة للمدققين (5.00 USDC — PDF + CycloneDX 1.6 CBOM + عيّنة مجانية)", "Auditor-Ready Signed PDF + CycloneDX CBOM Attestation (5.00 USDC + free sample PDF)", "Signierter TLS-Prüfbericht + CycloneDX CBOM für Prüfer (5,00 USDC + Gratis-Muster)"),
     ("/guides/tls-clienthello-middlebox-fragmentation", "دليل تعثّر ClientHello مع الجدران النارية", "ClientHello Fragmentation & Middlebox Guide", "Leitfaden: ClientHello-Fragmentierung & Firewalls"),
     ("/guides/bsi-tr-02102-2-post-quantum-tls", "دليل متطلبات BSI TR-02102-2 وNIS2/DORA", "BSI TR-02102-2 & NIS2/DORA PQC TLS Guide", "BSI TR-02102-2 & NIS2/DORA Praxis-Leitfaden"),
+    ("/partners#agent-affiliate", "برنامج الشراكة والعمولة للوكلاء والبشر (30% عمولة متكررة)", "AI Agent & Partner Affiliate Programme (30% recurring commission)", "Partner- & KI-Agenten-Affiliate-Programm (30 % wiederkehrende Provision)"),
     ("/policies/qa-pqc-transport/1.0", "مواصفة الإيصالات الموقّعة Ed25519 (qa-pqc-transport 1.0)", "Signed Ed25519 TLS Receipts (qa-pqc-transport 1.0)", "Signierte Ed25519-TLS-Prüfbelege (v1.0)"),
     ("/partners", "برنامج البايلوت لشركاء ومزوّدي خدمات IT (290 €)", "MSP Partner Pilot (up to 50 hostnames, 290 €)", "IT-Dienstleister-Pilot (bis zu 50 Hostnamen, 290 €)"),
     ("/guides/openssl-3-5-curl-x25519mlkem768", "دليل OpenSSL 3.5 وcurl لتفعيل X25519MLKEM768", "OpenSSL 3.5 & curl X25519MLKEM768 Cookbook", "OpenSSL 3.5 & curl X25519MLKEM768 Anleitung"),
@@ -138,8 +140,10 @@ def employee_radar_replies(
             continue
         intent = (r["intent"] or "discussion").lower()
         stack = (r["stack"] or "general").lower()
+        topic = (r["topic"] or "").lower()
         title = r["title"] or ""
-        if stack == "clienthello" or "clienthello" in title.lower():
+        t_low = title.lower()
+        if stack == "clienthello" or "clienthello" in t_low:
             guide = f"{SITE}/guides/tls-clienthello-middlebox-fragmentation"
             reply = (
                 "We have been seeing this across enterprise middleboxes/firewalls whenever clients advertise "
@@ -147,6 +151,21 @@ def employee_radar_replies(
                 "Quick way to verify whether an upstream endpoint actually completes the hybrid PQ handshake "
                 f"(or triggers a silent fallback/hang): {SITE}/ (free single-handshake check, no login) — "
                 f"and diagnostic notes on middlebox fragmentation: {guide}"
+            )
+        elif topic == "cbom" or "cbom" in t_low or "cyclonedx" in t_low or "nis2" in t_low or "dora" in t_low:
+            reply = (
+                "For external TLS cryptographic evidence (CycloneDX 1.6 CBOM + Ed25519 JWS signed receipt + "
+                "printable auditor PDF), we built an automated point-in-time attestation bundle that verifies "
+                "the live negotiated TLS 1.3 key-exchange group (X25519MLKEM768 vs classical). "
+                f"You can inspect a free archived sample PDF (no signup) at {SITE}/api/v1/attestation/sample.pdf "
+                f"or check any hostname for free at {SITE}/"
+            )
+        elif topic == "mcp" or "mcp" in t_low or "a2a" in t_low:
+            reply = (
+                "If your agents or MCP/A2A tools need verifiable post-quantum TLS evidence (X25519MLKEM768) with "
+                f"Ed25519 JWS receipts, we expose both a free remote MCP server ({SITE}/mcp) and an A2A Agent Card "
+                f"({SITE}/.well-known/agent-card.json), plus a guide on securing agent transport: "
+                f"{SITE}/guides/securing-mcp-a2a-acp-agents-post-quantum-tls"
             )
         elif intent == "question":
             reply = (
@@ -494,8 +513,90 @@ def employee_geo_freshness(
     return {"news": news_status, "crawlers": crawlers}
 
 
+# ---------------------------------------------------------------- Employee 6: Product & Partner Promotion Studio
+def employee_promo_studio(c: sqlite3.Connection, today: dt.date | None = None) -> dict:
+    """يولّد مسودة ترويجية يومية متجددة لخدماتنا الجديدة + مقتطفاً جاهزاً لكل شريك نشط (للمالك فقط، بلا إرسال آلي)."""
+    today = today or dt.datetime.now(dt.timezone.utc).date()
+    angles = (
+        {
+            "channel": "X / LinkedIn / r/mcp / Show HN (مطوّرو الوكلاء وMCP/A2A)",
+            "text": (
+                "Your AI agents can now verify post-quantum TLS (X25519MLKEM768) and fetch auditor-ready signed "
+                "evidence programmatically via MCP or A2A:\n"
+                f"• A2A Agent Card: {SITE}/.well-known/agent-card.json\n"
+                f"• Remote MCP Server: {SITE}/mcp (free read-only evidence & rate-limited scans with Ed25519 JWS receipts)\n"
+                f"• Paid Auditor Bundle (5.00 USDC on Base via x402): fresh probe + CycloneDX 1.6 CBOM + printable PDF\n"
+                f"• Free archived sample PDF (no signup): {SITE}/api/v1/attestation/sample.pdf\n"
+                "• Agents & operators can also self-register for 30% recurring commission via MCP `register_agent_affiliate`.\n"
+                "#MCP #A2A #PostQuantum #TLS #CBOM #x402"
+            ),
+        },
+        {
+            "channel": "LinkedIn (فرق الامتثال والتدقيق NIS2 / DORA / BSI)",
+            "text": (
+                "Need verifiable external TLS evidence for NIS2, DORA, or BSI TR-02102-2 reviews without installing agents?\n\n"
+                "Quantum Aether produces a point-in-time Auditor-Ready TLS Attestation bundle ($5 USDC via x402 or API): "
+                "a fresh port-443 handshake observation, an Ed25519 JWS signed receipt verifiable offline via JWKS, "
+                "a CycloneDX 1.6 CBOM, and a printable Auditor PDF.\n\n"
+                f"Inspect a free archived sample PDF first (no signup): {SITE}/api/v1/attestation/sample.pdf\n"
+                f"Or test any domain for free: {SITE}/\n"
+                "#NIS2 #DORA #BSI #CBOM #CycloneDX #PostQuantumTLS"
+            ),
+        },
+        {
+            "channel": "LinkedIn (DACH IT-Dienstleister & MSP Pilot — 290 €)",
+            "text": (
+                "Für IT-Dienstleister & MSPs im DACH-Raum: Prüfen Sie bis zu 50 Kunden-Hostnamen auf "
+                "Post-Quanten-TLS-Bereitschaft (X25519MLKEM768 / BSI TR-02102-2) im kompakten Partner-Piloten.\n\n"
+                "Enthalten: deutscher Ampel-PDF-Bericht (optional mit Ihrem Logo), signierte Ed25519-Prüfbelege "
+                "und klare Empfehlungen pro Hostname — 290 € einmalig (3 Partner-Plätze).\n\n"
+                f"Details & unverbindliche Anfrage: {SITE}/partners?lang=de#msp-pilot\n"
+                f"Kostenloses Muster-PDF (Einzelhost): {SITE}/api/v1/attestation/sample.pdf\n"
+                "#ITDienstleister #MSP #BSI #NIS2 #DORA #PostQuantenTLS"
+            ),
+        },
+    )
+    spotlight_post = angles[today.toordinal() % len(angles)]
+
+    partner_snippets = []
+    try:
+        rows = c.execute(
+            "SELECT code, name, lang FROM partners WHERE status='ACTIVE' ORDER BY id LIMIT 10"
+        ).fetchall()
+    except sqlite3.Error:
+        rows = []
+    for r in rows:
+        code = (r["code"] or "").strip()
+        if not code:
+            continue
+        name = (r["name"] or code).strip()
+        lang = (r["lang"] or "en").strip().lower()
+        ref_url = f"{SITE}/?ref={code}"
+        if lang == "ar":
+            snippet = (
+                f"هل موقع مؤسستك جاهز للتشفير المقاوم للحوسبة الكمومية (X25519MLKEM768)؟ "
+                f"افحص أي نطاق مجاناً خلال ثوانٍ واحصل على تقرير فوري أو عيّنة تقرير تدقيق PDF: {ref_url}"
+            )
+        else:
+            snippet = (
+                f"Check whether your public domains negotiate post-quantum TLS (X25519MLKEM768) in seconds — "
+                f"free instant scan + 14-day monitoring trial (no card): {ref_url}"
+            )
+        partner_snippets.append({"code": code, "name": name, "lang": lang, "ref_url": ref_url, "snippet": snippet})
+
+    return {"spotlight_post": spotlight_post, "partner_snippets": partner_snippets}
+
+
 # ---------------------------------------------------------------- Render Daily Markdown Brief
-def render_brief(day: str, radar_drafts: list[dict], dj: dict, badges: list[dict], leads: dict, geo: dict) -> str:
+def render_brief(
+    day: str,
+    radar_drafts: list[dict],
+    dj: dict,
+    badges: list[dict],
+    leads: dict,
+    geo: dict,
+    promo: dict | None = None,
+) -> str:
     L = [
         f"# Quantum Aether — حزمة موظفي التسويق اليومية ({day})",
         "",
@@ -594,6 +695,24 @@ def render_brief(day: str, radar_drafts: list[dict], dj: dict, badges: list[dict
     else:
         L.append("- **زواحف البحث/AI الموثّقة:** لا بيانات مسجّلة بعد.")
     L.append("")
+    if promo:
+        sp = promo.get("spotlight_post") or {}
+        L += ["---", "", "## 6️⃣ موظف ترويج الخدمات والشركاء (مسودات جاهزة للنسخ — بدون إرسال تلقائي)"]
+        if sp.get("text"):
+            L += [
+                f"### 🚀 منشور ترويجي مقترح اليوم — {sp.get('channel', '')}",
+                "```text",
+                sp["text"],
+                "```",
+                "",
+            ]
+        snippets = promo.get("partner_snippets") or []
+        if snippets:
+            L.append("### 🤝 مقتطفات جاهزة لتمريرها يدوياً لشركائنا النشطين:")
+            for ps in snippets:
+                L.append(f"- **{ps['name']} (`{ps['code']}`)** — {ps['ref_url']}")
+                L.append(f"  > {ps['snippet']}")
+            L.append("")
     L += ["—", "Quantum Aether Team", ""]
     return "\n".join(L)
 
@@ -626,13 +745,14 @@ def run(
             shown_domains=set(history["priority_cf_domains"]),
             today=today,
         )
+        promo = employee_promo_studio(c, today=today)
     finally:
         c.close()
 
     geo = employee_geo_freshness(
         data_dir, refresh_news=refresh_news, seen_news_urls=set(history["news_urls"])
     )
-    brief = render_brief(today_iso, radar_drafts, dj, badges, leads, geo)
+    brief = render_brief(today_iso, radar_drafts, dj, badges, leads, geo, promo=promo)
 
     out_dir = Path(data_dir) / "marketing_briefs"
     out_dir.mkdir(parents=True, exist_ok=True)
