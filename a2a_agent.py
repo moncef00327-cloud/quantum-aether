@@ -466,7 +466,7 @@ def _read_request(message):
               or QA_PRICING_WORDS.search(joined) or QA_CONCEPT_WORDS.search(joined)
               or QA_NAV_WORDS.search(joined)) and not domain:
             skill = "qa-assistant"
-        elif domain and QA_CONFIG_WORDS.search(joined) and not SCAN_WORDS.search(joined):
+        elif domain and re.search(r"\b(config(?:ure|uration)?|konfigur\w*|إعداد(?:ات)?|تفعيل|كيف\s+أفعل|nginx|apache|haproxy|caddy|openssl)\b", joined, re.I) and not SCAN_WORDS.search(joined):
             skill = "qa-assistant"
         elif SCAN_WORDS.search(joined):
             skill = "tls-scan"

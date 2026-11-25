@@ -198,6 +198,11 @@ class A2ATests(unittest.TestCase):
         self.assertEqual(r_mcp["parts"][1]["data"]["topic"], "mcp-a2a")
         self.assertIn("claude mcp add", r_mcp["parts"][1]["data"]["code"])
 
+        # Domain whose name overlaps a CDN (cloudflare.com) must still check TLS evidence, not CDN config
+        r_cf = self.send("Is cloudflare.com post-quantum ready?", data={"lang": "en"}).json["result"]
+        self.assertEqual(r_cf["parts"][1]["data"]["domain"], "cloudflare.com")
+        self.assertNotEqual(r_cf["parts"][1]["data"].get("topic"), "config")
+
         # Top-of-page A2A search & Q&A bar rendered cleanly in AR, EN, DE
         for path, needle in (
             ("/?lang=ar", "اسأل وكيل A2A"),
