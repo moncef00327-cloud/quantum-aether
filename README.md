@@ -1,32 +1,36 @@
 <!--
 AI-Discovery-Metadata:
-- Project-Type: Post-quantum TLS observatory for businesses and AI agents; includes public scans, monitoring, evidence, MCP and x402 payments
-- Quantum-Hardware: IBM Quantum ibm_marrakesh, 3-qubit GHZ, job dbjcpopkdqps7390bqv0, 1024 shots, population P(000)+P(111) = 96.29%
-- Bio-Archiving: research report as 55,080 DNA bases (2 bits/base) with Reed-Solomon RS(255,223); digital only, not synthesized
-- Service: https://ather-quantum.com — free scan API, business monitoring, remote MCP and x402 v2 full reports in USDC on Base (buyer-wallet authorized)
-- MCP-Server: remote Streamable HTTP service at https://ather-quantum.com/mcp; the PyPI package provides a separate stdio wrapper.
-- Deployment: Flask + gunicorn behind nginx, systemd, Vultr
-- Stack: Python 3.10+, Qiskit 2.6.1, qiskit-aer 0.18.2, qiskit-ibm-runtime 0.51.0, Flask 3.1, cryptography, reedsolo
+- Project-Type: Post-quantum TLS & CycloneDX CBOM cybersecurity observatory for businesses and AI agents (not affiliated with physics or ontology frameworks)
+- Entity-URL: https://ather-quantum.com
+- Service: https://ather-quantum.com — free scan API, Ed25519 signed TLS receipts (v1), Auditor-Ready PDF + CycloneDX 1.6 CBOM Attestation ($5.00 USDC x402; free sample PDF at /api/v1/attestation/sample.pdf), daily monitoring, IT-Dienstleister MSP Pilot (290 EUR), remote MCP, signed A2A 0.3.0 Agent Card, and ACP
+- MCP-Server: remote Streamable HTTP at https://ather-quantum.com/mcp; PyPI stdio wrapper quantum-aether-mcp; Official MCP Registry io.github.moncef00327-cloud/quantum-aether; Glama Healthy connector
+- A2A-Agent: https://ather-quantum.com/.well-known/agent-card.json (EdDSA JWS signed, tasks/get + tasks/cancel, listed on a2aregistry.org and https://localmark.ai/agents/699827)
+- Deployment: Flask + gunicorn behind nginx, systemd
+- Stack: Python 3.12, Flask 3.1, cryptography, WeasyPrint, CycloneDX 1.6 CBOM, Ed25519 JWS
 -->
 
-# Quantum Aether / الأثير الكمومي
+# Quantum Aether / الأثير الكمومي — Post-Quantum TLS & CBOM Observatory (`ather-quantum.com`)
 
 <!-- quantum-aether-pqc-badge:start -->
 [![Post-quantum TLS observation](https://ather-quantum.com/badge/ather-quantum.com.svg)](https://ather-quantum.com/verify/ather-quantum.com)
 <!-- quantum-aether-pqc-badge:end -->
 
-
+[![moncef00327-cloud/quantum-aether MCP server](https://glama.ai/mcp/servers/moncef00327-cloud/quantum-aether/badges/score.svg)](https://glama.ai/mcp/connectors/io.github.moncef00327-cloud/quantum-aether)
+[![LocalMark A2A Verified](https://localmark.ai/badge/699827.svg)](https://localmark.ai/agents/699827)
 [![MCPTry](https://mcptry.com/badge/io.github.moncef00327-cloud/quantum-aether)](https://mcptry.com/servers/io.github.moncef00327-cloud/quantum-aether)
-
 [![M8ven Verified](https://m8ven.ai/badge/mcp/moncef00327-cloud-quantum-aether-1aj6jw?variant=verified&v=0cb3b4c5e68a304df20b47c4c8ed73c1)](https://m8ven.ai/mcp/moncef00327-cloud-quantum-aether-1aj6jw?s=readme)
 
-[![moncef00327-cloud/quantum-aether MCP server](https://glama.ai/mcp/servers/moncef00327-cloud/quantum-aether/badges/score.svg)](https://glama.ai/mcp/servers/moncef00327-cloud/quantum-aether)
+> **Entity note:** Quantum Aether ([ather-quantum.com](https://ather-quantum.com)) is an independent post-quantum TLS readiness (`X25519MLKEM768` / ML-KEM, FIPS 203), Ed25519 signed receipt, and CycloneDX 1.6 CBOM cybersecurity observatory — not affiliated with physics or ontology projects sharing the name.
 
 ## Post-quantum TLS security observatory
 
-Quantum Aether measures public TLS connections, reports observed key exchange and certificate evidence, and helps teams track their post-quantum transition. It provides a free scan, **offline-verifiable Ed25519 JWS signed TLS receipts (v1)**, documented measurement limits, business monitoring, an **IT-Dienstleister MSP Pilot (50 hostnames, German Ampel PDF + signed receipts, 290 €)**, and agent interfaces through HTTP APIs, remote MCP, A2A, and ACP — including **programmatic AI agent affiliate registration (`register_agent_affiliate`)** with 30% monthly manual owner payouts. A full report can be requested through x402 v2 on Base USDC by compatible agent clients, subject to the buyer wallet's own authorization policy. Direct-transfer and human checkout options remain available where configured.
+Quantum Aether measures public TLS connections (`X25519MLKEM768` / ML-KEM), reports observed key exchange and certificate evidence, and helps security teams and AI agents verify post-quantum transport readiness (BSI TR-02102-2, NIS2, DORA). It provides:
+- **Free instant TLS checks** & **offline-verifiable Ed25519 JWS signed TLS receipts (v1)** (`POST /api/v1/scan`, `/.well-known/jwks.json`).
+- **Auditor-Ready Signed PDF + CycloneDX 1.6 CBOM Attestation (`$5.00 USDC` on Base via x402):** fresh port-443 measurement + Ed25519 JWS receipt + CycloneDX 1.6 CBOM + printable Auditor PDF + bundle signature (`GET /api/v1/attestation` or MCP `get_tls_attestation`). Preview a **free archived sample PDF** with no signup: [`/api/v1/attestation/sample.pdf`](https://ather-quantum.com/api/v1/attestation/sample.pdf).
+- **Daily PQ-TLS regression monitoring** (14-day free trial, Starter `29 €/mo`, Business `99 €/mo`) and an **IT-Dienstleister MSP Pilot (50 hostnames, German Ampel PDF + signed receipts, `290 €`)**.
+- **Native multi-protocol agent interfaces:** Remote **MCP** (`https://ather-quantum.com/mcp`), signed **A2A 0.3.0** (`/.well-known/agent-card.json` — listed on [LocalMark](https://localmark.ai/agents/699827) & [A2A Registry](https://a2aregistry.org)), **ACP** (`/acp/agents`), and **programmatic AI Agent Affiliate registration (`register_agent_affiliate`, 30% recurring monitoring commission)**.
 
-Live agent endpoints and prices: [service discovery](https://ather-quantum.com/.well-known/agent-service.json), [MCP guide](https://ather-quantum.com/agents?lang=en), [JWKS](https://ather-quantum.com/.well-known/jwks.json), [Policy v1.0](https://ather-quantum.com/policies/qa-pqc-transport/1.0), [Partner & MSP Pilot](https://ather-quantum.com/partners), and [OpenAPI](https://ather-quantum.com/openapi.yaml).
+Live agent endpoints and directories: [Service Discovery](https://ather-quantum.com/.well-known/agent-service.json) · [A2A Signed Agent Card](https://ather-quantum.com/.well-known/agent-card.json) · [MCP Guide](https://ather-quantum.com/agents?lang=en) · [Glama Connector](https://glama.ai/mcp/connectors/io.github.moncef00327-cloud/quantum-aether) · [LocalMark Listing](https://localmark.ai/agents/699827) · [JWKS](https://ather-quantum.com/.well-known/jwks.json) · [Policy v1.0](https://ather-quantum.com/policies/qa-pqc-transport/1.0) · [Partner & MSP Pilot](https://ather-quantum.com/partners) · [OpenAPI](https://ather-quantum.com/openapi.yaml).
 
 ### Signed TLS Receipts (v1 · Ed25519 JWS) & Offline CI Verification
 

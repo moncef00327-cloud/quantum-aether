@@ -631,6 +631,9 @@ SAME_AS = (
     "https://github.com/moncef00327-cloud/quantum-aether",
     "https://github.com/moncef00327-cloud",
     "https://pypi.org/project/quantum-aether-mcp/",
+    "https://www.npmjs.com/package/quantum-aether",
+    "https://glama.ai/mcp/connectors/io.github.moncef00327-cloud/quantum-aether",
+    "https://localmark.ai/agents/699827",
     "https://github.com/marketplace/actions/post-quantum-tls-check-quantum-aether",
     "https://github.com/moncef00327-cloud/pq-tls-action",
 )
@@ -641,9 +644,22 @@ def org_jsonld(full=True):
     base = public_base()
     ref = {"@type": "Organization", "@id": base + "/#organization", "name": "Quantum Aether", "url": base + "/"}
     if full:
-        ref.update({"alternateName": ["الأثير الكمومي", "كوانتوم أثير", "أثير كوانتوم", "Ather Quantum"],
-                    "logo": base + "/static/favicon.svg", "sameAs": list(SAME_AS),
-                    "email": contact_email_address()})
+        ref.update({
+            "alternateName": ["الأثير الكمومي", "كوانتوم أثير", "أثير كوانتوم", "Ather Quantum", "Quantum Aether Observatory"],
+            "disambiguatingDescription": (
+                "Post-quantum TLS readiness scanner (X25519MLKEM768 / ML-KEM, FIPS 203), Ed25519 signed TLS "
+                "receipts, CycloneDX 1.6 CBOM attestation API, and MCP/A2A agent service at ather-quantum.com — "
+                "independent cybersecurity observatory, not affiliated with physics or ontology frameworks."
+            ),
+            "knowsAbout": [
+                "Post-Quantum Cryptography", "X25519MLKEM768", "ML-KEM", "FIPS 203", "TLS 1.3",
+                "CycloneDX CBOM", "BSI TR-02102-2", "NIS2", "DORA",
+                "Model Context Protocol (MCP)", "Agent2Agent (A2A)",
+            ],
+            "logo": base + "/static/favicon.svg",
+            "sameAs": list(SAME_AS),
+            "email": contact_email_address(),
+        })
         ref = {k: v for k, v in ref.items() if v}
     return ref
 
@@ -4468,7 +4484,7 @@ def _sitemap_pages():
     mea = _mea_summary()
     if mea:
         pages.append(("/adoption/arab-africa-hosting", mea["updated"], site_langs))
-    pages.append(("/partners", "2026-11-21", de_langs))
+    pages.append(("/partners", "2026-11-25", de_langs))
     pq_index_data = pq_index.load(BASE_DIR)
     if pq_index_data:
         pages.append(("/index", pq_index.updated(pq_index_data), de_langs))
