@@ -224,11 +224,15 @@ article.card.is-plan-selected,.price-box.is-plan-selected{border-color:#67e8f9!i
   }
 
   .service-content .scan-row {
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .service-content .scan-row input {
-    flex: 1 1 12rem;
+    flex: 0 0 auto;
+    width: 100%;
+    height: auto;
+    min-height: 48px;
   }
 
   .service-content .scan-row button {
