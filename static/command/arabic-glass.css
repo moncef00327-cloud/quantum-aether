@@ -35,8 +35,8 @@ body:has(.app) {
     radial-gradient(ellipse 75% 42% at 30% 96%, rgba(182, 154, 255, .10), rgba(85, 229, 244, .06) 45%, transparent 75%);
 }
 
-.app > main,
-.app > aside {
+/* Keep <aside> position:fixed (never override to relative, which would steal flex width on mobile!) */
+.app > main {
   position: relative;
   z-index: 1;
 }

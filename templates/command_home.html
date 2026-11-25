@@ -23,7 +23,7 @@
 <link rel="stylesheet" href="/static/command/app.css?v=20261117-plan-pills1">
 <link rel="stylesheet" href="/static/a2a-search.css?v=20261125-a2aui6">
 <link rel="stylesheet" href="{{ url_for('static', filename='command/dashboard.css', v='20261125-compact2') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='command/arabic-glass.css', v='20261126-unified1') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='command/arabic-glass.css', v='20261126-unified2') }}">
 {% for obj in jsonld %}<script type="application/ld+json">{{ obj | tojson }}</script>{% endfor %}
 </head>
 <body><div id="command-root">{% if lang == "ar" %}{% include "command/ar.html" %}{% else %}{% include "command/en.html" %}{% endif %}</div>
