@@ -29,21 +29,34 @@ import receipts
 import sector_snapshot
 import signed_receipts
 
+AR_PREFIX = r"(?:^|[\s،؟?!.,:;/()-])(?:[وفبلك]?ال|[وفبلك])?"
+AR_DIACRITICS_RE = re.compile(r"[\u064B-\u065F\u0670]")
+AR_ALEF_RE = re.compile(r"[أإآ]")
+
+
+def _norm_query(text: str) -> str:
+    """Normalize Arabic alef/ta-marbuta/yaa/diacritics so 'الاسعار' and 'الأسعار' match identically."""
+    s = AR_DIACRITICS_RE.sub("", text or "")
+    s = AR_ALEF_RE.sub("ا", s).replace("ة", "ه").replace("ى", "ي")
+    return s
+
+
 PROTOCOL = "0.3.0"
 HOST_RE = re.compile(r"(?<![@\w.-])((?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63})(?![\w-])", re.I)
-SCAN_WORDS = re.compile(r"\b(scan|rescan|measure|check now|fresh|live\s+scan|افحص|فحص\s+مباشر|فحص\s+الآن|prüf(?:en|e)?\s+jetzt)\b", re.I)
-AFFILIATE_WORDS = re.compile(r"\b(affiliate|referral|partner\s+program|commission|ref\s*code|عمولة|إحالة|شراكة|شريك)\b", re.I)
-ATTESTATION_WORDS = re.compile(r"\b(attestation|cbom|cyclonedx|auditor\s+pdf|audit\s+pdf|sample\.pdf|شهادة\s+تدقيق|ملف\s+المدقق)\b", re.I)
-MSP_PILOT_WORDS = re.compile(r"\b(msp|pilot|it[- ]?dienstleister|white[- ]?label|ampel|50\s+hostnames?|290\s*€|290\s*eur|بايلوت)\b", re.I)
-QA_CONFIG_WORDS = re.compile(r"\b(nginx|apache|haproxy|caddy|cloudfront|cloudflare|node\.?js|golang|openssl|config(?:ure|uration)?|konfigur\w*|إعداد(?:ات)?|تفعيل|كيف\s+أفعل|إصلاح)\b", re.I)
-QA_DEADLINE_WORDS = re.compile(r"\b(bsi|tr-?02102|nis2|dora|nist|cnsa|ncsc|sama|deadline\w*|compliance|roadmap|frist\w*|richtlinie|مواعيد|موعد|امتثال|قانون|معايير)\b", re.I)
-QA_RECEIPT_WORDS = re.compile(r"\b(receipt\w*|jws|jwks|ed25519|offline\s+verif\w*|signatur\w*|إيصال(?:ات)?|توقيع|التحقق)\b", re.I)
-QA_MCP_WORDS = re.compile(r"\b(mcp|a2a|acp|cursor|claude|vs\s*code|vscode|api\b|openapi|llms\.txt|وكيل|وكلاء|واجهة\s+برمج|برمج(?:ي|ة))\b", re.I)
-QA_PRICING_WORDS = re.compile(r"\b(pricing|prices?|plans?|cost|monitoring|trial|starter|business|audit|490|29\s*€|99\s*€|سعر|أسعار|باقة|باقات|مراقبة|تجربة|تكلفة|preise?|pakete?|kosten|überwachung|testphase)\b", re.I)
-QA_CONCEPT_WORDS = re.compile(r"\b(what\s+is|how\s+does|explain|hndl|harvest\s+now|ml-?kem|kyber|post[- ]?quantum|was\s+ist|wie\s+funktioniert|erklär\w*|ما\s+هو|ما\s+هي|كيف\s+يعمل|ما\s+بعد\s+الكم|التشفير\s+الكم)\b", re.I)
-QA_NAV_WORDS = re.compile(r"\b(study|banks?|insurers?|countries|hosting|exposure|prooflab|adoption|tracker|دراسة|بنوك|مصارف|تأمين|دول|استضافة|تتبع|مؤشر)\b", re.I)
+SCAN_WORDS = re.compile(r"\b(scan|rescan|measure|check now|fresh|live\s+scan|prüf(?:en|e)?\s+jetzt)\b|" + AR_PREFIX + r"(?:افحص|فحص\s+مباشر|فحص\s+الان)", re.I)
+AFFILIATE_WORDS = re.compile(r"\b(affiliate|referral|partner\s+program|commission|ref\s*code)\b|" + AR_PREFIX + r"(?:عمول(?:ه|ات)|احال(?:ه|ات)|شراك(?:ه|ات)|شريك|مسوق)", re.I)
+ATTESTATION_WORDS = re.compile(r"\b(attestation|cbom|cyclonedx|auditor\s+pdf|audit\s+pdf|sample\.pdf)\b|" + AR_PREFIX + r"(?:شهاده\s+تدقيق|ملف\s+المدقق)", re.I)
+MSP_PILOT_WORDS = re.compile(r"\b(msp|pilot|it[- ]?dienstleister|white[- ]?label|ampel|50\s+hostnames?|290\s*€|290\s*eur)\b|" + AR_PREFIX + r"(?:بايلوت|تجريبي\s+للشركاء)", re.I)
+QA_CONFIG_WORDS = re.compile(r"\b(nginx|apache|haproxy|caddy|cloudfront|cloudflare|node\.?js|golang|openssl|config(?:ure|uration)?|konfigur\w*)\b|" + AR_PREFIX + r"(?:اعداد(?:ات)?|تفعيل|كيف\s+افعل|اصلاح)", re.I)
+QA_DEADLINE_WORDS = re.compile(r"\b(bsi|tr-?02102|nis2|dora|nist|cnsa|ncsc|sama|deadline\w*|compliance|roadmap|frist\w*|richtlinie)\b|" + AR_PREFIX + r"(?:مواعيد|موعد|امتثال|قانون|معايير|تنظيم\w*)", re.I)
+QA_RECEIPT_WORDS = re.compile(r"\b(receipt\w*|jws|jwks|ed25519|offline\s+verif\w*|signatur\w*)\b|" + AR_PREFIX + r"(?:ايصال(?:ات)?|توقيع|تحقق)", re.I)
+QA_MCP_WORDS = re.compile(r"\b(mcp|a2a|acp|cursor|claude|vs\s*code|vscode|api\b|openapi|llms\.txt)\b|" + AR_PREFIX + r"(?:وكيل|وكلاء|واجهه\s+برمج|برمج(?:ي|ه)|ربط)", re.I)
+QA_PRICING_WORDS = re.compile(r"\b(pricing|prices?|plans?|cost|subscri\w*|billing|monitoring|trial|starter|business|audit|490|29\s*€|99\s*€|preise?|pakete?|kosten|überwachung|testphase|abo\w*)\b|" + AR_PREFIX + r"(?:سعر|اسعار|تسعير|باق(?:ه|ات)|اشتراك(?:ات)?|اشترك|مراقب(?:ه|ات)|تجرب(?:ه|ات)|تكلف(?:ه|ات)|دفع|مجان(?:ي|ا)|خط(?:ه|ط))", re.I)
+QA_CONTACT_WORDS = re.compile(r"\b(contact|support|email|help\s*desk|talk\s+to\s+human|kontakt|hilfe)\b|" + AR_PREFIX + r"(?:تواصل|اتصال|دعم|مساعده|بريد|ايميل)", re.I)
+QA_CONCEPT_WORDS = re.compile(r"\b(what\s+is|how\s+does|explain|hndl|harvest\s+now|ml-?kem|kyber|post[- ]?quantum|was\s+ist|wie\s+funktioniert|erklär\w*)\b|" + AR_PREFIX + r"(?:ما\s+هو|ما\s+هي|كيف\s+يعمل|ما\s+بعد\s+الكم|تشفير\s+كم\w*)", re.I)
+QA_NAV_WORDS = re.compile(r"\b(study|banks?|insurers?|countries|hosting|exposure|prooflab|adoption|tracker)\b|" + AR_PREFIX + r"(?:دراس(?:ه|ات)|بنوك|مصارف|تامين|دول|استضافه|تتبع|مؤشر)", re.I)
 ARABIC_RE = re.compile(r"[\u0600-\u06FF]")
-GERMAN_RE = re.compile(r"\b(welche|preise?|kosten|überwachung|frist\w*|konfigur\w*|prüf\w*|hilfe|pakete?|was\s+ist|wie\s+funktioniert|beinhaltet|gibt\s+es)\b", re.I)
+GERMAN_RE = re.compile(r"\b(welche|preise?|kosten|überwachung|frist\w*|konfigur\w*|prüf\w*|hilfe|pakete?|was\s+ist|wie\s+funktioniert|beinhaltet|gibt\s+es|kontakt)\b", re.I)
 VALID_SKILLS = ("tls-evidence", "tls-scan", "tls-attestation", "msp-pilot", "paid-data", "agent-affiliate", "qa-assistant")
 
 
@@ -247,10 +260,11 @@ def _qa_answer(joined: str, base: str, lang: str, offer: dict, domain: str | Non
     l = lang if lang in ("ar", "en", "de") else "en"
     lq = f"?lang={l}"
     en_or_l = l if l != "de" else "en"
+    norm = _norm_query(joined)
 
     # 1) Server / CDN configuration generator
-    srv = _match_server_key(joined)
-    if srv or QA_CONFIG_WORDS.search(joined):
+    srv = _match_server_key(norm)
+    if srv or QA_CONFIG_WORDS.search(norm):
         srv_key = srv or "nginx"
         spec = config_gen.SERVERS[srv_key]
         chosen_key, var = config_gen.variant(srv_key, "")
@@ -277,7 +291,7 @@ def _qa_answer(joined: str, base: str, lang: str, offer: dict, domain: str | Non
         }
 
     # 2) Deadlines & compliance (BSI / NIS2 / DORA / NIST / CNSA 2.0 / NCSC)
-    if QA_DEADLINE_WORDS.search(joined):
+    if QA_DEADLINE_WORDS.search(norm):
         dtxt = deadlines.TEXT[l] if l in deadlines.TEXT else deadlines.TEXT["en"]
         pts = list(dtxt["short"][:3]) + [
             f"{y}: {dtxt['milestones'][k]}" for y, k in deadlines.MILESTONES if y in ("2026", "2030", "2035")
@@ -298,7 +312,7 @@ def _qa_answer(joined: str, base: str, lang: str, offer: dict, domain: str | Non
         }
 
     # 3) Signed receipts & offline verification
-    if QA_RECEIPT_WORDS.search(joined):
+    if QA_RECEIPT_WORDS.search(norm):
         text = {
             "ar": "كل فحص عبر الموقع أو API أو MCP أو A2A يُصدر إيصالاً موقّعاً رقمياً v1 بصيغة Ed25519 JWS (صالح 24 ساعة وفق سياسة qa-pqc-transport 1.0) قابل للتحقق محلياً دون اتصال عبر /.well-known/jwks.json أو أداة tools/qa_verify.py في خطوط CI/CD.",
             "de": "Jeder Scan über Web, API, MCP oder A2A erzeugt eine 24h gültige, offline verifizierbare Ed25519-JWS-Quittung (v1, Policy qa-pqc-transport 1.0), prüfbar gegen /.well-known/jwks.json und tools/qa_verify.py in CI/CD.",
@@ -317,7 +331,7 @@ def _qa_answer(joined: str, base: str, lang: str, offer: dict, domain: str | Non
         }
 
     # 4) MCP / A2A / API / Developer tools
-    if QA_MCP_WORDS.search(joined):
+    if QA_MCP_WORDS.search(norm):
         text = {
             "ar": "يدعم Quantum Aether بروتوكولات MCP (13 أداة + 5 موارد + 4 قوالب جاهزة على /mcp) وA2A 0.3.0 الموقّع (على /a2a) وACP وHTTP REST بدون مفتاح API للبحث والفحص المجاني.",
             "de": "Quantum Aether unterstützt Remote-MCP (13 Tools, 5 Resources, 4 Prompts unter /mcp), signiertes A2A 0.3.0 (/a2a), ACP sowie HTTP REST — kostenlos und ohne API-Key für Basis-Checks.",
@@ -335,45 +349,61 @@ def _qa_answer(joined: str, base: str, lang: str, offer: dict, domain: str | Non
             "services": offer,
         }
 
-    # 5) Pricing, Monitoring & Plans
-    if QA_PRICING_WORDS.search(joined):
+    # 5) Pricing, Monitoring, Subscriptions & Plans (checked BEFORE generic 'ما هي / what is' concept matcher!)
+    if QA_PRICING_WORDS.search(norm):
         pts = {
             "ar": [
                 "الفحص الفوري + الإيصال الموقّع Ed25519: مجاني (0 €).",
-                "المراقبة اليومية الآلية: تجربة مجانية 14 يوماً (حتى 10 نطاقات)، ثم Starter بـ 29 €/شهر أو Business بـ 99 €/شهر (حتى 100 نطاق).",
+                "المراقبة اليومية الآلية: تجربة مجانية 14 يوماً (حتى 10 نطاقات، بدون بطاقة)، ثم Starter بـ 29 €/شهر أو Business بـ 99 €/شهر (حتى 100 نطاق).",
                 "MSP Pilot لمزودي خدمات IT: حتى 50 نطاقاً مع تقرير PDF Ampel ألماني وإيصالات موقّعة بـ 290 € مرة واحدة.",
                 "التقرير الكامل: 49 $ · حزمة المدقّق (PDF + CycloneDX CBOM عبر x402): 5.00 USDC · تدقيق المؤسسة الكامل: 490 €.",
             ],
             "de": [
                 "Sofort-Check + signierte Ed25519-Quittung: kostenlos (0 €).",
-                "Tägliches Monitoring: 14 Tage kostenlos testen (bis 10 Domains), danach Starter 29 €/Monat oder Business 99 €/Monat (bis 100 Domains).",
+                "Tägliches Monitoring: 14 Tage kostenlos testen (bis 10 Domains, ohne Karte), danach Starter 29 €/Monat oder Business 99 €/Monat (bis 100 Domains).",
                 "IT-Dienstleister / MSP Pilot: bis 50 Hostnamen, deutsches Ampel-PDF + signierte Quittungen + optionales Logo für 290 € einmalig.",
                 "Vollbericht: 49 $ · Auditor-PDF + CycloneDX CBOM (x402): 5,00 USDC · Organisations-Audit: 490 €.",
             ],
             "en": [
                 "Instant TLS check + Ed25519 signed receipt: free ($0).",
-                "Daily PQ-TLS monitoring: 14-day free trial (up to 10 domains), then Starter 29 €/mo or Business 99 €/mo (up to 100 domains).",
+                "Daily PQ-TLS monitoring: 14-day free trial (up to 10 domains, no card), then Starter 29 €/mo or Business 99 €/mo (up to 100 domains).",
                 "IT-Dienstleister / MSP Pilot: up to 50 hostnames, German Ampel PDF + signed receipts + optional logo for 290 € one-time.",
                 "Full remediation report: $49 · Auditor PDF + CycloneDX CBOM (x402): 5.00 USDC · Organization audit: 490 €.",
             ],
         }[l]
         text = {
-            "ar": "ملخص الأسعار والباقات المتوفرة حالياً في Quantum Aether:",
-            "de": "Übersicht der aktuellen Quantum-Aether-Tarife und Pakete:",
-            "en": "Here is the current Quantum Aether pricing and plan overview:",
+            "ar": "ملخص الاشتراكات والأسعار المتوفرة حالياً في Quantum Aether (تبدأ بتجربة مجانية 14 يوماً بدون بطاقة):",
+            "de": "Übersicht der aktuellen Quantum-Aether-Tarife und Abos (Start mit 14 Tagen kostenloser Testphase):",
+            "en": "Here is the current Quantum Aether pricing and subscription overview (starts with a 14-day free trial, no card):",
         }[l]
         return text, {
             "topic": "pricing", "lang": l, "points": pts,
             "actions": [
-                {"label": {"ar": "ابدأ تجربة المراقبة 14 يوماً مجاناً ↗", "de": "14 Tage kostenlos testen ↗", "en": "Start 14-day free monitoring trial ↗"}[l], "url": f"{b}/monitoring{lq}#trial-form"},
+                {"label": {"ar": "ابدأ تجربة الاشتراك 14 يوماً مجاناً ↗", "de": "14 Tage kostenlos testen ↗", "en": "Start 14-day free trial ↗"}[l], "url": f"{b}/monitoring{lq}#trial-form"},
                 {"label": {"ar": "عرض MSP Pilot (290 €) ↗", "de": "MSP Pilot (290 €) ↗", "en": "MSP Pilot (290 €) ↗"}[l], "url": f"{b}/partners{lq}#msp-pilot"},
                 {"label": {"ar": "صفحة الأسعار الكاملة ↗", "de": "Alle Preise ansehen ↗", "en": "Full pricing page ↗"}[l], "url": f"{b}/pricing{lq}"},
             ],
             "services": offer,
         }
 
-    # 6) Concept / What is PQ-TLS & HNDL
-    if QA_CONCEPT_WORDS.search(joined):
+    # 6) Contact & direct support
+    if QA_CONTACT_WORDS.search(norm):
+        text = {
+            "ar": "يسعدنا مساعدتك مباشرةً — يمكنك مراسلة فريق Quantum Aether عبر البريد الإلكتروني أو طلب عرض MSP Pilot (حتى 50 نطاقاً بـ 290 €) بدون دفع مسبق.",
+            "de": "Wir helfen Ihnen gerne direkt weiter — schreiben Sie dem Quantum-Aether-Team per E-Mail oder fragen Sie unverbindlich den MSP Pilot (bis 50 Hostnamen, 290 €) an.",
+            "en": "We are happy to help directly — email the Quantum Aether team below or request the fixed-scope MSP Pilot (up to 50 hostnames, 290 EUR) with no upfront payment.",
+        }[l]
+        return text, {
+            "topic": "contact", "lang": l, "allow_contact": True,
+            "actions": [
+                {"label": {"ar": "طلب عرض MSP Pilot (290 €) ↗", "de": "MSP Pilot anfragen ↗", "en": "Request MSP Pilot ↗"}[l], "url": f"{b}/partners{lq}#msp-pilot"},
+                {"label": {"ar": "صفحة الشركات ↗", "de": "Für Unternehmen ↗", "en": "For business ↗"}[l], "url": f"{b}/business{lq}"},
+            ],
+            "services": offer,
+        }
+
+    # 7) Concept / What is PQ-TLS & HNDL
+    if QA_CONCEPT_WORDS.search(norm):
         text = {
             "ar": "تشفير TLS لما بعد الكم (مثل X25519MLKEM768 وفق معيار NIST FIPS 203) يحمي حركة HTTPS اليوم ضد خطر «اجمع الآن وفكّ التشفير لاحقاً» (Harvest Now, Decrypt Later). متصفحات Chrome وFirefox وEdge تدعمه افتراضياً؛ تحتاج فقط لتفعيله على الخادم أو الـ CDN.",
             "de": "Post-Quantum-TLS (hybrid X25519MLKEM768 nach NIST FIPS 203) schützt heutigen HTTPS-Datenverkehr gegen «Harvest Now, Decrypt Later». Chrome, Firefox und Edge unterstützen es standardmäßig — es muss nur am Server oder CDN aktiviert werden.",
@@ -389,8 +419,8 @@ def _qa_answer(joined: str, base: str, lang: str, offer: dict, domain: str | Non
             "services": offer,
         }
 
-    # 7) Site search / observatory datasets
-    if QA_NAV_WORDS.search(joined):
+    # 8) Site search / observatory datasets
+    if QA_NAV_WORDS.search(norm):
         text = {
             "ar": "روابط سريعة لأقسام الرصد والبيانات المفتوحة في Quantum Aether:",
             "de": "Direktzugriff auf die Messdaten und Tracker von Quantum Aether:",
@@ -407,9 +437,9 @@ def _qa_answer(joined: str, base: str, lang: str, offer: dict, domain: str | Non
             "services": offer,
         }
 
-    # 8) General inquiry fallback (preserves 'hostname' in English for A2A callers + contact option for humans)
+    # 9) General inquiry fallback (preserves 'hostname' in English for A2A callers + contact option for humans)
     text = {
-        "ar": "يمكنني فحص أي نطاق عام (اكتب مثلاً: cloudflare.com أو «افحص example.com»)، أو الإجابة فوراً عن الأسعار، عرض MSP Pilot (290 €)، إعدادات Nginx/Cloudflare، ومواعيد BSI/NIS2/DORA. إذا كان لديك استفسار مخصص، تواصل مع فريقنا مباشرة من الزر أدناه.",
+        "ar": "يمكنني فحص أي نطاق عام (اكتب مثلاً: cloudflare.com أو «افحص example.com»)، أو الإجابة فوراً عن الأسعار والاشتراكات، عرض MSP Pilot (290 €)، إعدادات Nginx/Cloudflare، ومواعيد BSI/NIS2/DORA. إذا كان لديك استفسار مخصص، تواصل مع فريقنا مباشرة من الزر أدناه.",
         "de": "Ich kann jede öffentliche Domain prüfen (z. B. «cloudflare.com» oder «scan example.com») oder sofort Fragen zu Preisen, dem 290-€-MSP-Piloten, nginx/Cloudflare-Konfiguration sowie BSI/NIS2/DORA-Fristen beantworten. Für individuelle Anfragen schreiben Sie direkt unserem Team.",
         "en": "Send a public hostname, e.g. 'Is example.com post-quantum ready?' or {\"skill\":\"tls-scan\",\"domain\":\"example.com\"}, or ask about pricing, the 290 EUR MSP Pilot, nginx/Cloudflare config, BSI/NIS2 deadlines, Ed25519 receipts, or MCP/A2A integration.",
     }[l]
@@ -446,6 +476,7 @@ def _read_request(message):
         elif p.get("kind") == "data" and isinstance(p.get("data"), dict):
             data.update(p["data"])
     joined = " ".join(text)
+    norm = _norm_query(joined)
     skill = data.get("skill") if data.get("skill") in VALID_SKILLS else None
     domain = data.get("domain") if isinstance(data.get("domain"), str) else None
     if not domain:
@@ -453,22 +484,22 @@ def _read_request(message):
         if m and m.group(1).lower() not in ("node.js", "llms.txt", "sample.pdf"):
             domain = m.group(1)
     if not skill:
-        if MSP_PILOT_WORDS.search(joined):
+        if MSP_PILOT_WORDS.search(norm):
             skill = "msp-pilot"
-        elif ATTESTATION_WORDS.search(joined):
+        elif ATTESTATION_WORDS.search(norm):
             skill = "tls-attestation"
-        elif AFFILIATE_WORDS.search(joined) and not domain:
+        elif AFFILIATE_WORDS.search(norm) and not domain:
             skill = "agent-affiliate"
-        elif re.search(r"\b(buy|pay|report|x402|sector|snapshot|شراء|تقرير)\b", joined, re.I) and not domain and not QA_PRICING_WORDS.search(joined):
+        elif re.search(r"\b(buy|pay|report|x402|sector|snapshot)\b|" + AR_PREFIX + r"(?:شراء|تقرير)", norm, re.I) and not domain and not QA_PRICING_WORDS.search(norm):
             skill = "paid-data"
-        elif (QA_CONFIG_WORDS.search(joined) or QA_DEADLINE_WORDS.search(joined)
-              or QA_RECEIPT_WORDS.search(joined) or QA_MCP_WORDS.search(joined)
-              or QA_PRICING_WORDS.search(joined) or QA_CONCEPT_WORDS.search(joined)
-              or QA_NAV_WORDS.search(joined)) and not domain:
+        elif (QA_CONFIG_WORDS.search(norm) or QA_DEADLINE_WORDS.search(norm)
+              or QA_RECEIPT_WORDS.search(norm) or QA_MCP_WORDS.search(norm)
+              or QA_PRICING_WORDS.search(norm) or QA_CONTACT_WORDS.search(norm)
+              or QA_CONCEPT_WORDS.search(norm) or QA_NAV_WORDS.search(norm)) and not domain:
             skill = "qa-assistant"
-        elif domain and re.search(r"\b(config(?:ure|uration)?|konfigur\w*|إعداد(?:ات)?|تفعيل|كيف\s+أفعل|nginx|apache|haproxy|caddy|openssl)\b", joined, re.I) and not SCAN_WORDS.search(joined):
+        elif domain and re.search(r"\b(config(?:ure|uration)?|konfigur\w*|nginx|apache|haproxy|caddy|openssl)\b|" + AR_PREFIX + r"(?:اعداد(?:ات)?|تفعيل|كيف\s+افعل)", norm, re.I) and not SCAN_WORDS.search(norm):
             skill = "qa-assistant"
-        elif SCAN_WORDS.search(joined):
+        elif SCAN_WORDS.search(norm):
             skill = "tls-scan"
         elif domain:
             skill = "tls-evidence"

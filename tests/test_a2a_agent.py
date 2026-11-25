@@ -199,9 +199,18 @@ class A2ATests(unittest.TestCase):
         self.assertIn("claude mcp add", r_mcp["parts"][1]["data"]["code"])
 
         # Domain whose name overlaps a CDN (cloudflare.com) must still check TLS evidence, not CDN config
-        r_cf = self.send("Is cloudflare.com post-quantum ready?", data={"lang": "en"}).json["result"]
-        self.assertEqual(r_cf["parts"][1]["data"]["domain"], "cloudflare.com")
-        self.assertNotEqual(r_cf["parts"][1]["data"].get("topic"), "config")
+        for q, l in (("Is cloudflare.com post-quantum ready?", "en"), ("هل cloudflare.com جاهز لما بعد الكم؟", "ar")):
+            r_cf = self.send(q, data={"lang": l}).json["result"]
+            self.assertEqual(r_cf["parts"][1]["data"]["domain"], "cloudflare.com", q)
+            self.assertNotEqual(r_cf["parts"][1]["data"].get("topic"), "config", q)
+
+        # Arabic real-world spelling variations (definite article 'ال', bare alef 'ا', subscription/pricing/contact)
+        for q in ("الاسعار", "ما هي الأسعار والباقات؟", "اشتراك", "الدفع"):
+            r_ar_p = self.send(q, data={"lang": "ar"}).json["result"]
+            self.assertEqual(r_ar_p["parts"][1]["data"]["topic"], "pricing", q)
+        r_ar_c = self.send("تواصل معكم", data={"lang": "ar"}).json["result"]
+        self.assertEqual(r_ar_c["parts"][1]["data"]["topic"], "contact")
+        self.assertTrue(r_ar_c["parts"][1]["data"]["allow_contact"])
 
         # Top-of-page A2A search & Q&A bar rendered cleanly in AR, EN, DE
         for path, needle in (
