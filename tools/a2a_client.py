@@ -79,10 +79,14 @@ def fetch_agent_card(target: str, *, fetcher=_http_json, timeout: float = 15.0) 
 
 def summarize_card(card_url: str, card: dict) -> dict:
     endpoint = card.get("url")
-    if not endpoint and isinstance(card.get("supportedInterfaces"), list) and card["supportedInterfaces"]:
+    proto = card.get("protocolVersion") or ""
+    if isinstance(card.get("supportedInterfaces"), list) and card["supportedInterfaces"]:
         first = card["supportedInterfaces"][0]
         if isinstance(first, dict):
-            endpoint = first.get("url")
+            if not endpoint:
+                endpoint = first.get("url")
+            if not proto:
+                proto = first.get("protocolVersion") or ""
     sec_schemes = card.get("securitySchemes") or {}
     security = card.get("security") or []
     skills = [
@@ -93,7 +97,7 @@ def summarize_card(card_url: str, card: dict) -> dict:
     return {
         "card_url": card_url,
         "name": card.get("name") or "(unnamed)",
-        "protocol_version": card.get("protocolVersion") or "",
+        "protocol_version": proto,
         "endpoint": endpoint or "",
         "preferred_transport": card.get("preferredTransport") or "",
         "auth_required": bool(sec_schemes or security),

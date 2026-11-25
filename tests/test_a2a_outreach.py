@@ -99,6 +99,49 @@ class A2AOutreachTests(unittest.TestCase):
             self.assertEqual(sup, ["stopbot.example.org"])
             c.close()
 
+    def test_v1_sendmessage_detection_and_32601_fallback(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            targets_file = os.path.join(tmp, "a2a_targets.json")
+            db_path = os.path.join(tmp, "test.db")
+            Path(targets_file).write_text(json.dumps({"targets": [
+                {"host": "v1.example.org", "card_url": "https://v1.example.org/.well-known/agent-card.json", "endpoint": "https://v1.example.org/a2a/"},
+                {"host": "fb.example.org", "card_url": "https://fb.example.org/.well-known/agent-card.json", "endpoint": "https://fb.example.org/a2a"},
+            ]}), encoding="utf-8")
+
+            cards = {
+                "https://v1.example.org/.well-known/agent-card.json": {
+                    "name": "V1 Agent",
+                    "supportedInterfaces": [{"url": "https://v1.example.org/a2a/", "protocolBinding": "JSONRPC", "protocolVersion": "1.0"}],
+                },
+                "https://fb.example.org/.well-known/agent-card.json": {
+                    "name": "Fallback Agent",
+                    "url": "https://fb.example.org/a2a",
+                    "protocolVersion": "0.3.0",
+                },
+            }
+            methods_called = []
+
+            def fake_http(url, *, method="GET", body=None, timeout=15.0):
+                if method == "GET":
+                    return 200, cards[url]
+                methods_called.append((url, body["method"]))
+                if "fb.example.org" in url and body["method"] == "message/send":
+                    return 200, {"jsonrpc": "2.0", "id": body["id"], "error": {"code": -32601, "message": "Method not found"}}
+                return 200, {"jsonrpc": "2.0", "id": body["id"], "result": {"parts": [{"text": "Accepted via SendMessage"}]}}
+
+            res = a2a_outreach.run_batch(
+                mode="send", targets_path=targets_file, db_path=db_path, limit=5, daily_cap=5, pause_s=0,
+                card_fetcher=fake_http,
+                handshake_fn=lambda h: {"tls_version": "TLSv1.3", "group": "X25519", "kex_class": "classical"},
+                sleep_fn=lambda _: None,
+            )
+            self.assertEqual(res["sent"], 2)
+            self.assertEqual(methods_called, [
+                ("https://v1.example.org/a2a/", "SendMessage"),
+                ("https://fb.example.org/a2a", "message/send"),
+                ("https://fb.example.org/a2a", "SendMessage"),
+            ])
+
 
 if __name__ == "__main__":
     unittest.main()

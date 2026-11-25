@@ -258,10 +258,12 @@ def sent_last_24h(conn: sqlite3.Connection) -> int:
     return int(conn.execute("SELECT COUNT(*) FROM a2a_outreach_sent WHERE sent_at >= ?", (since,)).fetchone()[0])
 
 
-def build_a2a_pitch(summary: dict, host: str, obs: dict, *, date_iso: str | None = None) -> dict:
-    """Build a proof-led A2A JSON-RPC 2.0 message/send containing the target's real PQ-TLS observation."""
+def build_a2a_pitch(summary: dict, host: str, obs: dict, *, date_iso: str | None = None, method: str | None = None) -> dict:
+    """Build a proof-led A2A JSON-RPC 2.0 payload supporting both A2A 0.3 (message/send) and A2A 1.0 (SendMessage)."""
     today = date_iso or dt.date.today().isoformat()
     name = summary.get("name") or host
+    proto = str(summary.get("protocol_version") or "")
+    chosen_method = method or ("SendMessage" if proto.startswith("1.") else "message/send")
     tls_v = obs["tls_version"]
     grp = obs["group"]
     if obs["kex_class"] == "hybrid-pq":
@@ -304,21 +306,30 @@ def build_a2a_pitch(summary: dict, host: str, obs: dict, *, date_iso: str | None
         "affiliate_register": f"{SITE}/api/v1/agent/affiliate/register",
         "one_time_notice": True,
     }
+    if chosen_method == "SendMessage":
+        msg = {
+            "role": "ROLE_USER",
+            "messageId": str(uuid.uuid4()),
+            "parts": [
+                {"text": text},
+                {"data": data},
+            ],
+        }
+    else:
+        msg = {
+            "kind": "message",
+            "role": "user",
+            "messageId": str(uuid.uuid4()),
+            "parts": [
+                {"kind": "text", "text": text},
+                {"kind": "data", "data": data},
+            ],
+        }
     return {
         "jsonrpc": "2.0",
         "id": f"qa-a2a-{uuid.uuid4().hex[:12]}",
-        "method": "message/send",
-        "params": {
-            "message": {
-                "kind": "message",
-                "role": "user",
-                "messageId": str(uuid.uuid4()),
-                "parts": [
-                    {"kind": "text", "text": text},
-                    {"kind": "data", "data": data},
-                ],
-            }
-        },
+        "method": chosen_method,
+        "params": {"message": msg},
     }
 
 
@@ -394,7 +405,8 @@ def run_batch(
 
             endpoint = (info.get("endpoint") or "").strip()
             ep_host = _host_of(endpoint) or host
-            if info.get("auth_required") or not endpoint.startswith("https://") or endpoint.rstrip("/").endswith("/mcp"):
+            ep_trim = endpoint.rstrip("/")
+            if info.get("auth_required") or not endpoint.startswith("https://") or ep_trim.endswith(("/mcp", "/ask")):
                 summary_out["skipped"] += 1
                 continue
             if is_blocked_or_sent(conn, endpoint, ep_host):
@@ -413,17 +425,27 @@ def run_batch(
                 summary_out["rendered"] += 1
                 summary_out["items"].append({
                     "name": info["name"], "host": ep_host, "endpoint": endpoint,
+                    "method": payload["method"],
                     "tls": obs["tls_version"], "group": obs["group"], "kex_class": obs["kex_class"],
                     "preview": payload["params"]["message"]["parts"][0]["text"][:260],
                 })
                 continue
 
-            # 3) Send ONE A2A JSON-RPC 2.0 message/send
+            # 3) Send ONE A2A JSON-RPC 2.0 call (auto-fallback between message/send and SendMessage on -32601)
             if summary_out["sent"] > 0 and pause_s > 0:
                 sleep_fn(pause_s)
             try:
                 status, resp = card_fetcher(endpoint, method="POST", body=payload, timeout=20.0)
-            except Exception as exc:
+                if (
+                    status == 200
+                    and isinstance(resp, dict)
+                    and isinstance(resp.get("error"), dict)
+                    and resp["error"].get("code") == -32601
+                ):
+                    alt = "message/send" if payload["method"] == "SendMessage" else "SendMessage"
+                    payload = build_a2a_pitch(info, ep_host, obs, method=alt)
+                    status, resp = card_fetcher(endpoint, method="POST", body=payload, timeout=20.0)
+            except Exception:
                 summary_out["errors"] += 1
                 consecutive_errors += 1
                 if consecutive_errors >= 5:
