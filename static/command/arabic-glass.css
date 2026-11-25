@@ -1,0 +1,283 @@
+/* RTL Command overview, shared by the initial page and the interactive workspace. */
+#command-root > .app[dir="rtl"]:has(.qa-hero-modular-glass) {
+  --glass-night: #071426;
+  --glass-cyan: #55e5f4;
+  --glass-violet: #b69aff;
+  --glass-pearl: #f2a6df;
+  --glass-text: #f5f7ff;
+  --glass-line: #a7c7f170;
+  --glass-surface:
+    radial-gradient(ellipse at 12% 0%, #b69aff40, transparent 40%),
+    radial-gradient(ellipse at 94% 96%, #f2a6df23, transparent 32%),
+    linear-gradient(140deg, #8170ba40 0%, #32688b42 32%, #132943d9 72%, #92649338);
+  --glass-shadow: inset 0 1px 1px #e5edff80, inset 0 -1px 2px #b6a0eb45, 0 6px 20px #02081556;
+  color: var(--glass-text);
+  background: var(--glass-night);
+}
+
+#command-root .app[dir="rtl"] .qa-hero-modular-glass.qa-neon {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  gap: clamp(16px, 2vw, 28px);
+}
+
+#command-root .app[dir="rtl"] .qa-neon .qa-hero-content {
+  padding: clamp(10px, 2vw, 30px) clamp(6px, 1.2vw, 18px);
+}
+
+#command-root .app[dir="rtl"] .qa-neon .qa-hero-content h1 {
+  color: var(--glass-text);
+  font-size: clamp(2.2rem, 4.3vw, 4.1rem);
+  line-height: 1.24;
+  margin-block: .15em .35em;
+  text-shadow: 0 3px 18px #9a7adc35;
+}
+
+#command-root .app[dir="rtl"] .qa-neon .qa-hero-content p {
+  color: #e3eefa;
+  font-size: clamp(.95rem, 1.35vw, 1.12rem);
+  line-height: 1.72;
+}
+
+#command-root .app[dir="rtl"] :is(.qa-neon .qa-glass-card, .qa-agent-search, .qa-neon .qa-trial.qa-trial-inline) {
+  background: var(--glass-surface);
+  border: 1px solid var(--glass-line);
+  border-radius: clamp(18px, 1.8vw, 28px);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+#command-root .app[dir="rtl"] .qa-agent-search {
+  padding: 10px 14px 7px;
+  margin-block-end: clamp(12px, 2vw, 24px);
+}
+
+#command-root .app[dir="rtl"] .qa-neon .qa-scan-card:has(> .qa-trial-inline) {
+  --panel-inset: clamp(16px, 2.2vw, 30px);
+  display: grid;
+  isolation: isolate;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: repeat(6, auto) [scanner-end] auto;
+  gap: 10px 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+#command-root .app[dir="rtl"] .qa-neon .qa-scan-card:has(> .qa-trial-inline)::before {
+  content: "";
+  grid-area: 1 / 1 / scanner-end / -1;
+  z-index: -1;
+  pointer-events: none;
+  border: 1px solid var(--glass-line);
+  border-radius: clamp(18px, 1.8vw, 28px);
+  background: var(--glass-surface);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+#command-root .app[dir="rtl"] .qa-neon .qa-scan-card:has(> .qa-trial-inline) > :not(.qa-trial-inline) {
+  grid-column: 1;
+  margin-inline: var(--panel-inset);
+  min-inline-size: 0;
+}
+
+#command-root .app[dir="rtl"] .qa-neon .qa-scan-card:has(> .qa-trial-inline) > .qa-card-head {
+  grid-row: 1;
+  margin-block-start: var(--panel-inset);
+}
+
+#command-root .app[dir="rtl"] .qa-neon .qa-scan-card:has(> .qa-trial-inline) > form:not(.qa-trial-inline) {
+  grid-row: 2;
+}
+
+#command-root .app[dir="rtl"] .qa-neon .qa-scan-card:has(> .qa-trial-inline) > :is(.err, .error, [role="alert"], [role="status"]) {
+  grid-row: 3;
+}
+
+#command-root .app[dir="rtl"] .qa-neon .qa-scan-card:has(> .qa-trial-inline) > .qa-hero-examples {
+  grid-row: 4;
+  margin-block-start: 2px;
+  padding-block-start: 12px;
+  border-block-start: 1px solid #a7c7f147;
+}
+
+#command-root .app[dir="rtl"] .qa-neon .qa-scan-card:has(> .qa-trial-inline) > .qa-hero-note {
+  grid-row: 5;
+}
+
+#command-root .app[dir="rtl"] .qa-neon .qa-scan-card:has(> .qa-trial-inline) > #domain-scope {
+  grid-row: 6;
+  margin-block-end: var(--panel-inset);
+}
+
+#command-root .app[dir="rtl"] .qa-neon .qa-scan-card > .qa-trial-inline {
+  grid-area: scanner-end / 1 / auto / -1;
+  margin: 6px 0 0;
+  padding: var(--panel-inset, 16px);
+}
+
+#command-root .app[dir="rtl"] .qa-neon .qa-scan-card > .qa-trial-inline h2 {
+  font-size: clamp(1rem, 1.6vw, 1.25rem);
+}
+
+#command-root .app[dir="rtl"] .qa-agent-input,
+#command-root .app[dir="rtl"] .qa-neon .qa-scan-card .input {
+  background: linear-gradient(165deg, #729ac342, #12263bd9 70%);
+  border-color: var(--glass-line);
+  border-radius: 999px;
+  box-shadow: inset 0 1px 2px #dceaff4d;
+}
+
+#command-root .app[dir="rtl"] :is(.qa-agent-input, .qa-neon .qa-scan-card .input input)::placeholder {
+  color: #c7d9ed;
+  opacity: 1;
+}
+
+#command-root .app[dir="rtl"] .qa-agent-submit {
+  background: linear-gradient(160deg, var(--glass-pearl), var(--glass-violet));
+  border-radius: 999px;
+  color: #17203a;
+}
+
+#command-root .app[dir="rtl"] .qa-neon .qa-scan-card .input button {
+  background: linear-gradient(155deg, #bdffff, var(--glass-cyan) 52%, #58c5df);
+  border-radius: 999px;
+  color: #071426;
+  box-shadow: inset 0 1px 2px #fff, 0 0 15px #55e5f448;
+}
+
+#command-root .app[dir="rtl"] .qa-neon .qa-scan-card .input button svg {
+  color: currentColor;
+}
+
+#command-root .app[dir="rtl"] .qa-neon :is(.qa-text-link, .qa-hero-examples button) {
+  background: linear-gradient(155deg, #a6bbeb4d, #2e486c69);
+  border-color: var(--glass-line);
+  box-shadow: inset 0 1px 1px #e5edff55;
+}
+
+#command-root .app[dir="rtl"] .qa-neon .qa-metric-big {
+  color: var(--glass-cyan);
+  text-shadow: 0 0 16px #55e5f433;
+}
+
+#command-root .app[dir="rtl"]:has(.qa-hero-modular-glass) #workspace-content > header {
+  background: #12284280 !important;
+  border-color: var(--glass-line) !important;
+}
+
+#command-root .app[dir="rtl"]:has(.qa-hero-modular-glass) #workspace-content {
+  background:
+    linear-gradient(to bottom, transparent 0, #07142620 32rem, var(--glass-night) 58rem),
+    url("arabic-glass-ribbons.webp") left top / 100% auto no-repeat;
+}
+
+#command-root .app[dir="rtl"]:has(.qa-hero-modular-glass) > aside {
+  background: linear-gradient(155deg, #302d56f5, #0a2037f5 58%, #20314af5) !important;
+  border-inline-end-color: var(--glass-line) !important;
+}
+
+#command-root .app[dir="rtl"]:has(.qa-hero-modular-glass) #workspace-nav .active {
+  color: var(--glass-cyan);
+  background: linear-gradient(160deg, #5ce4f84e, #23668353) !important;
+  border-color: rgba(85, 229, 244, .55) !important;
+  box-shadow: inset 0 1px 2px #d4fdff7d, 0 0 12px #55e5f438;
+}
+
+@media (min-width: 851px) {
+  #command-root .app[dir="rtl"] .qa-neon .qa-hero-content {
+    inline-size: min(65%, 750px);
+    min-block-size: clamp(220px, 22vw, 320px);
+    align-content: center;
+  }
+}
+
+@media (max-width: 850px) {
+  #command-root .app[dir="rtl"]:has(.qa-hero-modular-glass) #workspace-content > header {
+    margin: 10px 12px 0;
+    border: 1px solid var(--glass-line);
+    border-radius: 20px;
+    box-shadow: var(--glass-shadow);
+  }
+}
+
+@media (max-width: 680px) {
+  #command-root .app[dir="rtl"]:has(.qa-hero-modular-glass) #workspace-content {
+    background-size: auto, max(145%, 35rem) auto;
+    background-position: center top, left -5.5rem top -4rem;
+    background-image:
+      linear-gradient(to bottom, #07142648, #071426ad 14rem, var(--glass-night) 35rem),
+      url("arabic-glass-ribbons.webp");
+  }
+
+  #command-root .app[dir="rtl"] .qa-neon .qa-hero-content {
+    padding: 18px 8px 8px;
+  }
+
+  #command-root .app[dir="rtl"] .qa-neon .qa-hero-content::before {
+    content: "";
+    display: block;
+    inline-size: min(18%, 70px);
+    block-size: 3px;
+    margin-block-end: 14px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--glass-cyan), var(--glass-pearl));
+    box-shadow: 0 0 10px #55e5f480;
+  }
+
+  #command-root .app[dir="rtl"] .qa-neon .qa-scan-card .input {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  #command-root .app[dir="rtl"] .qa-neon .qa-scan-card .input > svg {
+    position: absolute;
+    right: 15px;
+    top: 14px;
+    z-index: 1;
+    color: var(--glass-cyan);
+    pointer-events: none;
+  }
+
+  #command-root .app[dir="rtl"] .qa-neon .qa-scan-card .input input {
+    inline-size: 100%;
+    box-sizing: border-box;
+    padding: 8px 42px 8px 16px;
+    border: 1px solid var(--glass-line);
+    border-radius: 999px;
+    color: var(--glass-text);
+    background: linear-gradient(155deg, #7896bf4d, #15304bdb 72%);
+  }
+
+  #command-root .app[dir="rtl"] .qa-neon .qa-scan-card .input input:focus-visible {
+    outline: 2px solid var(--glass-cyan);
+    outline-offset: 2px;
+  }
+
+  #command-root .app[dir="rtl"] .qa-neon .qa-scan-card .input button {
+    inline-size: 100%;
+    min-block-size: 48px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  #command-root .app[dir="rtl"] .qa-neon .qa-scan-card .input button svg {
+    display: block;
+  }
+}
