@@ -162,7 +162,7 @@ def sync_targets(
     out_path: str = TARGETS_PATH,
     *,
     getter=_get_json,
-    max_per_registry: int = 300,
+    max_per_registry: int = 800,
 ) -> list[dict]:
     """Fetch open, healthy, relevant A2A agent candidates from a2aregistry.org and localmark.ai."""
     found: list[dict] = []
@@ -217,10 +217,10 @@ def sync_targets(
         if len(agents) < 100:
             break
 
-    # 2) localmark.ai (targeted queries for A2A security/compliance/x402/enterprise agents)
-    for q in ("security", "compliance", "tls", "x402", "audit", "enterprise", "devops", "agent"):
+    # 2) localmark.ai (targeted queries for A2A security/compliance/IT/MSP/enterprise agents)
+    for q in ("security", "compliance", "tls", "audit", "enterprise", "devops", "msp", "consulting", "agency", "cloud", "network", "agent"):
         try:
-            doc = getter(f"https://localmark.ai/api/v1/search?q={urllib.parse.quote(q)}&limit=30")
+            doc = getter(f"https://localmark.ai/api/v1/search?q={urllib.parse.quote(q)}&limit=50")
         except Exception:
             continue
         items = doc.get("items") or doc.get("results") or doc.get("agents") if isinstance(doc, dict) else doc
@@ -298,14 +298,16 @@ def build_a2a_pitch(summary: dict, host: str, obs: dict, *, date_iso: str | None
     text = (
         f"Hello {name} — one-time A2A interoperability & post-quantum TLS note from Quantum Aether ({OUR_CARD}).\n\n"
         f"{finding}\n\n"
-        f"What we offer for IT service providers, MSPs, security teams, and AI agents:\n"
-        f"1) IT-Dienstleister / MSP Partner Pilot (290 EUR one-time, up to 50 client hostnames, German Ampel PDF + "
-        f"Ed25519 signed receipts + optional partner logo): {SITE}/partners?lang=de#msp-pilot\n"
-        f"2) Free A2A 0.3.0 ({SITE}/a2a) & remote MCP ({SITE}/mcp) PQ-TLS checks with Ed25519 JWS receipts "
-        f"({SITE}/.well-known/jwks.json) + Auditor-Ready Signed PDF & CycloneDX 1.6 CBOM Attestation ($5.00 USDC x402; "
-        f"free archived sample PDF: {SITE}/api/v1/attestation/sample.pdf).\n"
-        f"3) 30% recurring AI Agent & Partner Affiliate Programme (MCP register_agent_affiliate). "
-        f"Free live check for your host: {SITE}/?domain={host}&lang=en\n\n"
+        f"Ready-to-use machine & human options for {host}:\n"
+        f"1) Instant Auditor-Ready Signed PDF + CycloneDX 1.6 CBOM Attestation for {host} ($5.00 USDC on Base via x402 v2; "
+        f"unpaid call returns HTTP 402 and never charges; pay only with explicit buyer spend authorization): "
+        f"GET {SITE}/api/v1/attestation?domain={host}  OR  MCP {SITE}/mcp tool get_tls_attestation({{\"domain\":\"{host}\"}}). "
+        f"Free archived sample PDF first: {SITE}/api/v1/attestation/sample.pdf\n"
+        f"2) IT-Dienstleister / MSP Partner Pilot (290 EUR one-time, up to 50 client hostnames, German Ampel PDF + "
+        f"Ed25519 signed receipts + optional logo, no upfront payment): {SITE}/partners?lang=de#msp-pilot\n"
+        f"3) Free A2A ({SITE}/a2a) & MCP ({SITE}/mcp) checks with Ed25519 JWS receipts ({SITE}/.well-known/jwks.json), "
+        f"14-day free monitoring trial ({SITE}/monitoring?domain={host}#trial-form), and 30% recurring AI Agent Affiliate "
+        f"Programme (MCP register_agent_affiliate).\n\n"
         f"One-time message; we will not message this endpoint again. Reply 'stop' to suppress {host}."
     )
     data = {
@@ -327,6 +329,46 @@ def build_a2a_pitch(summary: dict, host: str, obs: dict, *, date_iso: str | None
             "deliverables": "German Ampel PDF + Ed25519 signed receipts + optional partner white-label logo",
             "url_de": f"{SITE}/partners?lang=de#msp-pilot",
             "url_en": f"{SITE}/partners?lang=en#msp-pilot",
+        },
+        "purchase_options": {
+            "autonomous_x402_attestation": {
+                "method": "GET",
+                "url": f"{SITE}/api/v1/attestation?domain={host}",
+                "mcp_server": f"{SITE}/mcp",
+                "mcp_tool": "get_tls_attestation",
+                "mcp_arguments": {"domain": host},
+                "protocol": "x402 v2",
+                "scheme": "exact",
+                "price_usd": "5.00",
+                "currency": "USDC",
+                "network": "eip155:8453",
+                "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                "read_only": False,
+                "starts_scan": True,
+                "buyer_wallet_required": True,
+                "payment_authorization_required": True,
+                "spend_policy": "Unpaid call returns HTTP 402 with exact payment requirements and never charges. Pay only with explicit buyer spend authorization.",
+                "free_preview_pdf": f"{SITE}/api/v1/attestation/sample.pdf",
+                "deliverables": ["Ed25519 JWS receipt", "CycloneDX 1.6 CBOM", "Printable Auditor PDF", "Bundle Ed25519 JWS"],
+            },
+            "human_msp_pilot": {
+                "price_eur": "290",
+                "hostnames_limit": 50,
+                "no_upfront_payment": True,
+                "url_de": f"{SITE}/partners?lang=de#msp-pilot",
+                "url_en": f"{SITE}/partners?lang=en#msp-pilot",
+            },
+            "monitoring_trial": {
+                "free_days": 14,
+                "plans": "Starter 29 EUR/mo (10 domains) | Business 99 EUR/mo (100 domains)",
+                "url": f"{SITE}/monitoring?domain={host}#trial-form",
+            },
+            "agent_affiliate_30pct": {
+                "method": "POST",
+                "url": f"{SITE}/api/v1/agent/affiliate/register",
+                "mcp_tool": "register_agent_affiliate",
+                "commission": "30% monitoring (12m) / 20% one-time, monthly manual payout",
+            },
         },
         "attestation_api": f"{SITE}/api/v1/attestation",
         "attestation_price": "5.00 USDC (Base, x402 v2)",

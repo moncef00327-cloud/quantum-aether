@@ -66,7 +66,7 @@ def parse_security_txt(text):
     return list(dict.fromkeys(emails)), expires, False
 
 
-def fetch_security_txt(domain, timeout=6.0):
+def fetch_security_txt(domain, timeout=4.0):
     base = domain.lower().removeprefix("www.")
     hosts = [domain] if domain.startswith("www.") else [domain, "www." + domain]
     seen = set()
@@ -105,8 +105,11 @@ def main():
     ap.add_argument("--db", default=DB_PATH)
     ap.add_argument("--out", default=OUT_PATH)
     ap.add_argument("--grades", default="F,C,B", help="comma-separated grades to include (default F,C,B)")
-    ap.add_argument("--workers", type=int, default=16)
-    ap.add_argument("--max-targets", type=int, default=120)
+    ap.add_argument("--workers", type=int, default=24)
+    ap.add_argument("--max-targets", type=int, default=150)
+    ap.add_argument("--include-top", action="store_true", default=True,
+                    help="also scan unsectored top-ranked commercial domains (F->C->B) after paying sectors")
+    ap.add_argument("--no-include-top", dest="include_top", action="store_false")
     a = ap.parse_args()
 
     grades = tuple(g.strip().upper() for g in a.grades.split(",") if g.strip())
@@ -130,8 +133,8 @@ def main():
 
     ph_s = ",".join("?" for _ in PAY_SECTORS)
     ph_g = ",".join("?" for _ in grades)
-    rows = conn.execute(f"""
-        SELECT domain, sector, grade, grp, tls
+    rows = list(conn.execute(f"""
+        SELECT domain, sector, grade, grp, tls, rank
         FROM adoption_results
         WHERE week = ? AND ok = 1 AND pq = 0 AND unsure = 0
           AND sector IN ({ph_s}) AND grade IN ({ph_g})
@@ -139,15 +142,25 @@ def main():
                  CASE sector WHEN 'banks-mena' THEN 0 WHEN 'banks-dach' THEN 1 WHEN 'banks-europe' THEN 2
                              WHEN 'payments-fintech' THEN 3 WHEN 'telecom' THEN 4 ELSE 5 END,
                  domain
-    """, (wk, *PAY_SECTORS, *grades)).fetchall()
+    """, (wk, *PAY_SECTORS, *grades)).fetchall())
+    if a.include_top:
+        rows += list(conn.execute(f"""
+            SELECT domain, COALESCE(NULLIF(sector,''), 'top-commercial') AS sector, grade, grp, tls, rank
+            FROM adoption_results
+            WHERE week = ? AND ok = 1 AND pq = 0 AND unsure = 0
+              AND (sector IS NULL OR sector = '') AND grade IN ({ph_g})
+            ORDER BY CASE grade WHEN 'F' THEN 0 WHEN 'C' THEN 1 WHEN 'B' THEN 2 ELSE 3 END,
+                     COALESCE(rank, 999999) ASC, domain
+        """, (wk, *grades)).fetchall())
     conn.close()
 
     candidates = []
     seen_base = set()
+    skip_tlds = (".gov", ".mil", ".edu", ".ac.uk", ".gob.", ".gouv.")
     for r in rows:
         dom = r["domain"].strip().lower()
         base = dom.removeprefix("www.")
-        if base in seen_base or base in skip_domains or ".gov" in base:
+        if base in seen_base or base in skip_domains or any(t in base for t in skip_tlds):
             continue
         seen_base.add(base)
         candidates.append(dict(r, base=base))
@@ -183,12 +196,27 @@ def main():
             "_sector": item["sector"],
         }
 
-    with cf.ThreadPoolExecutor(max_workers=a.workers) as ex:
-        for res in ex.map(probe, candidates):
-            if res:
-                found.append(res)
-                if len(found) >= a.max_targets:
-                    break
+    ex = cf.ThreadPoolExecutor(max_workers=a.workers)
+    try:
+        chunk_size = max(a.workers * 4, 80)
+        for i in range(0, len(candidates), chunk_size):
+            if len(found) >= a.max_targets:
+                break
+            batch = candidates[i:i + chunk_size]
+            futs = [ex.submit(probe, item) for item in batch]
+            for fut in cf.as_completed(futs):
+                try:
+                    res = fut.result()
+                except Exception:
+                    res = None
+                if res:
+                    found.append(res)
+                    if len(found) >= a.max_targets:
+                        for rem_f in futs:
+                            rem_f.cancel()
+                        break
+    finally:
+        ex.shutdown(wait=False, cancel_futures=True)
 
     # Sort F -> C -> B and deduplicate by contact_email (one row per security inbox)
     rank = {"F": 0, "C": 1, "B": 2}
