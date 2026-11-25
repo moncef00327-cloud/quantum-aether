@@ -85,6 +85,20 @@ class A2ATests(unittest.TestCase):
         self.assertEqual(r["parts"][1]["data"]["state"], "not_scanned")
         self.scanner.assert_not_called()
 
+    def test_search_routes_mcp_setup_before_server_configuration(self):
+        for lang, question in (
+            ("en", "How do I configure MCP with Node.js?"),
+            ("de", "Wie konfiguriere ich MCP in Cursor?"),
+            ("ar", "كيف أضبط إعدادات MCP في Claude؟"),
+        ):
+            with self.subTest(lang=lang):
+                result = self.send(question, {"lang": lang}).json["result"]
+                data = result["parts"][1]["data"]
+                self.assertEqual(data["topic"], "mcp-a2a")
+                self.assertEqual(data["lang"], lang)
+                self.assertIn("/agents?", data["actions"][0]["url"])
+        self.scanner.assert_not_called()
+
     def test_scan_by_text_and_rate_limit(self):
         r = self.send("please scan example.com").json["result"]
         self.assertIn("grade B", r["parts"][0]["text"])

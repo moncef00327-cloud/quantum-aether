@@ -264,7 +264,8 @@ def _qa_answer(joined: str, base: str, lang: str, offer: dict, domain: str | Non
 
     # 1) Server / CDN configuration generator
     srv = _match_server_key(norm)
-    if srv or QA_CONFIG_WORDS.search(norm):
+    integration = re.search(r"\b(?:mcp|a2a|acp|cursor|claude|vscode|vs\s+code)\b", norm, re.I)
+    if not integration and (srv or QA_CONFIG_WORDS.search(norm)):
         srv_key = srv or "nginx"
         spec = config_gen.SERVERS[srv_key]
         chosen_key, var = config_gen.variant(srv_key, "")

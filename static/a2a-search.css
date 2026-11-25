@@ -12,6 +12,7 @@
   box-shadow:0 12px 32px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.08);
   color:#efeef4;
 }
+.qa-agent-search[hidden],.qa-agent-search [hidden]{display:none!important}
 .qa-agent-form{display:flex;align-items:center;gap:10px}
 .qa-agent-badge{
   display:inline-flex;align-items:center;gap:6px;flex:0 0 auto;
@@ -88,6 +89,7 @@
 }
 .qa-agent-close:hover{background:rgba(255,255,255,.12);color:#fff}
 .qa-agent-answer{margin:0;color:#f3f1fa;font-size:14px;line-height:1.72}
+.qa-agent-answer,.qa-agent-points{overflow-wrap:anywhere}
 .qa-agent-points{margin:10px 0 0;padding-inline-start:18px;color:#d6d0e8;font-size:13px;line-height:1.68;display:grid;gap:5px}
 .qa-agent-code-wrap{margin-top:11px;border:1px solid rgba(138,126,173,.32);border-radius:12px;background:#0a0711;overflow:hidden}
 .qa-agent-code-head{display:flex;align-items:center;justify-content:space-between;padding:7px 12px;border-bottom:1px solid rgba(138,126,173,.22);font-size:11px;color:#a39abe}
@@ -112,9 +114,7 @@
   .qa-agent-form{gap:7px}
   .qa-agent-badge{padding:5px 8px;font-size:10px}
   .qa-agent-kbd{display:none}
-  .qa-agent-input{padding-inline-end:12px}
+  .qa-agent-input{padding-inline:34px}
   .qa-agent-submit{padding:0 13px;font-size:12.5px}
-  .qa-agent-chips{flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
-  .qa-agent-chips::-webkit-scrollbar{display:none}
-  .qa-agent-chip{flex:0 0 auto;white-space:nowrap}
+  .qa-agent-chip{min-height:32px;max-width:100%}
 }
