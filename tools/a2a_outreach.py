@@ -61,6 +61,16 @@ SKIP_RE = re.compile(
     re.I,
 )
 OPT_OUT_RE = re.compile(r"\b(stop|unsubscribe|opt[- ]?out|do not contact|remove us|blacklist|blocked|unauthorized)\b", re.I)
+PAID_BOT_RE = re.compile(
+    r"\b(x402|pay[- ]?per[- ]?call|http\s*402|paid tools|paid operations|prepaid credits|tollbooth|storefront|"
+    r"per image|per call|autonomous purchase|solana usdc)\b",
+    re.I,
+)
+TEAM_CONTACT_RE = re.compile(
+    r"\b(message[- ]?team|contact|join|coordina|human|owner|partner|directory|registry|inquiry|submit|list[- ]?agent)\b",
+    re.I,
+)
+TASK_ID_TEXT_RE = re.compile(r"tasks/get\s+([a-zA-Z0-9_-]{8,80})")
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS a2a_outreach_sent (
@@ -73,7 +83,10 @@ CREATE TABLE IF NOT EXISTS a2a_outreach_sent (
     kex_class     TEXT,
     http_status   INTEGER,
     reply_excerpt TEXT,
-    sent_at       TEXT NOT NULL
+    sent_at       TEXT NOT NULL,
+    task_id       TEXT,
+    task_state    TEXT,
+    task_reply    TEXT
 );
 CREATE INDEX IF NOT EXISTS a2a_outreach_sent_host ON a2a_outreach_sent (host);
 CREATE INDEX IF NOT EXISTS a2a_outreach_sent_at ON a2a_outreach_sent (sent_at);
@@ -93,6 +106,10 @@ def now_iso() -> str:
 def init(conn: sqlite3.Connection) -> None:
     with conn:
         conn.executescript(SCHEMA)
+        cols = {r[1] for r in conn.execute("PRAGMA table_info(a2a_outreach_sent)")}
+        for col in ("task_id", "task_state", "task_reply"):
+            if col not in cols:
+                conn.execute(f"ALTER TABLE a2a_outreach_sent ADD COLUMN {col} TEXT")
 
 
 def keep_db_owner(db_path: str) -> None:
@@ -306,6 +323,9 @@ def build_a2a_pitch(summary: dict, host: str, obs: dict, *, date_iso: str | None
         "affiliate_register": f"{SITE}/api/v1/agent/affiliate/register",
         "one_time_notice": True,
     }
+    contact_skill = pick_contact_skill(summary)
+    if contact_skill:
+        data["skill"] = contact_skill
     if chosen_method == "SendMessage":
         msg = {
             "role": "ROLE_USER",
@@ -331,6 +351,43 @@ def build_a2a_pitch(summary: dict, host: str, obs: dict, *, date_iso: str | None
         "method": chosen_method,
         "params": {"message": msg},
     }
+
+
+def is_paid_storefront_only(card: dict) -> bool:
+    """Return True for pay-per-call x402 vending-machine bots that don't expose team/contact/coordination skills."""
+    if not isinstance(card, dict):
+        return False
+    skill_ids = " ".join(str(s.get("id") or "") + " " + str(s.get("name") or "") for s in (card.get("skills") or []) if isinstance(s, dict))
+    blob = f"{card.get('name') or ''} {card.get('description') or ''} {skill_ids}"
+    if TEAM_CONTACT_RE.search(blob):
+        return False
+    return bool(PAID_BOT_RE.search(blob))
+
+
+def pick_contact_skill(summary: dict) -> str | None:
+    """Pick a safe free/contact/coordination skill id if the target agent card advertises one."""
+    preferred = ("message-team", "contact", "inquiry", "join", "register", "submit", "hello", "info")
+    skills = summary.get("skills") or []
+    for want in preferred:
+        for s in skills:
+            sid = str(s.get("id") or "").strip()
+            if sid and want in sid.lower():
+                return sid
+    return None
+
+
+def _extract_task_info(resp: dict | str, excerpt: str) -> tuple[str | None, str | None]:
+    if isinstance(resp, dict):
+        res = resp.get("result")
+        if isinstance(res, dict):
+            tid = res.get("id") if isinstance(res.get("id"), str) else None
+            state = (res.get("status") or {}).get("state") if isinstance(res.get("status"), dict) else None
+            if tid and state:
+                return tid, str(state)
+    m = TASK_ID_TEXT_RE.search(excerpt or "")
+    if m:
+        return m.group(1), "working"
+    return None, None
 
 
 def _extract_reply_excerpt(resp: dict | str) -> str:
@@ -380,12 +437,12 @@ def run_batch(
 
     already_24h = sent_last_24h(conn)
     budget = max(0, min(limit, daily_cap - already_24h)) if mode == "send" else limit
-    summary_out = {"mode": mode, "budget": budget, "sent": 0, "rendered": 0, "skipped": 0, "errors": 0, "items": []}
+    summary_out = {"mode": mode, "budget": budget, "attempts": 0, "sent": 0, "rendered": 0, "skipped": 0, "errors": 0, "items": []}
     consecutive_errors = 0
 
     try:
         for t in targets:
-            if summary_out["sent" if mode == "send" else "rendered"] >= budget:
+            if summary_out["attempts" if mode == "send" else "rendered"] >= budget:
                 break
             if mode == "send" and is_paused():
                 break
@@ -395,7 +452,7 @@ def run_batch(
                 summary_out["skipped"] += 1
                 continue
 
-            # 1) Live Agent Card verification (must be open, valid https JSON-RPC endpoint)
+            # 1) Live Agent Card verification (must be open, valid https non-root JSON-RPC endpoint, not paid-only bot)
             try:
                 card_url, card = a2a_client.fetch_agent_card(card_hint, fetcher=card_fetcher, timeout=10.0)
                 info = a2a_client.summarize_card(card_url, card)
@@ -403,10 +460,15 @@ def run_batch(
                 summary_out["skipped"] += 1
                 continue
 
+            if is_paid_storefront_only(card):
+                summary_out["skipped"] += 1
+                continue
+
             endpoint = (info.get("endpoint") or "").strip()
             ep_host = _host_of(endpoint) or host
+            ep_path = urllib.parse.urlsplit(endpoint).path.strip("/")
             ep_trim = endpoint.rstrip("/")
-            if info.get("auth_required") or not endpoint.startswith("https://") or ep_trim.endswith(("/mcp", "/ask")):
+            if info.get("auth_required") or not endpoint.startswith("https://") or not ep_path or ep_trim.endswith(("/mcp", "/ask")):
                 summary_out["skipped"] += 1
                 continue
             if is_blocked_or_sent(conn, endpoint, ep_host):
@@ -432,7 +494,7 @@ def run_batch(
                 continue
 
             # 3) Send ONE A2A JSON-RPC 2.0 call (with A2A-Version header + auto-fallback on -32601 / -32009)
-            if summary_out["sent"] > 0 and pause_s > 0:
+            if summary_out["attempts"] > 0 and pause_s > 0:
                 sleep_fn(pause_s)
 
             def _post_with_version(pld):
@@ -456,14 +518,18 @@ def run_batch(
                     break
                 continue
 
+            summary_out["attempts"] += 1
             excerpt = _extract_reply_excerpt(resp)
+            task_id, task_state = _extract_task_info(resp, excerpt)
             ts = now_iso()
             with conn:
                 conn.execute(
                     "INSERT OR REPLACE INTO a2a_outreach_sent "
-                    "(endpoint, host, agent_name, card_url, tls_version, kex_group, kex_class, http_status, reply_excerpt, sent_at) "
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                    (endpoint, ep_host, info["name"], card_url, obs["tls_version"], obs["group"], obs["kex_class"], int(status), excerpt, ts),
+                    "(endpoint, host, agent_name, card_url, tls_version, kex_group, kex_class, http_status, "
+                    "reply_excerpt, sent_at, task_id, task_state) "
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    (endpoint, ep_host, info["name"], card_url, obs["tls_version"], obs["group"], obs["kex_class"],
+                     int(status), excerpt, ts, task_id, task_state),
                 )
                 if status in (401, 403, 429) or OPT_OUT_RE.search(excerpt):
                     conn.execute(
@@ -480,7 +546,7 @@ def run_batch(
                 consecutive_errors += 1
             summary_out["items"].append({
                 "name": info["name"], "host": ep_host, "endpoint": endpoint,
-                "http_status": status, "reply_excerpt": excerpt[:200],
+                "http_status": status, "task_id": task_id, "reply_excerpt": excerpt[:200],
             })
             if consecutive_errors >= 5:
                 break
@@ -489,12 +555,52 @@ def run_batch(
     return summary_out
 
 
+def poll_pending_tasks(*, db_path: str = DB_PATH, card_fetcher=a2a_client._http_json) -> dict:
+    """Poll open async A2A tasks (e.g. Braigetori team queue) via tasks/get and store completed human replies."""
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    init(conn)
+    out = {"checked": 0, "updated": 0, "items": []}
+    try:
+        rows = conn.execute(
+            "SELECT endpoint, host, agent_name, task_id, task_state FROM a2a_outreach_sent "
+            "WHERE task_id IS NOT NULL AND task_id != '' "
+            "AND (task_state IS NULL OR task_state IN ('submitted', 'working', 'input-required')) "
+            "ORDER BY sent_at DESC LIMIT 25"
+        ).fetchall()
+        for r in rows:
+            out["checked"] += 1
+            payload = {"jsonrpc": "2.0", "id": f"qa-poll-{uuid.uuid4().hex[:8]}", "method": "tasks/get", "params": {"id": r["task_id"]}}
+            try:
+                st, resp = card_fetcher(r["endpoint"], method="POST", body=payload, timeout=15.0)
+            except Exception:
+                continue
+            if st != 200 or not isinstance(resp, dict) or not isinstance(resp.get("result"), dict):
+                continue
+            res = resp["result"]
+            new_state = str((res.get("status") or {}).get("state") or r["task_state"] or "")
+            new_reply = _extract_reply_excerpt(resp)
+            if new_state != r["task_state"] or (new_reply and new_state == "completed"):
+                with conn:
+                    conn.execute(
+                        "UPDATE a2a_outreach_sent SET task_state=?, task_reply=? WHERE endpoint=?",
+                        (new_state, new_reply, r["endpoint"]),
+                    )
+                keep_db_owner(db_path)
+                out["updated"] += 1
+            out["items"].append({"host": r["host"], "task_id": r["task_id"], "state": new_state, "reply": new_reply[:200]})
+    finally:
+        conn.close()
+    return out
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Controlled recurring B2B-grade A2A outreach campaign.")
     mode = ap.add_mutually_exclusive_group(required=True)
     mode.add_argument("--sync", action="store_true", help="Refresh qualified open A2A targets from public registries")
     mode.add_argument("--dry-run", action="store_true", help="Render messages with live TLS check; send nothing")
     mode.add_argument("--send", action="store_true", help="Send up to --limit/--daily-cap A2A introductions")
+    mode.add_argument("--poll-tasks", action="store_true", help="Poll open async A2A tasks for human team replies")
     ap.add_argument("--targets", default=TARGETS_PATH)
     ap.add_argument("--db", default=DB_PATH)
     ap.add_argument("--limit", type=int, default=10)
@@ -505,6 +611,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.sync:
         items = sync_targets(args.targets)
         print(f"Synced {len(items)} qualified open A2A targets -> {args.targets}")
+        return 0
+    if args.poll_tasks:
+        print(json.dumps(poll_pending_tasks(db_path=args.db), indent=2, ensure_ascii=False))
         return 0
 
     res = run_batch(

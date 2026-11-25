@@ -142,6 +142,65 @@ class A2AOutreachTests(unittest.TestCase):
                 ("https://fb.example.org/a2a", "SendMessage", "1.0"),
             ])
 
+    def test_skips_paid_x402_storefront_bare_root_and_enforces_strict_attempt_cap_and_polls_tasks(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            targets_file = os.path.join(tmp, "a2a_targets.json")
+            db_path = os.path.join(tmp, "test.db")
+            Path(targets_file).write_text(json.dumps({"targets": [
+                {"host": "paid.example.org", "card_url": "https://paid.example.org/.well-known/agent-card.json"},
+                {"host": "rootonly.example.org", "card_url": "https://rootonly.example.org/.well-known/agent-card.json"},
+                {"host": "team.example.org", "card_url": "https://team.example.org/.well-known/agent-card.json"},
+            ]}), encoding="utf-8")
+
+            cards = {
+                "https://paid.example.org/.well-known/agent-card.json": {
+                    "name": "Paid Bot", "description": "Pay per call x402 storefront ($0.025)",
+                    "url": "https://paid.example.org/a2a", "protocolVersion": "0.3.0",
+                },
+                "https://rootonly.example.org/.well-known/agent-card.json": {
+                    "name": "Bad Root", "description": "Security agent",
+                    "url": "https://rootonly.example.org/", "protocolVersion": "0.3.0",
+                },
+                "https://team.example.org/.well-known/agent-card.json": {
+                    "name": "Team Hub", "description": "Human coordination team",
+                    "url": "https://team.example.org/a2a", "protocolVersion": "0.3.0",
+                    "skills": [{"id": "message-team", "name": "Message Team"}],
+                },
+            }
+            sent_payloads = []
+
+            def fake_http(url, *, method="GET", body=None, timeout=15.0, extra_headers=None):
+                if method == "GET":
+                    return 200, cards[url]
+                if body["method"] == "tasks/get":
+                    return 200, {"jsonrpc": "2.0", "id": body["id"], "result": {
+                        "id": "task-abc12345", "kind": "task",
+                        "status": {"state": "completed", "message": {"parts": [{"kind": "text", "text": "Human team replied!"}]}},
+                    }}
+                sent_payloads.append((url, body))
+                return 200, {"jsonrpc": "2.0", "id": body["id"], "result": {
+                    "parts": [{"kind": "text", "text": "Queued (tasks/get task-abc12345)"}],
+                }}
+
+            res = a2a_outreach.run_batch(
+                mode="send", targets_path=targets_file, db_path=db_path, limit=5, daily_cap=5, pause_s=0,
+                card_fetcher=fake_http,
+                handshake_fn=lambda h: {"tls_version": "TLSv1.3", "group": "X25519", "kex_class": "classical"},
+                sleep_fn=lambda _: None,
+            )
+            self.assertEqual(res["attempts"], 1)
+            self.assertEqual(res["sent"], 1)
+            self.assertEqual(res["skipped"], 2)
+            # Contact skill auto-selected
+            self.assertEqual(sent_payloads[0][1]["params"]["message"]["parts"][1]["data"].get("skill"), "message-team")
+
+            # Async task poll picks up the completed human reply
+            polled = a2a_outreach.poll_pending_tasks(db_path=db_path, card_fetcher=fake_http)
+            self.assertEqual(polled["checked"], 1)
+            self.assertEqual(polled["updated"], 1)
+            self.assertEqual(polled["items"][0]["state"], "completed")
+            self.assertIn("Human team replied!", polled["items"][0]["reply"])
+
 
 if __name__ == "__main__":
     unittest.main()
