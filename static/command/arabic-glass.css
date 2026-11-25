@@ -19,24 +19,25 @@ body:has(.app) {
   background: var(--glass-night);
 }
 
-/* Shared seamless workspace ribbon aura (zero hard edges on any width or RTL/LTR direction) */
+/* Shared seamless workspace ribbon aura (top + soft bottom glow, zero hard edges on any width or RTL/LTR) */
 .app #workspace-content {
   background-color: var(--glass-night);
   background-image:
+    radial-gradient(ellipse 90% 24rem at 50% 100%, rgba(182, 154, 255, .14), rgba(85, 229, 244, .08) 46%, transparent 78%),
     linear-gradient(to bottom, #07142624 0, #07142668 24rem, var(--glass-night) 48rem),
     radial-gradient(ellipse 95% 55% at 50% 0%, transparent 45%, var(--glass-night) 100%),
     url("arabic-glass-ribbons.webp");
-  background-position: center top, center top, center top;
-  background-size: 100% 100%, 100% 48rem, max(100%, 1200px) auto;
+  background-position: center bottom, center top, center top, center top;
+  background-size: 100% 24rem, 100% 100%, 100% 48rem, max(100%, 1200px) auto;
   background-repeat: no-repeat;
 }
 
 .app[dir="rtl"] #workspace-content {
-  background-position: center top, center top, left top;
+  background-position: center bottom, center top, center top, left top;
 }
 
 .app[dir="ltr"] #workspace-content {
-  background-position: center top, center top, center top;
+  background-position: center bottom, center top, center top, center top;
 }
 
 .app #workspace-content > header {
@@ -82,21 +83,197 @@ body:has(.app) {
   line-height: 1.7;
 }
 
-/* Glass cards across Command overview, A2A search bar, and all inner service pages */
+/* Glass cards across Command overview, bottom panels, metrics, discovery strip, footer, and ALL inner pages */
 .app :is(
   .qa-neon .qa-glass-card,
   .qa-agent-search,
   .qa-neon .qa-trial.qa-trial-inline,
+  .panel,
+  .metrics,
+  .resource,
   .service-content .card,
   .service-content .scanner-panel,
-  .service-content .price-box
+  .service-content .price-box,
+  .service-content .discovery-strip a
 ) {
-  background: var(--glass-surface);
-  border: 1px solid var(--glass-line);
-  border-radius: clamp(16px, 1.8vw, 26px);
+  background: var(--glass-surface) !important;
+  border: 1px solid var(--glass-line) !important;
+  border-radius: clamp(16px, 1.8vw, 24px);
   box-shadow: var(--glass-shadow);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
+}
+
+/* Always show chart captions, dataset notes, and grade details across ALL languages and screens */
+#command-root .app .qa-neon .qa-chart figcaption,
+#command-root .app .qa-neon .qa-metrics-card .qa-card-note,
+#command-root .app .qa-neon .qa-grade-card .qa-card-sub {
+  display: block !important;
+}
+
+#command-root .app .qa-neon .qa-chart figcaption {
+  color: #cde0f5;
+  font-size: 12px;
+  font-weight: 600;
+  margin: 0 0 6px;
+}
+
+#command-root .app .qa-neon .qa-metrics-card .qa-card-note {
+  color: #b7c8dc;
+  font-size: 11.5px;
+  line-height: 1.55;
+  margin: 6px 0 0;
+}
+
+#command-root .app .qa-neon .qa-chart .qa-bar {
+  fill: var(--glass-cyan);
+}
+
+/* Clean alignment for bottom panels ("What do we measure?" / "ما الذي نقيسه؟" & world map) */
+.app .bottom-grid {
+  gap: 16px;
+}
+
+.app .panel .paneltitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(167, 199, 241, .22);
+}
+
+.app .panel .paneltitle h3 {
+  margin: 0;
+  color: var(--glass-text);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.app .panel .check {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(11, 22, 40, .48);
+  border: 1px solid rgba(167, 199, 241, .22) !important;
+  margin-top: 10px;
+}
+
+/* Unified glass bottom discovery links + glass footer across EVERY page (no giant blank void!) */
+[data-qa-command-seo] {
+  margin: 18px 0 12px;
+}
+
+.seo-discovery-links[hidden] {
+  display: none !important;
+}
+
+.seo-discovery-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: var(--glass-surface);
+  border: 1px solid var(--glass-line);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.seo-discovery-links a {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(167, 199, 241, .30);
+  background: rgba(11, 22, 40, .55);
+  color: #d8f6ff;
+  font-size: 12.5px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: border-color .15s, background .15s, color .15s;
+}
+
+.seo-discovery-links a:hover {
+  border-color: var(--glass-cyan);
+  background: rgba(85, 229, 244, .14);
+  color: #ffffff;
+}
+
+.app main footer {
+  display: grid;
+  gap: 10px;
+  margin: 18px 0 calc(20px + env(safe-area-inset-bottom, 0px)) !important;
+  padding: 18px 20px !important;
+  border-radius: clamp(16px, 1.8vw, 24px);
+  background: var(--glass-surface);
+  border: 1px solid var(--glass-line);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  text-align: start;
+  line-height: 1.75;
+}
+
+.app main footer > div,
+.app main footer .command-footer-links {
+  display: block;
+  color: #d0def2;
+  font-size: 12.5px;
+  line-height: 1.9;
+}
+
+.app main footer a {
+  color: #9be8f7;
+  text-decoration: none;
+}
+
+.app main footer a:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+.app main footer p,
+.app main footer small,
+.app main footer span {
+  margin: 0;
+  color: #b7c8dc;
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.app main footer .command-language-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.app main footer .command-language-links a {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(167, 199, 241, .32);
+  background: rgba(11, 22, 40, .55);
+  color: #e6f4ff;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.app main footer .command-language-links a:hover {
+  border-color: var(--glass-cyan);
+  background: rgba(85, 229, 244, .14);
+  text-decoration: none;
+}
+
+.app .service-content .card h2 {
+  margin-top: 0;
 }
 
 .app .service-content .price-box.highlight,
@@ -279,20 +456,21 @@ body:has(.app) {
 @media (max-width: 680px) {
   .app #workspace-content {
     background-image:
+      radial-gradient(ellipse 100% 20rem at 50% 100%, rgba(182, 154, 255, .14), rgba(85, 229, 244, .08) 46%, transparent 78%),
       linear-gradient(to bottom, #07142638 0, #071426a8 15rem, var(--glass-night) 34rem),
       radial-gradient(ellipse 115% 45% at 50% 4%, transparent 48%, var(--glass-night) 100%),
       url("arabic-glass-ribbons.webp");
-    background-position: center top, center top, center top;
-    background-size: 100% 100%, 100% 34rem, max(165%, 640px) auto;
+    background-position: center bottom, center top, center top, center top;
+    background-size: 100% 20rem, 100% 100%, 100% 34rem, max(165%, 640px) auto;
     background-repeat: no-repeat;
   }
 
   .app[dir="rtl"] #workspace-content {
-    background-position: center top, center top, left -2rem top -2rem;
+    background-position: center bottom, center top, center top, left -2rem top -2rem;
   }
 
   .app[dir="ltr"] #workspace-content {
-    background-position: center top, center top, center -2rem;
+    background-position: center bottom, center top, center top, center -2rem;
   }
 
   #command-root .app .qa-neon .qa-hero-content {

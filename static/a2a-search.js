@@ -1,19 +1,34 @@
 (function () {
   var commandSearch = document.querySelector("[data-qa-command-search]");
-  if (commandSearch) {
+  var commandSeo = document.querySelector("[data-qa-command-seo]");
+  if (commandSearch || commandSeo) {
     var commandRoot = document.getElementById("command-root");
     var syncCommandSearch = function () {
-      var target = commandRoot.querySelector("#workspace-content > .content");
-      if (target && target.firstElementChild !== commandSearch) {
-        target.prepend(commandSearch);
+      var curLang = document.documentElement.lang === "ar" ? "ar" : "en";
+      var target = commandRoot && commandRoot.querySelector("#workspace-content > .content");
+      if (commandSearch) {
+        if (target && target.firstElementChild !== commandSearch) {
+          target.prepend(commandSearch);
+        }
+        commandSearch.hidden = Boolean(target && !target.querySelector(":scope > .qa-hero-modular-glass"));
+        commandSearch.querySelectorAll("[data-qa-agent-bar]").forEach(function (bar) {
+          bar.hidden = bar.getAttribute("data-lang") !== curLang;
+        });
       }
-      commandSearch.hidden = Boolean(target && !target.querySelector(":scope > .qa-hero-modular-glass"));
-      commandSearch.querySelectorAll("[data-qa-agent-bar]").forEach(function (bar) {
-        bar.hidden = bar.getAttribute("data-lang") !== document.documentElement.lang;
-      });
+      if (commandSeo) {
+        var footer = target && target.querySelector(":scope > footer");
+        if (target && footer && commandSeo.parentNode !== target) {
+          target.insertBefore(commandSeo, footer);
+        } else if (target && !footer && commandSeo.parentNode !== target) {
+          target.appendChild(commandSeo);
+        }
+        commandSeo.querySelectorAll("[data-qa-seo-bar]").forEach(function (nav) {
+          nav.hidden = nav.getAttribute("data-lang") !== curLang;
+        });
+      }
     };
     var observer = new MutationObserver(syncCommandSearch);
-    observer.observe(commandRoot, { childList: true, subtree: true });
+    if (commandRoot) observer.observe(commandRoot, { childList: true, subtree: true });
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ["lang"] });
     syncCommandSearch();
   }
