@@ -140,9 +140,11 @@ class InboundStopTests(unittest.TestCase):
         app.register_blueprint(bp)
         self.client = app.test_client()
 
-    def receive(self, sender, subject, msg_id):
-        body = json.dumps({"type": "email.received", "data": {"from": sender, "to": ["reply@mail.ather-quantum.com"],
-                                                               "subject": subject}})
+    def receive(self, sender, subject, msg_id, extra=None):
+        data = {"from": sender, "to": ["reply@mail.ather-quantum.com"], "subject": subject}
+        if extra:
+            data.update(extra)
+        body = json.dumps({"type": "email.received", "data": data})
         stamp = str(int(time.time()))
         headers = {"svix-id": msg_id, "svix-timestamp": stamp, "svix-signature": inbound_mail.sign(WEBHOOK, msg_id, stamp, body)}
         self.assertEqual(self.client.post("/hooks/resend/inbound", data=body, headers=headers).status_code, 200)
@@ -152,8 +154,22 @@ class InboundStopTests(unittest.TestCase):
         self.receive("Ops <ops@other.example>", "Re: thanks, interesting", "m2")
         self.receive("Bot <alerts@ather-quantum.com>", "stop", "m3")
         self.receive("فريق <sec@arab.example>", "إيقاف", "m4")
+        # Body-only "stop" (with neutral subject) MUST suppress
+        self.receive("CSIRT <csirt@bank.example>", "Re: bank.example: TLS key exchange observed", "m5",
+                     extra={"text": "stop"})
+        # Body-only German "abmelden" MUST suppress
+        self.receive("IT <it@firma.de>", "AW: TLS Check", "m6",
+                     extra={"text": "Bitte abmelden."})
+        # Warm reply quoting our own footer ("reply \"stop\"") MUST NOT suppress!
+        self.receive("Lead <cto@lead.example>", "Re: lead.example: TLS key exchange observed", "m7",
+                     extra={"text": "Looks useful, can we talk Tuesday?\n\nOn Thu, Nov 26 Quantum Aether wrote:\n> Unsubscribe in one click (or reply \"stop\")."})
         rows = self.conn.execute("SELECT email, reason FROM outreach_suppress ORDER BY email").fetchall()
-        self.assertEqual(rows, [("sec@arab.example", "reply-stop"), ("security@target.example", "reply-stop")])
+        self.assertEqual(rows, [
+            ("csirt@bank.example", "reply-stop"),
+            ("it@firma.de", "reply-stop"),
+            ("sec@arab.example", "reply-stop"),
+            ("security@target.example", "reply-stop"),
+        ])
 
 
 

@@ -149,6 +149,22 @@ class AssessTests(unittest.TestCase):
         codes = {f["code"] for f in self.grade(kx)["findings"]}
         self.assertIn("KX_PQ_HELLO_REJECTED", codes)
 
+    def test_pq_supported_not_preferred_finding(self):
+        kx = {"version": "TLSv1.3", "group": "x25519", "pq": False, "pq_hello_ok": True,
+              "pq_supported_not_preferred": True, "pq_supported_group": "X25519MLKEM768"}
+        assessed = self.grade(kx)
+        self.assertEqual(assessed["grade"], "B")
+        codes = {f["code"] for f in assessed["findings"]}
+        self.assertIn("KX_CLASSICAL", codes)
+        self.assertIn("KX_PQ_SUPPORTED_NOT_PREFERRED", codes)
+        import i18n
+        for lang in ("en", "ar", "de"):
+            title, detail = i18n.finding_text(
+                [f for f in assessed["findings"] if f["code"] == "KX_PQ_SUPPORTED_NOT_PREFERRED"][0], lang
+            )
+            self.assertIn("X25519MLKEM768", title)
+            self.assertIn("x25519", detail)
+
 
 if __name__ == "__main__":
     unittest.main()

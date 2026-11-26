@@ -5177,7 +5177,8 @@ DE_PAGES.add("site.adoption_sector_page")
 import inbound_mail  # noqa: E402  Replies to reply@/outreach@mail.ather-quantum.com via Resend webhook (2026-11-21)
 inbound_mail.register(bp, {"db": db, "mailer": lambda: current_app.extensions["mailer"],
                            "owner": lambda: current_app.config["OWNER_EMAIL"],
-                           "secret": lambda: current_app.config.get("RESEND_WEBHOOK_SECRET", "")})
+                           "secret": lambda: current_app.config.get("RESEND_WEBHOOK_SECRET", ""),
+                           "resend_api_key": lambda: current_app.config.get("RESEND_API_KEY", "")})
 
 import outreach_suppress  # noqa: E402  One-click unsubscribe for outreach: /u/<token> (RFC 8058), 2026-11-23
 outreach_suppress.register(bp, {"db": db, "secret": lambda: current_app.config["HASH_SALT"]})

@@ -15,6 +15,8 @@ import json
 import logging
 import re
 import time
+import urllib.error
+import urllib.request
 
 from flask import request
 
@@ -34,8 +36,62 @@ CREATE INDEX IF NOT EXISTS inbound_mail_created ON inbound_mail (created_at);
 TOLERANCE_SECONDS = 300
 OWN_DOMAINS = ("ather-quantum.com", "mail.ather-quantum.com", "ather-quatum.cloud")
 TEST_MARK = "[qa-test]"
-# A reply whose subject says stop/unsubscribe suppresses the sender for all outreach (same words as growth_agent.STOP_RE).
-STOP_RE = re.compile(r"\b(stop|unsubscribe|remove me|opt[- ]?out)\b|إيقاف|الغاء|إلغاء", re.I)
+# A reply whose subject or unquoted body says stop/unsubscribe suppresses the sender for all outreach.
+STOP_RE = re.compile(
+    r"\b(stop|unsubscribe|remove me|opt[- ]?out|abmelden|do not contact|do not email|do not write|"
+    r"no further emails?|nicht mehr kontaktieren)\b|إيقاف|ايقاف|الغاء|إلغاء",
+    re.I,
+)
+_QUOTE_HEADER_RE = re.compile(
+    r"^(on .+ wrote:|am .+ schrieb .*:|el .+ escribi[oó]:|-{2,}\s*(original message|forwarded message|ursprüngliche nachricht)|"
+    r"(from|de|von):\s+.+@.+|sent from my )",
+    re.I,
+)
+_HTML_TAG_RE = re.compile(r"<[^>]+>")
+
+
+def unquoted_reply_text(text):
+    """Return only the sender's own reply lines (strip quoted original messages so our own footer never triggers STOP_RE)."""
+    if not text:
+        return ""
+    lines = []
+    for raw_line in str(text).splitlines():
+        line = raw_line.strip()
+        if line.startswith(">"):
+            continue
+        if _QUOTE_HEADER_RE.match(line):
+            break
+        lines.append(line)
+    return "\n".join(lines).strip()
+
+
+def _fetch_received_text(email_id, api_key, timeout=5.0):
+    """Fetch received email plain text from Resend when webhook metadata omits body text."""
+    if not (email_id and api_key):
+        return ""
+    req = urllib.request.Request(
+        f"https://api.resend.com/emails/receiving/{email_id}",
+        headers={"Authorization": f"Bearer {api_key}", "User-Agent": "QuantumAetherInbound/1.0"},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            payload = json.loads(resp.read().decode("utf-8", errors="replace"))
+    except (urllib.error.URLError, OSError, ValueError):
+        return ""
+    if not isinstance(payload, dict):
+        return ""
+    body = payload.get("text") or ""
+    if not body and payload.get("html"):
+        body = _HTML_TAG_RE.sub(" ", str(payload.get("html") or ""))
+    return str(body)
+
+
+def is_stop_reply(subject, body_text=""):
+    """True if the subject or unquoted reply body requests opting out."""
+    if STOP_RE.search(subject or ""):
+        return True
+    reply = unquoted_reply_text(body_text)
+    return bool(reply and STOP_RE.search(reply))
 
 
 def init(conn):
@@ -154,11 +210,19 @@ def register(bp, deps):
         if row is None:
             return {"ok": True, "duplicate": True}
         log.info("inbound mail stored: id=%s test=%s", row["id"], row["is_test"])
-        if not row["is_test"] and not is_own_mail(row["from_addr"]) and STOP_RE.search(row["subject"] or ""):
-            try:
-                outreach_suppress.suppress(conn, row["from_addr"], "reply-stop")
-            except Exception:  # never lose the reply because of the opt-out write
-                log.exception("inbound mail: could not record reply-stop")
+        if not row["is_test"] and not is_own_mail(row["from_addr"]):
+            body_text = str(data.get("text") or "")
+            if not body_text and data.get("html"):
+                body_text = _HTML_TAG_RE.sub(" ", str(data.get("html") or ""))
+            if not body_text and not STOP_RE.search(row["subject"] or "") and row["email_id"]:
+                api_key_fn = deps.get("resend_api_key")
+                api_key = api_key_fn() if callable(api_key_fn) else ""
+                body_text = _fetch_received_text(row["email_id"], api_key)
+            if is_stop_reply(row["subject"], body_text):
+                try:
+                    outreach_suppress.suppress(conn, row["from_addr"], "reply-stop")
+                except Exception:  # never lose the reply because of the opt-out write
+                    log.exception("inbound mail: could not record reply-stop")
         owner = deps["owner"]()
         if not row["is_test"] and owner and not is_own_mail(row["from_addr"]):
             subject, text = owner_notice(row)

@@ -501,6 +501,38 @@ def _check_offered(hello: dict, groups: list) -> None:
         raise ValueError('server selected an unoffered TLS version')
 
 
+def _probe_pq_only(ip: str, host: str, timeout: float = 4.0, port: int = PORT):
+    """Test if a TLS 1.3 server that chose a classical group actually supports PQ when no classical share is sent.
+
+    Returns the negotiated PQ group name if the server accepts a PQ-only offer (meaning the server supports PQ
+    but ranks classical groups ahead of it in server preference, causing real browsers to downgrade), else None.
+    """
+    pq_groups = [g for g in PQ_OFFER if g in PQ_GROUPS]
+    x25519_public = x25519.X25519PrivateKey.generate().public_key().public_bytes(Encoding.Raw, PublicFormat.Raw)
+    shares = [(X25519MLKEM768, mlkem768_encapsulation_key() + x25519_public)]
+    client_random, session_id = secrets.token_bytes(32), secrets.token_bytes(32)
+    try:
+        with _connect_port(ip, port, timeout) as sock:
+            sock.settimeout(timeout)
+            sock.sendall(build_client_hello(host, pq_groups, shares, client_random, session_id))
+            hello = read_server_response(sock, timeout=timeout)
+            _check_offered(hello, pq_groups)
+            if hello["hrr"]:
+                requested = hello["group"]
+                if requested is None or requested not in PQ_GROUPS or requested in {g for g, _ in shares}:
+                    return None
+                retry = build_client_hello(host, pq_groups, [(requested, key_share_for(requested))],
+                                           client_random, session_id, hello.get("cookie"), record_version=0x0303)
+                sock.sendall(retry)
+                hello = read_server_response(sock, timeout=timeout)
+                _check_offered(hello, pq_groups)
+            if hello["version"] == 0x0304 and not hello["hrr"] and hello["group"] in PQ_GROUPS:
+                return GROUP_NAMES.get(hello["group"], hex(hello["group"]))
+    except (TLSAlert, ConnectionError, TimeoutError, ValueError, OSError, ScanError):
+        return None
+    return None
+
+
 def probe_key_exchange(ip: str, host: str, timeout: float = TIMEOUT, port: int = PORT) -> dict:
     result = {"pq_hello_ok": None, "pq_hello_error": None, "error": None}
     for offer_pq in (True, False):
@@ -529,6 +561,12 @@ def probe_key_exchange(ip: str, host: str, timeout: float = TIMEOUT, port: int =
             result["hello_retry"] = GROUP_NAMES.get(hello["retried_for"], hex(hello["retried_for"]))
         if hello.get("retry_error"):
             result["hello_retry_error"] = hello["retry_error"]
+        if (offer_pq and result["version"] == "TLSv1.3" and not result["pq"]
+                and not result["hrr"] and hello.get("retried_for") is None):
+            pq_alt = _probe_pq_only(ip, host, min(timeout, 4.0), port=port)
+            if pq_alt:
+                result["pq_supported_not_preferred"] = True
+                result["pq_supported_group"] = pq_alt
         return result
     return result
 
@@ -733,6 +771,9 @@ def assess(kx: dict, cert: dict) -> dict:
         add("KX_PQ_HYBRID", "ok", group=kx.get("group") or "?")
     elif version == "TLSv1.3":
         add("KX_CLASSICAL", "warning", group=kx.get("group") or "?")
+        if kx.get("pq_supported_not_preferred") and kx.get("pq_supported_group"):
+            add("KX_PQ_SUPPORTED_NOT_PREFERRED", "warning",
+                group=kx.get("group") or "?", pq_group=kx["pq_supported_group"])
     elif version == "TLSv1.2":
         add("TLS12_ONLY", "warning")
         if kx.get("kx") == "RSA":

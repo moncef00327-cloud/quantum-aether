@@ -380,6 +380,20 @@ FINDINGS = {
                "traffic recorded now could be decrypted once a quantum computer can run Shor's algorithm "
                "(\"harvest now, decrypt later\"). This is the most important item to fix for quantum readiness."),
     },
+    "KX_PQ_SUPPORTED_NOT_PREFERRED": {
+        "ar": ("الخادم يدعم {pq_group} لكنه يفضّل {group} التقليدية للمتصفحات",
+               "يدعم الخادم المجموعة المقاومة للكم {pq_group} عند طلبها وحدها (لذلك قد تظهر كمدعومة في بعض أدوات الفحص مثل SSL Labs)، "
+               "لكن ترتيب التفضيل على الخادم يضع {group} قبلها؛ لذلك تتفاوض متصفحات Chrome وFirefox وSafari فعلياً على {group} التقليدية. "
+               "ضع {pq_group} في مقدّمة قائمة المجموعات (Groups) على الخادم أو CDN."),
+        "en": ("Server supports {pq_group}, but prefers classical {group} for browsers",
+               "The server accepts {pq_group} when offered alone (so group-capability tools like SSL Labs list it as supported), "
+               "but its server-side group preference ranks {group} ahead of it. As a result, Chrome, Firefox and Safari actually negotiate "
+               "classical {group} in production. Move {pq_group} to the front of your TLS Groups preference list."),
+        "de": ("Server unterstützt {pq_group}, bevorzugt aber klassisches {group} für Browser",
+               "Der Server akzeptiert {pq_group}, wenn es allein angeboten wird (daher zeigen Tools wie SSL Labs es als unterstützt an), "
+               "aber die Server-Präferenz reiht {group} davor ein. Chrome, Firefox und Safari handeln dadurch in der Praxis klassisches {group} aus. "
+               "Setzen Sie {pq_group} an den Anfang Ihrer TLS-Gruppenliste."),
+    },
     "TLS12_ONLY": {
         "ar": ("الخادم لا يدعم TLS 1.3",
                "تبادل المفاتيح المقاوم للكم متاح فقط في TLS 1.3، لذا يجب تفعيل TLS 1.3 أولاً."),
@@ -464,7 +478,8 @@ REMEDIATION = [
 
 
 def finding_text(finding, lang):
-    title, detail = FINDINGS[finding["code"]][lang]
+    entry = FINDINGS[finding["code"]]
+    title, detail = entry.get(lang) or entry["en"]
     params = finding.get("params") or {}
     return title.format(**params), detail.format(**params)
 
