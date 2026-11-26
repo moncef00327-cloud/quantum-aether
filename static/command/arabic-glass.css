@@ -89,7 +89,8 @@ body {
 .app #workspace-content::before {
   top: 0;
   height: clamp(28rem, 48vw, 44rem);
-  opacity: .66;
+  opacity: .40;
+  filter: brightness(.76) saturate(1.12);
   background-position: center 12%;
   -webkit-mask-image: radial-gradient(ellipse 92% 76% at 50% 42%, #000 28%, rgba(0, 0, 0, .55) 60%, transparent 96%);
   mask-image: radial-gradient(ellipse 92% 76% at 50% 42%, #000 28%, rgba(0, 0, 0, .55) 60%, transparent 96%);
@@ -102,7 +103,8 @@ body {
 .app #workspace-content::after {
   bottom: 0;
   height: clamp(22rem, 36vw, 34rem);
-  opacity: .40;
+  opacity: .34;
+  filter: brightness(.80) saturate(1.10);
   background-position: center 88%;
   -webkit-mask-image: radial-gradient(ellipse 92% 76% at 50% 58%, #000 26%, rgba(0, 0, 0, .52) 58%, transparent 96%);
   mask-image: radial-gradient(ellipse 92% 76% at 50% 58%, #000 26%, rgba(0, 0, 0, .52) 58%, transparent 96%);
@@ -137,16 +139,34 @@ body {
   padding: clamp(10px, 2vw, 30px) clamp(6px, 1.2vw, 18px);
 }
 
+#command-root .app .qa-neon .qa-hero-content h1,
+.app .intro h1,
+.app .service-content .hero h1 {
+  color: #ffffff;
+  text-shadow: 0 2px 16px rgba(6, 15, 30, .90), 0 1px 3px rgba(6, 15, 30, .95);
+}
+
 #command-root .app .qa-neon .qa-hero-content h1 {
-  color: var(--glass-text);
   font-size: clamp(2.1rem, 4.1vw, 3.9rem);
   line-height: 1.22;
   margin-block: .15em .35em;
-  text-shadow: 0 3px 18px #9a7adc35;
+}
+
+#command-root .app .qa-neon .qa-hero-content .eyebrow,
+.app .intro .eyebrow,
+.app .service-content .hero .eyebrow {
+  color: #e2f0ff;
+  text-shadow: 0 1px 10px rgba(6, 15, 30, .96), 0 0 2px rgba(6, 15, 30, .95);
+}
+
+#command-root .app .qa-neon .qa-hero-content p,
+.app .intro p,
+.app .service-content .hero .lead {
+  color: #edf5ff;
+  text-shadow: 0 1px 12px rgba(6, 15, 30, .95), 0 1px 3px rgba(6, 15, 30, .92);
 }
 
 #command-root .app .qa-neon .qa-hero-content p {
-  color: #e3eefa;
   font-size: clamp(.95rem, 1.3vw, 1.1rem);
   line-height: 1.7;
 }
@@ -848,7 +868,8 @@ body {
   .app #workspace-content::before {
     top: 18px;
     height: 24rem;
-    opacity: .56;
+    opacity: .32;
+    filter: brightness(.72) saturate(1.12);
     background-size: 128% auto;
     background-position: 28% top;
     -webkit-mask-image: radial-gradient(ellipse 88% 74% at 50% 44%, #000 22%, rgba(0, 0, 0, .52) 56%, transparent 94%);
@@ -857,7 +878,8 @@ body {
 
   .app #workspace-content::after {
     height: 20rem;
-    opacity: .36;
+    opacity: .30;
+    filter: brightness(.78) saturate(1.10);
     background-size: 128% auto;
     background-position: center bottom;
     -webkit-mask-image: radial-gradient(ellipse 88% 74% at 50% 58%, #000 22%, rgba(0, 0, 0, .50) 56%, transparent 94%);
