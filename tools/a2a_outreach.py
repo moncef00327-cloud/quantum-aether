@@ -57,7 +57,7 @@ RELEVANT_RE = re.compile(
     re.I,
 )
 SKIP_RE = re.compile(
-    r"\b(nsfw|porn|adult|casino|gambl|weather|horoscope|astrology|joke|meme|trivia|recipe|dating|tarot|localhost|127\.0\.0\.1)\b",
+    r"\b(nsfw|porn|adult|escort|erotic|casino|gambl|weather|horoscope|astrology|joke|meme|trivia|recipe|dating|tarot|localhost|127\.0\.0\.1)\b",
     re.I,
 )
 OPT_OUT_RE = re.compile(r"\b(stop|unsubscribe|opt[- ]?out|do not contact|remove us|blacklist|blocked|unauthorized)\b", re.I)
@@ -296,19 +296,17 @@ def build_a2a_pitch(summary: dict, host: str, obs: dict, *, date_iso: str | None
         )
 
     text = (
-        f"Hello {name} — one-time A2A interoperability & post-quantum TLS note from Quantum Aether ({OUR_CARD}).\n\n"
+        f"Hello {name} — one-time A2A/MCP post-quantum TLS note from Quantum Aether ({OUR_CARD}).\n\n"
         f"{finding}\n\n"
-        f"Ready-to-use machine & human options for {host}:\n"
-        f"1) Instant Auditor-Ready Signed PDF + CycloneDX 1.6 CBOM Attestation for {host} ($5.00 USDC on Base via x402 v2; "
-        f"unpaid call returns HTTP 402 and never charges; pay only with explicit buyer spend authorization): "
-        f"GET {SITE}/api/v1/attestation?domain={host}  OR  MCP {SITE}/mcp tool get_tls_attestation({{\"domain\":\"{host}\"}}). "
-        f"Free archived sample PDF first: {SITE}/api/v1/attestation/sample.pdf\n"
-        f"2) IT-Dienstleister / MSP Partner Pilot (290 EUR one-time, up to 50 client hostnames, German Ampel PDF + "
-        f"Ed25519 signed receipts + optional logo, no upfront payment): {SITE}/partners?lang=de#msp-pilot\n"
-        f"3) Free A2A ({SITE}/a2a) & MCP ({SITE}/mcp) checks with Ed25519 JWS receipts ({SITE}/.well-known/jwks.json), "
-        f"14-day free monitoring trial ({SITE}/monitoring?domain={host}#trial-form), and 30% recurring AI Agent Affiliate "
-        f"Programme (MCP register_agent_affiliate).\n\n"
-        f"One-time message; we will not message this endpoint again. Reply 'stop' to suppress {host}."
+        f"Options for {host}:\n"
+        f"1) Signed PDF + CycloneDX 1.6 CBOM Attestation ($5 USDC Base x402; HTTP 402 if unpaid): "
+        f"GET {SITE}/api/v1/attestation?domain={host} or MCP {SITE}/mcp tool get_tls_attestation. "
+        f"Free sample PDF: {SITE}/api/v1/attestation/sample.pdf\n"
+        f"2) IT-Dienstleister / MSP Pilot (290 EUR, up to 50 hostnames, German Ampel PDF + Ed25519 receipts + optional logo): "
+        f"{SITE}/partners?lang=de#msp-pilot\n"
+        f"3) Free A2A ({SITE}/a2a) & MCP ({SITE}/mcp) checks with Ed25519 receipts ({SITE}/.well-known/jwks.json), "
+        f"14-day free monitoring trial ({SITE}/monitoring?domain={host}#trial-form), and 30% recurring affiliate (register_agent_affiliate).\n\n"
+        f"One-time note. Reply 'stop' to suppress {host}."
     )
     data = {
         "from_agent": "Quantum Aether",
@@ -321,14 +319,11 @@ def build_a2a_pitch(summary: dict, host: str, obs: dict, *, date_iso: str | None
         "observed_tls": tls_v,
         "observed_group": grp,
         "observed_kex_class": obs["kex_class"],
-        "free_check_url": f"{SITE}/?domain={host}&lang=en",
         "free_sample_pdf": f"{SITE}/api/v1/attestation/sample.pdf",
         "msp_pilot": {
             "price_eur": "290",
             "hostnames": 50,
-            "deliverables": "German Ampel PDF + Ed25519 signed receipts + optional partner white-label logo",
             "url_de": f"{SITE}/partners?lang=de#msp-pilot",
-            "url_en": f"{SITE}/partners?lang=en#msp-pilot",
         },
         "purchase_options": {
             "autonomous_x402_attestation": {
@@ -336,43 +331,13 @@ def build_a2a_pitch(summary: dict, host: str, obs: dict, *, date_iso: str | None
                 "url": f"{SITE}/api/v1/attestation?domain={host}",
                 "mcp_server": f"{SITE}/mcp",
                 "mcp_tool": "get_tls_attestation",
-                "mcp_arguments": {"domain": host},
-                "protocol": "x402 v2",
-                "scheme": "exact",
                 "price_usd": "5.00",
-                "currency": "USDC",
                 "network": "eip155:8453",
-                "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-                "read_only": False,
-                "starts_scan": True,
-                "buyer_wallet_required": True,
                 "payment_authorization_required": True,
-                "spend_policy": "Unpaid call returns HTTP 402 with exact payment requirements and never charges. Pay only with explicit buyer spend authorization.",
-                "free_preview_pdf": f"{SITE}/api/v1/attestation/sample.pdf",
-                "deliverables": ["Ed25519 JWS receipt", "CycloneDX 1.6 CBOM", "Printable Auditor PDF", "Bundle Ed25519 JWS"],
             },
-            "human_msp_pilot": {
-                "price_eur": "290",
-                "hostnames_limit": 50,
-                "no_upfront_payment": True,
-                "url_de": f"{SITE}/partners?lang=de#msp-pilot",
-                "url_en": f"{SITE}/partners?lang=en#msp-pilot",
-            },
-            "monitoring_trial": {
-                "free_days": 14,
-                "plans": "Starter 29 EUR/mo (10 domains) | Business 99 EUR/mo (100 domains)",
-                "url": f"{SITE}/monitoring?domain={host}#trial-form",
-            },
-            "agent_affiliate_30pct": {
-                "method": "POST",
-                "url": f"{SITE}/api/v1/agent/affiliate/register",
-                "mcp_tool": "register_agent_affiliate",
-                "commission": "30% monitoring (12m) / 20% one-time, monthly manual payout",
-            },
+            "monitoring_trial": f"{SITE}/monitoring?domain={host}#trial-form",
+            "agent_affiliate_30pct": f"{SITE}/api/v1/agent/affiliate/register",
         },
-        "attestation_api": f"{SITE}/api/v1/attestation",
-        "attestation_price": "5.00 USDC (Base, x402 v2)",
-        "affiliate_register": f"{SITE}/api/v1/agent/affiliate/register",
         "one_time_notice": True,
     }
     contact_skill = pick_contact_skill(summary)
@@ -564,7 +529,7 @@ def run_batch(
                     return card_fetcher(endpoint, method="POST", body=pld, timeout=20.0)
 
             def _jsonrpc_err(st, r):
-                if st in (200, 400) and isinstance(r, dict) and isinstance(r.get("error"), dict):
+                if st in (200, 400, 404) and isinstance(r, dict) and isinstance(r.get("error"), dict):
                     return r["error"].get("code"), str(r["error"].get("message") or "").lower()
                 return None, ""
 
@@ -578,7 +543,10 @@ def run_batch(
                         err_code, err_msg = _jsonrpc_err(status, resp)
                         if err_code not in (-32601, -32009):
                             break
-                if err_code in (-32602, -32005) and ("part" in err_msg or "text" in err_msg or "param" in err_msg):
+                if (
+                    status == 413
+                    or (err_code in (-32600, -32602, -32005) and any(w in err_msg for w in ("part", "text", "param", "bytes", "exceeds", "large")))
+                ):
                     text_only = dict(payload)
                     msg_copy = dict(payload["params"]["message"])
                     msg_copy["parts"] = payload["params"]["message"]["parts"][:1]
