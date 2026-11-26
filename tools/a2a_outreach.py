@@ -519,8 +519,13 @@ def run_batch(
             endpoint = (info.get("endpoint") or "").strip()
             ep_host = _host_of(endpoint) or host
             ep_path = urllib.parse.urlsplit(endpoint).path.strip("/")
-            ep_trim = endpoint.rstrip("/")
-            if info.get("auth_required") or not endpoint.startswith("https://") or not ep_path or ep_trim.endswith(("/mcp", "/ask")):
+            ep_trim = endpoint.rstrip("/").lower()
+            if (
+                info.get("auth_required")
+                or not endpoint.startswith("https://")
+                or not ep_path
+                or ep_trim.endswith(("/mcp", "/ask", "/chat", ".html", ".htm", ".md", ".txt", ".xml", ".pdf", ".json"))
+            ):
                 summary_out["skipped"] += 1
                 continue
             if is_blocked_or_sent(conn, endpoint, ep_host):
@@ -545,7 +550,9 @@ def run_batch(
                 })
                 continue
 
-            # 3) Send ONE A2A JSON-RPC 2.0 call (with A2A-Version header + auto-fallback on -32601 / -32009)
+            # 3) Send ONE A2A JSON-RPC 2.0 call with smart interoperability fallbacks:
+            #    - Method fallback on HTTP 200/400 JSON-RPC -32601/-32009: SendMessage <-> message/send -> tasks/send
+            #    - Single-text-part fallback on HTTP 200/400 JSON-RPC -32602/-32005 ("one part" / "only text parts")
             if summary_out["attempts"] > 0 and pause_s > 0:
                 sleep_fn(pause_s)
 
@@ -556,19 +563,22 @@ def run_batch(
                 except TypeError:
                     return card_fetcher(endpoint, method="POST", body=pld, timeout=20.0)
 
+            def _jsonrpc_err(st, r):
+                if st in (200, 400) and isinstance(r, dict) and isinstance(r.get("error"), dict):
+                    return r["error"].get("code"), str(r["error"].get("message") or "").lower()
+                return None, ""
+
             try:
                 status, resp = _post_with_version(payload)
-                err_obj = resp.get("error") if (status == 200 and isinstance(resp, dict) and isinstance(resp.get("error"), dict)) else None
-                err_code = err_obj.get("code") if err_obj else None
-                err_msg = str(err_obj.get("message") or "").lower() if err_obj else ""
+                err_code, err_msg = _jsonrpc_err(status, resp)
                 if err_code in (-32601, -32009):
-                    alt = "message/send" if payload["method"] == "SendMessage" else "SendMessage"
-                    payload = build_a2a_pitch(info, ep_host, obs, method=alt)
-                    status, resp = _post_with_version(payload)
-                    err_obj = resp.get("error") if (status == 200 and isinstance(resp, dict) and isinstance(resp.get("error"), dict)) else None
-                    err_code = err_obj.get("code") if err_obj else None
-                    err_msg = str(err_obj.get("message") or "").lower() if err_obj else ""
-                if err_code in (-32602, -32005) and ("part" in err_msg or "text" in err_msg):
+                    for alt in (["message/send", "tasks/send"] if payload["method"] == "SendMessage" else ["SendMessage", "tasks/send"]):
+                        payload = build_a2a_pitch(info, ep_host, obs, method=alt)
+                        status, resp = _post_with_version(payload)
+                        err_code, err_msg = _jsonrpc_err(status, resp)
+                        if err_code not in (-32601, -32009):
+                            break
+                if err_code in (-32602, -32005) and ("part" in err_msg or "text" in err_msg or "param" in err_msg):
                     text_only = dict(payload)
                     msg_copy = dict(payload["params"]["message"])
                     msg_copy["parts"] = payload["params"]["message"]["parts"][:1]
@@ -585,6 +595,11 @@ def run_batch(
             excerpt = _extract_reply_excerpt(resp)
             task_id, task_state = _extract_task_info(resp, excerpt)
             ts = now_iso()
+            auth_err = (
+                status in (401, 403, 429)
+                or OPT_OUT_RE.search(excerpt)
+                or bool(re.search(r"(-32000|-32001|bearer|token required|authenticated|anonymousactor)", excerpt, re.I))
+            )
             with conn:
                 conn.execute(
                     "INSERT OR REPLACE INTO a2a_outreach_sent "
@@ -594,10 +609,10 @@ def run_batch(
                     (endpoint, ep_host, info["name"], card_url, obs["tls_version"], obs["group"], obs["kex_class"],
                      int(status), excerpt, ts, task_id, task_state),
                 )
-                if status in (401, 403, 429) or OPT_OUT_RE.search(excerpt):
+                if auth_err:
                     conn.execute(
                         "INSERT OR IGNORE INTO a2a_outreach_suppress (host, reason, created_at) VALUES (?, ?, ?)",
-                        (ep_host, f"http_{status}_or_optout", ts),
+                        (ep_host, f"http_{status}_or_auth_optout", ts),
                     )
             keep_db_owner(db_path)
 
@@ -606,7 +621,10 @@ def run_batch(
                 summary_out["sent"] += 1
             else:
                 summary_out["errors"] += 1
-                consecutive_errors += 1
+                if int(status) >= 500 or int(status) == 0:
+                    consecutive_errors += 1
+                else:
+                    consecutive_errors = 0
             summary_out["items"].append({
                 "name": info["name"], "host": ep_host, "endpoint": endpoint,
                 "http_status": status, "task_id": task_id, "reply_excerpt": excerpt[:200],
