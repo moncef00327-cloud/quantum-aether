@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="{{ lang }}" dir="{{ t.dir }}">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#071426"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#0b1930"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>{{ t.home_title }} · {{ t.brand }}</title>
 <meta name="description" content="{{ t.home_meta }}">
 <meta name="google-site-verification" content="lomNrWcm6STSBOBFYRuatxcSN8DGmceimGw_y79Sc7o">
@@ -23,7 +23,7 @@
 <link rel="stylesheet" href="/static/command/app.css?v=20261117-plan-pills1">
 <link rel="stylesheet" href="/static/a2a-search.css?v=20261125-a2aui6">
 <link rel="stylesheet" href="{{ url_for('static', filename='command/dashboard.css', v='20261125-compact2') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='command/arabic-glass.css', v='20261126-luminous2') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='command/arabic-glass.css', v='20261126-luminous3') }}">
 {% for obj in jsonld %}<script type="application/ld+json">{{ obj | tojson }}</script>{% endfor %}
 </head>
 <body><div id="command-root">{% if lang == "ar" %}{% include "command/ar.html" %}{% else %}{% include "command/en.html" %}{% endif %}</div>

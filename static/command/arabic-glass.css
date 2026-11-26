@@ -1,11 +1,11 @@
-/* Unified Quantum Aether Glass Theme: seamless edge-to-edge aurora (including behind iOS Dynamic Island), feathered top/bottom ribbons, zero hard seams. */
+/* Unified Quantum Aether Glass Theme: seamless edge-to-edge aurora (zero top/bottom seam on iOS Dynamic Island & Safari bar), feathered ribbons. */
 html,
-body:has(.app) {
-  background: #071426;
+body {
+  background: #0b1930 !important;
 }
 
 .app {
-  --glass-night: #071426;
+  --glass-night: #0b1930;
   --glass-cyan: #55e5f4;
   --glass-violet: #b69aff;
   --glass-pearl: #f2a6df;
@@ -25,23 +25,26 @@ body:has(.app) {
     0 10px 30px rgba(3, 10, 26, .42);
   position: relative;
   isolation: isolate;
+  min-height: 100dvh;
   color: var(--glass-text);
   background: var(--glass-night);
 }
 
-/* Single continuous synchronized luminous aurora on parent .app extending past Dynamic Island & safe areas */
+/* Single continuous synchronized luminous aurora on parent .app, feathered to 0% alpha at exact top/bottom viewport edges so iOS Safari's Dynamic Island & bottom pill blend seamlessly with zero hard cut line while keeping interactive frosted-glass scroll blur */
 .app::before {
   content: "";
   position: fixed;
-  inset: -80px;
+  inset: 0;
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 68% 42% at 18% 12%, rgba(85, 229, 244, .22), transparent 66%),
-    radial-gradient(ellipse 65% 44% at 86% 24%, rgba(182, 154, 255, .24), transparent 68%),
-    radial-gradient(ellipse 72% 46% at 22% 58%, rgba(182, 154, 255, .18), rgba(242, 166, 223, .09) 44%, transparent 72%),
-    radial-gradient(ellipse 76% 42% at 80% 86%, rgba(85, 229, 244, .20), rgba(182, 154, 255, .14) 46%, transparent 74%),
-    radial-gradient(ellipse 84% 34% at 42% 98%, rgba(242, 166, 223, .17), rgba(182, 154, 255, .12) 48%, transparent 76%);
+    radial-gradient(ellipse 68% 40% at 18% 20%, rgba(85, 229, 244, .22), transparent 66%),
+    radial-gradient(ellipse 65% 42% at 86% 28%, rgba(182, 154, 255, .24), transparent 68%),
+    radial-gradient(ellipse 72% 44% at 22% 56%, rgba(182, 154, 255, .18), rgba(242, 166, 223, .09) 44%, transparent 72%),
+    radial-gradient(ellipse 76% 40% at 80% 78%, rgba(85, 229, 244, .20), rgba(182, 154, 255, .14) 46%, transparent 74%),
+    radial-gradient(ellipse 84% 34% at 42% 84%, rgba(242, 166, 223, .16), rgba(182, 154, 255, .12) 48%, transparent 76%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 12%, #000 88%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 12%, #000 88%, transparent 100%);
 }
 
 /* Keep <aside> position:fixed (never override to relative, which would steal flex width on mobile!) */
@@ -79,8 +82,8 @@ body:has(.app) {
   height: clamp(28rem, 48vw, 44rem);
   opacity: .72;
   background-position: left top;
-  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, .55) 0%, #000 18%, #000 50%, transparent 100%);
-  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, .55) 0%, #000 18%, #000 50%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 18%, #000 54%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 18%, #000 54%, transparent 100%);
 }
 
 .app[dir="ltr"] #workspace-content::before {
@@ -92,8 +95,8 @@ body:has(.app) {
   height: clamp(22rem, 36vw, 34rem);
   opacity: .42;
   background-position: center bottom;
-  -webkit-mask-image: linear-gradient(to top, rgba(0, 0, 0, .65) 0%, #000 22%, #000 52%, transparent 100%);
-  mask-image: linear-gradient(to top, rgba(0, 0, 0, .65) 0%, #000 22%, #000 52%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to top, transparent 0%, #000 22%, #000 54%, transparent 100%);
+  mask-image: linear-gradient(to top, transparent 0%, #000 22%, #000 54%, transparent 100%);
 }
 
 .app #workspace-content > header {
@@ -538,16 +541,16 @@ body:has(.app) {
     height: 30rem;
     opacity: .68;
     background-position: center top;
-    -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, .28) 0%, #000 22%, #000 50%, transparent 100%);
-    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, .28) 0%, #000 22%, #000 50%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 22%, #000 52%, transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0%, #000 22%, #000 52%, transparent 100%);
   }
 
   .app #workspace-content::after {
     height: 24rem;
     opacity: .42;
     background-position: center bottom;
-    -webkit-mask-image: linear-gradient(to top, rgba(0, 0, 0, .35) 0%, #000 24%, #000 52%, transparent 100%);
-    mask-image: linear-gradient(to top, rgba(0, 0, 0, .35) 0%, #000 24%, #000 52%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to top, transparent 0%, #000 26%, #000 54%, transparent 100%);
+    mask-image: linear-gradient(to top, transparent 0%, #000 26%, #000 54%, transparent 100%);
   }
 
   #command-root .app .qa-neon .qa-hero-content {
