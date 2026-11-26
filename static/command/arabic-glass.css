@@ -42,6 +42,7 @@ body {
   inset: 0;
   z-index: 0;
   pointer-events: none;
+  transform: translateZ(0);
   background:
     radial-gradient(ellipse 68% 40% at 18% 20%, rgba(85, 229, 244, .22), transparent 66%),
     radial-gradient(ellipse 65% 42% at 86% 28%, rgba(182, 154, 255, .24), transparent 68%),
@@ -85,8 +86,7 @@ body {
 .app #workspace-content::before {
   top: 0;
   height: clamp(28rem, 48vw, 44rem);
-  opacity: .40;
-  filter: brightness(.76) saturate(1.12);
+  opacity: .34;
   background-position: center 12%;
   -webkit-mask-image: radial-gradient(ellipse 92% 76% at 50% 42%, #000 28%, rgba(0, 0, 0, .55) 60%, transparent 96%);
   mask-image: radial-gradient(ellipse 92% 76% at 50% 42%, #000 28%, rgba(0, 0, 0, .55) 60%, transparent 96%);
@@ -99,8 +99,7 @@ body {
 .app #workspace-content::after {
   bottom: 0;
   height: clamp(22rem, 36vw, 34rem);
-  opacity: .34;
-  filter: brightness(.80) saturate(1.10);
+  opacity: .28;
   background-position: center 88%;
   -webkit-mask-image: radial-gradient(ellipse 92% 76% at 50% 58%, #000 26%, rgba(0, 0, 0, .52) 58%, transparent 96%);
   mask-image: radial-gradient(ellipse 92% 76% at 50% 58%, #000 26%, rgba(0, 0, 0, .52) 58%, transparent 96%);
@@ -184,8 +183,8 @@ body {
   border: 1.5px solid rgba(232, 244, 255, .58) !important;
   border-radius: 24px;
   box-shadow: var(--glass-shadow);
-  backdrop-filter: blur(24px) saturate(155%);
-  -webkit-backdrop-filter: blur(24px) saturate(155%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 /* Soften inner session nudge / nested callouts so they blend smoothly without harsh nested box edges */
@@ -1101,11 +1100,26 @@ body {
 }
 
 @media (max-width: 680px) {
+  .app :is(
+    .qa-neon .qa-glass-card,
+    .qa-compliance-card,
+    .qa-home-trial-card,
+    .panel,
+    .metrics,
+    .resource,
+    .service-content .card,
+    .service-content .scanner-panel,
+    .service-content .price-box,
+    .service-content .discovery-strip a
+  ) {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
   .app #workspace-content::before {
     top: 18px;
     height: 24rem;
-    opacity: .32;
-    filter: brightness(.72) saturate(1.12);
+    opacity: .26;
     background-size: 128% auto;
     background-position: 28% top;
     -webkit-mask-image: radial-gradient(ellipse 88% 74% at 50% 44%, #000 22%, rgba(0, 0, 0, .52) 56%, transparent 94%);
@@ -1114,8 +1128,7 @@ body {
 
   .app #workspace-content::after {
     height: 20rem;
-    opacity: .30;
-    filter: brightness(.78) saturate(1.10);
+    opacity: .24;
     background-size: 128% auto;
     background-position: center bottom;
     -webkit-mask-image: radial-gradient(ellipse 88% 74% at 50% 58%, #000 22%, rgba(0, 0, 0, .50) 56%, transparent 94%);

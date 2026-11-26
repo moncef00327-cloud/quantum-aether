@@ -5039,6 +5039,11 @@ def _security_headers(response):
                    "frame-src https://*.paypal.com; connect-src 'self' https://*.paypal.com; style-src 'self' 'unsafe-inline'; "
                    "frame-ancestors 'none'; base-uri 'none'; form-action 'self'")
         response.headers["Content-Security-Policy"] = csp
+    if request.path.startswith("/static/") and response.status_code == 200:
+        if request.args.get("v") or request.path.startswith("/static/fonts/"):
+            response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        elif request.path.endswith((".webp", ".png", ".svg", ".ico", ".woff2")):
+            response.headers["Cache-Control"] = "public, max-age=604800"
     return response
 
 
