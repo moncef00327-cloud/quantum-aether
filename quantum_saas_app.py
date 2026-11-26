@@ -5199,6 +5199,10 @@ exposure_web.register(bp, {"db": db, "lang": current_lang, "base": public_base, 
                            "de_endpoints": i18n.DE_ENDPOINTS, "data_dir": lambda: current_app.config["DATA_DIR"],
                            "salt": lambda: current_app.config["HASH_SALT"], "sitemap_response": _sitemap_response})
 
+import mcp_index  # noqa: E402  Reverse MCP Server Post-Quantum Security Index (/mcp-index, 2026-11-26)
+mcp_index.register(bp, {"lang": current_lang, "data_dir": lambda: current_app.config["DATA_DIR"],
+                        "base": public_base, "open_data": _open_data, "de_pages": DE_PAGES, "de_endpoints": i18n.DE_ENDPOINTS})
+
 app = create_app()
 
 if __name__ == "__main__":

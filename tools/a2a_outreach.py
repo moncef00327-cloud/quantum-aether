@@ -240,6 +240,17 @@ def sync_targets(
                 "skills_text": q,
             })
 
+    # 3) Official MCP Registry hosts that also expose an open /.well-known/agent-card.json
+    mcp_cards_path = os.path.join(DATA_DIR, "mcp_a2a_cards.json")
+    if os.path.exists(mcp_cards_path):
+        try:
+            mcp_doc = json.loads(Path(mcp_cards_path).read_text(encoding="utf-8"))
+            for card in (mcp_doc.get("cards") or []):
+                if isinstance(card, dict) and str(card.get("card_url") or "").startswith("https://"):
+                    add_item(dict(card))
+        except Exception:
+            pass
+
     out = Path(out_path)
     out.parent.mkdir(parents=True, exist_ok=True)
     tmp = out.with_suffix(".json.tmp")
