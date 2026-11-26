@@ -466,6 +466,40 @@ body {
   filter: brightness(1.06);
 }
 
+/* Trial CTA clarity cues on /monitoring, /pricing, /business, /scan/* */
+.app .qa-trial-domain-ready {
+  margin: 0 0 8px;
+  padding: 9px 13px;
+  border-radius: 14px;
+  border: 1px solid rgba(85, 229, 244, .44);
+  background: rgba(85, 229, 244, .12);
+  color: #e6f7ff;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+.app .qa-trial-domain-ready strong {
+  color: #7ef2ff;
+  font-weight: 700;
+}
+
+.app .qa-trial-step-cue {
+  margin: 0 0 8px;
+  color: #cde8ff;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.app .trial-cta input[type="email"],
+.app .trial-cta input[name="domain"] {
+  min-height: 48px !important;
+  border-radius: 16px !important;
+  background: linear-gradient(160deg, rgba(10, 23, 44, .90), rgba(18, 38, 68, .84)) !important;
+  color: #ffffff !important;
+  font-size: 16px !important;
+}
+
 /* Top A2A search bar pill harmony (AR, EN, DE) */
 .app .qa-agent-search {
   padding: 0;

@@ -180,10 +180,19 @@
     // Missing email (2026-11-21): a clear error box under the field, not a soft cyan hint (6 empty submits that day,
     // 5 of them on /pricing, and nobody retried).
     el.style.cssText = isGuide
-      ? "display:block;color:#fecaca;background:rgba(255,107,107,.14);border:1px solid rgba(255,107,107,.6);padding:8px 12px;border-radius:10px;font-weight:600;margin:.4rem 0 .7rem"
+      ? "display:block;color:#fef3c7;background:rgba(245,158,11,.15);border:1px solid rgba(251,191,36,.62);padding:10px 13px;border-radius:12px;font-weight:600;margin:.45rem 0 .75rem"
       : "color:#ff6b6b;font-weight:600;margin:0 0 .6rem";
     return el;
   }
+  // Auto-focus email field cleanly when landing directly on /monitoring with a prefilled domain or #trial-form hash.
+  try {
+    if (location.pathname === "/monitoring" && (location.hash === "#trial-form" || location.hash === "#trial" || new URLSearchParams(location.search).get("domain"))) {
+      var monEmail = document.getElementById("trial-form-email");
+      if (monEmail && !monEmail.value) {
+        setTimeout(function () { try { monEmail.focus({ preventScroll: true }); } catch (e) {} }, 120);
+      }
+    }
+  } catch (e) {}
   // Take over validation only for trial forms: set before the browser runs its own check on this click/Enter.
   document.addEventListener("click", function (e) {
     var b = e.target && e.target.closest ? e.target.closest("button, input[type=submit]") : null;

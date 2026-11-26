@@ -24,10 +24,12 @@
     <input type="hidden" name="plan" value="{{ sel_plan }}">
     <input type="hidden" name="variant" value="{{ conversion_variant }}">
     {% if source %}<input type="hidden" name="src" value="{{ source }}">{% endif %}
+    {% if prefill %}<p class="qa-trial-domain-ready">{{ 'جاهز لمراقبة النطاق:' if lang == 'ar' else ('Überwachung bereit für:' if lang == 'de' else 'Daily monitoring ready for:') }} <strong dir="ltr">{{ prefill }}</strong></p>{% endif %}
+    <p class="qa-trial-step-cue">{{ 'الخطوة 1: أدخل بريدك الإلكتروني لإرسال رابط التفعيل الفوري' if lang == 'ar' else ('Schritt 1: E-Mail-Adresse für Ihren sofortigen Aktivierungslink eingeben' if lang == 'de' else 'Step 1: Enter your email to receive your instant activation link') }}</p>
     {% if error and focus != 'email' %}<p class="form-error trial-error" role="alert">{{ error }}</p>{% endif %}
     <label for="{{ form_id }}-email">{{ t.trial_email_label }} <span class="trial-required" aria-hidden="true" style="color:#ff6b6b;font-weight:700">*</span></label>
     <div class="scan-row qa-email-row">
-      <input id="{{ form_id }}-email" name="email" type="email" autocomplete="email" dir="ltr" required aria-required="true" maxlength="254" placeholder="security@{{ domain or prefill or 'company.com' }}" style="border-color:rgba(103,232,249,.55)"{% if email %} value="{{ email }}"{% endif %}{% if focus == 'email' %} autofocus aria-invalid="true"{% endif %}>
+      <input id="{{ form_id }}-email" name="email" type="email" autocomplete="email" dir="ltr" required aria-required="true" maxlength="254" placeholder="security@{{ domain or prefill or 'company.com' }}" style="border-color:rgba(103,232,249,.65)"{% if email %} value="{{ email }}"{% endif %}{% if focus == 'email' %} autofocus aria-invalid="true"{% endif %}>
     </div>
     <p class="form-error trial-error" id="{{ form_id }}-email-msg" data-trial-email-error role="alert"{% if not (error and focus == 'email') %} hidden{% endif %}>{% if error and focus == 'email' %}{{ error }}{% endif %}</p>
     {% if not domain or editable_domain %}<p><label for="{{ form_id }}-domain" class="small">{{ t.trial_cta_domain }}</label><br>
