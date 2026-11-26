@@ -4434,7 +4434,7 @@ def _sitemap_pages():
              ("/press", _template_day("press.html"), de_langs),
              ("/study/top-1000-post-quantum-tls",
               max(study_data()["scanned_on"], (adoption_snapshot() or {}).get("scanned_at", "")[:10]), de_langs)]
-    adoption_weeks = adoption.weeks(db())
+    
     adoption_day = adoption.week_monday(adoption_weeks[-1]).isoformat() if adoption_weeks else study_data()["scanned_on"]
     pages.append(("/adoption", adoption_day, de_langs))
     snap_for_sitemap = adoption_snapshot() or {}
