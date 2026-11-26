@@ -170,9 +170,13 @@ def is_valid_b2b_email(email: str, domain: str) -> bool:
         return False
     local, _, edom = clean.partition("@")
     base_dom = domain.lower().removeprefix("www.")
-    if edom != base_dom and not edom.endswith("." + base_dom):
+    if edom != base_dom:
+        return False
+    if re.fullmatch(r"[0-9a-f]{16,}", local):
         return False
     if any(local == p or local.startswith(p + ".") or local.startswith(p + "-") or local.startswith(p + "_") for p in FORBIDDEN_PREFIXES):
+        return False
+    if re.search(r"(^|[._-])(sec|security|csirt|cert|abuse|privacy|dsb|dpo|feedback)([._-]|$)", local):
         return False
     if local in ("example", "test", "name", "vorname.nachname", "mustermann"):
         return False

@@ -15,9 +15,11 @@ class MSPRadarTests(unittest.TestCase):
         self.assertFalse(msp_radar.is_valid_b2b_email("csirt@firma.de", "firma.de"))
         self.assertFalse(msp_radar.is_valid_b2b_email("datenschutz@firma.de", "firma.de"))
         self.assertFalse(msp_radar.is_valid_b2b_email("abuse@firma.de", "firma.de"))
+        self.assertFalse(msp_radar.is_valid_b2b_email("info.sec@firma.de", "firma.de"))
+        self.assertFalse(msp_radar.is_valid_b2b_email("e089d2733edd42d2bf2470c485aa8d76@sentry.kube.firma.de", "firma.de"))
         self.assertFalse(msp_radar.is_valid_b2b_email("info@other-agency.de", "firma.de"))
         self.assertTrue(msp_radar.is_valid_b2b_email("kontakt@firma.de", "firma.de"))
-        self.assertTrue(msp_radar.is_valid_b2b_email("vertrieb@sub.firma.de", "firma.de"))
+        self.assertTrue(msp_radar.is_valid_b2b_email("vertrieb@firma.de", "firma.de"))
 
     def test_pick_best_b2b_email_ranks_sales_and_kontakt_above_generic(self):
         best = msp_radar.pick_best_b2b_email(
