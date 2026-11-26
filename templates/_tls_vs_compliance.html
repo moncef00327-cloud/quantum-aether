@@ -3,15 +3,15 @@
 <section class="qa-compliance-section" data-qa-compliance-lang="{{ c_lang }}"{% if cmp_hidden is defined and cmp_hidden %} hidden{% endif %} aria-labelledby="qa-cmp-title-{{ c_lang }}">
   <div class="qa-compliance-head">
     {% if c_lang == 'ar' %}
-    <span class="qa-cmp-eyebrow">لماذا يهمّ هذا الشركات والمدققين؟</span>
-    <h2 id="qa-cmp-title-ar">الفرق بين نتيجة فحص TLS ودليل امتثال NIS2 وDORA</h2>
-    <p>الفحص الفوري يكشف وضع النطاق الآن؛ أما التدقيق التنظيمي فيحتاج دليلًا موثّقًا ومستمرًا يمكن التحقق منه في أي وقت.</p>
+    <span class="qa-cmp-eyebrow">للشركات والمدققين</span>
+    <h2 id="qa-cmp-title-ar">الفرق بين فحص <bdi dir="ltr">TLS</bdi> ودليل الامتثال</h2>
+    <p>الفحص المجاني يوضح وضع نطاقك الآن؛ أما التدقيق لمتطلبات <bdi dir="ltr">NIS2</bdi> و<bdi dir="ltr">DORA</bdi> فيحتاج دليلًا يوميًا موثّقًا.</p>
     {% elif c_lang == 'de' %}
-    <span class="qa-cmp-eyebrow">Warum das für Unternehmen &amp; Prüfer zählt</span>
+    <span class="qa-cmp-eyebrow">Für Unternehmen &amp; Prüfer</span>
     <h2 id="qa-cmp-title-de">TLS-Prüfergebnis vs. NIS2- &amp; DORA-Nachweis</h2>
-    <p>Der kostenlose Check zeigt den aktuellen Handshake; für Audits braucht es fortlaufende, kryptografisch prüfbare Nachweise.</p>
+    <p>Der kostenlose Check zeigt den aktuellen Stand; für Audits braucht es fortlaufende, kryptografisch prüfbare Nachweise.</p>
     {% else %}
-    <span class="qa-cmp-eyebrow">Why this matters for companies &amp; auditors</span>
+    <span class="qa-cmp-eyebrow">For companies &amp; auditors</span>
     <h2 id="qa-cmp-title-en">TLS scan result vs. NIS2 &amp; DORA compliance evidence</h2>
     <p>A free scan shows your handshake right now; compliance audits require continuous, verifiable evidence over time.</p>
     {% endif %}
@@ -21,8 +21,8 @@
     <article class="qa-compliance-card">
       <div class="qa-cmp-card-top">
         {% if c_lang == 'ar' %}
-        <h3>نتيجة فحص TLS الفوري</h3>
-        <span class="qa-cmp-badge">مجاني · لقطة لحظية</span>
+        <h3>نتيجة فحص <bdi dir="ltr">TLS</bdi> الفوري</h3>
+        <span class="qa-cmp-badge">مجاني · فحص لحظي</span>
         {% elif c_lang == 'de' %}
         <h3>Sofortiges TLS-Prüfergebnis</h3>
         <span class="qa-cmp-badge">Kostenlos · Momentaufnahme</span>
@@ -31,28 +31,55 @@
         <span class="qa-cmp-badge">Free · Point-in-time</span>
         {% endif %}
       </div>
-      <ul>
+      <div class="qa-cmp-list">
         {% if c_lang == 'ar' %}
-        <li><strong>ما الذي تثبته:</strong> إصدار <code>TLS 1.3</code>، مجموعة تبادل المفاتيح الهجين (<code>X25519MLKEM768</code>)، حالة الشهادة، والدرجة <code>A–F</code> على المنفذ 443.</li>
-        <li><strong>متى تكفي:</strong> للتحقق السريع قبل التعديل أو فور تفعيل إعدادات ما بعد الكم على الخادم أو CDN.</li>
-        <li><strong>ما الذي لا تثبته وحدها:</strong> قياس لمرة واحدة لنطاق واحد — لا يثبت استمرارية الحماية مع الوقت ولا يغطي بقية النطاقات الفرعية.</li>
+        <div class="qa-cmp-item">
+          <strong>ما الذي يكشفه فورًا؟</strong>
+          <p>إصدار <bdi dir="ltr">TLS 1.3</bdi>، ودعم التبادل الهجين المقاوم للكم <bdi dir="ltr">X25519MLKEM768</bdi>، وصلاحية الشهادة، والدرجة (<bdi dir="ltr">A–F</bdi>).</p>
+        </div>
+        <div class="qa-cmp-item">
+          <strong>متى يكفي وحده؟</strong>
+          <p>للتحقق التقني السريع قبل التعديل أو فور تفعيل إعدادات ما بعد الكم على الخادم أو <bdi dir="ltr">CDN</bdi>.</p>
+        </div>
+        <div class="qa-cmp-item">
+          <strong>ما الذي لا يثبته وحده؟</strong>
+          <p>هو لقطة لمرة واحدة لنطاق واحد فقط؛ لا يثبت استمرار الحماية يوميًا ولا يغطي بقية النطاقات الفرعية.</p>
+        </div>
         {% elif c_lang == 'de' %}
-        <li><strong>Was es zeigt:</strong> ausgehandelte <code>TLS 1.3</code>-Version, hybriden Schlüsselaustausch (<code>X25519MLKEM768</code>), Zertifikatsstatus und Bewertung <code>A–F</code> auf Port 443.</li>
-        <li><strong>Wofür es reicht:</strong> schneller Technik-Check vor oder direkt nach einer Server- oder CDN-Umstellung.</li>
-        <li><strong>Was es allein nicht belegt:</strong> nur eine einmalige Stichprobe für einen Host — kein fortlaufender Nachweis über Zeit oder alle Subdomains.</li>
+        <div class="qa-cmp-item">
+          <strong>Was es sofort zeigt</strong>
+          <p>Ausgehandelte <bdi dir="ltr">TLS 1.3</bdi>-Version, hybrider Schlüsselaustausch (<bdi dir="ltr">X25519MLKEM768</bdi>), Zertifikatsstatus und Note (<bdi dir="ltr">A–F</bdi>).</p>
+        </div>
+        <div class="qa-cmp-item">
+          <strong>Wofür es ausreicht</strong>
+          <p>Schneller Technik-Check vor oder direkt nach einer Umstellung am Server oder <bdi dir="ltr">CDN</bdi>.</p>
+        </div>
+        <div class="qa-cmp-item">
+          <strong>Was es allein nicht belegt</strong>
+          <p>Nur eine einmalige Stichprobe für einen Host — kein fortlaufender Nachweis über Zeit oder alle Subdomains.</p>
+        </div>
         {% else %}
-        <li><strong>What it proves:</strong> negotiated <code>TLS 1.3</code> version, hybrid key exchange (<code>X25519MLKEM768</code>), certificate health, and grade <code>A–F</code> on port 443.</li>
-        <li><strong>Best used for:</strong> quick technical verification before or right after a server or CDN configuration change.</li>
-        <li><strong>What it does not prove alone:</strong> a single point-in-time check on one host — not continuous protection over time or coverage across subdomains.</li>
+        <div class="qa-cmp-item">
+          <strong>What it shows right away</strong>
+          <p>Negotiated <bdi dir="ltr">TLS 1.3</bdi> version, hybrid key exchange (<bdi dir="ltr">X25519MLKEM768</bdi>), certificate health, and grade (<bdi dir="ltr">A–F</bdi>).</p>
+        </div>
+        <div class="qa-cmp-item">
+          <strong>When it is enough</strong>
+          <p>Fast technical verification before or right after a server or <bdi dir="ltr">CDN</bdi> configuration update.</p>
+        </div>
+        <div class="qa-cmp-item">
+          <strong>What it does not prove alone</strong>
+          <p>A single point-in-time check on one host — not continuous protection over time or coverage across subdomains.</p>
+        </div>
         {% endif %}
-      </ul>
+      </div>
     </article>
 
     <article class="qa-compliance-card is-highlight">
       <div class="qa-cmp-card-top">
         {% if c_lang == 'ar' %}
-        <h3>دليل امتثال NIS2 وDORA</h3>
-        <span class="qa-cmp-badge is-accent">جاهز للتدقيق · للشركات وMSP</span>
+        <h3>دليل امتثال <bdi dir="ltr">NIS2</bdi> و<bdi dir="ltr">DORA</bdi></h3>
+        <span class="qa-cmp-badge is-accent">جاهز للتدقيق · للشركات</span>
         {% elif c_lang == 'de' %}
         <h3>NIS2- &amp; DORA-Prüfnachweis</h3>
         <span class="qa-cmp-badge is-accent">Audit-tauglich · KMU &amp; MSP</span>
@@ -61,33 +88,60 @@
         <span class="qa-cmp-badge is-accent">Audit-ready · Business &amp; MSP</span>
         {% endif %}
       </div>
-      <ul>
+      <div class="qa-cmp-list">
         {% if c_lang == 'ar' %}
-        <li><strong>مراقبة يومية وتنبيهات:</strong> رصد تلقائي لأي تراجع في التشفير أو اقتراب انتهاء شهادة مع سجل زمني موثّق (تجربة 14 يومًا مجانًا، والخطط من <code>29 € / شهر</code>).</li>
-        <li><strong>إيصالات موقّعة رقميًا (Ed25519 JWS):</strong> كل فحص ينتج إيصالًا قابلًا للتحقق محليًا دون اتصال عبر <a href="/.well-known/jwks.json"><code>/.well-known/jwks.json</code></a> وفق سياسة <a href="/policies/qa-pqc-transport/1.0"><code>qa-pqc-transport/1.0</code></a>.</li>
-        <li><strong>تقرير PDF بإشارات مرور للعملاء والإدارة:</strong> يشمل بايلوت مزوّدي تقنية المعلومات (حتى 50 مضيفًا مقابل <code>290 €</code> مع خيار وضع شعارك).</li>
+        <div class="qa-cmp-item">
+          <strong>مراقبة يومية وتنبيهات فورية</strong>
+          <p>سجل يومي يثبت الاستمرارية وينبّهك عند أي تراجع أو قرب انتهاء شهادة — 14 يومًا مجانًا، ثم من <bdi dir="ltr">29 €</bdi> شهريًا.</p>
+        </div>
+        <div class="qa-cmp-item">
+          <strong>إيصالات موقّعة رقميًا (<bdi dir="ltr">Ed25519</bdi>)</strong>
+          <p>كل فحص يصدر إيصالًا قابلًا للتحقق محليًا دون اتصال عبر <a href="/.well-known/jwks.json">مفاتيح التحقق (<bdi dir="ltr">JWKS</bdi>)</a> و<a href="/policies/qa-pqc-transport/1.0">سياسة الفحص المعتمدة</a>.</p>
+        </div>
+        <div class="qa-cmp-item">
+          <strong>تقارير <bdi dir="ltr">PDF</bdi> جاهزة للإدارة والعملاء</strong>
+          <p>تقرير بإشارات مرور لكل مضيف، مع باقة بايلوت لمزوّدي خدمات التقنية: حتى 50 مضيفًا مقابل <bdi dir="ltr">290 €</bdi> وبخيار شعارك.</p>
+        </div>
         {% elif c_lang == 'de' %}
-        <li><strong>Tägliches Monitoring &amp; Alarme:</strong> automatische Prüfung mit Historie bei Rückfällen oder ablaufenden Zertifikaten (14 Tage kostenlos testen, danach ab <code>29 € / Monat</code>).</li>
-        <li><strong>Signierte Prüfbelege (Ed25519 JWS):</strong> jeder Scan erzeugt einen offline prüfbaren Nachweis über <a href="/.well-known/jwks.json"><code>/.well-known/jwks.json</code></a> nach Richtlinie <a href="/policies/qa-pqc-transport/1.0"><code>qa-pqc-transport/1.0</code></a>.</li>
-        <li><strong>Ampel-PDF für Kunden &amp; Geschäftsführung:</strong> inklusive IT-Dienstleister-Pilot (bis zu 50 Hostnamen für <code>290 €</code>, optional mit Ihrem Logo).</li>
+        <div class="qa-cmp-item">
+          <strong>Tägliches Monitoring &amp; Alarme</strong>
+          <p>Laufende Historie mit Warnungen bei Rückfällen oder ablaufenden Zertifikaten — 14 Tage gratis, danach ab <bdi dir="ltr">29 €</bdi>/Monat.</p>
+        </div>
+        <div class="qa-cmp-item">
+          <strong>Signierte Prüfbelege (<bdi dir="ltr">Ed25519</bdi>)</strong>
+          <p>Jeder Scan erzeugt einen offline prüfbaren Nachweis über unseren <a href="/.well-known/jwks.json">Prüfschlüssel (<bdi dir="ltr">JWKS</bdi>)</a> und die <a href="/policies/qa-pqc-transport/1.0">Prüfrichtlinie 1.0</a>.</p>
+        </div>
+        <div class="qa-cmp-item">
+          <strong>Ampel-<bdi dir="ltr">PDF</bdi> für Kunden &amp; Leitung</strong>
+          <p>Inklusive IT-Dienstleister-Pilot: bis zu 50 Hostnamen für <bdi dir="ltr">290 €</bdi>, optional mit Ihrem eigenen Logo.</p>
+        </div>
         {% else %}
-        <li><strong>Daily monitoring &amp; alerts:</strong> continuous history with alerts on TLS regressions or expiring certificates (14-day free trial, plans from <code>29 € / month</code>).</li>
-        <li><strong>Signed receipts (Ed25519 JWS):</strong> every scan issues an offline-verifiable receipt checked against <a href="/.well-known/jwks.json"><code>/.well-known/jwks.json</code></a> under <a href="/policies/qa-pqc-transport/1.0"><code>qa-pqc-transport/1.0</code></a>.</li>
-        <li><strong>Traffic-light PDF reports:</strong> including our IT-service-provider MSP Pilot (up to 50 hostnames for <code>290 €</code>, with optional white-label logo).</li>
+        <div class="qa-cmp-item">
+          <strong>Daily monitoring &amp; instant alerts</strong>
+          <p>Continuous history alerting you to TLS regressions or expiring certificates — 14 days free, then from <bdi dir="ltr">29 €</bdi>/month.</p>
+        </div>
+        <div class="qa-cmp-item">
+          <strong>Signed receipts (<bdi dir="ltr">Ed25519</bdi>)</strong>
+          <p>Every scan issues an offline-verifiable receipt checked against our <a href="/.well-known/jwks.json">public <bdi dir="ltr">JWKS</bdi> keys</a> and <a href="/policies/qa-pqc-transport/1.0">transport policy 1.0</a>.</p>
+        </div>
+        <div class="qa-cmp-item">
+          <strong>Executive <bdi dir="ltr">PDF</bdi> reports</strong>
+          <p>Traffic-light reporting per host, including our IT-service-provider MSP Pilot: up to 50 hostnames for <bdi dir="ltr">290 €</bdi>, with optional white-label logo.</p>
+        </div>
         {% endif %}
-      </ul>
+      </div>
       <div class="qa-cmp-actions">
         {% if c_lang == 'ar' %}
         <a class="qa-cmp-btn is-primary" href="{{ trial_href }}">ابدأ المراقبة المجانية (14 يومًا)</a>
-        <a class="qa-cmp-btn" href="/partners?lang=ar">بايلوت الشركاء · 290 €</a>
+        <a class="qa-cmp-btn" href="/partners?lang=ar">بايلوت الشركاء · <bdi dir="ltr">290 €</bdi></a>
         <a class="qa-cmp-btn" href="/sample-report?lang=ar">نموذج التقرير</a>
         {% elif c_lang == 'de' %}
         <a class="qa-cmp-btn is-primary" href="{{ trial_href }}">14 Tage kostenlos testen</a>
-        <a class="qa-cmp-btn" href="/partners?lang=de">MSP-Pilot · 290 €</a>
+        <a class="qa-cmp-btn" href="/partners?lang=de">MSP-Pilot · <bdi dir="ltr">290 €</bdi></a>
         <a class="qa-cmp-btn" href="/sample-report?lang=en">Beispielbericht</a>
         {% else %}
         <a class="qa-cmp-btn is-primary" href="{{ trial_href }}">Start 14-day free trial</a>
-        <a class="qa-cmp-btn" href="/partners?lang=en">MSP Pilot · 290 €</a>
+        <a class="qa-cmp-btn" href="/partners?lang=en">MSP Pilot · <bdi dir="ltr">290 €</bdi></a>
         <a class="qa-cmp-btn" href="/sample-report?lang=en">Sample report</a>
         {% endif %}
       </div>
@@ -96,11 +150,11 @@
 
   <p class="qa-cmp-scope">
     {% if c_lang == 'ar' %}
-    <strong>حدود الدليل بوضوح:</strong> يغطي Quantum Aether طبقة النقل العامة (Public TLS) القابلة للرصد الخارجي فقط — ولا يُغني عن جرد التشفير الداخلي أو فحص الاتصال بالخادم الأصلي خلف CDN.
+    <strong>حدود الدليل بوضوح:</strong> يغطي <bdi dir="ltr">Quantum Aether</bdi> طبقة النقل العامة (<bdi dir="ltr">Public TLS</bdi>) المرصودة خارجيًا فقط، ولا يشمل الشبكة الداخلية أو الخادم الأصلي خلف <bdi dir="ltr">CDN</bdi>.
     {% elif c_lang == 'de' %}
-    <strong>Klare Abgrenzung:</strong> Quantum Aether dokumentiert ausschließlich die öffentlich erreichbare Transportverschlüsselung (Public TLS) — keine interne Krypto-Inventur und keine Origin-Verbindung hinter einem CDN.
+    <strong>Klare Abgrenzung:</strong> <bdi dir="ltr">Quantum Aether</bdi> dokumentiert ausschließlich die öffentlich erreichbare Transportverschlüsselung (<bdi dir="ltr">Public TLS</bdi>) — keine interne Krypto-Inventur und keine Origin-Verbindung hinter einem <bdi dir="ltr">CDN</bdi>.
     {% else %}
-    <strong>Clear scope boundary:</strong> Quantum Aether documents externally observable public TLS transport only — not an internal cryptography inventory or the origin connection behind a CDN.
+    <strong>Clear scope boundary:</strong> <bdi dir="ltr">Quantum Aether</bdi> documents externally observable <bdi dir="ltr">Public TLS</bdi> transport only — not an internal cryptography inventory or the origin connection behind a <bdi dir="ltr">CDN</bdi>.
     {% endif %}
   </p>
 </section>
