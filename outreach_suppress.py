@@ -161,13 +161,14 @@ def mask(email):
 
 
 PAGE = """<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#0b1930"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="robots" content="noindex, nofollow"><title>{{ t.title }}</title>
-<style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#0b1020;color:#e8ecf5;margin:0;padding:24px}
-main{max-width:560px;margin:40px auto;background:#131a2e;border:1px solid #26304d;border-radius:12px;padding:24px}
+<style>html,body{background:#0b1930;min-height:100dvh}body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#f5f7ff;margin:0;position:relative;isolation:isolate;padding:calc(env(safe-area-inset-top,0px) + 24px) 20px calc(env(safe-area-inset-bottom,0px) + 24px)}
+body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 68% 40% at 18% 20%,rgba(85,229,244,.22),transparent 66%),radial-gradient(ellipse 65% 42% at 86% 28%,rgba(182,154,255,.24),transparent 68%);-webkit-mask-image:linear-gradient(to bottom,transparent 0%,#000 12%,#000 88%,transparent 100%);mask-image:linear-gradient(to bottom,transparent 0%,#000 12%,#000 88%,transparent 100%)}
+main{position:relative;z-index:1;max-width:560px;margin:28px auto;background:linear-gradient(150deg,rgba(182,154,255,.19) 0%,rgba(85,229,244,.12) 28%,rgba(17,36,62,.68) 64%,rgba(242,166,223,.13) 100%);border:1px solid rgba(186,214,255,.42);border-radius:20px;padding:24px;box-shadow:inset 0 1px 1px rgba(235,244,255,.48),0 10px 28px rgba(3,10,26,.42);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
 h1{font-size:1.25rem;margin:0 0 12px}p{line-height:1.5;margin:8px 0}.ar{direction:rtl;text-align:right}
-button{font:inherit;font-weight:600;background:#e8b84a;color:#0b1020;border:0;border-radius:8px;padding:12px 18px;width:100%;cursor:pointer;margin-top:16px}
-hr{border:0;border-top:1px solid #26304d;margin:16px 0}small{color:#9aa4bf}</style></head>
+button{font:inherit;font-weight:700;background:linear-gradient(155deg,#bdffff,#55e5f4 52%,#58c5df);color:#071426;border:0;border-radius:999px;padding:12px 18px;width:100%;cursor:pointer;margin-top:16px}
+hr{border:0;border-top:1px solid rgba(167,199,241,.25);margin:16px 0}small{color:#b7c8dc}</style></head>
 <body><main>
 {% if state == "invalid" %}
 <h1>Link not valid</h1>
