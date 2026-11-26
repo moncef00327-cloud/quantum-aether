@@ -12,26 +12,23 @@ body {
   --glass-text: #f5f7ff;
   --glass-line: rgba(186, 214, 255, .42);
   --glass-line-strong: rgba(110, 232, 247, .62);
-  /* Multi-layered VisionOS/Crystal frosted glass surface & double specular glass frame */
+  /* Clean optical-grade frosted glass surface & crisp single specular rim (zero double/triple ghost outlines) */
   --glass-surface:
     linear-gradient(148deg,
-      rgba(220, 236, 255, .16) 0%,
-      rgba(182, 154, 255, .17) 18%,
-      rgba(85, 229, 244, .11) 40%,
-      rgba(14, 31, 56, .66) 68%,
-      rgba(242, 166, 223, .14) 100%);
+      rgba(220, 236, 255, .14) 0%,
+      rgba(182, 154, 255, .15) 20%,
+      rgba(85, 229, 244, .10) 42%,
+      rgba(14, 31, 56, .70) 70%,
+      rgba(242, 166, 223, .12) 100%);
   --glass-inner-surface:
     linear-gradient(155deg,
-      rgba(225, 240, 255, .09) 0%,
-      rgba(17, 36, 62, .48) 58%,
-      rgba(182, 154, 255, .08) 100%);
+      rgba(225, 240, 255, .08) 0%,
+      rgba(14, 30, 54, .56) 60%,
+      rgba(182, 154, 255, .07) 100%);
   --glass-shadow:
-    inset 0 1.5px 0 rgba(255, 255, 255, .58),
-    inset 0 -1.5px 2px rgba(182, 154, 255, .30),
-    inset 0 0 0 1px rgba(220, 238, 255, .14),
-    inset 0 24px 48px rgba(140, 200, 255, .07),
-    0 0 0 1px rgba(186, 214, 255, .18),
-    0 16px 38px rgba(3, 10, 26, .50);
+    inset 0 1px 0 rgba(255, 255, 255, .48),
+    inset 0 -1px 0 rgba(165, 200, 255, .16),
+    0 18px 40px rgba(3, 10, 26, .48);
   position: relative;
   isolation: isolate;
   min-height: 100dvh;
@@ -185,8 +182,8 @@ body {
   .service-content .discovery-strip a
 ) {
   background: var(--glass-surface) !important;
-  border: 1px solid rgba(196, 224, 255, .48) !important;
-  border-radius: clamp(20px, 2vw, 26px);
+  border: 1px solid rgba(196, 224, 255, .36) !important;
+  border-radius: 24px;
   box-shadow: var(--glass-shadow);
   backdrop-filter: blur(24px) saturate(155%);
   -webkit-backdrop-filter: blur(24px) saturate(155%);
@@ -454,46 +451,50 @@ body {
   inline-size: min(100%, 760px);
 }
 
-#command-root .app .qa-neon .qa-scan-card {
+/* True stacked 3-layer frosted glass deck: parent wrapper holds the 2 curved receding glass cards physically BEHIND .qa-scan-card (zero step-corner artifacts!) */
+#command-root .app .qa-neon .qa-hero-bottom-cards {
+  display: block;
+  grid-column: 1 / -1;
   position: relative;
-  display: grid;
-  gap: 14px;
-  padding: clamp(18px, 2.2vw, 26px) !important;
-  margin-bottom: 24px;
-  overflow: visible !important;
+  isolation: isolate;
+  margin-bottom: 22px;
 }
 
-/* Stacked multi-layer frosted glass deck beneath the primary scanner card */
-#command-root .app .qa-neon .qa-scan-card::before,
-#command-root .app .qa-neon .qa-scan-card::after {
+#command-root .app .qa-neon .qa-hero-bottom-cards::before,
+#command-root .app .qa-neon .qa-hero-bottom-cards::after {
   content: "";
   position: absolute;
   pointer-events: none;
-  border-top: 0;
   backdrop-filter: blur(18px) saturate(140%);
   -webkit-backdrop-filter: blur(18px) saturate(140%);
 }
 
-#command-root .app .qa-neon .qa-scan-card::before {
-  top: calc(100% - 1px);
-  inset-inline: 16px;
-  height: 10px;
-  border-radius: 0 0 18px 18px;
-  border: 1px solid rgba(196, 224, 255, .36);
-  border-top: 0;
-  background: linear-gradient(180deg, rgba(22, 46, 80, .62), rgba(182, 154, 255, .18));
-  box-shadow: inset 0 -1px 1px rgba(225, 244, 255, .34), 0 8px 20px rgba(3, 10, 26, .38);
+#command-root .app .qa-neon .qa-hero-bottom-cards::before {
+  inset: 14px 12px -9px;
+  z-index: 1;
+  border-radius: 22px;
+  border: 1px solid rgba(196, 224, 255, .28);
+  background: linear-gradient(180deg, rgba(16, 36, 66, .35), rgba(34, 62, 102, .56));
+  box-shadow: inset 0 -1px 0 rgba(220, 240, 255, .28), 0 10px 24px rgba(3, 10, 26, .38);
 }
 
-#command-root .app .qa-neon .qa-scan-card::after {
-  top: calc(100% + 9px);
-  inset-inline: 34px;
-  height: 9px;
-  border-radius: 0 0 16px 16px;
-  border: 1px solid rgba(186, 214, 255, .24);
-  border-top: 0;
-  background: linear-gradient(180deg, rgba(16, 36, 66, .46), rgba(85, 229, 244, .12));
-  box-shadow: inset 0 -1px 1px rgba(182, 154, 255, .26), 0 12px 24px rgba(3, 10, 26, .34);
+#command-root .app .qa-neon .qa-hero-bottom-cards::after {
+  inset: 26px 26px -17px;
+  z-index: 0;
+  border-radius: 20px;
+  border: 1px solid rgba(186, 214, 255, .18);
+  background: linear-gradient(180deg, rgba(13, 29, 54, .24), rgba(28, 52, 88, .40));
+  box-shadow: inset 0 -1px 0 rgba(182, 154, 255, .22), 0 14px 28px rgba(3, 10, 26, .32);
+}
+
+#command-root .app .qa-neon .qa-scan-card {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: 14px;
+  padding: clamp(18px, 2.2vw, 26px) !important;
+  margin-bottom: 0;
+  overflow: hidden !important;
 }
 
 #command-root .app .qa-neon .qa-scan-card .qa-card-head h2 {
@@ -505,22 +506,22 @@ body {
 }
 
 #command-root .app .qa-neon .qa-scan-card .qa-card-head .badge {
-  padding: 5px 11px;
-  border-radius: 10px;
-  border: 1px solid rgba(135, 228, 248, .44);
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(135, 228, 248, .42);
   background: rgba(10, 24, 46, .66);
   color: #dff6ff;
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 600;
   letter-spacing: .04em;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .20);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18);
 }
 
 #command-root .app .qa-neon .qa-scan-card .input {
   background: linear-gradient(160deg, rgba(10, 23, 44, .90), rgba(18, 38, 68, .84));
-  border: 1.5px solid rgba(135, 228, 248, .50);
+  border: 1.5px solid rgba(135, 228, 248, .48);
   border-radius: 999px;
-  box-shadow: inset 0 2px 8px rgba(3, 10, 26, .55), inset 0 1px 0 rgba(255, 255, 255, .14), 0 0 0 1px rgba(186, 214, 255, .14);
+  box-shadow: inset 0 2px 8px rgba(3, 10, 26, .55), inset 0 1px 0 rgba(255, 255, 255, .14);
 }
 
 #command-root .app .qa-neon .qa-scan-card .input input {
@@ -536,19 +537,19 @@ body {
   opacity: 1;
 }
 
-/* Crisp, symmetrically aligned 3-column example domains grid */
+/* Flush full-width proportional example domains row: ZERO ellipsis truncation, perfectly aligned edge-to-edge */
 #command-root .app .qa-neon .qa-scan-card > .qa-hero-examples {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  align-items: stretch;
-  gap: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
   margin-block-start: 2px;
   padding-block-start: 14px;
-  border-block-start: 1px solid rgba(186, 214, 255, .26);
+  border-block-start: 1px solid rgba(186, 214, 255, .24);
 }
 
 #command-root .app .qa-neon .qa-scan-card > .qa-hero-examples > span {
-  grid-column: 1 / -1;
+  flex: 1 0 100%;
   color: #e4f0ff;
   font-size: 12.5px;
   font-weight: 600;
@@ -557,23 +558,24 @@ body {
 }
 
 #command-root .app .qa-neon .qa-scan-card > .qa-hero-examples button {
-  width: 100%;
+  flex: 1 0 auto;
   min-width: 0;
-  min-height: 40px;
-  padding: 8px 10px;
-  border-radius: 14px !important;
+  min-height: 38px;
+  padding: 7px 9px;
+  border-radius: 12px !important;
   display: inline-flex;
   align-items: center;
   justify-content: space-between;
   gap: 5px;
   direction: ltr;
   background: var(--glass-inner-surface);
-  border: 1px solid rgba(196, 222, 255, .36);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28), 0 5px 14px rgba(3, 10, 26, .24);
+  border: 1px solid rgba(196, 222, 255, .32);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), 0 4px 12px rgba(3, 10, 26, .22);
   color: #f4f9ff;
-  font-size: clamp(10.5px, 2.75vw, 12.5px);
+  font-size: clamp(11px, 2.8vw, 12.5px);
   font-weight: 600;
-  transition: border-color .15s, background .15s, transform .15s;
+  white-space: nowrap;
+  transition: border-color .15s, background .15s;
 }
 
 #command-root .app .qa-neon .qa-scan-card > .qa-hero-examples button:hover {
@@ -582,9 +584,6 @@ body {
 }
 
 #command-root .app .qa-neon .qa-scan-card > .qa-hero-examples button bdi {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
@@ -592,13 +591,13 @@ body {
   flex: 0 0 auto;
   display: inline-grid;
   place-items: center;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 5px;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 4px;
   border-radius: 999px;
   background: rgba(9, 20, 38, .72);
-  border: 1px solid rgba(196, 222, 255, .28);
-  font-size: 11px;
+  border: 1px solid rgba(196, 222, 255, .26);
+  font-size: 10.5px;
   font-weight: 700;
   line-height: 1;
 }
@@ -618,9 +617,9 @@ body {
   align-items: flex-start;
   gap: 8px;
   margin: 0;
-  padding: 10px 12px;
-  border-radius: 14px;
-  background: rgba(9, 20, 38, .44);
+  padding: 11px 13px;
+  border-radius: 16px;
+  background: rgba(9, 20, 38, .48);
   border: 1px solid rgba(186, 214, 255, .20);
   color: #dceafb;
   font-size: 12.5px;
@@ -1101,13 +1100,13 @@ body {
     inline-size: 100%;
     min-block-size: 52px;
     box-sizing: border-box;
-    border: 1.5px solid rgba(135, 228, 248, .54);
-    border-radius: 18px !important;
+    border: 1.5px solid rgba(135, 228, 248, .50);
+    border-radius: 16px !important;
     color: #ffffff;
     font-size: 16px;
     font-weight: 600;
     background: linear-gradient(160deg, rgba(10, 23, 44, .92), rgba(18, 38, 68, .86));
-    box-shadow: inset 0 2px 8px rgba(3, 10, 26, .58), inset 0 1px 0 rgba(255, 255, 255, .16), 0 0 0 1px rgba(186, 214, 255, .14);
+    box-shadow: inset 0 2px 8px rgba(3, 10, 26, .58), inset 0 1px 0 rgba(255, 255, 255, .14);
   }
 
   #command-root .app[dir="rtl"] .qa-neon .qa-scan-card .input input {
@@ -1127,7 +1126,7 @@ body {
   #command-root .app .qa-neon .qa-scan-card .input button {
     inline-size: 100%;
     min-block-size: 50px;
-    border-radius: 18px !important;
+    border-radius: 16px !important;
     font-size: 15.5px;
     font-weight: 700;
     display: inline-flex;
