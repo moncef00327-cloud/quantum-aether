@@ -558,11 +558,22 @@ def run_batch(
 
             try:
                 status, resp = _post_with_version(payload)
-                err_code = resp.get("error", {}).get("code") if (status == 200 and isinstance(resp, dict) and isinstance(resp.get("error"), dict)) else None
+                err_obj = resp.get("error") if (status == 200 and isinstance(resp, dict) and isinstance(resp.get("error"), dict)) else None
+                err_code = err_obj.get("code") if err_obj else None
+                err_msg = str(err_obj.get("message") or "").lower() if err_obj else ""
                 if err_code in (-32601, -32009):
                     alt = "message/send" if payload["method"] == "SendMessage" else "SendMessage"
                     payload = build_a2a_pitch(info, ep_host, obs, method=alt)
                     status, resp = _post_with_version(payload)
+                    err_obj = resp.get("error") if (status == 200 and isinstance(resp, dict) and isinstance(resp.get("error"), dict)) else None
+                    err_code = err_obj.get("code") if err_obj else None
+                    err_msg = str(err_obj.get("message") or "").lower() if err_obj else ""
+                if err_code in (-32602, -32005) and ("part" in err_msg or "text" in err_msg):
+                    text_only = dict(payload)
+                    msg_copy = dict(payload["params"]["message"])
+                    msg_copy["parts"] = payload["params"]["message"]["parts"][:1]
+                    text_only["params"] = {"message": msg_copy}
+                    status, resp = _post_with_version(text_only)
             except Exception:
                 summary_out["errors"] += 1
                 consecutive_errors += 1
