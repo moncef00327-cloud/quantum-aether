@@ -455,15 +455,182 @@ body {
 }
 
 #command-root .app .qa-neon .qa-scan-card {
+  position: relative;
   display: grid;
-  gap: 12px;
-  padding: clamp(16px, 2.2vw, 26px) !important;
+  gap: 14px;
+  padding: clamp(18px, 2.2vw, 26px) !important;
+  margin-bottom: 24px;
+  overflow: visible !important;
 }
 
+/* Stacked multi-layer frosted glass deck beneath the primary scanner card */
+#command-root .app .qa-neon .qa-scan-card::before,
+#command-root .app .qa-neon .qa-scan-card::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  border-top: 0;
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+}
+
+#command-root .app .qa-neon .qa-scan-card::before {
+  top: calc(100% - 1px);
+  inset-inline: 16px;
+  height: 10px;
+  border-radius: 0 0 18px 18px;
+  border: 1px solid rgba(196, 224, 255, .36);
+  border-top: 0;
+  background: linear-gradient(180deg, rgba(22, 46, 80, .62), rgba(182, 154, 255, .18));
+  box-shadow: inset 0 -1px 1px rgba(225, 244, 255, .34), 0 8px 20px rgba(3, 10, 26, .38);
+}
+
+#command-root .app .qa-neon .qa-scan-card::after {
+  top: calc(100% + 9px);
+  inset-inline: 34px;
+  height: 9px;
+  border-radius: 0 0 16px 16px;
+  border: 1px solid rgba(186, 214, 255, .24);
+  border-top: 0;
+  background: linear-gradient(180deg, rgba(16, 36, 66, .46), rgba(85, 229, 244, .12));
+  box-shadow: inset 0 -1px 1px rgba(182, 154, 255, .26), 0 12px 24px rgba(3, 10, 26, .34);
+}
+
+#command-root .app .qa-neon .qa-scan-card .qa-card-head h2 {
+  color: #ffffff;
+  font-size: clamp(1.08rem, 1.8vw, 1.28rem);
+  font-weight: 700;
+  letter-spacing: 0;
+  text-shadow: 0 1px 10px rgba(6, 15, 30, .65);
+}
+
+#command-root .app .qa-neon .qa-scan-card .qa-card-head .badge {
+  padding: 5px 11px;
+  border-radius: 10px;
+  border: 1px solid rgba(135, 228, 248, .44);
+  background: rgba(10, 24, 46, .66);
+  color: #dff6ff;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .20);
+}
+
+#command-root .app .qa-neon .qa-scan-card .input {
+  background: linear-gradient(160deg, rgba(10, 23, 44, .90), rgba(18, 38, 68, .84));
+  border: 1.5px solid rgba(135, 228, 248, .50);
+  border-radius: 999px;
+  box-shadow: inset 0 2px 8px rgba(3, 10, 26, .55), inset 0 1px 0 rgba(255, 255, 255, .14), 0 0 0 1px rgba(186, 214, 255, .14);
+}
+
+#command-root .app .qa-neon .qa-scan-card .input input {
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: .01em;
+}
+
+#command-root .app .qa-neon .qa-scan-card .input input::placeholder {
+  color: rgba(235, 246, 255, .82);
+  font-weight: 500;
+  opacity: 1;
+}
+
+/* Crisp, symmetrically aligned 3-column example domains grid */
 #command-root .app .qa-neon .qa-scan-card > .qa-hero-examples {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 8px;
   margin-block-start: 2px;
-  padding-block-start: 12px;
-  border-block-start: 1px solid #a7c7f147;
+  padding-block-start: 14px;
+  border-block-start: 1px solid rgba(186, 214, 255, .26);
+}
+
+#command-root .app .qa-neon .qa-scan-card > .qa-hero-examples > span {
+  grid-column: 1 / -1;
+  color: #e4f0ff;
+  font-size: 12.5px;
+  font-weight: 600;
+  text-align: start;
+  margin-bottom: 2px;
+}
+
+#command-root .app .qa-neon .qa-scan-card > .qa-hero-examples button {
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  padding: 8px 10px;
+  border-radius: 14px !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+  direction: ltr;
+  background: var(--glass-inner-surface);
+  border: 1px solid rgba(196, 222, 255, .36);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28), 0 5px 14px rgba(3, 10, 26, .24);
+  color: #f4f9ff;
+  font-size: clamp(10.5px, 2.75vw, 12.5px);
+  font-weight: 600;
+  transition: border-color .15s, background .15s, transform .15s;
+}
+
+#command-root .app .qa-neon .qa-scan-card > .qa-hero-examples button:hover {
+  border-color: var(--glass-cyan);
+  background: rgba(85, 229, 244, .16);
+}
+
+#command-root .app .qa-neon .qa-scan-card > .qa-hero-examples button bdi {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#command-root .app .qa-neon .qa-scan-card > .qa-hero-examples button b {
+  flex: 0 0 auto;
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: rgba(9, 20, 38, .72);
+  border: 1px solid rgba(196, 222, 255, .28);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+#command-root .app .qa-neon .qa-scan-card > .qa-hero-examples button b.lime {
+  color: #7df6d4 !important;
+  border-color: rgba(125, 246, 212, .45);
+}
+
+#command-root .app .qa-neon .qa-scan-card > .qa-hero-examples button b.amber {
+  color: #ffd67a !important;
+  border-color: rgba(255, 214, 122, .45);
+}
+
+#command-root .app .qa-neon .qa-scan-card > #domain-scope {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(9, 20, 38, .44);
+  border: 1px solid rgba(186, 214, 255, .20);
+  color: #dceafb;
+  font-size: 12.5px;
+  line-height: 1.65;
+}
+
+#command-root .app .qa-neon .qa-scan-card > #domain-scope svg {
+  flex: 0 0 auto;
+  margin-top: 3px;
+  color: var(--glass-cyan);
 }
 
 /* Full-width "What do we measure?" panel after removing the decorative world map */
@@ -914,48 +1081,55 @@ body {
 
   #command-root .app .qa-neon .qa-scan-card .input > svg {
     position: absolute;
-    top: 14px;
+    top: 17px;
     z-index: 1;
     color: var(--glass-cyan);
     pointer-events: none;
   }
 
   #command-root .app[dir="rtl"] .qa-neon .qa-scan-card .input > svg {
-    right: 15px;
+    right: 16px;
     left: auto;
   }
 
   #command-root .app[dir="ltr"] .qa-neon .qa-scan-card .input > svg {
-    left: 15px;
+    left: 16px;
     right: auto;
   }
 
   #command-root .app .qa-neon .qa-scan-card .input input {
     inline-size: 100%;
+    min-block-size: 52px;
     box-sizing: border-box;
-    border: 1px solid var(--glass-line);
-    border-radius: 999px;
-    color: var(--glass-text);
-    background: linear-gradient(155deg, #7896bf4d, #15304bdb 72%);
+    border: 1.5px solid rgba(135, 228, 248, .54);
+    border-radius: 18px !important;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 600;
+    background: linear-gradient(160deg, rgba(10, 23, 44, .92), rgba(18, 38, 68, .86));
+    box-shadow: inset 0 2px 8px rgba(3, 10, 26, .58), inset 0 1px 0 rgba(255, 255, 255, .16), 0 0 0 1px rgba(186, 214, 255, .14);
   }
 
   #command-root .app[dir="rtl"] .qa-neon .qa-scan-card .input input {
-    padding: 8px 42px 8px 16px;
+    padding: 12px 44px 12px 16px;
   }
 
   #command-root .app[dir="ltr"] .qa-neon .qa-scan-card .input input {
-    padding: 8px 16px 8px 42px;
+    padding: 12px 16px 12px 44px;
   }
 
   #command-root .app .qa-neon .qa-scan-card .input input:focus-visible {
     outline: 2px solid var(--glass-cyan);
     outline-offset: 2px;
+    border-color: var(--glass-cyan);
   }
 
   #command-root .app .qa-neon .qa-scan-card .input button {
     inline-size: 100%;
-    min-block-size: 48px;
-    border-radius: 999px;
+    min-block-size: 50px;
+    border-radius: 18px !important;
+    font-size: 15.5px;
+    font-weight: 700;
     display: inline-flex;
     align-items: center;
     justify-content: center;
