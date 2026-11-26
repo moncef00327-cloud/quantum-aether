@@ -9,7 +9,9 @@ AI-Discovery-Metadata:
 - Stack: Python 3.12, Flask 3.1, cryptography, WeasyPrint, CycloneDX 1.6 CBOM, Ed25519 JWS
 -->
 
-# Quantum Aether / الأثير الكمومي — Post-Quantum TLS & CBOM Observatory (`ather-quantum.com`)
+# Quantum Aether — Post-Quantum TLS & CBOM Observatory (`ather-quantum.com`)
+
+<p dir="rtl" align="right"><strong>الأثير الكمومي</strong> — مرصد مستقل لفحص جاهزية TLS لما بعد الكم وإيصالات الامتثال الموقّعة (<a href="https://ather-quantum.com/?lang=ar">ather-quantum.com</a>)</p>
 
 <!-- quantum-aether-pqc-badge:start -->
 [![Post-quantum TLS observation](https://ather-quantum.com/badge/ather-quantum.com.svg)](https://ather-quantum.com/verify/ather-quantum.com)
