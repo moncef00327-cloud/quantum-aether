@@ -539,7 +539,7 @@ class AdminExclusionAndSeoTest(unittest.TestCase):
         # every <loc> must stay unique.
         locs = re.findall(r"<loc>([^<]+)</loc>", body)
         self.assertEqual(len(locs), len(set(locs)))
-        self.assertEqual(body.count("<url>"), 46 * 3 + 48 * 2 + 1)
+        self.assertEqual(body.count("<url>"), 47 * 3 + 48 * 2 + 1)
         self.assertIn("<loc>https://ather-quantum.com/index</loc>", body)
         self.assertIn("<loc>https://ather-quantum.com/pricing</loc>", body)
         self.assertIn("https://ather-quantum.com/compare?lang=en", body)
