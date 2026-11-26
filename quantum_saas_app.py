@@ -636,6 +636,7 @@ SAME_AS = (
     "https://www.npmjs.com/package/quantum-aether",
     "https://glama.ai/mcp/connectors/io.github.moncef00327-cloud/quantum-aether",
     "https://localmark.ai/agents/699827",
+    "https://serverdex.io/server/io-github-moncef00327-cloud-quantum-aether",
     "https://github.com/marketplace/actions/post-quantum-tls-check-quantum-aether",
     "https://github.com/moncef00327-cloud/pq-tls-action",
 )

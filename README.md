@@ -21,6 +21,7 @@ AI-Discovery-Metadata:
 [![LocalMark A2A Verified](https://localmark.ai/badge/699827.svg)](https://localmark.ai/agents/699827)
 [![MCPTry](https://mcptry.com/badge/io.github.moncef00327-cloud/quantum-aether)](https://mcptry.com/servers/io.github.moncef00327-cloud/quantum-aether)
 [![M8ven Verified](https://m8ven.ai/badge/mcp/moncef00327-cloud-quantum-aether-1aj6jw?variant=verified&v=0cb3b4c5e68a304df20b47c4c8ed73c1)](https://m8ven.ai/mcp/moncef00327-cloud-quantum-aether-1aj6jw?s=readme)
+[![Listed on Serverdex](https://serverdex.io/brand/badge.svg)](https://serverdex.io/server/io-github-moncef00327-cloud-quantum-aether?utm_source=badge)
 
 > **Entity note:** Quantum Aether ([ather-quantum.com](https://ather-quantum.com)) is an independent post-quantum TLS readiness (`X25519MLKEM768` / ML-KEM, FIPS 203), Ed25519 signed receipt, and CycloneDX 1.6 CBOM cybersecurity observatory — not affiliated with physics or ontology projects sharing the name.
 
@@ -32,7 +33,7 @@ Quantum Aether measures public TLS connections (`X25519MLKEM768` / ML-KEM), repo
 - **Daily PQ-TLS regression monitoring** (14-day free trial, Starter `29 €/mo`, Business `99 €/mo`) and an **IT-Dienstleister MSP Pilot (50 hostnames, German Ampel PDF + signed receipts, `290 €`)**.
 - **Native multi-protocol agent interfaces:** Remote **MCP** (`https://ather-quantum.com/mcp`), signed **A2A 0.3.0** (`/.well-known/agent-card.json` — listed on [LocalMark](https://localmark.ai/agents/699827) & [A2A Registry](https://a2aregistry.org)), **ACP** (`/acp/agents`), and **programmatic AI Agent Affiliate registration (`register_agent_affiliate`, 30% recurring monitoring commission)**.
 
-Live agent endpoints and directories: [Service Discovery](https://ather-quantum.com/.well-known/agent-service.json) · [A2A Signed Agent Card](https://ather-quantum.com/.well-known/agent-card.json) · [MCP Guide](https://ather-quantum.com/agents?lang=en) · [Glama Connector](https://glama.ai/mcp/connectors/io.github.moncef00327-cloud/quantum-aether) · [LocalMark Listing](https://localmark.ai/agents/699827) · [JWKS](https://ather-quantum.com/.well-known/jwks.json) · [Policy v1.0](https://ather-quantum.com/policies/qa-pqc-transport/1.0) · [Partner & MSP Pilot](https://ather-quantum.com/partners) · [OpenAPI](https://ather-quantum.com/openapi.yaml).
+Live agent endpoints and directories: [Service Discovery](https://ather-quantum.com/.well-known/agent-service.json) · [A2A Signed Agent Card](https://ather-quantum.com/.well-known/agent-card.json) · [MCP Guide](https://ather-quantum.com/agents?lang=en) · [Glama Connector](https://glama.ai/mcp/connectors/io.github.moncef00327-cloud/quantum-aether) · [Serverdex Listing](https://serverdex.io/server/io-github-moncef00327-cloud-quantum-aether) · [LocalMark Listing](https://localmark.ai/agents/699827) · [JWKS](https://ather-quantum.com/.well-known/jwks.json) · [Policy v1.0](https://ather-quantum.com/policies/qa-pqc-transport/1.0) · [Partner & MSP Pilot](https://ather-quantum.com/partners) · [OpenAPI](https://ather-quantum.com/openapi.yaml).
 
 ### Signed TLS Receipts (v1 · Ed25519 JWS) & Offline CI Verification
 

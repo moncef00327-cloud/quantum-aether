@@ -3,7 +3,7 @@
 
 > Checks whether an HTTPS server negotiates the hybrid post-quantum key exchange X25519MLKEM768 (ML-KEM, FIPS 203) used by Chrome and Firefox, and reports TLS version, Ed25519 signed receipts, CycloneDX 1.6 CBOM attestations, and certificate details. Free summary; full report with remediation steps costs {{ report_price_dual }} via PayPal, or the same in USDT/USDC.
 >
-> Entity identity: Quantum Aether (`ather-quantum.com`) is an independent cybersecurity post-quantum TLS & CBOM observatory (not affiliated with physics or ontology projects sharing the name). Official directories: MCP Registry (`io.github.moncef00327-cloud/quantum-aether`), PyPI (`quantum-aether-mcp`), Glama (`https://glama.ai/mcp/connectors/io.github.moncef00327-cloud/quantum-aether`), A2A Registry (`https://a2aregistry.org`), and LocalMark (`https://localmark.ai/agents/699827`, verified EdDSA Agent Card signature).
+> Entity identity: Quantum Aether (`ather-quantum.com`) is an independent cybersecurity post-quantum TLS & CBOM observatory (not affiliated with physics or ontology projects sharing the name). Official directories: MCP Registry (`io.github.moncef00327-cloud/quantum-aether`), PyPI (`quantum-aether-mcp`), Glama (`https://glama.ai/mcp/connectors/io.github.moncef00327-cloud/quantum-aether`), Serverdex (`https://serverdex.io/server/io-github-moncef00327-cloud-quantum-aether`), A2A Registry (`https://a2aregistry.org`), and LocalMark (`https://localmark.ai/agents/699827`, verified EdDSA Agent Card signature).
 
 Full text of every guide plus the live weekly figures in one file: {{ base }}/llms-full.txt
 
