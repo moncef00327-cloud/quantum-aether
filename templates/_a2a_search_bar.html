@@ -1,56 +1,66 @@
 <section class="qa-agent-search" data-qa-agent-bar{% if qa_agent_hidden %} hidden{% endif %} data-lang="{{ lang }}" data-endpoint="{{ url_for('site.a2a_endpoint') }}" data-contact="mailto:{{ contact_email }}" role="search" aria-label="{{ 'وكيل الاستفسار والبحث A2A' if lang == 'ar' else ('A2A-Frage- und Suchassistent' if lang == 'de' else 'A2A Inquiry & Search Agent') }}">
-  <form class="qa-agent-form" data-qa-agent-form novalidate>
-    <label class="qa-sr-only" for="qa-agent-input-{{ lang }}">{{ 'اسأل وكيل Quantum Aether أو ابحث عن نطاق أو سعر أو إعدادات' if lang == 'ar' else ('Fragen Sie den Quantum-Aether-Assistenten oder suchen Sie nach Domain, Preisen oder Konfiguration' if lang == 'de' else 'Ask the Quantum Aether A2A agent or search a domain, pricing, or config') }}</label>
-    <div class="qa-agent-field">
-      <svg class="qa-agent-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-      <input id="qa-agent-input-{{ lang }}" class="qa-agent-input" data-qa-input type="search" dir="auto" maxlength="300" autocomplete="off"
-             placeholder="{{ 'اكتب سؤالًا أو نطاقًا' if lang == 'ar' else ('Frage oder Domain' if lang == 'de' else 'Question or domain') }}">
-      <kbd class="qa-agent-kbd" aria-hidden="true">/</kbd>
-    </div>
-    <button type="submit" class="qa-agent-submit" data-qa-submit>{{ 'اسأل' if lang == 'ar' else ('Fragen' if lang == 'de' else 'Ask') }}</button>
-  </form>
-  <details class="qa-agent-suggestions" data-qa-suggestions>
-    <summary>{{ 'أسئلة مقترحة' if lang == 'ar' else ('Fragevorschläge' if lang == 'de' else 'Suggested questions') }}</summary>
-    <div class="qa-agent-chips">
-    {% if lang == 'ar' %}
-    <button type="button" class="qa-agent-chip" data-qa-prompt="هل cloudflare.com جاهز لما بعد الكم؟">فحص cloudflare.com</button>
-    <button type="button" class="qa-agent-chip" data-qa-prompt="ما هو عرض MSP Pilot 290 €؟">عرض MSP Pilot (290 €)</button>
-    <button type="button" class="qa-agent-chip" data-qa-prompt="إعدادات nginx لتفعيل X25519MLKEM768">إعدادات Nginx</button>
-    <button type="button" class="qa-agent-chip" data-qa-prompt="ما هي مواعيد BSI وNIS2 وDORA؟">مواعيد BSI / NIS2</button>
-    <button type="button" class="qa-agent-chip" data-qa-prompt="ما هي الأسعار والباقات؟">الأسعار والباقات</button>
-    <button type="button" class="qa-agent-chip" data-qa-prompt="كيف أربط MCP في Cursor أو Claude؟">ربط MCP / A2A</button>
-    {% elif lang == 'de' %}
-    <button type="button" class="qa-agent-chip" data-qa-prompt="Ist cloudflare.com Post-Quantum-bereit?">cloudflare.com prüfen</button>
-    <button type="button" class="qa-agent-chip" data-qa-prompt="Was beinhaltet der MSP Pilot für 290 EUR?">MSP Pilot (290 €)</button>
-    <button type="button" class="qa-agent-chip" data-qa-prompt="nginx Konfiguration für X25519MLKEM768">Nginx-Konfiguration</button>
-    <button type="button" class="qa-agent-chip" data-qa-prompt="Welche Fristen gelten für BSI, NIS2 und DORA?">BSI / NIS2 Fristen</button>
-    <button type="button" class="qa-agent-chip" data-qa-prompt="Welche Preise und Pakete gibt es?">Preise &amp; Pakete</button>
-    <button type="button" class="qa-agent-chip" data-qa-prompt="Wie verbinde ich MCP mit Cursor oder Claude?">MCP / A2A verbinden</button>
-    {% else %}
-    <button type="button" class="qa-agent-chip" data-qa-prompt="Is cloudflare.com post-quantum ready?">Check cloudflare.com</button>
-    <button type="button" class="qa-agent-chip" data-qa-prompt="Tell me about the 290 EUR MSP Pilot">MSP Pilot (290 €)</button>
-    <button type="button" class="qa-agent-chip" data-qa-prompt="How to configure nginx for X25519MLKEM768?">Nginx PQC config</button>
-    <button type="button" class="qa-agent-chip" data-qa-prompt="What are the BSI, NIS2, and NIST PQC deadlines?">BSI / NIS2 deadlines</button>
-    <button type="button" class="qa-agent-chip" data-qa-prompt="What are the plans and pricing?">Pricing &amp; plans</button>
-    <button type="button" class="qa-agent-chip" data-qa-prompt="How do I connect MCP in Cursor or Claude?">Connect MCP / A2A</button>
-    {% endif %}
+  <details class="qa-agent-disclosure" data-qa-agent-disclosure>
+    <summary class="qa-agent-toggle">
+      <svg class="qa-agent-toggle-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9L12 3z"></path></svg>
+      <span>{{ 'اسأل الوكيل' if lang == 'ar' else ('Agent fragen' if lang == 'de' else 'Ask agent') }}</span>
+      <span class="qa-agent-badge" dir="ltr">A2A</span>
+      <svg class="qa-agent-chevron" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+    </summary>
+    <div class="qa-agent-body">
+      <form class="qa-agent-form" data-qa-agent-form novalidate>
+        <label class="qa-sr-only" for="qa-agent-input-{{ lang }}">{{ 'اسأل وكيل Quantum Aether أو ابحث عن نطاق أو سعر أو إعدادات' if lang == 'ar' else ('Fragen Sie den Quantum-Aether-Assistenten oder suchen Sie nach Domain, Preisen oder Konfiguration' if lang == 'de' else 'Ask the Quantum Aether A2A agent or search a domain, pricing, or config') }}</label>
+        <div class="qa-agent-field">
+          <svg class="qa-agent-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+          <input id="qa-agent-input-{{ lang }}" class="qa-agent-input" data-qa-input type="search" dir="auto" maxlength="300" autocomplete="off"
+                 placeholder="{{ 'اكتب سؤالًا أو نطاقًا' if lang == 'ar' else ('Frage oder Domain' if lang == 'de' else 'Question or domain') }}">
+          <kbd class="qa-agent-kbd" aria-hidden="true">/</kbd>
+        </div>
+        <button type="submit" class="qa-agent-submit" data-qa-submit>{{ 'اسأل' if lang == 'ar' else ('Fragen' if lang == 'de' else 'Ask') }}</button>
+      </form>
+      <details class="qa-agent-suggestions" data-qa-suggestions>
+        <summary>{{ 'أسئلة مقترحة' if lang == 'ar' else ('Fragevorschläge' if lang == 'de' else 'Suggested questions') }}</summary>
+        <div class="qa-agent-chips">
+        {% if lang == 'ar' %}
+        <button type="button" class="qa-agent-chip" data-qa-prompt="هل cloudflare.com جاهز لما بعد الكم؟">فحص cloudflare.com</button>
+        <button type="button" class="qa-agent-chip" data-qa-prompt="ما هو عرض MSP Pilot 290 €؟">عرض MSP Pilot (290 €)</button>
+        <button type="button" class="qa-agent-chip" data-qa-prompt="إعدادات nginx لتفعيل X25519MLKEM768">إعدادات Nginx</button>
+        <button type="button" class="qa-agent-chip" data-qa-prompt="ما هي مواعيد BSI وNIS2 وDORA؟">مواعيد BSI / NIS2</button>
+        <button type="button" class="qa-agent-chip" data-qa-prompt="ما هي الأسعار والباقات؟">الأسعار والباقات</button>
+        <button type="button" class="qa-agent-chip" data-qa-prompt="كيف أربط MCP في Cursor أو Claude؟">ربط MCP / A2A</button>
+        {% elif lang == 'de' %}
+        <button type="button" class="qa-agent-chip" data-qa-prompt="Ist cloudflare.com Post-Quantum-bereit?">cloudflare.com prüfen</button>
+        <button type="button" class="qa-agent-chip" data-qa-prompt="Was beinhaltet der MSP Pilot für 290 EUR?">MSP Pilot (290 €)</button>
+        <button type="button" class="qa-agent-chip" data-qa-prompt="nginx Konfiguration für X25519MLKEM768">Nginx-Konfiguration</button>
+        <button type="button" class="qa-agent-chip" data-qa-prompt="Welche Fristen gelten für BSI, NIS2 und DORA?">BSI / NIS2 Fristen</button>
+        <button type="button" class="qa-agent-chip" data-qa-prompt="Welche Preise und Pakete gibt es?">Preise &amp; Pakete</button>
+        <button type="button" class="qa-agent-chip" data-qa-prompt="Wie verbinde ich MCP mit Cursor oder Claude?">MCP / A2A verbinden</button>
+        {% else %}
+        <button type="button" class="qa-agent-chip" data-qa-prompt="Is cloudflare.com post-quantum ready?">Check cloudflare.com</button>
+        <button type="button" class="qa-agent-chip" data-qa-prompt="Tell me about the 290 EUR MSP Pilot">MSP Pilot (290 €)</button>
+        <button type="button" class="qa-agent-chip" data-qa-prompt="How to configure nginx for X25519MLKEM768?">Nginx PQC config</button>
+        <button type="button" class="qa-agent-chip" data-qa-prompt="What are the BSI, NIS2, and NIST PQC deadlines?">BSI / NIS2 deadlines</button>
+        <button type="button" class="qa-agent-chip" data-qa-prompt="What are the plans and pricing?">Pricing &amp; plans</button>
+        <button type="button" class="qa-agent-chip" data-qa-prompt="How do I connect MCP in Cursor or Claude?">Connect MCP / A2A</button>
+        {% endif %}
+        </div>
+      </details>
+      <div class="qa-agent-panel" data-qa-panel hidden>
+        <div class="qa-agent-panel-head">
+          <span class="qa-agent-panel-title" data-qa-panel-title><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.5 20 5.5v6c0 5-3.4 8.4-8 10-4.6-1.6-8-5-8-10v-6z"></path><path d="m9 12 2 2 4-4"></path></svg>{{ 'رد وكيل Quantum Aether (A2A)' if lang == 'ar' else ('Antwort · Quantum Aether A2A-Assistent' if lang == 'de' else 'Quantum Aether A2A Agent') }}</span>
+          <button type="button" class="qa-agent-close" data-qa-close aria-label="{{ 'إغلاق' if lang == 'ar' else ('Schließen' if lang == 'de' else 'Close') }}">×</button>
+        </div>
+        <p class="qa-agent-answer" data-qa-answer dir="auto" role="status"></p>
+        <ul class="qa-agent-points" data-qa-points hidden></ul>
+        <div class="qa-agent-code-wrap" data-qa-code-wrap hidden>
+          <div class="qa-agent-code-head">
+            <span data-qa-code-label>Config</span>
+            <button type="button" class="qa-agent-copy" data-qa-copy>{{ 'نسخ' if lang == 'ar' else ('Kopieren' if lang == 'de' else 'Copy') }}</button>
+          </div>
+          <pre dir="ltr"><code data-qa-code></code></pre>
+        </div>
+        <div class="qa-agent-actions" data-qa-actions hidden></div>
+        <div class="qa-agent-meta" data-qa-meta></div>
+      </div>
     </div>
   </details>
-  <div class="qa-agent-panel" data-qa-panel hidden>
-    <div class="qa-agent-panel-head">
-      <span class="qa-agent-panel-title" data-qa-panel-title><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.5 20 5.5v6c0 5-3.4 8.4-8 10-4.6-1.6-8-5-8-10v-6z"></path><path d="m9 12 2 2 4-4"></path></svg>{{ 'رد وكيل Quantum Aether (A2A)' if lang == 'ar' else ('Antwort · Quantum Aether A2A-Assistent' if lang == 'de' else 'Quantum Aether A2A Agent') }}</span>
-      <button type="button" class="qa-agent-close" data-qa-close aria-label="{{ 'إغلاق' if lang == 'ar' else ('Schließen' if lang == 'de' else 'Close') }}">×</button>
-    </div>
-    <p class="qa-agent-answer" data-qa-answer dir="auto" role="status"></p>
-    <ul class="qa-agent-points" data-qa-points hidden></ul>
-    <div class="qa-agent-code-wrap" data-qa-code-wrap hidden>
-      <div class="qa-agent-code-head">
-        <span data-qa-code-label>Config</span>
-        <button type="button" class="qa-agent-copy" data-qa-copy>{{ 'نسخ' if lang == 'ar' else ('Kopieren' if lang == 'de' else 'Copy') }}</button>
-      </div>
-      <pre dir="ltr"><code data-qa-code></code></pre>
-    </div>
-    <div class="qa-agent-actions" data-qa-actions hidden></div>
-    <div class="qa-agent-meta" data-qa-meta></div>
-  </div>
 </section>

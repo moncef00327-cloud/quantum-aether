@@ -1,118 +1,165 @@
-/* Command UI Glassmorphic Top-of-Page A2A Inquiry & Search Agent Bar */
+/* Command UI Collapsible Top-of-Page A2A Inquiry & Search Agent Pill */
 .qa-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .qa-agent-search{
   position:relative;
-  margin:0 0 14px;
-  padding:9px 12px;
-  border-radius:15px;
-  border:1px solid rgba(138,229,247,.24);
-  background:linear-gradient(135deg,rgba(25,39,63,.76),rgba(21,16,33,.92));
-  backdrop-filter:blur(18px);
-  -webkit-backdrop-filter:blur(18px);
-  box-shadow:0 8px 22px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.08);
+  margin:0 0 10px;
+  padding:0;
+  border:0;
+  background:transparent;
+  box-shadow:none;
   color:#efeef4;
 }
-[data-qa-command-search][hidden],.qa-agent-search[hidden],.qa-agent-search [hidden]{display:none!important}
+[data-qa-command-search][hidden],[data-qa-command-compliance][hidden],.qa-agent-search[hidden],.qa-agent-search [hidden]{display:none!important}
+.qa-agent-disclosure{width:100%}
+.qa-agent-toggle{
+  list-style:none;
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  min-height:36px;
+  padding:6px 13px;
+  border-radius:999px;
+  border:1px solid rgba(186,214,255,.38);
+  background:linear-gradient(150deg,rgba(182,154,255,.18),rgba(17,36,62,.68));
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  box-shadow:inset 0 1px 1px rgba(235,244,255,.42),0 6px 18px rgba(3,10,26,.28);
+  color:#e8f3ff;
+  font-size:12.5px;
+  font-weight:600;
+  cursor:pointer;
+  user-select:none;
+  transition:border-color .16s,background .16s,color .16s;
+}
+.qa-agent-toggle::-webkit-details-marker{display:none}
+.qa-agent-toggle:hover{
+  border-color:rgba(85,229,244,.65);
+  color:#ffffff;
+}
+.qa-agent-toggle:focus-visible{outline:2px solid #55e5f4;outline-offset:3px}
+.qa-agent-toggle-icon{color:#55e5f4;flex-shrink:0}
+.qa-agent-badge{
+  padding:1px 6px;
+  border-radius:999px;
+  background:rgba(85,229,244,.16);
+  border:1px solid rgba(85,229,244,.38);
+  color:#9be8f7;
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.04em;
+}
+.qa-agent-chevron{opacity:.8;transition:transform .18s ease}
+.qa-agent-disclosure[open] > .qa-agent-toggle .qa-agent-chevron{transform:rotate(180deg)}
+.qa-agent-body{
+  margin-top:10px;
+  padding:12px 14px;
+  border-radius:20px;
+  border:1px solid rgba(186,214,255,.42);
+  background:linear-gradient(150deg,rgba(182,154,255,.19) 0%,rgba(85,229,244,.12) 28%,rgba(17,36,62,.76) 64%,rgba(242,166,223,.13) 100%);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+  box-shadow:inset 0 1px 1px rgba(235,244,255,.48),0 10px 30px rgba(3,10,26,.42);
+}
 .qa-agent-form{display:flex;align-items:center;gap:8px}
 .qa-agent-field{position:relative;flex:1 1 auto;min-width:0;display:flex;align-items:center}
 .qa-agent-icon{
-  position:absolute;inset-inline-start:11px;width:15px;height:15px;
+  position:absolute;inset-inline-start:12px;width:15px;height:15px;
   color:#8fe4f2;opacity:.85;pointer-events:none;
 }
 .qa-agent-input{
-  width:100%;min-width:0;min-height:38px;
-  padding:7px 34px;
-  border:1px solid rgba(148,163,184,.28);
-  border-radius:11px;
-  background:rgba(13,10,19,.80);
-  color:#f3f1fa;font-size:13.5px;outline:none;
+  width:100%;min-width:0;min-height:40px;
+  padding:7px 36px;
+  border:1px solid rgba(186,214,255,.38);
+  border-radius:999px;
+  background:rgba(11,25,48,.78);
+  color:#f5f7ff;font-size:13.5px;outline:none;
   transition:border-color .18s,box-shadow .18s,background .18s;
 }
-.qa-agent-input::placeholder{color:#c2b9d7;opacity:1}
+.qa-agent-input::placeholder{color:#c7d9ed;opacity:1}
 .qa-agent-input:focus{
-  border-color:#67e8f9;
-  background:rgba(13,10,19,.94);
-  box-shadow:0 0 0 3px rgba(103,232,249,.20);
+  border-color:#55e5f4;
+  background:rgba(11,25,48,.94);
+  box-shadow:0 0 0 3px rgba(85,229,244,.20);
 }
 .qa-agent-kbd{
-  position:absolute;inset-inline-end:10px;
+  position:absolute;inset-inline-end:12px;
   padding:2px 6px;border-radius:5px;
-  border:1px solid rgba(148,163,184,.26);
-  background:rgba(38,30,57,.72);
-  color:#a39abe;font:600 10.5px/1.2 Manrope,sans-serif;
+  border:1px solid rgba(186,214,255,.28);
+  background:rgba(17,36,62,.75);
+  color:#b7c8dc;font:600 10.5px/1.2 Manrope,sans-serif;
   pointer-events:none;
 }
 .qa-agent-submit{
-  flex:0 0 auto;min-height:38px;padding:0 15px;
-  border:1px solid #d4abfb;border-radius:11px;
-  background:linear-gradient(135deg,#bb79f9,#9f67f8);
-  color:#140c26;font-weight:700;font-size:13px;white-space:nowrap;
-  box-shadow:0 4px 14px rgba(187,121,249,.24);
+  flex:0 0 auto;min-height:40px;padding:0 16px;
+  border:1px solid rgba(212,171,251,.65);border-radius:999px;
+  background:linear-gradient(160deg,#f2a6df,#b69aff);
+  color:#17203a;font-weight:700;font-size:13px;white-space:nowrap;
+  box-shadow:0 4px 14px rgba(182,154,255,.24);
 }
-.qa-agent-submit:hover{filter:brightness(1.08)}
+.qa-agent-submit:hover{filter:brightness(1.06)}
 .qa-agent-submit:disabled{opacity:.6;cursor:wait}
-.qa-agent-suggestions{margin-block-start:4px}
+.qa-agent-suggestions{margin-block-start:6px}
 .qa-agent-suggestions > summary{
   width:fit-content;min-height:26px;padding-block:3px 1px;cursor:pointer;
   color:#cbd9ee;font-size:12px;font-weight:600;
 }
 .qa-agent-suggestions > summary:hover{color:#fff}
-.qa-agent-suggestions > summary:focus-visible{outline:2px solid #67e8f9;outline-offset:3px}
-.qa-agent-chips{display:flex;flex-wrap:wrap;gap:7px;padding-block:2px 6px}
+.qa-agent-suggestions > summary:focus-visible{outline:2px solid #55e5f4;outline-offset:3px}
+.qa-agent-chips{display:flex;flex-wrap:wrap;gap:7px;padding-block:4px 4px}
 .qa-agent-chip{
   padding:6px 12px;border-radius:999px;
-  border:1px solid rgba(148,163,184,.22);
-  background:rgba(15,12,28,.62);
-  color:#d6d0e8;font-size:12px;line-height:1.3;
+  border:1px solid rgba(186,214,255,.28);
+  background:rgba(11,25,48,.62);
+  color:#dce8f7;font-size:12px;line-height:1.3;
   transition:border-color .15s,background .15s,color .15s;
 }
 .qa-agent-chip:hover{
-  border-color:rgba(103,232,249,.58);
-  background:rgba(103,232,249,.13);
+  border-color:rgba(85,229,244,.60);
+  background:rgba(85,229,244,.14);
   color:#ffffff;
 }
 .qa-agent-panel{
   margin-top:12px;padding:15px 16px;
-  border:1px solid rgba(103,232,249,.30);
+  border:1px solid rgba(85,229,244,.34);
   border-radius:16px;
-  background:rgba(13,10,20,.90);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
+  background:rgba(9,20,38,.88);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
 }
 .qa-agent-panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
-.qa-agent-panel-title{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:#67e8f9;letter-spacing:.02em}
+.qa-agent-panel-title{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:#55e5f4;letter-spacing:.02em}
 .qa-agent-close{
-  width:28px;height:28px;border:1px solid rgba(148,163,184,.26);
-  border-radius:50%;background:rgba(38,30,57,.55);color:#cfc8e2;
+  width:28px;height:28px;border:1px solid rgba(186,214,255,.28);
+  border-radius:50%;background:rgba(17,36,62,.65);color:#dce8f7;
   font-size:16px;line-height:1;display:grid;place-items:center;
 }
 .qa-agent-close:hover{background:rgba(255,255,255,.12);color:#fff}
-.qa-agent-answer{margin:0;color:#f3f1fa;font-size:14px;line-height:1.72}
+.qa-agent-answer{margin:0;color:#f5f7ff;font-size:14px;line-height:1.72}
 .qa-agent-answer,.qa-agent-points{overflow-wrap:anywhere}
-.qa-agent-points{margin:10px 0 0;padding-inline-start:18px;color:#d6d0e8;font-size:13px;line-height:1.68;display:grid;gap:5px}
-.qa-agent-code-wrap{margin-top:11px;border:1px solid rgba(138,126,173,.32);border-radius:12px;background:#0a0711;overflow:hidden}
-.qa-agent-code-head{display:flex;align-items:center;justify-content:space-between;padding:7px 12px;border-bottom:1px solid rgba(138,126,173,.22);font-size:11px;color:#a39abe}
-.qa-agent-copy{padding:3px 10px;border:1px solid rgba(103,232,249,.45);border-radius:7px;background:rgba(103,232,249,.12);color:#bae6fd;font-size:11px;font-weight:600}
+.qa-agent-points{margin:10px 0 0;padding-inline-start:18px;color:#d6e4f5;font-size:13px;line-height:1.68;display:grid;gap:5px}
+.qa-agent-code-wrap{margin-top:11px;border:1px solid rgba(186,214,255,.28);border-radius:12px;background:#081224;overflow:hidden}
+.qa-agent-code-head{display:flex;align-items:center;justify-content:space-between;padding:7px 12px;border-bottom:1px solid rgba(186,214,255,.20);font-size:11px;color:#b7c8dc}
+.qa-agent-copy{padding:3px 10px;border:1px solid rgba(85,229,244,.45);border-radius:999px;background:rgba(85,229,244,.14);color:#d8f6ff;font-size:11px;font-weight:600}
 .qa-agent-code-wrap pre{margin:0;padding:11px 13px;overflow-x:auto;font-size:12px;line-height:1.58;color:#e2e8f0}
 .qa-agent-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 .qa-agent-action{
   display:inline-flex;align-items:center;gap:6px;
-  padding:8px 14px;border-radius:11px;
-  border:1px solid rgba(103,232,249,.38);
-  background:rgba(103,232,249,.12);
+  padding:8px 14px;border-radius:999px;
+  border:1px solid rgba(85,229,244,.38);
+  background:rgba(85,229,244,.12);
   color:#e0f2fe;font-size:12.5px;font-weight:600;text-decoration:none;
 }
 .qa-agent-action.is-primary{
-  background:linear-gradient(135deg,#bb79f9,#9f67f8);
-  border-color:#d4abfb;color:#140c26;font-weight:700;
+  background:linear-gradient(155deg,#bdffff,#55e5f4 52%,#58c5df);
+  border-color:rgba(189,255,255,.75);color:#071426;font-weight:700;
 }
-.qa-agent-action:hover{filter:brightness(1.08);text-decoration:none}
-.qa-agent-meta{margin-top:10px;font-size:11px;color:#8e86a8}
+.qa-agent-action:hover{filter:brightness(1.06);text-decoration:none}
+.qa-agent-meta{margin-top:10px;font-size:11px;color:#99afc8}
 @media(max-width:640px){
-  .qa-agent-search{padding:11px 12px;margin-bottom:16px;border-radius:18px}
+  .qa-agent-search{margin-bottom:8px}
   .qa-agent-form{gap:7px}
   .qa-agent-kbd{display:none}
-  .qa-agent-input{padding-inline:30px;min-height:44px;font-size:16px}
-  .qa-agent-submit{padding:0 13px;min-height:44px;font-size:13px}
+  .qa-agent-input{padding-inline:34px;min-height:44px;font-size:16px}
+  .qa-agent-submit{padding:0 14px;min-height:44px;font-size:13px}
   .qa-agent-suggestions > summary{min-height:36px;padding-block:8px}
-  .qa-agent-chip{min-height:40px;max-width:100%;overflow-wrap:anywhere}
+  .qa-agent-chip{min-height:38px;max-width:100%;overflow-wrap:anywhere}
 }

@@ -40,8 +40,8 @@
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="stylesheet" href="/static/command/app.css?v=20261122-scanmobile1">
   <link rel="stylesheet" href="/static/command/pages.css?v=20261125-fixinput1">
-  {% if request.endpoint == 'site.index' %}<link rel="stylesheet" href="/static/a2a-search.css?v=20261125-a2aui6">{% endif %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='command/arabic-glass.css', v='20261126-luminous3') }}">
+  {% if request.endpoint == 'site.index' %}<link rel="stylesheet" href="/static/a2a-search.css?v=20261126-pill1">{% endif %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='command/arabic-glass.css', v='20261126-focus1') }}">
   {% if false %}{% block head %}{% endblock %}{% endif %}{% set head_html = self.head() %}{{ head_html }}
   {% if not seo_noindex and "application/ld+json" not in head_html %}<script type="application/ld+json">{{ {"@context": "https://schema.org", "@type": "WebPage", "@id": metadata_url(lang) ~ "#webpage", "url": metadata_url(lang), "name": seo_title_text, "description": seo_description_text, "inLanguage": lang, "isPartOf": {"@type": "WebSite", "@id": abs_url('site.index') ~ "#website", "name": "Quantum Aether", "url": abs_url('site.index')}, "publisher": org_jsonld()} | tojson }}</script>{% endif %}
 </head>
@@ -63,7 +63,7 @@
 <script src="{{ url_for('static',filename='app.js',v='20261115-report-feedback1') }}" defer></script>
 <script src="/static/trial-form.js?v=20261124-email-any" defer></script>
 <script src="{{ url_for('static',filename='scanner-ui.js') }}" defer></script>
-{% if request.endpoint == 'site.index' %}<script src="/static/a2a-search.js?v=20261126-homefooter1" defer></script>{% endif %}
+{% if request.endpoint == 'site.index' %}<script src="/static/a2a-search.js?v=20261126-homefocus1" defer></script>{% endif %}
 {% block scripts %}{% endblock %}
 {% include "_ref_bar.html" %}
 </body></html>

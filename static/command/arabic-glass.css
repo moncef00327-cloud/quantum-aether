@@ -142,12 +142,11 @@ body {
   line-height: 1.7;
 }
 
-/* Glass cards across Command overview, bottom panels, metrics, discovery strip, footer, and ALL inner pages.
-   Exclude .qa-scan-card:has(> .qa-trial-inline) so the split scanner/trial container NEVER gets a double clipping border! */
+/* Glass cards across Command overview, compliance comparison, trial card, bottom panels, metrics, footer, and ALL inner pages. */
 .app :is(
-  .qa-neon .qa-glass-card:not(.qa-scan-card:has(> .qa-trial-inline)),
-  .qa-agent-search,
-  .qa-neon .qa-trial.qa-trial-inline,
+  .qa-neon .qa-glass-card,
+  .qa-compliance-card,
+  .qa-home-trial-card,
   .panel,
   .metrics,
   .resource,
@@ -377,11 +376,11 @@ body {
   filter: brightness(1.06);
 }
 
-/* Top A2A search bar glass pill harmony (AR, EN, DE) */
+/* Top A2A search bar pill harmony (AR, EN, DE) */
 .app .qa-agent-search {
-  padding: 10px 14px 7px;
-  margin-block-start: 6px;
-  margin-block-end: clamp(12px, 2vw, 24px);
+  padding: 0;
+  margin-block-start: 2px;
+  margin-block-end: 10px;
 }
 
 .app .qa-agent-input,
@@ -403,80 +402,337 @@ body {
   color: #17203a;
 }
 
-/* Split scanner + inline trial glass card on Command homepage (AR & EN): zero outer wrapper border or clipping! */
-#command-root .app .qa-neon .qa-scan-card:has(> .qa-trial-inline) {
-  --panel-inset: clamp(16px, 2.2vw, 28px);
+/* Balanced, proof-led Command homepage focus:
+   1) Clean first screen: 1 headline + 1 crisp sentence + Active Domain Scanner only
+   2) TLS scan result vs NIS2 / DORA compliance evidence
+   3) 14-day daily monitoring trial
+   4) Single weekly metrics bar + 4 checks (hide duplicate metrics card, sample JSON card, filler journey & decorative world map) */
+#command-root .app .qa-neon .qa-hero-content .qa-target,
+#command-root .app .qa-neon .qa-hero-content .qa-hero-links,
+#command-root .app .qa-neon .qa-scan-card > .qa-trial-inline,
+#command-root .app .qa-neon .qa-scan-card > .qa-hero-note:not(#domain-scope),
+#command-root .app .qa-neon .qa-metrics-card,
+#command-root .app .qa-neon .qa-grade-card,
+#command-root .app .journey,
+#command-root .app .bottom-grid .panel.map {
+  display: none !important;
+}
+
+#command-root .app .qa-neon .qa-hero-content {
+  padding: clamp(6px, 1.2vw, 16px) clamp(4px, 1vw, 12px) 4px;
+  min-block-size: auto;
+  inline-size: min(100%, 760px);
+}
+
+#command-root .app .qa-neon .qa-scan-card {
   display: grid;
-  isolation: isolate;
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: repeat(6, auto) [scanner-end] auto;
-  gap: 10px 0;
-  padding: 0 !important;
-  background: transparent !important;
-  border: 0 !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
-  overflow: visible !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+  gap: 12px;
+  padding: clamp(16px, 2.2vw, 26px) !important;
 }
 
-#command-root .app .qa-neon .qa-scan-card:has(> .qa-trial-inline)::before {
-  content: "";
-  grid-area: 1 / 1 / scanner-end / -1;
-  z-index: -1;
-  pointer-events: none;
-  border: 1px solid var(--glass-line);
-  border-radius: clamp(18px, 1.8vw, 24px);
-  background: var(--glass-surface);
-  box-shadow: var(--glass-shadow);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-}
-
-#command-root .app .qa-neon .qa-scan-card:has(> .qa-trial-inline) > :not(.qa-trial-inline) {
-  grid-column: 1;
-  margin-inline: var(--panel-inset);
-  min-inline-size: 0;
-}
-
-#command-root .app .qa-neon .qa-scan-card:has(> .qa-trial-inline) > .qa-card-head {
-  grid-row: 1;
-  margin-block-start: var(--panel-inset);
-}
-
-#command-root .app .qa-neon .qa-scan-card:has(> .qa-trial-inline) > form:not(.qa-trial-inline) {
-  grid-row: 2;
-}
-
-#command-root .app .qa-neon .qa-scan-card:has(> .qa-trial-inline) > :is(.err, .error, [role="alert"], [role="status"]) {
-  grid-row: 3;
-}
-
-#command-root .app .qa-neon .qa-scan-card:has(> .qa-trial-inline) > .qa-hero-examples {
-  grid-row: 4;
+#command-root .app .qa-neon .qa-scan-card > .qa-hero-examples {
   margin-block-start: 2px;
   padding-block-start: 12px;
   border-block-start: 1px solid #a7c7f147;
 }
 
-#command-root .app .qa-neon .qa-scan-card:has(> .qa-trial-inline) > .qa-hero-note {
-  grid-row: 5;
+/* Full-width "What do we measure?" panel after removing the decorative world map */
+#command-root .app .bottom-grid {
+  grid-template-columns: minmax(0, 1fr);
 }
 
-#command-root .app .qa-neon .qa-scan-card:has(> .qa-trial-inline) > #domain-scope {
-  grid-row: 6;
-  margin-block-end: var(--panel-inset);
+#command-root .app .panel.checks {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
 }
 
-#command-root .app .qa-neon .qa-scan-card > .qa-trial-inline {
-  grid-area: scanner-end / 1 / auto / -1;
-  margin: 6px 0 0;
-  padding: var(--panel-inset, 16px);
+#command-root .app .panel.checks .paneltitle {
+  grid-column: 1 / -1;
 }
 
-#command-root .app .qa-neon .qa-scan-card > .qa-trial-inline h2 {
-  font-size: clamp(1rem, 1.6vw, 1.25rem);
+#command-root .app .panel.checks .check {
+  margin-top: 0;
+}
+
+@media (min-width: 720px) {
+  #command-root .app .panel.checks {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+}
+
+/* TLS Scan Result vs NIS2 / DORA Compliance Evidence section (AR / EN / DE) */
+.qa-compliance-section {
+  margin: 22px 0 18px;
+}
+
+.qa-compliance-head {
+  margin-bottom: 14px;
+}
+
+.qa-cmp-eyebrow {
+  display: inline-block;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  color: var(--glass-cyan);
+  margin-bottom: 6px;
+}
+
+.qa-compliance-head h2 {
+  margin: 0 0 6px;
+  color: var(--glass-text);
+  font-size: clamp(1.25rem, 2.2vw, 1.7rem);
+  line-height: 1.3;
+}
+
+.qa-compliance-head p {
+  margin: 0;
+  color: #cde0f5;
+  font-size: 14px;
+  line-height: 1.65;
+  max-inline-size: 68ch;
+}
+
+.qa-compliance-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.qa-compliance-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: clamp(16px, 2vw, 22px);
+}
+
+.qa-compliance-card.is-highlight {
+  border-color: rgba(85, 229, 244, .58) !important;
+  box-shadow: var(--glass-shadow), 0 0 24px rgba(85, 229, 244, .14);
+}
+
+.qa-cmp-card-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(167, 199, 241, .22);
+}
+
+.qa-cmp-card-top h3 {
+  margin: 0;
+  color: var(--glass-text);
+  font-size: 16.5px;
+  font-weight: 700;
+}
+
+.qa-cmp-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(186, 214, 255, .34);
+  background: rgba(11, 25, 48, .55);
+  color: #cde0f5;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.qa-cmp-badge.is-accent {
+  border-color: rgba(85, 229, 244, .55);
+  background: rgba(85, 229, 244, .16);
+  color: #9be8f7;
+}
+
+.qa-compliance-card ul {
+  margin: 0;
+  padding-inline-start: 18px;
+  display: grid;
+  gap: 9px;
+  color: #ddeaf8;
+  font-size: 13.5px;
+  line-height: 1.65;
+}
+
+.qa-compliance-card code {
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: rgba(11, 25, 48, .65);
+  border: 1px solid rgba(167, 199, 241, .22);
+  color: #9be8f7;
+  font-size: 12px;
+}
+
+.qa-compliance-card a {
+  color: #9be8f7;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.qa-cmp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 6px;
+}
+
+.qa-cmp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(186, 214, 255, .36);
+  background: rgba(11, 25, 48, .58);
+  color: #e6f4ff !important;
+  font-size: 12.5px;
+  font-weight: 600;
+  text-decoration: none !important;
+  transition: border-color .15s, background .15s, filter .15s;
+}
+
+.qa-cmp-btn:hover {
+  border-color: var(--glass-cyan);
+  background: rgba(85, 229, 244, .14);
+}
+
+.qa-cmp-btn.is-primary {
+  background: linear-gradient(155deg, #bdffff, var(--glass-cyan) 52%, #58c5df);
+  border-color: rgba(189, 255, 255, .75);
+  color: #071426 !important;
+  font-weight: 700;
+  box-shadow: inset 0 1px 2px #fff, 0 0 14px #55e5f440;
+}
+
+.qa-cmp-btn.is-primary:hover {
+  filter: brightness(1.06);
+}
+
+.qa-cmp-scope {
+  margin: 12px 2px 0;
+  color: #b7c8dc;
+  font-size: 12.5px;
+  line-height: 1.65;
+}
+
+/* Home Trial Card (placed after TLS vs NIS2/DORA comparison on AR/EN homepage) */
+.qa-home-trial-card {
+  margin: 0 0 22px;
+  padding: clamp(16px, 2.2vw, 24px);
+}
+
+.qa-home-trial-head h2 {
+  margin: 0 0 6px;
+  color: var(--glass-text);
+  font-size: clamp(1.1rem, 1.8vw, 1.38rem);
+}
+
+.qa-home-trial-head p {
+  margin: 0 0 12px;
+  color: #cde0f5;
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+.qa-home-trial-form {
+  display: grid;
+  gap: 10px;
+}
+
+.qa-home-trial-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.qa-home-trial-form .qa-field-label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #dce8f7;
+}
+
+.qa-home-trial-form .qa-field {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 9px 14px;
+  border: 1px solid var(--glass-line);
+  border-radius: 999px;
+  background: rgba(11, 25, 48, .72);
+  color: var(--glass-text);
+  font-size: 14px;
+}
+
+.qa-home-trial-form .qa-field:focus {
+  outline: none;
+  border-color: var(--glass-cyan);
+  box-shadow: 0 0 0 3px rgba(85, 229, 244, .20);
+}
+
+.qa-home-trial-form .qa-trial-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 12.5px;
+  color: #cde0f5;
+  line-height: 1.6;
+}
+
+.qa-home-trial-form .qa-trial-consent input {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.qa-home-trial-form .qa-trial-consent a {
+  color: #9be8f7;
+  text-decoration: underline;
+}
+
+.qa-home-trial-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 2px;
+}
+
+.qa-home-trial-form .qa-trial-submit {
+  min-height: 44px;
+  padding: 10px 22px;
+  border: 1px solid rgba(189, 255, 255, .75);
+  border-radius: 999px;
+  background: linear-gradient(155deg, #bdffff, var(--glass-cyan) 52%, #58c5df);
+  color: #071426;
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: inset 0 1px 2px #fff, 0 0 14px #55e5f440;
+}
+
+.qa-home-trial-form .qa-trial-note {
+  margin: 0;
+  color: #b7c8dc;
+  font-size: 12.5px;
+}
+
+@media (max-width: 760px) {
+  .qa-compliance-grid,
+  .qa-home-trial-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .qa-home-trial-form .qa-trial-submit {
+    width: 100%;
+  }
 }
 
 #command-root .app .qa-neon .qa-scan-card .input button {
@@ -504,13 +760,13 @@ body {
 /* Desktop spacing */
 @media (min-width: 851px) {
   .app #workspace-content > .content {
-    padding-top: 26px;
+    padding-top: 18px;
   }
 
   #command-root .app .qa-neon .qa-hero-content {
-    inline-size: min(65%, 750px);
-    min-block-size: clamp(220px, 22vw, 320px);
-    align-content: center;
+    inline-size: min(100%, 760px);
+    min-block-size: auto;
+    padding-block: 8px 6px;
   }
 }
 

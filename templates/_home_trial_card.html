@@ -1,0 +1,51 @@
+{% set c_lang = trial_lang if trial_lang is defined else lang %}
+{% set sp_label = '29 €' %}
+{% set bp_label = '99 €' %}
+<section class="qa-home-trial-card" id="trial-home-{{ c_lang }}" data-qa-home-trial="{{ c_lang }}" data-starter-price="{{ sp_label }}" data-business-price="{{ bp_label }}"{% if trial_hidden is defined and trial_hidden %} hidden{% endif %}>
+  <div class="qa-home-trial-head">
+    {% if c_lang == 'ar' %}
+    <h2>حوّل الفحص إلى دليل يومي · 14 يومًا مجانًا</h2>
+    <p>مراقبة يومية تلقائية لنطاقاتك وتنبيهات فورية عند أي تغيير، دون بطاقة ائتمان وتنتهي تلقائيًا.</p>
+    {% else %}
+    <h2>Turn your scan into daily evidence · 14 days free</h2>
+    <p>Automatic daily monitoring and regression alerts for your domains — no card required, ends automatically.</p>
+    {% endif %}
+  </div>
+  <form class="qa-trial qa-home-trial-form" method="post" action="/monitoring/trial?lang={{ c_lang }}" data-trial-source="home">
+    <input type="hidden" name="src" value="home">
+    <input type="hidden" name="plan" value="starter">
+    <div class="trial-plan-switch" role="group" aria-label="{{ 'الباقة بعد التجربة' if c_lang == 'ar' else 'Plan after trial' }}">
+      <button type="button" class="trial-plan-pill is-active" data-select-plan="starter" data-price="{{ sp_label }}" aria-pressed="true" onclick="(function(b){var p=b.getAttribute('data-price');document.querySelectorAll('[data-trial-price]').forEach(function(e){e.textContent=p});document.querySelectorAll('input[name=plan]').forEach(function(i){i.value='starter'});document.querySelectorAll('.trial-plan-pill').forEach(function(x){var a=x.getAttribute('data-select-plan')==='starter';x.classList.toggle('is-active',a);x.setAttribute('aria-pressed',a?'true':'false')})})(this)">
+        <span class="trial-plan-main" dir="ltr">Starter · {{ sp_label }}</span>
+        <span class="trial-plan-sub">{{ 'حتى 10 نطاقات' if c_lang == 'ar' else 'Up to 10 domains' }}</span>
+      </button>
+      <button type="button" class="trial-plan-pill" data-select-plan="business" data-price="{{ bp_label }}" aria-pressed="false" onclick="(function(b){var p=b.getAttribute('data-price');document.querySelectorAll('[data-trial-price]').forEach(function(e){e.textContent=p});document.querySelectorAll('input[name=plan]').forEach(function(i){i.value='business'});document.querySelectorAll('.trial-plan-pill').forEach(function(x){var a=x.getAttribute('data-select-plan')==='business';x.classList.toggle('is-active',a);x.setAttribute('aria-pressed',a?'true':'false')})})(this)">
+        <span class="trial-plan-main" dir="ltr">Business · {{ bp_label }}</span>
+        <span class="trial-plan-sub">{{ 'حتى 100 نطاق' if c_lang == 'ar' else 'Up to 100 domains' }}</span>
+      </button>
+    </div>
+    <div class="qa-home-trial-fields">
+      <div>
+        <label class="qa-field-label" for="trial-home-email-{{ c_lang }}">{{ 'بريد العمل' if c_lang == 'ar' else 'Work email' }} <span class="trial-required" aria-hidden="true">*</span></label>
+        <input id="trial-home-email-{{ c_lang }}" class="qa-field" type="email" required aria-required="true" maxlength="254" autocomplete="email" inputmode="email" dir="ltr" placeholder="security@company.com" name="email">
+      </div>
+      <div>
+        <label class="qa-field-label" for="trial-home-domain-{{ c_lang }}">{{ 'نطاق الشركة (اختياري)' if c_lang == 'ar' else 'Company domain (optional)' }}</label>
+        <input id="trial-home-domain-{{ c_lang }}" class="qa-field" type="text" maxlength="253" dir="ltr" inputmode="url" autocomplete="url" placeholder="company.com" name="domain">
+      </div>
+    </div>
+    <p class="trial-error form-error" id="trial-home-email-msg-{{ c_lang }}" data-trial-email-error hidden role="alert"></p>
+    <label class="qa-trial-consent">
+      <input type="checkbox" required name="consent" value="1">
+      {% if c_lang == 'ar' %}
+      <span>أوافق على <a href="/agb?lang=ar" target="_blank" rel="noreferrer">الشروط</a> و<a href="/datenschutz?lang=ar" target="_blank" rel="noreferrer">سياسة الخصوصية</a></span>
+      {% else %}
+      <span>I agree to the <a href="/agb?lang=en" target="_blank" rel="noreferrer">Terms</a> and <a href="/datenschutz?lang=en" target="_blank" rel="noreferrer">Privacy Policy</a></span>
+      {% endif %}
+    </label>
+    <div class="qa-home-trial-foot">
+      <button type="submit" class="qa-trial-submit" data-ev="trial_start">{{ 'ابدأ التجربة المجانية' if c_lang == 'ar' else 'Start free trial' }}</button>
+      <p class="qa-trial-note">{{ 'بلا بطاقة · تنتهي تلقائيًا · الخطط من' if c_lang == 'ar' else 'No card · ends automatically · plans from' }} <bdi dir="ltr" data-trial-price>{{ sp_label }}</bdi>{{ ' شهريًا' if c_lang == 'ar' else '/month' }}</p>
+    </div>
+  </form>
+</section>

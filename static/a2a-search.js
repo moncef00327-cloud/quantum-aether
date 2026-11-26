@@ -1,18 +1,33 @@
 (function () {
   var commandSearch = document.querySelector("[data-qa-command-search]");
+  var commandCompliance = document.querySelector("[data-qa-command-compliance]");
   var commandFooter = document.querySelector("[data-qa-command-footer]");
-  if (commandSearch || commandFooter) {
+  if (commandSearch || commandCompliance || commandFooter) {
     var commandRoot = document.getElementById("command-root");
     var syncCommandSearch = function () {
       var curLang = document.documentElement.lang === "ar" ? "ar" : "en";
       var target = commandRoot && commandRoot.querySelector("#workspace-content > .content");
+      var hero = target && target.querySelector(":scope > .qa-hero-modular-glass");
+      var onOverview = Boolean(hero);
       if (commandSearch) {
         if (target && target.firstElementChild !== commandSearch) {
           target.prepend(commandSearch);
         }
-        commandSearch.hidden = Boolean(target && !target.querySelector(":scope > .qa-hero-modular-glass"));
+        commandSearch.hidden = !onOverview;
         commandSearch.querySelectorAll("[data-qa-agent-bar]").forEach(function (bar) {
           bar.hidden = bar.getAttribute("data-lang") !== curLang;
+        });
+      }
+      if (commandCompliance) {
+        if (hero && commandCompliance.previousElementSibling !== hero) {
+          hero.insertAdjacentElement("afterend", commandCompliance);
+        }
+        commandCompliance.hidden = !onOverview;
+        commandCompliance.querySelectorAll("[data-qa-compliance-lang]").forEach(function (el) {
+          el.hidden = el.getAttribute("data-qa-compliance-lang") !== curLang;
+        });
+        commandCompliance.querySelectorAll("[data-qa-home-trial]").forEach(function (el) {
+          el.hidden = el.getAttribute("data-qa-home-trial") !== curLang;
         });
       }
       if (commandFooter) {
@@ -33,6 +48,7 @@
   document.querySelectorAll("[data-qa-agent-bar]").forEach(initSearch);
 
   function initSearch(bar) {
+    var disclosure = bar.querySelector("[data-qa-agent-disclosure]");
     var form = bar.querySelector("[data-qa-agent-form]");
     var input = bar.querySelector("[data-qa-input]");
     var submitBtn = bar.querySelector("[data-qa-submit]");
@@ -299,14 +315,27 @@
       });
     }
 
+    if (disclosure) {
+      disclosure.addEventListener("toggle", function () {
+        if (disclosure.open) {
+          setTimeout(function () { input.focus({ preventScroll: true }); }, 20);
+        }
+      });
+    }
+
     document.addEventListener("keydown", function (e) {
       if (e.defaultPrevented || bar.closest("[hidden], [inert]")) return;
-      if (e.key === "Escape" && !panel.hidden && bar.contains(document.activeElement)) {
-        closePanel();
+      if (e.key === "Escape" && bar.contains(document.activeElement)) {
+        if (!panel.hidden) {
+          closePanel();
+        } else if (disclosure && disclosure.open) {
+          disclosure.open = false;
+        }
       } else if (e.key === "/" && !e.ctrlKey && !e.metaKey && !e.altKey) {
         var tag = (document.activeElement && document.activeElement.tagName || "").toLowerCase();
         if (tag !== "input" && tag !== "textarea" && tag !== "select" && !(document.activeElement && document.activeElement.isContentEditable)) {
           e.preventDefault();
+          if (disclosure && !disclosure.open) disclosure.open = true;
           input.focus();
         }
       }
