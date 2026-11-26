@@ -221,37 +221,101 @@ body {
   fill: var(--glass-cyan);
 }
 
-/* Clean alignment for bottom panels ("What do we measure?" / "ما الذي نقيسه؟" & world map) */
+/* Clean alignment for metrics bar & bottom checks panel ("What do we measure?" / "ما الذي نقيسه؟") */
+.app .metrics {
+  overflow: hidden;
+}
+
+.app .metrics article {
+  padding: 18px 16px !important;
+  border-color: rgba(186, 214, 255, .18) !important;
+}
+
+.app .metrics article > div {
+  color: #dceafb !important;
+  font-size: 11.5px !important;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.app .metrics article strong {
+  display: block;
+  margin-top: 12px !important;
+  font-size: clamp(21px, 5.6vw, 32px) !important;
+  line-height: 1.15 !important;
+  letter-spacing: -.5px !important;
+  white-space: nowrap;
+  direction: ltr;
+}
+
+.app[dir="rtl"] .metrics article strong {
+  text-align: right;
+}
+
+.app[dir="ltr"] .metrics article strong {
+  text-align: left;
+}
+
+.app .metrics article p {
+  margin-top: 8px !important;
+  color: #bfd3ea !important;
+  font-size: 11.5px !important;
+  line-height: 1.5;
+}
+
 .app .bottom-grid {
   gap: 16px;
 }
 
 .app .panel .paneltitle {
   display: flex;
-  align-items: center;
+  align-items: center !important;
   justify-content: space-between;
   gap: 12px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid rgba(167, 199, 241, .22);
+  padding: 0 2px 14px !important;
+  margin: 0 !important;
+  border-bottom: 1px solid rgba(186, 214, 255, .20) !important;
 }
 
 .app .panel .paneltitle h3 {
   margin: 0;
-  color: var(--glass-text);
-  font-size: 16px;
+  color: #ffffff;
+  font-size: 17px !important;
   font-weight: 700;
+  line-height: 1.35 !important;
 }
 
-.app .panel .check {
+.app .panel .paneltitle .badge {
+  padding: 5px 12px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(135, 228, 248, .42) !important;
+  background: rgba(10, 24, 46, .66) !important;
+  color: #dff6ff !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  letter-spacing: .02em !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18) !important;
+}
+
+.app .panel .check,
+.app .panel .check:last-child {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 13px 15px;
-  border-radius: 16px;
-  background: var(--glass-inner-surface);
-  border: 1px solid rgba(196, 222, 255, .26) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .26), 0 6px 16px rgba(3, 10, 26, .24);
-  margin-top: 10px;
+  margin: 0 !important;
+  padding: 14px 15px !important;
+  border-radius: 16px !important;
+  background: var(--glass-inner-surface) !important;
+  border: 1px solid rgba(196, 222, 255, .24) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), 0 4px 14px rgba(3, 10, 26, .20) !important;
+}
+
+.app .panel .check > span {
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 10px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
 }
 
 /* Hide the legacy short React footer on Command homepage so the full unified glass footer is shown cleanly */
@@ -640,15 +704,13 @@ body {
 #command-root .app .panel.checks {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 10px;
+  gap: 12px;
+  padding: 18px 16px !important;
 }
 
 #command-root .app .panel.checks .paneltitle {
   grid-column: 1 / -1;
-}
-
-#command-root .app .panel.checks .check {
-  margin-top: 0;
+  margin-bottom: 2px !important;
 }
 
 @media (min-width: 720px) {

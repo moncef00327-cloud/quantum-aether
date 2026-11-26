@@ -121,7 +121,23 @@
       update();
     } catch { /* Keep the server-rendered snapshot available offline. */ }
   };
-  if (!reactRoot) update();
+  const fixDuplicateWeekNote = () => {
+    if (!valid(data) || !data.date || data.date === data.week) return;
+    const cards = root.querySelectorAll('.metrics article');
+    if (cards.length >= 4) {
+      const note = cards[3].querySelector('p');
+      if (note && note.textContent && note.textContent.trim() === data.week) {
+        note.textContent = data.date;
+      }
+    }
+  };
+  if (reactRoot) {
+    fixDuplicateWeekNote();
+    const obs = new MutationObserver(fixDuplicateWeekNote);
+    obs.observe(reactRoot, { childList: true, subtree: true });
+  } else {
+    update();
+  }
   void refresh();
   window.setInterval(refresh, 5 * 60 * 1000);
   window.addEventListener('focus', refresh);
