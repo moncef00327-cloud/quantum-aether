@@ -536,7 +536,7 @@ def is_api_request():
     return request.path.startswith("/api/")
 
 
-SCAN_SOURCES = {"home", "example", "site", "scanbox", "compare", "api", "mcp", "deadlines", "pack", "site_own"}
+SCAN_SOURCES = {"home", "example", "site", "scanbox", "compare", "api", "mcp", "deadlines", "pack", "site_own", "adoption_top", "mcp_index", "vs_censys", "vs_securitytrails"}
 
 
 def _recent_scan(conn, raw_domain, seconds):
@@ -4449,6 +4449,8 @@ def _sitemap_pages():
     
     adoption_weeks = adoption.weeks(db())
     pages.append(("/mcp-index", _template_day("mcp_index.html"), de_langs))
+    pages.append(("/vs-censys", _template_day("vs_competitor.html"), de_langs))
+    pages.append(("/vs-securitytrails", _template_day("vs_competitor.html"), de_langs))
     adoption_day = adoption.week_monday(adoption_weeks[-1]).isoformat() if adoption_weeks else study_data()["scanned_on"]
     pages.append(("/adoption", adoption_day, de_langs))
     snap_for_sitemap = adoption_snapshot() or {}
@@ -5224,6 +5226,10 @@ exposure_web.register(bp, {"db": db, "lang": current_lang, "base": public_base, 
 import mcp_index  # noqa: E402  Reverse MCP Server Post-Quantum Security Index (/mcp-index, 2026-11-26)
 mcp_index.register(bp, {"lang": current_lang, "data_dir": lambda: current_app.config["DATA_DIR"],
                         "base": public_base, "open_data": _open_data, "de_pages": DE_PAGES, "de_endpoints": i18n.DE_ENDPOINTS})
+
+import competitor_pages  # noqa: E402  Factual comparison pages (/vs-censys, /vs-securitytrails, 2026-11-27)
+competitor_pages.register(bp, {"lang": current_lang, "base": public_base,
+                               "de_pages": DE_PAGES, "de_endpoints": i18n.DE_ENDPOINTS})
 
 app = create_app()
 

@@ -267,6 +267,12 @@ def build_daily_tweet(summary: dict, day: dt.date | None = None, slot: int = 0, 
             f"https://ather-quantum.com/mcp-index #MCP #AIAgents #InfoSec"
         ),
         case_tweet,
+        (
+            f"Censys maps the internet. Quantum Aether adds the Post-Quantum TLS & agent trust layer on top:\n"
+            f"• Live X25519MLKEM768 preference-bug detection\n"
+            f"• Offline Ed25519 receipts (JWKS) + remote MCP/x402\n\n"
+            f"https://ather-quantum.com/vs-censys #PQC #MCP #AIAgents"
+        ),
     ]
     return variants[(d.toordinal() * 3 + int(slot)) % len(variants)]
 

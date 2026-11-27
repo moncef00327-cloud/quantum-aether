@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}{{ d.title }} · {{ t.brand }}{% endblock %}
+{% block description %}{{ d.meta }}{% endblock %}
+{% block head %}
+<script type="application/ld+json">{{ {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type": "Question", "name": d.faq[0][0], "acceptedAnswer": {"@type": "Answer", "text": d.faq[0][1]}},
+    {"@type": "Question", "name": d.faq[1][0], "acceptedAnswer": {"@type": "Answer", "text": d.faq[1][1]}}
+  ]
+} | tojson }}</script>
+<style>
+.vs-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.vs-table{width:100%;border-collapse:collapse;min-width:600px}
+table.vs-table th,table.vs-table td{padding:12px 12px;border-bottom:1px solid rgba(186,214,255,.18);text-align:start;vertical-align:top}
+table.vs-table th{color:#b7c8dc;font-size:.86rem}
+table.vs-table td.vs-us{color:#a7f3d0;font-weight:600}
+.vs-split{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.vs-box{padding:16px;border-radius:14px;background:rgba(15,34,64,.55);border:1px solid rgba(186,214,255,.22)}
+</style>
+{% endblock %}
+{% block content %}
+<section class="hero">
+  <p class="eyebrow">{{ d.kicker }}</p>
+  <h1>{{ d.h1 }}</h1>
+  <p class="lead">{{ d.lead }}</p>
+  <div class="commercial-actions">
+    <a class="button-link" href="{{ url_for('site.monitoring', lang=lang_code) }}#trial-form">{{ ui.cta_trial }}</a>
+    <a href="{{ url_for('site.partners_page', lang=lang_code) }}">{{ ui.cta_msp }}</a>
+    <a href="{{ url_for('site.agents_page', lang=lang_code) }}">{{ ui.cta_mcp }}</a>
+  </div>
+</section>
+
+{% with box_id='vs-' ~ slug ~ '-scan', box_src='vs_' ~ slug %}{% include "_scan_box.html" %}{% endwith %}
+
+<section class="card">
+  <div class="vs-table-wrap">
+    <table class="vs-table">
+      <thead>
+        <tr>
+          <th>{{ ui.col_cap }}</th>
+          <th>{{ ui.col_us }}</th>
+          <th>{{ competitor }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cap, us_val, them_val in d.rows %}
+        <tr>
+          <td><strong>{{ cap }}</strong></td>
+          <td class="vs-us">{{ us_val }}</td>
+          <td>{{ them_val }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="card">
+  <div class="vs-split">
+    <div class="vs-box" style="border-color:rgba(85,229,244,.42);">
+      <h2 style="margin-top:0;">{{ ui.best_us }}</h2>
+      <p style="margin-bottom:0;">{{ d.best_for_us }}</p>
+    </div>
+    <div class="vs-box">
+      <h2 style="margin-top:0;">{{ ui.best_them }} {{ competitor }}</h2>
+      <p style="margin-bottom:0;">{{ d.best_for_them }}</p>
+    </div>
+  </div>
+</section>
+
+<section class="card">
+  <h2>{{ ui.faq_title }}</h2>
+  {% for q, a in d.faq %}
+  <h3>{{ q }}</h3>
+  <p>{{ a }}</p>
+  {% endfor %}
+  <p class="muted small">{{ ui.other_vs }} <a href="{{ other_url }}">Quantum Aether vs {{ other_competitor }} →</a> · <a href="{{ url_for('site.mcp_index_page', lang=lang_code) }}">MCP Security Index →</a></p>
+</section>
+{% endblock %}
