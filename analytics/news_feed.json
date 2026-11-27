@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-11-26T16:16:05Z",
+  "updated_at": "2026-11-27T15:59:51Z",
   "classification": "Deterministic keyword rules; impact notes are editorial context, not source quotations or security advisories.",
   "sources": [
     {
@@ -31,71 +31,15 @@
     {
       "name": "arXiv quant-ph",
       "ok": true,
-      "entries": 172
+      "entries": 0
     },
     {
       "name": "arXiv cs.CR",
       "ok": true,
-      "entries": 72
+      "entries": 0
     }
   ],
   "items": [
-    {
-      "source": "arXiv cs.CR",
-      "url": "https://arxiv.org/abs/2611.34229",
-      "title": "Evaluating Post-Quantum and Hybrid Signatures for Blockchains: Performance, Storage and Ledger Growth",
-      "published_at": "2026-11-26T05:00:00Z",
-      "category": "research",
-      "importance": "medium",
-      "takeaway": {
-        "en": "Editorial takeaway: research context, not a production security advisory or evidence of a new cryptographic break; assess before changing policy.",
-        "ar": "قراءة تحريرية: هذا سياق بحثي، وليس تنبيهاً أمنياً للإنتاج أو دليلاً على كسر تشفيري جديد؛ قيّم النتائج قبل تغيير السياسة.",
-        "de": "Redaktionelle Einordnung: Forschungskontext, keine Produktionswarnung und kein Beleg für einen neuen kryptografischen Bruch; vor einer Richtlinienänderung bewerten."
-      },
-      "id": "1b01f43bac1ac96d"
-    },
-    {
-      "source": "arXiv cs.CR",
-      "url": "https://arxiv.org/abs/2603.02690",
-      "title": "VA-DAR: A PQC-Ready, Vendor-Agnostic Deterministic Artifact Resolution for Serverless, Enumeration-Resistant Wallet Recovery",
-      "published_at": "2026-11-26T05:00:00Z",
-      "category": "standards",
-      "importance": "high",
-      "takeaway": {
-        "en": "Editorial takeaway: compare your cryptographic inventory and migration plan with the linked guidance; scope and deadlines depend on the organization.",
-        "ar": "قراءة تحريرية: قارن جرد التشفير وخطة الانتقال لديك بالإرشادات المرتبطة؛ يختلف النطاق والجدول حسب المؤسسة.",
-        "de": "Redaktionelle Einordnung: Gleichen Sie Kryptoinventar und Migrationsplan mit den verlinkten Leitlinien ab; Umfang und Fristen hängen von der Organisation ab."
-      },
-      "id": "6753a048594f5e01"
-    },
-    {
-      "source": "arXiv cs.CR",
-      "url": "https://arxiv.org/abs/2603.07974",
-      "title": "ZK-ACE: Identity-Centric Zero-Knowledge Authorization for Post-Quantum Blockchain Systems",
-      "published_at": "2026-11-26T05:00:00Z",
-      "category": "research",
-      "importance": "medium",
-      "takeaway": {
-        "en": "Editorial takeaway: research context, not a production security advisory or evidence of a new cryptographic break; assess before changing policy.",
-        "ar": "قراءة تحريرية: هذا سياق بحثي، وليس تنبيهاً أمنياً للإنتاج أو دليلاً على كسر تشفيري جديد؛ قيّم النتائج قبل تغيير السياسة.",
-        "de": "Redaktionelle Einordnung: Forschungskontext, keine Produktionswarnung und kein Beleg für einen neuen kryptografischen Bruch; vor einer Richtlinienänderung bewerten."
-      },
-      "id": "97d9ece373153fad"
-    },
-    {
-      "source": "arXiv cs.CR",
-      "url": "https://arxiv.org/abs/2603.07982",
-      "title": "ACE-GF-based Attestation Relay for PQC - Lightweight Mempool Propagation Without On-Path Proofs",
-      "published_at": "2026-11-26T05:00:00Z",
-      "category": "research",
-      "importance": "medium",
-      "takeaway": {
-        "en": "Editorial takeaway: research context, not a production security advisory or evidence of a new cryptographic break; assess before changing policy.",
-        "ar": "قراءة تحريرية: هذا سياق بحثي، وليس تنبيهاً أمنياً للإنتاج أو دليلاً على كسر تشفيري جديد؛ قيّم النتائج قبل تغيير السياسة.",
-        "de": "Redaktionelle Einordnung: Forschungskontext, keine Produktionswarnung und kein Beleg für einen neuen kryptografischen Bruch; vor einer Richtlinienänderung bewerten."
-      },
-      "id": "b6c697f4ee087b22"
-    },
     {
       "source": "Cloudflare Blog",
       "url": "https://blog.cloudflare.com/vole-mole/",
