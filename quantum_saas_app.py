@@ -4410,6 +4410,7 @@ def robots():
             f"# A2A Agent Card: {public_base()}/.well-known/agent-card.json\n"
             f"# API Catalog (RFC 9727): {public_base()}/.well-known/api-catalog\n"
             f"# Declarative Agent Flows: {public_base()}/.well-known/agents.json\n"
+            f"# x402 Discovery (Base USDC): {public_base()}/.well-known/x402\n"
             f"# OpenAPI: {public_base()}/openapi.yaml\n"
             f"# Content feed (Atom): {public_base()}/feed.xml\n")
     return Response(body, mimetype="text/plain")

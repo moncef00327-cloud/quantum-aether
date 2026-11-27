@@ -67,6 +67,33 @@ class DistributionPackTests(unittest.TestCase):
                 self.assertEqual(qa_cli.main(["scan", "cloudflare.com"]), 0)
         self.assertEqual(json.loads(buf.getvalue())["grade"], "A")
 
+    def test_well_known_x402_discovery_endpoints(self):
+        import os
+        import tempfile
+        import quantum_saas_app as app_mod
+
+        with tempfile.TemporaryDirectory() as tmp:
+            app = app_mod.create_app({
+                "TESTING": True,
+                "DATA_DIR": tmp,
+                "DB_PATH": os.path.join(tmp, "test.db"),
+                "USDC_BASE_ADDR": "0x1111111111111111111111111111111111111111",
+            })
+            client = app.test_client()
+            for path in ("/.well-known/x402", "/.well-known/x402.json"):
+                r = client.get(path)
+                self.assertEqual(r.status_code, 200, path)
+                self.assertEqual(r.headers.get("Access-Control-Allow-Origin"), "*")
+                doc = r.get_json()
+                self.assertEqual(doc["x402Version"], 2)
+                self.assertEqual(doc["network"], "eip155:8453")
+                self.assertTrue(doc["enabled"])
+                self.assertGreaterEqual(len(doc["resources"]), 4)
+                ids = {e["id"] for e in doc["endpoints"]}
+                self.assertEqual(ids, {"sector_snapshot", "tls_attestation", "full_report"})
+            robots = client.get("/robots.txt").get_data(as_text=True)
+            self.assertIn("/.well-known/x402", robots)
+
 
 if __name__ == "__main__":
     unittest.main()

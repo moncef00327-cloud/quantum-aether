@@ -450,6 +450,93 @@ def register(bp, services):
   response.headers['Link']=f'<{base()}/.well-known/agent-service.json>; rel="canonical"'
   return response
 
+ @bp.get('/.well-known/x402')
+ @bp.get('/.well-known/x402.json')
+ def well_known_x402():
+  """Standard x402 v2 discovery document for x402scan, Coinbase Bazaar, PayAI, and OpenClaw autonomous bots."""
+  b=base().rstrip('/')
+  cfg=current_app.config
+  pay_to=x402_pay.receiver() or ''
+  sector_price=sector_price_usd()
+  att_price=x402_attestation.PRICE_USD
+  rep_price=str(cfg.get('PRICE','49'))
+  doc={
+   'version':1,
+   'x402Version':2,
+   'provider':{'name':'Quantum Aether','url':b,'mcp':f'{b}/mcp','agent_card':f'{b}/.well-known/agent-card.json','jwks':f'{b}/.well-known/jwks.json'},
+   'network':x402_pay.NETWORK,
+   'asset':x402_pay.ASSET,
+   'scheme':'exact',
+   'facilitator':x402_pay.FACILITATOR,
+   'enabled':bool(pay_to),
+   'resources':[
+    f'GET {b}/api/v1/agent/sector/banks',
+    f'GET {b}/api/v1/agent/sector/governments',
+    f'GET {b}/api/v1/agent/sector/cyber-agencies',
+    f'GET {b}/api/v1/attestation',
+    f'POST {b}/api/v1/agent/report/{{scan_id}}',
+   ],
+   'endpoints':[
+    {
+     'id':'sector_snapshot',
+     'method':'GET',
+     'url':f'{b}/api/v1/agent/sector/banks',
+     'url_template':f'{b}/api/v1/agent/sector/{{sector}}',
+     'sectors':list(SECTOR_KEYS),
+     'mcp_tool':'get_sector_snapshot',
+     'price_usd':sector_price,
+     'amount':x402_pay.units(sector_price),
+     'asset':x402_pay.ASSET,
+     'network':x402_pay.NETWORK,
+     'payTo':pay_to,
+     'read_only':True,
+     'description':'Weekly post-quantum TLS (X25519MLKEM768) adoption snapshot for a critical sector (banks, governments, cyber-agencies, telecoms, etc.).',
+    },
+    {
+     'id':'tls_attestation',
+     'method':'GET',
+     'url':f'{b}/api/v1/attestation',
+     'query':{'domain':'example.com'},
+     'mcp_tool':'get_tls_attestation',
+     'price_usd':att_price,
+     'amount':x402_pay.units(att_price),
+     'asset':x402_pay.ASSET,
+     'network':x402_pay.NETWORK,
+     'payTo':pay_to,
+     'read_only':False,
+     'sample_url':f'{b}/api/v1/attestation/sample',
+     'sample_pdf_url':f'{b}/api/v1/attestation/sample.pdf',
+     'description':'Fresh live PQ-TLS measurement + Ed25519 JWS receipt + CycloneDX 1.6 CBOM + printable Auditor PDF with SHA-256 + bundle_jws.',
+    },
+    {
+     'id':'full_report',
+     'method':'POST',
+     'url_template':f'{b}/api/v1/agent/report/{{scan_id}}',
+     'mcp_tool':'get_full_report',
+     'price_usd':rep_price,
+     'amount':x402_pay.units(rep_price),
+     'asset':x402_pay.ASSET,
+     'network':x402_pay.NETWORK,
+     'payTo':pay_to,
+     'read_only':True,
+     'description':'Full post-quantum TLS remediation report for a completed scan_id.',
+    },
+   ],
+   'free_endpoints':{
+    'live_scan_with_signed_receipt':f'POST {b}/api/v1/scan',
+    'stored_evidence':f'GET {b}/api/v1/badge/{{domain}}',
+    'mcp_security_index':f'GET {b}/api/v1/mcp-index',
+    'remote_mcp':f'{b}/mcp',
+    'agent_affiliate_register':f'POST {b}/api/v1/agent/affiliate/register',
+   },
+   'instructions':'Call free MCP/HTTP endpoints first (scan_tls, get_tls_evidence, /api/v1/mcp-index). Paid x402 endpoints return HTTP 402 with PAYMENT-REQUIRED v2 exact EIP-3009 USDC-on-Base requirements.',
+  }
+  response=jsonify(doc)
+  response.headers['Cache-Control']='public, max-age=300'
+  response.headers['Access-Control-Allow-Origin']='*'
+  response.headers['Link']=f'<{b}/.well-known/x402>; rel="canonical"'
+  return response
+
  @bp.get('/security-copilot.yaml')
  def security_copilot_manifest():
   # Microsoft Security Copilot custom plugin (Format: MCP), per learn.microsoft.com/copilot/security/plugin-mcp.
