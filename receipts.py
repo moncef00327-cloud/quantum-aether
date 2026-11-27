@@ -1149,7 +1149,7 @@ def register_routes(bp, services: dict) -> None:
     def well_known_jwks():
         doc = jwks_document(**key_config_from_app(services))
         resp = Response(
-            json.dumps(doc, separators=(",", ":")),
+            json.dumps(doc, indent=2) + "\n",
             status=200,
             mimetype="application/jwk-set+json",
         )
@@ -1159,7 +1159,11 @@ def register_routes(bp, services: dict) -> None:
 
     @bp.get("/.well-known/qa-receipt-configuration")
     def well_known_receipt_configuration():
-        resp = jsonify(discovery_configuration(base()))
+        resp = Response(
+            json.dumps(discovery_configuration(base()), indent=2) + "\n",
+            status=200,
+            mimetype="application/json",
+        )
         resp.headers["Cache-Control"] = "public, max-age=3600"
         resp.headers["Access-Control-Allow-Origin"] = "*"
         return resp
