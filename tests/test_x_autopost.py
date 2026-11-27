@@ -20,6 +20,18 @@ class XAutopostTests(unittest.TestCase):
             seen.add(t)
         self.assertEqual(len(seen), 4)
         self.assertTrue(any("/.well-known/x402" in t for t in seen), "x402 discovery URL must not be truncated")
+        self.assertTrue(all("#AIAgents" in t for t in seen), "all daily tweets should carry #AIAgents")
+
+    def test_mention_reply_variants_and_skip(self):
+        r1 = xa.build_mention_reply("AxiomBot", "A signed scan receipt with timestamp would help")
+        self.assertIsNotNone(r1)
+        self.assertLessEqual(len(r1), 280)
+        self.assertIn("jwks.json", r1)
+        r2 = xa.build_mention_reply("boardyai", "agents paying per call with its own wallet")
+        self.assertIsNotNone(r2)
+        self.assertLessEqual(len(r2), 280)
+        self.assertIn(".well-known/x402", r2)
+        self.assertIsNone(xa.build_mention_reply("spammer", "free airdrop giveaway"))
 
     def test_oauth1_header_structure(self):
         creds = {
