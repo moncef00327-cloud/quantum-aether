@@ -472,9 +472,9 @@ def register(bp, services):
    'resources':[
     f'{b}/api/v1/x402/batch-scan',
     f'{b}/api/v1/x402/cbom',
-    f'{b}/api/v1/agent/sector/banks',
-    f'{b}/api/v1/agent/sector/governments',
-    f'{b}/api/v1/agent/sector/cyber-agencies',
+    f'{b}/api/v1/agent/sector/banks-europe',
+    f'{b}/api/v1/agent/sector/government-dach',
+    f'{b}/api/v1/agent/sector/cyber-agencies-worldwide',
     f'{b}/api/v1/attestation',
    ],
    'endpoints':[
@@ -508,7 +508,7 @@ def register(bp, services):
     {
      'id':'sector_snapshot',
      'method':'GET',
-     'url':f'{b}/api/v1/agent/sector/banks',
+     'url':f'{b}/api/v1/agent/sector/banks-europe',
      'url_template':f'{b}/api/v1/agent/sector/{{sector}}',
      'sectors':list(SECTOR_KEYS),
      'mcp_tool':'get_sector_snapshot',
@@ -627,12 +627,12 @@ def register(bp, services):
       },
      }
     },
-    '/api/v1/agent/sector/banks':{
+    '/api/v1/agent/sector/banks-europe':{
      'get':{
-      'operationId':'x402SectorBanks',
-      'summary':'Weekly Banks PQ-TLS Adoption Snapshot ($0.50 USDC on Base)',
-      'description':'Read-only weekly post-quantum TLS adoption dataset for global banks.',
-      **pay_ext(sector_price,'Weekly post-quantum TLS adoption snapshot for banks'),
+      'operationId':'x402SectorBanksEurope',
+      'summary':'Weekly European Banks PQ-TLS Adoption Snapshot ($0.50 USDC on Base)',
+      'description':'Read-only weekly post-quantum TLS adoption dataset for European banks.',
+      **pay_ext(sector_price,'Weekly post-quantum TLS adoption snapshot for European banks'),
       'responses':{
        '200':{'description':'Sector snapshot JSON'},
        '402':{'description':'x402 v2 Base USDC payment required ($0.50 USDC)'},

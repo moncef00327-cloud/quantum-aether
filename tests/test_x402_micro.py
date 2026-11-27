@@ -128,7 +128,7 @@ class X402MicroTests(unittest.TestCase):
         spec = r.get_json()
         self.assertEqual(spec["openapi"], "3.1.0")
         self.assertIn("@", spec["info"]["contact"]["email"])
-        for path in ("/api/v1/x402/batch-scan", "/api/v1/x402/cbom", "/api/v1/agent/sector/banks", "/api/v1/attestation"):
+        for path in ("/api/v1/x402/batch-scan", "/api/v1/x402/cbom", "/api/v1/agent/sector/banks-europe", "/api/v1/attestation"):
             self.assertIn(path, spec["paths"])
 
 
