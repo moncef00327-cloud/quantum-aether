@@ -1,0 +1,16 @@
+{
+  "name": "quantum-aether",
+  "owner": {
+    "name": "Quantum Aether",
+    "url": "https://ather-quantum.com"
+  },
+  "description": "Quantum Aether's official Claude Code plugin marketplace for post-quantum TLS (X25519MLKEM768 / ML-KEM), signed Ed25519 receipts, and NIS2/DORA evidence.",
+  "plugins": [
+    {
+      "name": "quantum-aether",
+      "source": "./plugins/quantum-aether",
+      "description": "Measure post-quantum TLS (X25519MLKEM768), detect hidden server-preference downgrades, generate copy-paste server fixes, and issue offline-verifiable Ed25519 signed receipts — zero API key required.",
+      "category": "Security"
+    }
+  ]
+}

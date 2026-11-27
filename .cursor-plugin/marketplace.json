@@ -1,0 +1,17 @@
+{
+  "name": "quantum-aether",
+  "owner": {
+    "name": "Quantum Aether",
+    "email": "contact@mail.ather-quantum.com"
+  },
+  "metadata": {
+    "description": "Quantum Aether's official plugin marketplace for Cursor and Grok Bot: live post-quantum TLS checks, signed Ed25519 receipts, and copy-paste X25519MLKEM768 fixes."
+  },
+  "plugins": [
+    {
+      "name": "quantum-aether",
+      "source": "plugins/quantum-aether",
+      "description": "Audit post-quantum TLS (X25519MLKEM768), catch server-preference PQ downgrades SSL Labs hides, audit remote MCP servers, and generate Nginx/Apache/Cloudflare fixes."
+    }
+  ]
+}

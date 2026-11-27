@@ -1,0 +1,49 @@
+{
+  "name": "quantum-aether",
+  "version": "2.0.0",
+  "description": "Post-quantum TLS (X25519MLKEM768 / ML-KEM) auditing, hidden server-preference downgrade detection, Ed25519 signed receipts, CycloneDX 1.6 CBOM, and copy-paste remediation configs.",
+  "author": {
+    "name": "Quantum Aether",
+    "url": "https://ather-quantum.com"
+  },
+  "homepage": "https://ather-quantum.com",
+  "repository": "https://github.com/moncef00327-cloud/quantum-aether",
+  "license": "MIT",
+  "keywords": [
+    "post-quantum",
+    "pqc",
+    "tls",
+    "ml-kem",
+    "x25519mlkem768",
+    "cybersecurity",
+    "nis2",
+    "dora",
+    "cbom",
+    "mcp-security"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Quantum Aether",
+    "shortDescription": "Post-quantum TLS & signed compliance evidence.",
+    "longDescription": "Audit whether any public domain, API, or remote MCP server actually negotiates hybrid post-quantum TLS (X25519MLKEM768 / ML-KEM, FIPS 203) with real browsers.\n\nQuantum Aether detects both classical endpoints and hidden server-preference downgrades (where tools like SSL Labs report PQ support but Chrome/Firefox still receive classical X25519), generates copy-paste Nginx/Apache/HAProxy/Cloudflare fixes, and issues offline-verifiable Ed25519 signed TLS receipts for NIS2/DORA/BSI TR-02102-2 documentation.",
+    "developerName": "Quantum Aether",
+    "category": "Security",
+    "capabilities": [
+      "Post-quantum TLS scanning",
+      "Signed Ed25519 TLS receipts",
+      "Copy-paste PQ-TLS configs",
+      "Remote MCP security auditing",
+      "NIS2 & DORA evidence"
+    ],
+    "websiteURL": "https://ather-quantum.com",
+    "privacyPolicyURL": "https://ather-quantum.com/privacy",
+    "termsOfServiceURL": "https://ather-quantum.com/impressum",
+    "defaultPrompt": [
+      "Audit example.com for post-quantum TLS (X25519MLKEM768) and explain any server-preference downgrade.",
+      "Generate a copy-paste Nginx configuration to enable X25519MLKEM768 ahead of classical curves.",
+      "Produce NIS2/DORA transport encryption evidence with an offline-verifiable Ed25519 signed receipt.",
+      "Check whether our remote MCP servers protect agent traffic with post-quantum TLS."
+    ]
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "quantum-aether": {
+      "type": "http",
+      "url": "https://ather-quantum.com/mcp"
+    }
+  }
+}

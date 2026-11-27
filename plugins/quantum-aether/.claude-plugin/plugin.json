@@ -1,0 +1,28 @@
+{
+  "name": "quantum-aether",
+  "displayName": "Quantum Aether",
+  "version": "2.0.0",
+  "description": "Post-quantum TLS (X25519MLKEM768 / ML-KEM) security audits, hidden server-preference downgrade detection, Ed25519 signed receipts, CycloneDX 1.6 CBOM, and copy-paste remediation configs — no API key required.",
+  "author": {
+    "name": "Quantum Aether",
+    "url": "https://ather-quantum.com"
+  },
+  "homepage": "https://ather-quantum.com",
+  "privacyPolicyUrl": "https://ather-quantum.com/privacy",
+  "repository": "https://github.com/moncef00327-cloud/quantum-aether",
+  "license": "MIT",
+  "keywords": [
+    "post-quantum",
+    "pqc",
+    "tls",
+    "ml-kem",
+    "x25519mlkem768",
+    "cybersecurity",
+    "nis2",
+    "dora",
+    "cbom",
+    "cyclonedx",
+    "mcp-security",
+    "ssl-audit"
+  ]
+}
