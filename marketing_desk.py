@@ -469,6 +469,80 @@ def employee_b2b_leads(
     return {"inbound_hot": inbound, "priority_cf": priority}
 
 
+def employee_msp_hot_leads(c: sqlite3.Connection, today: dt.date | None = None) -> dict:
+    """يرصد حالة دفعات MSP Pilot الألمانية (Wave-3/4/5) والعملاء الساخنين الذين فحصوا أو زاروا /partners."""
+    today = today or dt.datetime.now(dt.timezone.utc).date()
+    since_14d = (today - dt.timedelta(days=14)).isoformat()
+    since_7d = (today - dt.timedelta(days=7)).isoformat()
+    yesterday = (today - dt.timedelta(days=1)).isoformat()
+
+    sent_rows = []
+    try:
+        sent_rows = c.execute(
+            "SELECT domain, email, sent_at FROM outreach_sent "
+            "WHERE sent_at >= ? AND (lang = 'de' OR subject LIKE '%Pilot%') ORDER BY sent_at DESC",
+            (since_14d,),
+        ).fetchall()
+    except sqlite3.Error:
+        pass
+    msp_domains = {(r["domain"] or "").strip().lower().removeprefix("www."): dict(r) for r in sent_rows if r["domain"]}
+
+    hot_matches = []
+    if msp_domains:
+        try:
+            for r in c.execute(
+                "SELECT domain, grade, created_at FROM scans WHERE created_at >= ? ORDER BY created_at DESC LIMIT 200",
+                (since_7d,),
+            ):
+                d = (r["domain"] or "").strip().lower().removeprefix("www.")
+                if d in msp_domains:
+                    hot_matches.append({"domain": d, "signal": f"فحص حيّ (Grade {r['grade']})", "at": r["created_at"]})
+        except sqlite3.Error:
+            pass
+        try:
+            for path, n in c.execute(
+                "SELECT path, COUNT(*) FROM pageviews WHERE day >= ? AND is_bot=0 AND is_test=0 AND path LIKE '/site/%' GROUP BY path",
+                (since_7d,),
+            ):
+                d = path.split("/site/", 1)[1].split("?")[0].strip("/").lower().removeprefix("www.")
+                if d in msp_domains:
+                    hot_matches.append({"domain": d, "signal": f"زيارة /site/{d} ({n}×)", "at": since_7d})
+        except sqlite3.Error:
+            pass
+
+    partners_pv = 0
+    pricing_pv = 0
+    try:
+        partners_pv = c.execute(
+            "SELECT COUNT(DISTINCT visitor) FROM pageviews WHERE day = ? AND is_bot=0 AND is_test=0 AND path = '/partners'",
+            (yesterday,),
+        ).fetchone()[0] or 0
+        pricing_pv = c.execute(
+            "SELECT COUNT(DISTINCT visitor) FROM pageviews WHERE day = ? AND is_bot=0 AND is_test=0 AND path = '/pricing'",
+            (yesterday,),
+        ).fetchone()[0] or 0
+    except sqlite3.Error:
+        pass
+
+    recent_inbound = []
+    try:
+        for r in c.execute(
+            "SELECT sender, subject, received_at FROM inbound_mail WHERE received_at >= ? ORDER BY received_at DESC LIMIT 5",
+            (since_7d,),
+        ):
+            recent_inbound.append(dict(r))
+    except sqlite3.Error:
+        pass
+
+    return {
+        "msp_sent_14d": len(msp_domains),
+        "hot_matches": hot_matches[:10],
+        "partners_visitors_yesterday": int(partners_pv),
+        "pricing_visitors_yesterday": int(pricing_pv),
+        "recent_inbound": recent_inbound,
+    }
+
+
 # ---------------------------------------------------------------- Employee 5: GEO / AI Search Freshness
 def employee_geo_freshness(
     data_dir: str,
@@ -596,6 +670,7 @@ def render_brief(
     leads: dict,
     geo: dict,
     promo: dict | None = None,
+    msp_hot: dict | None = None,
 ) -> str:
     L = [
         f"# Quantum Aether — حزمة موظفي التسويق اليومية ({day})",
@@ -660,6 +735,19 @@ def render_brief(
     L.append("")
 
     L += ["---", "", "## 4️⃣ موظف أبحاث العملاء B2B (أهداف جديدة غير مكررة — بدون إرسال تلقائي)"]
+    if msp_hot:
+        L.append(
+            f"### 🇩🇪 رادار MSP Pilot الساخن (آخر 14 يوماً: **{msp_hot['msp_sent_14d']}** شركة مراسَلة · "
+            f"زوار أمس: `/partners`={msp_hot['partners_visitors_yesterday']} · `/pricing`={msp_hot['pricing_visitors_yesterday']}):"
+        )
+        if msp_hot["hot_matches"]:
+            for hm in msp_hot["hot_matches"]:
+                L.append(f"- 🔥 **`{hm['domain']}`** — {hm['signal']} (`{hm['at']}`)")
+        else:
+            L.append("- لم تُسجَّل زيارة أو إعادة فحص مباشرة من شركات MSP المراسَلة خلال آخر 7 أيام بعد.")
+        for ib in msp_hot.get("recent_inbound") or []:
+            L.append(f"- 📩 رد وارد من `{ib.get('sender', '')}`: {ib.get('subject', '')} (`{ib.get('received_at', '')}`)")
+        L.append("")
     if leads["inbound_hot"]:
         L.append("### 🔥 زاروا موقعك أو فحصوا أمس (أولوية قصوى):")
         for h in leads["inbound_hot"]:
@@ -745,6 +833,7 @@ def run(
             shown_domains=set(history["priority_cf_domains"]),
             today=today,
         )
+        msp_hot = employee_msp_hot_leads(c, today=today)
         promo = employee_promo_studio(c, today=today)
     finally:
         c.close()
@@ -752,7 +841,7 @@ def run(
     geo = employee_geo_freshness(
         data_dir, refresh_news=refresh_news, seen_news_urls=set(history["news_urls"])
     )
-    brief = render_brief(today_iso, radar_drafts, dj, badges, leads, geo, promo=promo)
+    brief = render_brief(today_iso, radar_drafts, dj, badges, leads, geo, promo=promo, msp_hot=msp_hot)
 
     out_dir = Path(data_dir) / "marketing_briefs"
     out_dir.mkdir(parents=True, exist_ok=True)

@@ -9,19 +9,21 @@ from tools import x_autopost as xa
 
 
 class XAutopostTests(unittest.TestCase):
-    def test_all_six_daily_variants_fit_280_chars(self):
+    def test_all_seven_daily_variants_fit_280_chars(self):
         summary = {"measured": 152, "pq_hybrid": 120, "pq_pct": 78.9, "classical": 28, "tls12": 4}
+        upg = {"week": "2026-W48", "domain": "manageengine.com", "old_grade": "C", "new_grade": "A", "old_grp": "x25519", "new_grp": "X25519MLKEM768"}
         seen = set()
-        for day_off in range(2):
+        for day_off in range(3):
             day = dt.date(2026, 11, 27) + dt.timedelta(days=day_off)
             for slot in range(3):
-                t = xa.build_daily_tweet(summary, day, slot=slot)
+                t = xa.build_daily_tweet(summary, day, slot=slot, upgrade=upg)
                 self.assertLessEqual(len(t), 280, f"day={day} slot={slot} len={len(t)}")
                 self.assertIn("https://", t)
                 self.assertIn("#AIAgents", t)
                 seen.add(t)
-        self.assertEqual(len(seen), 6)
+        self.assertEqual(len(seen), 7)
         self.assertTrue(any("/.well-known/x402" in t for t in seen), "x402 discovery URL must not be truncated")
+        self.assertTrue(any("manageengine.com" in t for t in seen), "case study upgrade variant must appear")
         for t in seen:
             self.assertNotIn("ather-quantum.com/mcp ", t, "use browser-friendly /agents instead of POST-only /mcp")
             self.assertNotIn("ather-quantum.com/api/v1/scan ", t, "avoid 400 bare /api/v1/scan link")

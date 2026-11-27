@@ -164,7 +164,43 @@ def load_mcp_summary(path: str = MCP_INDEX_PATH) -> dict:
     return {"measured": 152, "pq_hybrid": 120, "pq_pct": 78.9, "classical": 28, "tls12": 4, "pq_not_preferred": 0}
 
 
-def build_daily_tweet(summary: dict, day: dt.date | None = None, slot: int = 0) -> str:
+def load_recent_upgrade(db_path: str = DB_PATH, day: dt.date | None = None) -> dict | None:
+    """Fetch a real before/after PQ-TLS upgrade from the weekly adoption_results table."""
+    if not os.path.exists(db_path):
+        return None
+    try:
+        conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True, timeout=5)
+        try:
+            weeks = [r[0] for r in conn.execute("SELECT DISTINCT week FROM adoption_results ORDER BY week DESC LIMIT 2")]
+            if len(weeks) < 2:
+                return None
+            rows = conn.execute(
+                "SELECT cur.domain, prev.grade, cur.grade, prev.grp, cur.grp "
+                "FROM adoption_results cur JOIN adoption_results prev "
+                "ON cur.domain = prev.domain AND prev.week = ? "
+                "WHERE cur.week = ? AND cur.ok = 1 AND prev.ok = 1 AND cur.unsure = 0 AND prev.unsure = 0 "
+                "AND prev.pq = 0 AND cur.pq = 1 ORDER BY cur.sector IS NULL, cur.domain LIMIT 20",
+                (weeks[1], weeks[0]),
+            ).fetchall()
+            if not rows:
+                return None
+            d = day or now_utc().date()
+            row = rows[d.toordinal() % len(rows)]
+            return {
+                "week": weeks[0],
+                "domain": row[0],
+                "old_grade": row[1] or "B",
+                "new_grade": row[2] or "A",
+                "old_grp": row[3] or "classical",
+                "new_grp": row[4] or "X25519MLKEM768",
+            }
+        finally:
+            conn.close()
+    except sqlite3.Error:
+        return None
+
+
+def build_daily_tweet(summary: dict, day: dt.date | None = None, slot: int = 0, upgrade: dict | None = None) -> str:
     d = day or now_utc().date()
     m = summary.get("measured", 152)
     pq_n = summary.get("pq_hybrid", 120)
@@ -173,6 +209,22 @@ def build_daily_tweet(summary: dict, day: dt.date | None = None, slot: int = 0) 
     t12 = summary.get("tls12", 4)
     exposed = cls + t12
     day_str = d.isoformat()
+
+    if upgrade and upgrade.get("domain"):
+        case_tweet = (
+            f"Before/after in our weekly PQ-TLS tracker ({upgrade.get('week', day_str)}):\n"
+            f"{upgrade['domain']} upgraded Grade {upgrade['old_grade']} ({upgrade['old_grp']}) "
+            f"→ Grade {upgrade['new_grade']} ({upgrade['new_grp']}).\n\n"
+            f"Check your own domain + free Ed25519 receipt:\n"
+            f"https://ather-quantum.com/adoption #PQC #TLS #AIAgents"
+        )
+    else:
+        case_tweet = (
+            f"Before/after in our weekly PQ-TLS tracker ({day_str}):\n"
+            f"Every week we log real public domains upgrading from classical TLS to Grade A X25519MLKEM768.\n\n"
+            f"Check your domain + free Ed25519 receipt:\n"
+            f"https://ather-quantum.com/adoption #PQC #TLS #AIAgents"
+        )
 
     variants = [
         (
@@ -214,6 +266,7 @@ def build_daily_tweet(summary: dict, day: dt.date | None = None, slot: int = 0) 
             f"Free live check + copy-paste Nginx/Cloudflare config:\n"
             f"https://ather-quantum.com/mcp-index #MCP #AIAgents #InfoSec"
         ),
+        case_tweet,
     ]
     return variants[(d.toordinal() * 3 + int(slot)) % len(variants)]
 
@@ -509,7 +562,8 @@ def main(argv=None) -> int:
     now = now_utc()
     today = now.date()
     slot = a.slot if a.slot in (0, 1, 2) else current_slot(now)
-    tweet = a.text.strip() if a.text.strip() else build_daily_tweet(summary, today, slot=slot)
+    upgrade = load_recent_upgrade(a.db, today) if not a.text.strip() else None
+    tweet = a.text.strip() if a.text.strip() else build_daily_tweet(summary, today, slot=slot, upgrade=upgrade)
     if not a.reply_mentions and len(tweet) > 280:
         sys.exit(f"tweet too long: {len(tweet)} > 280 chars")
 
