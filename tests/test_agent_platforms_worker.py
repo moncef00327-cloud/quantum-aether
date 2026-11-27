@@ -35,6 +35,15 @@ class AgentPlatformsWorkerTests(unittest.TestCase):
         apw.record_done(conn, "agentboard", "daily_digest", "2026-11-27", "ok")
         self.assertTrue(apw.already_done(conn, "agentboard", "daily_digest", "2026-11-27"))
 
+    def test_moltbook_series_templates_format_cleanly(self):
+        for submolt, title_tpl, body_tpl in apw.MOLTBOOK_SERIES:
+            t = title_tpl.format(measured=118, pq_n=91, pq_pct=77.1, classical=24, tls12=3)
+            b = body_tpl.format(measured=118, pq_n=91, pq_pct=77.1, classical=24, tls12=3,
+                                site=apw.SITE, x402scan=apw.X402SCAN_URL)
+            self.assertTrue(len(t) <= 300, submolt)
+            self.assertIn("?", b, f"{submolt} post should end with an engaging question")
+            self.assertIn("## Sources", b, f"{submolt} post should include clean Sources block")
+
 
 if __name__ == "__main__":
     unittest.main()
