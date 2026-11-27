@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-"""Official X (Twitter) API v2 daily autoposter for Quantum Aether (Free Tier compliant, max 1 post/day).
+"""Official X (Twitter) API v2 autoposter & smart mention responder for Quantum Aether.
 
-Uses zero external dependencies (pure stdlib RFC 5849 OAuth 1.0a HMAC-SHA1 -> POST https://api.x.com/2/tweets).
+Uses zero external dependencies (pure stdlib RFC 5849 OAuth 1.0a HMAC-SHA1 -> api.x.com/2/*).
 Credentials live strictly outside git at /etc/quantum-aether/x_api.json (chmod 0600):
   {"api_key": "...", "api_secret": "...", "access_token": "...", "access_token_secret": "..."}
 
 Guardrails:
-  * Hard cap: 1 automated post per UTC day (tracked in SQLite agent_platform_activity).
+  * Daily post cap: 3 rotating telemetry posts/day across peak slots (09:30, 15:30, 21:30 Europe/Berlin).
+  * Hourly mention responder: uses cached user_id + since_id to minimize Pay-Per-Use cost,
+    hard-capped at 10 replies/day and max 1 reply per author per 24h (anti-bot-loop protection).
   * Instant kill-switch: touch /var/lib/quantum_saas/x_autopost.paused
   * Cleanly exits 0 (no-op) if /etc/quantum-aether/x_api.json is not configured yet.
   * Preserves quantum:quantum ownership on quantum_saas.db (-wal/-shm).
@@ -14,7 +16,8 @@ Guardrails:
 Usage:
   python3 tools/x_autopost.py --dry-run
   python3 tools/x_autopost.py --post
-  python3 tools/x_autopost.py --post --text "Custom tweet <= 280 chars"
+  python3 tools/x_autopost.py --reply-mentions
+  python3 tools/x_autopost.py --post --text "Custom tweet <= 280 chars" [--reply-to TWEET_ID]
 """
 from __future__ import annotations
 
@@ -42,7 +45,7 @@ PAUSE_FILE = os.path.join(DATA_DIR, "x_autopost.paused")
 CRED_PATH = "/etc/quantum-aether/x_api.json"
 TWEETS_URL = "https://api.x.com/2/tweets"
 X402SCAN_URL = "https://www.x402scan.com/server/2b8f5869-118f-4389-ad32-20989ffee2ca"
-USER_AGENT = "QuantumAetherXBot/2.0 (+https://ather-quantum.com)"
+USER_AGENT = "QuantumAetherXBot/2.1 (+https://ather-quantum.com)"
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS agent_platform_activity (
@@ -53,6 +56,11 @@ CREATE TABLE IF NOT EXISTS agent_platform_activity (
     summary    TEXT NOT NULL DEFAULT '',
     created_at TEXT NOT NULL,
     UNIQUE(platform, kind, ref_key)
+);
+CREATE TABLE IF NOT EXISTS x_bot_kv (
+    k TEXT PRIMARY KEY,
+    v TEXT NOT NULL,
+    updated_at TEXT NOT NULL
 );
 """
 
@@ -85,11 +93,54 @@ def keep_db_owner(db_path: str) -> None:
                 pass
 
 
+def kv_get(conn: sqlite3.Connection, key: str) -> str:
+    row = conn.execute("SELECT v FROM x_bot_kv WHERE k = ?", (key,)).fetchone()
+    return str(row[0]) if row else ""
+
+
+def kv_set(conn: sqlite3.Connection, key: str, value: str) -> None:
+    with conn:
+        conn.execute(
+            "INSERT INTO x_bot_kv (k, v, updated_at) VALUES (?, ?, ?) "
+            "ON CONFLICT(k) DO UPDATE SET v = excluded.v, updated_at = excluded.updated_at",
+            (key, str(value), now_iso()),
+        )
+
+
+def current_slot(now: dt.datetime | None = None) -> int:
+    """Map UTC hour to 3 daily slots: 0 (morning EU), 1 (EU/US peak), 2 (US/APAC evening)."""
+    h = (now or now_utc()).hour
+    if h < 12:
+        return 0
+    if h < 18:
+        return 1
+    return 2
+
+
 def already_posted_today(conn: sqlite3.Connection, day: str) -> bool:
     return bool(conn.execute(
         "SELECT 1 FROM agent_platform_activity WHERE platform = 'x' AND kind = 'daily_post' AND ref_key = ?",
         (day,),
     ).fetchone())
+
+
+def already_posted_slot(conn: sqlite3.Connection, day: str, slot: int) -> bool:
+    ref = f"{day}-slot{slot}"
+    if slot == 0 and already_posted_today(conn, day):
+        return True
+    return bool(conn.execute(
+        "SELECT 1 FROM agent_platform_activity WHERE platform = 'x' AND kind = 'daily_post' AND ref_key = ?",
+        (ref,),
+    ).fetchone())
+
+
+def posts_today_count(conn: sqlite3.Connection, day: str) -> int:
+    row = conn.execute(
+        "SELECT COUNT(*) FROM agent_platform_activity WHERE platform = 'x' AND kind = 'daily_post' "
+        "AND (ref_key = ? OR ref_key LIKE ?)",
+        (day, f"{day}-slot%"),
+    ).fetchone()
+    return int(row[0] or 0) if row else 0
 
 
 def record_post(conn: sqlite3.Connection, kind: str, ref_key: str, summary: str) -> None:
@@ -109,16 +160,16 @@ def load_mcp_summary(path: str = MCP_INDEX_PATH) -> dict:
             return s
     except (OSError, ValueError):
         pass
-    return {"measured": 118, "pq_hybrid": 91, "pq_pct": 77.1, "classical": 24, "tls12": 3, "pq_not_preferred": 0}
+    return {"measured": 152, "pq_hybrid": 120, "pq_pct": 78.9, "classical": 28, "tls12": 4, "pq_not_preferred": 0}
 
 
-def build_daily_tweet(summary: dict, day: dt.date | None = None) -> str:
+def build_daily_tweet(summary: dict, day: dt.date | None = None, slot: int = 0) -> str:
     d = day or now_utc().date()
-    m = summary.get("measured", 118)
-    pq_n = summary.get("pq_hybrid", 91)
-    pq_pct = summary.get("pq_pct", 77.1)
-    cls = summary.get("classical", 24)
-    t12 = summary.get("tls12", 3)
+    m = summary.get("measured", 152)
+    pq_n = summary.get("pq_hybrid", 120)
+    pq_pct = summary.get("pq_pct", 78.9)
+    cls = summary.get("classical", 28)
+    t12 = summary.get("tls12", 4)
     exposed = cls + t12
     day_str = d.isoformat()
 
@@ -150,8 +201,20 @@ def build_daily_tweet(summary: dict, day: dt.date | None = None) -> str:
             f"{X402SCAN_URL}\n"
             f"https://ather-quantum.com/.well-known/x402 #AIAgents #MCP"
         ),
+        (
+            f"Why trust a static README security badge?\n"
+            f"Every Quantum Aether scan issues an Ed25519 signed JWS receipt (iat/exp, negotiated group, cert SPKI hash) "
+            f"agents verify offline via JWKS:\n\n"
+            f"https://ather-quantum.com/.well-known/jwks.json #AIAgents #PQC #MCP"
+        ),
+        (
+            f"{exposed} of {m} Official Registry MCP servers still run classical TLS—meaning recorded traffic can be "
+            f"decrypted later (HNDL).\n\n"
+            f"Free live check + copy-paste Nginx/Cloudflare config:\n"
+            f"https://ather-quantum.com/mcp-index #MCP #AIAgents #InfoSec"
+        ),
     ]
-    return variants[d.toordinal() % len(variants)]
+    return variants[(d.toordinal() * 3 + int(slot)) % len(variants)]
 
 
 def _pct(s: str) -> str:
@@ -247,6 +310,21 @@ def already_replied_mention(conn: sqlite3.Connection, mention_id: str) -> bool:
     ).fetchone())
 
 
+def replied_author_recently(conn: sqlite3.Connection, author_id: str, username: str, hours: int = 24) -> bool:
+    cutoff = (now_utc() - dt.timedelta(hours=hours)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    uname = username.strip().lstrip("@").lower()
+    rows = conn.execute(
+        "SELECT summary FROM agent_platform_activity "
+        "WHERE platform = 'x' AND kind = 'mention_reply' AND created_at >= ?",
+        (cutoff,),
+    ).fetchall()
+    for (s,) in rows:
+        sl = (s or "").lower()
+        if f"author_id={author_id}" in sl or (uname and f"@{uname}" in sl):
+            return True
+    return False
+
+
 def replies_today_count(conn: sqlite3.Connection, day: str) -> int:
     row = conn.execute(
         "SELECT COUNT(*) FROM agent_platform_activity WHERE platform = 'x' AND kind = 'mention_reply' AND created_at LIKE ?",
@@ -256,9 +334,10 @@ def replies_today_count(conn: sqlite3.Connection, day: str) -> int:
 
 
 def build_mention_reply(username: str, text: str) -> str | None:
-    low = (text or "").lower()
+    raw = text or ""
+    low = raw.lower()
     handle = f"@{username.lstrip('@')}"
-    if any(w in low for w in ("stop", "unsubscribe", "spam", "scam", "airdrop", "giveaway", "crypto pump")):
+    if any(w in low for w in ("stop", "unsubscribe", "spam", "scam", "airdrop", "giveaway", "crypto pump", "dm me for promo")):
         return None
     if any(w in low for w in ("receipt", "jwks", "signed", "verify", "stale", "badge", "timestamp")):
         reply = (
@@ -280,6 +359,15 @@ def build_mention_reply(username: str, text: str) -> str | None:
             f"npx skills add moncef00327-cloud/quantum-aether\n"
             f"https://ather-quantum.com/mcp #MCP #AIAgents #PQC"
         )
+    elif any(w in raw for w in ("关注", "亮眼", "不错", "厉害", "支持")) or any(
+        w in low for w in ("follow", "followed", "impressive", "awesome", "great work", "cool", "nice")
+    ):
+        zh = " 感谢关注！" if any("\u4e00" <= ch <= "\u9fff" for ch in raw) else ""
+        reply = (
+            f"{handle} Thanks for the follow!{zh} We track live post-quantum TLS (X25519MLKEM768) across "
+            f"Official Registry MCP servers daily—try a free scan anytime:\n\n"
+            f"https://ather-quantum.com/mcp-index #AIAgents #MCP #PQC"
+        )
     else:
         reply = (
             f"{handle} You can test any domain live for real X25519MLKEM768 negotiation + Ed25519 signed receipt "
@@ -289,29 +377,56 @@ def build_mention_reply(username: str, text: str) -> str | None:
     return reply if len(reply) <= 280 else reply[:280]
 
 
-def process_mentions(conn: sqlite3.Connection, creds: dict, *, max_replies_per_day: int = 3) -> int:
+def get_self_user_id(conn: sqlite3.Connection, creds: dict) -> str:
+    cached = kv_get(conn, "self_user_id")
+    if cached:
+        return cached
+    # Access tokens begin with "<user_id>-..." on X OAuth 1.0a; verify via /2/users/me once and cache.
+    st, me = _oauth_get("https://api.x.com/2/users/me", creds)
+    if st == 200 and isinstance(me, dict):
+        uid = str((me.get("data") or {}).get("id") or "")
+        if uid:
+            kv_set(conn, "self_user_id", uid)
+            return uid
+    prefix = creds["access_token"].split("-", 1)[0]
+    if prefix.isdigit():
+        kv_set(conn, "self_user_id", prefix)
+        return prefix
+    return ""
+
+
+def process_mentions(conn: sqlite3.Connection, creds: dict, *, max_replies_per_day: int = 10) -> int:
     day = now_utc().date().isoformat()
     if replies_today_count(conn, day) >= max_replies_per_day:
         print(f"mentions: daily reply cap reached ({max_replies_per_day})")
         return 0
-    st, me = _oauth_get("https://api.x.com/2/users/me", creds)
-    if st != 200 or not isinstance(me, dict):
-        print(f"mentions: failed /2/users/me HTTP {st}", file=sys.stderr)
-        return 0
-    uid = (me.get("data") or {}).get("id")
+    uid = get_self_user_id(conn, creds)
     if not uid:
+        print("mentions: could not resolve self user id", file=sys.stderr)
         return 0
+    since_id = kv_get(conn, "mentions_since_id")
     url = (
         f"https://api.x.com/2/users/{uid}/mentions"
-        f"?max_results=5&tweet.fields=author_id,created_at&expansions=author_id&user.fields=username"
+        f"?max_results=10&tweet.fields=author_id,created_at&expansions=author_id&user.fields=username"
     )
+    if since_id:
+        url += f"&since_id={since_id}"
     st, doc = _oauth_get(url, creds)
     if st != 200 or not isinstance(doc, dict):
-        print(f"mentions: failed mentions fetch HTTP {st}", file=sys.stderr)
+        print(f"mentions: failed mentions fetch HTTP {st}: {str(doc)[:200]}", file=sys.stderr)
         return 0
+    items = doc.get("data") or []
+    newest_id = (doc.get("meta") or {}).get("newest_id")
+    if newest_id:
+        kv_set(conn, "mentions_since_id", str(newest_id))
+    if not items:
+        print("mentions: no new mentions")
+        return 0
+
     users = {u["id"]: u.get("username", "") for u in (doc.get("includes") or {}).get("users", [])}
     sent = 0
-    for item in doc.get("data") or []:
+    # Process oldest -> newest
+    for item in reversed(items):
         mid = str(item.get("id") or "")
         author_id = str(item.get("author_id") or "")
         if not mid or author_id == str(uid) or already_replied_mention(conn, mid):
@@ -321,14 +436,18 @@ def process_mentions(conn: sqlite3.Connection, creds: dict, *, max_replies_per_d
         username = users.get(author_id) or ""
         if not username:
             continue
+        if replied_author_recently(conn, author_id, username, hours=24):
+            record_post(conn, "mention_reply", mid, f"anti_loop_skip @{username} author_id={author_id}")
+            print(f"mentions: anti-loop skip @{username} ({mid})")
+            continue
         reply_text = build_mention_reply(username, item.get("text") or "")
         if not reply_text:
-            record_post(conn, "mention_reply", mid, f"skipped @{username}")
+            record_post(conn, "mention_reply", mid, f"skipped @{username} author_id={author_id}")
             continue
         rst, rres = post_tweet(reply_text, creds, reply_to=mid)
         if rst in (200, 201):
             rtid = (rres.get("data") or {}).get("id") if isinstance(rres, dict) else ""
-            record_post(conn, "mention_reply", mid, f"replied @{username} tweet_id={rtid}")
+            record_post(conn, "mention_reply", mid, f"replied @{username} author_id={author_id} tweet_id={rtid}")
             print(f"replied to @{username} ({mid}) -> tweet_id={rtid} (HTTP {rst})")
             sent += 1
         else:
@@ -339,24 +458,29 @@ def process_mentions(conn: sqlite3.Connection, creds: dict, *, max_replies_per_d
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     mode = ap.add_mutually_exclusive_group(required=True)
-    mode.add_argument("--dry-run", action="store_true", help="render today's tweet and length without posting")
-    mode.add_argument("--post", action="store_true", help="publish tweet via X API v2 (max 1/day unless --text)")
-    mode.add_argument("--reply-mentions", action="store_true", help="check recent mentions and reply once per mention (max 3/day)")
+    mode.add_argument("--dry-run", action="store_true", help="render current slot tweet and length without posting")
+    mode.add_argument("--post", action="store_true", help="publish tweet via X API v2 (up to --max-posts/day unless --text)")
+    mode.add_argument("--reply-mentions", action="store_true", help="check new mentions and reply once per author/24h")
     ap.add_argument("--text", default="", help="optional custom tweet text (<= 280 chars)")
     ap.add_argument("--reply-to", default="", help="optional tweet ID to reply to (requires --text)")
+    ap.add_argument("--slot", type=int, default=-1, help="override slot 0..2 (default derived from UTC hour)")
+    ap.add_argument("--max-posts", type=int, default=3, help="max scheduled posts per UTC day (default 3)")
+    ap.add_argument("--max-replies", type=int, default=10, help="max automated mention replies per UTC day (default 10)")
     ap.add_argument("--check-mentions", action="store_true", help="also check & reply to new mentions after --post")
     ap.add_argument("--creds", default=CRED_PATH)
     ap.add_argument("--db", default=DB_PATH)
     a = ap.parse_args(argv)
 
     summary = load_mcp_summary()
-    today = now_utc().date()
-    tweet = a.text.strip() if a.text.strip() else build_daily_tweet(summary, today)
+    now = now_utc()
+    today = now.date()
+    slot = a.slot if a.slot in (0, 1, 2) else current_slot(now)
+    tweet = a.text.strip() if a.text.strip() else build_daily_tweet(summary, today, slot=slot)
     if not a.reply_mentions and len(tweet) > 280:
         sys.exit(f"tweet too long: {len(tweet)} > 280 chars")
 
     if a.dry_run:
-        print(f"[DRY-RUN] chars={len(tweet)}/280\n---\n{tweet}\n---")
+        print(f"[DRY-RUN] slot={slot} chars={len(tweet)}/280\n---\n{tweet}\n---")
         return 0
 
     if os.path.exists(PAUSE_FILE):
@@ -373,29 +497,39 @@ def main(argv=None) -> int:
     keep_db_owner(a.db)
     try:
         if a.reply_mentions:
-            process_mentions(conn, creds)
+            process_mentions(conn, creds, max_replies_per_day=a.max_replies)
             return 0
         day_key = today.isoformat()
         if a.reply_to and not a.text.strip():
             sys.exit("--reply-to requires --text")
-        if a.text.strip() or not already_posted_today(conn, day_key):
+        if a.text.strip():
             st, res = post_tweet(tweet, creds, reply_to=a.reply_to.strip())
             if st in (200, 201):
                 tid = (res.get("data") or {}).get("id") if isinstance(res, dict) else ""
                 if a.reply_to.strip():
                     record_post(conn, "mention_reply", a.reply_to.strip(), f"manual_reply tweet_id={tid}")
                 else:
-                    kind = "manual_post" if a.text.strip() else "daily_post"
-                    ref = f"manual-{tid or now_iso()}" if a.text.strip() else day_key
-                    record_post(conn, kind, ref, f"tweet_id={tid}")
+                    record_post(conn, "manual_post", f"manual-{tid or now_iso()}", f"tweet_id={tid}")
                 print(f"posted X tweet id={tid} (HTTP {st})")
             else:
                 print(f"X API error HTTP {st}: {str(res)[:400]}", file=sys.stderr)
                 return 1
+        elif posts_today_count(conn, day_key) >= a.max_posts:
+            print(f"daily post cap reached ({a.max_posts}) for {day_key}")
+        elif already_posted_slot(conn, day_key, slot):
+            print(f"already posted slot {slot} today ({day_key})")
         else:
-            print(f"already posted today ({day_key})")
+            st, res = post_tweet(tweet, creds)
+            if st in (200, 201):
+                tid = (res.get("data") or {}).get("id") if isinstance(res, dict) else ""
+                ref = f"{day_key}-slot{slot}"
+                record_post(conn, "daily_post", ref, f"tweet_id={tid}")
+                print(f"posted X tweet id={tid} slot={slot} (HTTP {st})")
+            else:
+                print(f"X API error HTTP {st}: {str(res)[:400]}", file=sys.stderr)
+                return 1
         if a.check_mentions:
-            process_mentions(conn, creds)
+            process_mentions(conn, creds, max_replies_per_day=a.max_replies)
         return 0
     finally:
         conn.close()

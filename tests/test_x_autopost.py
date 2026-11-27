@@ -1,4 +1,4 @@
-"""Tests for tools/x_autopost.py (RFC 5849 OAuth 1.0a signing, 280-char templates, daily idempotency)."""
+"""Tests for tools/x_autopost.py (OAuth 1.0a signing, 6 rotating <=280-char templates, slot idempotency, anti-loop replies)."""
 import datetime as dt
 import os
 import sqlite3
@@ -9,28 +9,36 @@ from tools import x_autopost as xa
 
 
 class XAutopostTests(unittest.TestCase):
-    def test_all_four_daily_variants_fit_280_chars(self):
-        summary = {"measured": 150, "pq_hybrid": 115, "pq_pct": 76.7, "classical": 30, "tls12": 5}
+    def test_all_six_daily_variants_fit_280_chars(self):
+        summary = {"measured": 152, "pq_hybrid": 120, "pq_pct": 78.9, "classical": 28, "tls12": 4}
         seen = set()
-        for offset in range(4):
-            day = dt.date(2026, 11, 27) + dt.timedelta(days=offset)
-            t = xa.build_daily_tweet(summary, day)
-            self.assertLessEqual(len(t), 280, f"day {day} len={len(t)}")
-            self.assertIn("https://", t)
-            seen.add(t)
-        self.assertEqual(len(seen), 4)
+        for day_off in range(2):
+            day = dt.date(2026, 11, 27) + dt.timedelta(days=day_off)
+            for slot in range(3):
+                t = xa.build_daily_tweet(summary, day, slot=slot)
+                self.assertLessEqual(len(t), 280, f"day={day} slot={slot} len={len(t)}")
+                self.assertIn("https://", t)
+                self.assertIn("#AIAgents", t)
+                seen.add(t)
+        self.assertEqual(len(seen), 6)
         self.assertTrue(any("/.well-known/x402" in t for t in seen), "x402 discovery URL must not be truncated")
-        self.assertTrue(all("#AIAgents" in t for t in seen), "all daily tweets should carry #AIAgents")
 
     def test_mention_reply_variants_and_skip(self):
         r1 = xa.build_mention_reply("AxiomBot", "A signed scan receipt with timestamp would help")
         self.assertIsNotNone(r1)
         self.assertLessEqual(len(r1), 280)
         self.assertIn("jwks.json", r1)
+
         r2 = xa.build_mention_reply("boardyai", "agents paying per call with its own wallet")
         self.assertIsNotNone(r2)
         self.assertLessEqual(len(r2), 280)
         self.assertIn(".well-known/x402", r2)
+
+        r3 = xa.build_mention_reply("ChenY390353", "@Aether_Quantum 点了关注，这成绩很亮眼")
+        self.assertIsNotNone(r3)
+        self.assertLessEqual(len(r3), 280)
+        self.assertIn("感谢关注", r3)
+
         self.assertIsNone(xa.build_mention_reply("spammer", "free airdrop giveaway"))
 
     def test_oauth1_header_structure(self):
@@ -50,13 +58,19 @@ class XAutopostTests(unittest.TestCase):
             rc = xa.main(["--post", "--creds", os.path.join(tmp, "missing.json"), "--db", os.path.join(tmp, "t.db")])
             self.assertEqual(rc, 0)
 
-    def test_daily_idempotency(self):
+    def test_slot_idempotency_and_anti_loop(self):
         conn = sqlite3.connect(":memory:")
         self.addCleanup(conn.close)
         xa.init_db(conn)
-        self.assertFalse(xa.already_posted_today(conn, "2026-11-27"))
+        self.assertFalse(xa.already_posted_slot(conn, "2026-11-27", 0))
         xa.record_post(conn, "daily_post", "2026-11-27", "tweet_id=123")
-        self.assertTrue(xa.already_posted_today(conn, "2026-11-27"))
+        self.assertTrue(xa.already_posted_slot(conn, "2026-11-27", 0))
+        self.assertFalse(xa.already_posted_slot(conn, "2026-11-27", 1))
+        self.assertEqual(xa.posts_today_count(conn, "2026-11-27"), 1)
+
+        self.assertFalse(xa.replied_author_recently(conn, "999", "boardyai", hours=24))
+        xa.record_post(conn, "mention_reply", "m1", "replied @boardyai author_id=999 tweet_id=456")
+        self.assertTrue(xa.replied_author_recently(conn, "999", "boardyai", hours=24))
 
 
 if __name__ == "__main__":
