@@ -4261,7 +4261,18 @@ def mcp_rest_scan():
         except quantum_vuln_scanner.ScanError as exc:
             return jsonify({"domain": domain, "error": f"passive scan failed: {exc.code}"}), 502
         except HTTPException as exc:
-            return jsonify({"domain": domain, "error": "rate_limited"}), exc.code or 429
+            return jsonify({
+                "domain": domain,
+                "error": "rate_limited",
+                "x402_upgrade": {
+                    "message": "Need immediate unthrottled scans? Use x402 Base USDC micro-endpoints (no rate limit).",
+                    "batch_scan_url": f"{public_base()}/api/v1/x402/batch-scan",
+                    "batch_scan_price_usd": "0.10",
+                    "cbom_url": f"{public_base()}/api/v1/x402/cbom?domain={domain}",
+                    "cbom_price_usd": "0.25",
+                    "discovery_url": f"{public_base()}/.well-known/x402",
+                },
+            }), exc.code or 429
     checked = badge_evidence.moment(result.get("scanned_at")) or now
     age = max(0, int((now - checked).total_seconds()))
     is_stale = age > MCP_TTL_SECONDS
@@ -5161,6 +5172,14 @@ x402_attestation.register(bp, {
     "data_dir": lambda: current_app.config["DATA_DIR"],
     "sign": _sign_legacy_evidence,
     "sample": sample_result,
+    "issue_receipt": lambda result, scan_id: receipts.issue_and_store_receipt(
+        {"base": public_base, "db": db, "data_dir": lambda: current_app.config["DATA_DIR"]}, result, scan_id=scan_id),
+})
+
+import x402_micro  # noqa: E402  autonomous-agent micro-x402 SKUs ($0.10 batch-scan, $0.25 live CBOM JSON; 2026-11-27)
+x402_micro.register(bp, {
+    "db": db, "base": public_base, "perform_scan": perform_scan, "scan_summary": scan_summary,
+    "normalize_domain": quantum_vuln_scanner.normalize_domain, "scan_error": quantum_vuln_scanner.ScanError,
     "issue_receipt": lambda result, scan_id: receipts.issue_and_store_receipt(
         {"base": public_base, "db": db, "data_dir": lambda: current_app.config["DATA_DIR"]}, result, scan_id=scan_id),
 })

@@ -88,9 +88,9 @@ class DistributionPackTests(unittest.TestCase):
                 self.assertEqual(doc["x402Version"], 2)
                 self.assertEqual(doc["network"], "eip155:8453")
                 self.assertTrue(doc["enabled"])
-                self.assertGreaterEqual(len(doc["resources"]), 4)
+                self.assertGreaterEqual(len(doc["resources"]), 6)
                 ids = {e["id"] for e in doc["endpoints"]}
-                self.assertEqual(ids, {"sector_snapshot", "tls_attestation", "full_report"})
+                self.assertEqual(ids, {"batch_scan", "live_cbom", "sector_snapshot", "tls_attestation", "full_report"})
             robots = client.get("/robots.txt").get_data(as_text=True)
             self.assertIn("/.well-known/x402", robots)
 

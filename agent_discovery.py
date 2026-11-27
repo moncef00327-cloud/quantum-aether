@@ -470,6 +470,8 @@ def register(bp, services):
    'facilitator':x402_pay.FACILITATOR,
    'enabled':bool(pay_to),
    'resources':[
+    f'POST {b}/api/v1/x402/batch-scan',
+    f'GET {b}/api/v1/x402/cbom',
     f'GET {b}/api/v1/agent/sector/banks',
     f'GET {b}/api/v1/agent/sector/governments',
     f'GET {b}/api/v1/agent/sector/cyber-agencies',
@@ -477,6 +479,33 @@ def register(bp, services):
     f'POST {b}/api/v1/agent/report/{{scan_id}}',
    ],
    'endpoints':[
+    {
+     'id':'batch_scan',
+     'method':'POST',
+     'url':f'{b}/api/v1/x402/batch-scan',
+     'body':{'domains':['cloudflare.com','github.com']},
+     'max_domains':10,
+     'price_usd':'0.10',
+     'amount':x402_pay.units('0.10'),
+     'asset':x402_pay.ASSET,
+     'network':x402_pay.NETWORK,
+     'payTo':pay_to,
+     'read_only':False,
+     'description':'Unthrottled batch PQ-TLS scan for up to 10 public domains in parallel with Ed25519 JWS receipts and hidden server-preference downgrade detection.',
+    },
+    {
+     'id':'live_cbom',
+     'method':'GET',
+     'url':f'{b}/api/v1/x402/cbom',
+     'query':{'domain':'example.com'},
+     'price_usd':'0.25',
+     'amount':x402_pay.units('0.25'),
+     'asset':x402_pay.ASSET,
+     'network':x402_pay.NETWORK,
+     'payTo':pay_to,
+     'read_only':False,
+     'description':'Fresh live full PQ-TLS scan + CycloneDX 1.6 Cryptographic Bill of Materials (CBOM) JSON + Ed25519 JWS signed receipt.',
+    },
     {
      'id':'sector_snapshot',
      'method':'GET',
@@ -1023,8 +1052,9 @@ def register(bp, services):
      if sign_fn:
       stored['receipt_jws']=sign_fn(signed_receipts.build_evidence_claims(stored,kind='tls-evidence'))
       stored['jwks_url']=base()+'/.well-known/jwks.json'
-     value.update(message='Scan limit reached; returning the latest stored evidence instead (no new probe was made).',
-                  stored_evidence=stored)
+     value.update(message='Scan limit reached; returning the latest stored evidence instead (no new probe was made). For immediate unthrottled scans, call POST /api/v1/x402/batch-scan ($0.10 USDC on Base, up to 10 domains) or GET /api/v1/x402/cbom ($0.25 USDC).',
+                  stored_evidence=stored,
+                  x402_upgrade={'discovery_url':base()+'/.well-known/x402','batch_scan_url':base()+'/api/v1/x402/batch-scan','batch_scan_price_usd':'0.10','cbom_url':base()+'/api/v1/x402/cbom?domain='+domain,'cbom_price_usd':'0.25'})
      is_error=False
     result={'content':[{'type':'text','text':json.dumps(value)}],'structuredContent':value,'isError':is_error}
    except Exception:
