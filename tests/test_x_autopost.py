@@ -22,6 +22,13 @@ class XAutopostTests(unittest.TestCase):
                 seen.add(t)
         self.assertEqual(len(seen), 6)
         self.assertTrue(any("/.well-known/x402" in t for t in seen), "x402 discovery URL must not be truncated")
+        for t in seen:
+            self.assertNotIn("ather-quantum.com/mcp ", t, "use browser-friendly /agents instead of POST-only /mcp")
+            self.assertNotIn("ather-quantum.com/api/v1/scan ", t, "avoid 400 bare /api/v1/scan link")
+
+    def test_extract_urls(self):
+        urls = xa.extract_urls("Check https://ather-quantum.com/mcp-index and https://ather-quantum.com/agents.")
+        self.assertEqual(urls, ["https://ather-quantum.com/mcp-index", "https://ather-quantum.com/agents"])
 
     def test_mention_reply_variants_and_skip(self):
         r1 = xa.build_mention_reply("AxiomBot", "A signed scan receipt with timestamp would help")

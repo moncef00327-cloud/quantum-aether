@@ -30,6 +30,7 @@ import json
 import os
 from pathlib import Path
 import pwd
+import re
 import secrets
 import sqlite3
 import sys
@@ -192,7 +193,7 @@ def build_daily_tweet(summary: dict, day: dt.date | None = None, slot: int = 0) 
             f"Give Claude Code, Cursor, Codex or OpenClaw live PQ-TLS audits + Nginx/Cloudflare fixes "
             f"(zero API key):\n\n"
             f"npx skills add moncef00327-cloud/quantum-aether\n\n"
-            f"MCP (100/100 mcptry): https://ather-quantum.com/mcp #AIAgents #OpenClaw #MCP"
+            f"MCP setup (100/100 mcptry): https://ather-quantum.com/agents #AIAgents #OpenClaw #MCP"
         ),
         (
             f"Autonomous #Base USDC #x402 endpoints live on x402scan (6/6):\n"
@@ -257,7 +258,41 @@ def load_credentials(path: str = CRED_PATH) -> dict | None:
     return {k: str(doc[k]).strip() for k in required}
 
 
-def post_tweet(text: str, creds: dict, *, reply_to: str = "", timeout: float = 20.0) -> tuple[int, dict | str]:
+URL_RE = re.compile(r"https?://[^\s<>()]+")
+
+
+def extract_urls(text: str) -> list[str]:
+    return [m.group(0).rstrip(".,;:!?)") for m in URL_RE.finditer(text or "")]
+
+
+def verify_urls_ok(text: str, timeout: float = 8.0) -> tuple[bool, list[str]]:
+    """Pre-publish health gate: every URL in a tweet/reply must return HTTP 200 on browser GET."""
+    failures: list[str] = []
+    for url in extract_urls(text):
+        req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT}, method="GET")
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                if resp.status != 200:
+                    failures.append(f"{url} -> HTTP {resp.status}")
+        except urllib.error.HTTPError as exc:
+            failures.append(f"{url} -> HTTP {exc.code}")
+        except Exception as exc:
+            failures.append(f"{url} -> {exc}")
+    return (len(failures) == 0), failures
+
+
+def post_tweet(
+    text: str,
+    creds: dict,
+    *,
+    reply_to: str = "",
+    timeout: float = 20.0,
+    check_urls: bool = True,
+) -> tuple[int, dict | str]:
+    if check_urls:
+        ok, failures = verify_urls_ok(text)
+        if not ok:
+            return 0, f"pre-publish link check failed: {'; '.join(failures)}"
     auth = oauth1_header("POST", TWEETS_URL, creds)
     payload: dict = {"text": text}
     if reply_to:
@@ -344,7 +379,7 @@ def build_mention_reply(username: str, text: str) -> str | None:
             f"{handle} Every scan issues an Ed25519 signed JWS receipt (iat/exp, negotiated group, cert SPKI hash) "
             f"verifiable offline via JWKS:\n\n"
             f"https://ather-quantum.com/.well-known/jwks.json\n"
-            f"https://ather-quantum.com/api/v1/scan #AIAgents #MCP #PQC"
+            f"https://ather-quantum.com/agents #AIAgents #MCP #PQC"
         )
     elif any(w in low for w in ("x402", "usdc", "wallet", "pay", "batch", "cbom", "base")):
         reply = (
@@ -357,7 +392,7 @@ def build_mention_reply(username: str, text: str) -> str | None:
         reply = (
             f"{handle} Connect our free remote MCP server (100/100 on mcptry) or install our agent skills:\n\n"
             f"npx skills add moncef00327-cloud/quantum-aether\n"
-            f"https://ather-quantum.com/mcp #MCP #AIAgents #PQC"
+            f"https://ather-quantum.com/agents #MCP #AIAgents #PQC"
         )
     elif any(w in raw for w in ("关注", "亮眼", "不错", "厉害", "支持")) or any(
         w in low for w in ("follow", "followed", "impressive", "awesome", "great work", "cool", "nice")
