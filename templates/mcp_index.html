@@ -1,6 +1,50 @@
 {% extends "base.html" %}
 {% block title %}{{ d.title }} · {{ t.brand }}{% endblock %}
 {% block description %}{{ d.meta.format(measured=summary.measured, pq_pct=summary.pq_pct) }}{% endblock %}
+{% block head %}
+<style>
+.mcp-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.mcp-kpi{padding:14px;border-radius:14px;background:rgba(15,34,64,.55);border:1px solid rgba(186,214,255,.22)}
+.mcp-kpi-num{font-size:1.65rem;font-weight:800;line-height:1.15}
+.mcp-toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:14px}
+.mcp-filters{display:flex;flex-wrap:wrap;gap:6px}
+.mcp-flt{padding:6px 12px;border-radius:999px;border:1px solid rgba(186,214,255,.32);background:transparent;color:#cbd5e1;cursor:pointer;font-size:.85rem;white-space:nowrap}
+.mcp-flt.active{background:rgba(85,229,244,.18);color:#f5f7ff;border-color:rgba(85,229,244,.55)}
+.mcp-search{min-width:220px;flex:1 1 220px;max-width:340px;padding:8px 13px;border-radius:999px;border:1px solid rgba(186,214,255,.32);background:rgba(11,25,48,.72);color:#f5f7ff;font:inherit;font-size:.88rem}
+.mcp-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.mcp-table{width:100%;border-collapse:collapse;table-layout:auto;min-width:700px}
+table.mcp-table th,table.mcp-table td{padding:12px 10px;border-bottom:1px solid rgba(186,214,255,.16);text-align:start;vertical-align:middle;word-break:normal;overflow-wrap:anywhere}
+table.mcp-table th{font-size:.82rem;letter-spacing:.02em;color:#b7c8dc;white-space:nowrap}
+.mcp-srv-title{display:block;font-weight:700;color:#f5f7ff;word-break:break-word;overflow-wrap:anywhere}
+.mcp-srv-sub{display:block;font-size:.8rem;color:#9eb5d1;margin-top:2px;word-break:break-word;overflow-wrap:anywhere}
+.mcp-host{white-space:nowrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.86rem;color:#dbeafe}
+.mcp-badge{display:inline-flex;align-items:center;padding:4px 10px;border-radius:999px;font-size:.8rem;font-weight:700;white-space:nowrap;line-height:1.25}
+.mcp-badge.pq{background:rgba(16,185,129,.22);border:1px solid rgba(52,211,153,.48);color:#6ee7b7}
+.mcp-badge.mis{background:rgba(239,68,68,.22);border:1px solid rgba(248,113,113,.52);color:#fca5a5}
+.mcp-badge.cls{background:rgba(245,158,11,.2);border:1px solid rgba(251,191,36,.48);color:#fcd34d}
+.mcp-badge.t12{background:rgba(239,68,68,.18);border:1px solid rgba(248,113,113,.42);color:#fca5a5}
+.mcp-badge.unr{background:rgba(148,163,184,.16);border:1px solid rgba(148,163,184,.35);color:#cbd5e1}
+.mcp-tls{white-space:nowrap;font-size:.85rem;color:#e2e8f0}
+.mcp-tls code{white-space:nowrap}
+.mcp-act{white-space:nowrap;font-size:.86rem}
+.mcp-act a{white-space:nowrap}
+@media (max-width:760px){
+  .mcp-search{max-width:none;width:100%}
+  .mcp-table-wrap{overflow:visible}
+  table.mcp-table{min-width:0;display:block}
+  table.mcp-table thead{display:none}
+  table.mcp-table tbody{display:flex;flex-direction:column;gap:12px}
+  table.mcp-table tr{display:grid;grid-template-columns:1fr auto;gap:8px 10px;padding:14px;border-radius:16px;background:rgba(12,28,54,.62);border:1px solid rgba(186,214,255,.24);align-items:center}
+  table.mcp-table td{display:block;padding:0;border:0;min-width:0}
+  table.mcp-table td.c-srv{grid-column:1 / -1}
+  table.mcp-table td.c-host{grid-column:1;overflow:hidden;text-overflow:ellipsis}
+  table.mcp-table td.c-st{grid-column:2;justify-self:end}
+  table.mcp-table td.c-tls{grid-column:1}
+  table.mcp-table td.c-act{grid-column:2;justify-self:end}
+  .mcp-host{white-space:normal;word-break:break-all;font-size:.84rem}
+}
+</style>
+{% endblock %}
 {% block content %}
 <section class="hero">
   <p class="eyebrow">{{ d.kicker }}</p>
@@ -14,21 +58,21 @@
 </section>
 
 <section class="card">
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;">
-    <div style="padding:14px;border-radius:14px;background:rgba(15,34,64,.55);border:1px solid rgba(186,214,255,.22);">
-      <div style="font-size:1.7rem;font-weight:800;color:#7df9ff;">{{ summary.measured }}</div>
+  <div class="mcp-kpis">
+    <div class="mcp-kpi">
+      <div class="mcp-kpi-num" style="color:#7df9ff;">{{ summary.measured }}</div>
       <div class="muted small">{{ d.kpi_measured }}</div>
     </div>
-    <div style="padding:14px;border-radius:14px;background:rgba(15,34,64,.55);border:1px solid rgba(85,229,244,.32);">
-      <div style="font-size:1.7rem;font-weight:800;color:#5eead4;">{{ summary.pq_pct }}% <span style="font-size:1rem;font-weight:600;color:#cbd5e1;">({{ summary.pq_hybrid }})</span></div>
+    <div class="mcp-kpi" style="border-color:rgba(85,229,244,.32);">
+      <div class="mcp-kpi-num" style="color:#5eead4;">{{ summary.pq_pct }}% <span style="font-size:1rem;font-weight:600;color:#cbd5e1;">({{ summary.pq_hybrid }})</span></div>
       <div class="muted small">{{ d.kpi_pq }}</div>
     </div>
-    <div style="padding:14px;border-radius:14px;background:rgba(15,34,64,.55);border:1px solid rgba(251,191,36,.32);">
-      <div style="font-size:1.7rem;font-weight:800;color:#fcd34d;">{{ summary.classical }}</div>
+    <div class="mcp-kpi" style="border-color:rgba(251,191,36,.32);">
+      <div class="mcp-kpi-num" style="color:#fcd34d;">{{ summary.classical }}</div>
       <div class="muted small">{{ d.kpi_classical }}</div>
     </div>
-    <div style="padding:14px;border-radius:14px;background:rgba(15,34,64,.55);border:1px solid rgba(248,113,113,.38);">
-      <div style="font-size:1.7rem;font-weight:800;color:#fca5a5;">{{ summary.pq_not_preferred }}</div>
+    <div class="mcp-kpi" style="border-color:rgba(248,113,113,.38);">
+      <div class="mcp-kpi-num" style="color:#fca5a5;">{{ summary.pq_not_preferred }}</div>
       <div class="muted small">{{ d.kpi_misconfig }}</div>
     </div>
   </div>
@@ -41,19 +85,19 @@
   {% if not results %}
     <p class="muted">{{ d.empty }}</p>
   {% else %}
-    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:14px;">
-      <div style="display:flex;flex-wrap:wrap;gap:6px;" id="mcp-filter-bar">
-        <button type="button" class="mcp-flt active" data-st="all" style="padding:6px 12px;border-radius:999px;border:1px solid rgba(186,214,255,.35);background:rgba(85,229,244,.18);color:#f5f7ff;cursor:pointer;font-size:.86rem;">{{ d.filter_all }} ({{ results|length }})</button>
-        <button type="button" class="mcp-flt" data-st="pq_hybrid" style="padding:6px 12px;border-radius:999px;border:1px solid rgba(94,234,212,.35);background:transparent;color:#cbd5e1;cursor:pointer;font-size:.86rem;">{{ d.filter_pq }} ({{ summary.pq_hybrid }})</button>
-        <button type="button" class="mcp-flt" data-st="pq_not_preferred" style="padding:6px 12px;border-radius:999px;border:1px solid rgba(248,113,113,.4);background:transparent;color:#cbd5e1;cursor:pointer;font-size:.86rem;">{{ d.filter_misconfig }} ({{ summary.pq_not_preferred }})</button>
-        <button type="button" class="mcp-flt" data-st="classical" style="padding:6px 12px;border-radius:999px;border:1px solid rgba(251,191,36,.35);background:transparent;color:#cbd5e1;cursor:pointer;font-size:.86rem;">{{ d.filter_classical }} ({{ summary.classical }})</button>
-        <button type="button" class="mcp-flt" data-st="tls12" style="padding:6px 12px;border-radius:999px;border:1px solid rgba(248,113,113,.35);background:transparent;color:#cbd5e1;cursor:pointer;font-size:.86rem;">{{ d.filter_tls12 }} ({{ summary.tls12 }})</button>
+    <div class="mcp-toolbar">
+      <div class="mcp-filters" id="mcp-filter-bar">
+        <button type="button" class="mcp-flt active" data-st="all">{{ d.filter_all }} ({{ results|length }})</button>
+        <button type="button" class="mcp-flt" data-st="pq_hybrid">{{ d.filter_pq }} ({{ summary.pq_hybrid }})</button>
+        <button type="button" class="mcp-flt" data-st="pq_not_preferred">{{ d.filter_misconfig }} ({{ summary.pq_not_preferred }})</button>
+        <button type="button" class="mcp-flt" data-st="classical">{{ d.filter_classical }} ({{ summary.classical }})</button>
+        <button type="button" class="mcp-flt" data-st="tls12">{{ d.filter_tls12 }} ({{ summary.tls12 }})</button>
       </div>
-      <input type="search" id="mcp-search" placeholder="{{ d.search_placeholder }}" style="min-width:220px;padding:7px 12px;border-radius:999px;border:1px solid rgba(186,214,255,.32);background:rgba(11,25,48,.7);color:#f5f7ff;font:inherit;font-size:.88rem;">
+      <input type="search" id="mcp-search" class="mcp-search" placeholder="{{ d.search_placeholder }}">
     </div>
 
-    <div style="overflow-x:auto;">
-      <table class="kv" id="mcp-table" style="width:100%;">
+    <div class="mcp-table-wrap">
+      <table class="mcp-table" id="mcp-table">
         <thead>
           <tr>
             <th>{{ d.col_server }}</th>
@@ -66,25 +110,30 @@
         <tbody>
         {% for r in results %}
           <tr data-st="{{ r.status }}" data-q="{{ (r.server_name ~ ' ' ~ r.title ~ ' ' ~ r.host)|lower }}">
-            <td><strong dir="ltr">{{ r.title or r.server_name }}</strong><div class="muted small" dir="ltr">{{ r.server_name }}</div></td>
-            <td><code dir="ltr">{{ r.host }}</code></td>
-            <td>
-              {% if r.status == 'pq_hybrid' %}
-                <span style="display:inline-block;padding:3px 9px;border-radius:999px;background:rgba(16,185,129,.22);border:1px solid rgba(52,211,153,.45);color:#6ee7b7;font-size:.82rem;font-weight:700;">{{ d.st_pq_hybrid }}</span>
-              {% elif r.status == 'pq_not_preferred' %}
-                <span style="display:inline-block;padding:3px 9px;border-radius:999px;background:rgba(239,68,68,.22);border:1px solid rgba(248,113,113,.5);color:#fca5a5;font-size:.82rem;font-weight:700;">{{ d.st_pq_not_preferred }}</span>
-              {% elif r.status == 'classical' %}
-                <span style="display:inline-block;padding:3px 9px;border-radius:999px;background:rgba(245,158,11,.2);border:1px solid rgba(251,191,36,.45);color:#fcd34d;font-size:.82rem;font-weight:700;">{{ d.st_classical }}</span>
-              {% elif r.status == 'tls12' %}
-                <span style="display:inline-block;padding:3px 9px;border-radius:999px;background:rgba(239,68,68,.18);border:1px solid rgba(248,113,113,.4);color:#fca5a5;font-size:.82rem;font-weight:700;">{{ d.st_tls12 }}</span>
-              {% else %}
-                <span class="muted small">{{ d.st_unreachable }}</span>
+            <td class="c-srv">
+              <span class="mcp-srv-title" dir="ltr">{{ r.title or r.server_name }}</span>
+              {% if r.server_name and r.title and r.title != r.server_name %}
+              <span class="mcp-srv-sub" dir="ltr">{{ r.server_name }}</span>
               {% endif %}
             </td>
-            <td dir="ltr" class="small">
-              {% if r.tls_version %}{{ r.tls_version }} · <code>{{ r.group or '?' }}</code>{% if r.pq_supported_group %}<div class="muted small">supports {{ r.pq_supported_group }}</div>{% endif %}{% else %}—{% endif %}
+            <td class="c-host"><span class="mcp-host" dir="ltr">{{ r.host }}</span></td>
+            <td class="c-st">
+              {% if r.status == 'pq_hybrid' %}
+                <span class="mcp-badge pq">{{ d.st_pq_hybrid }}</span>
+              {% elif r.status == 'pq_not_preferred' %}
+                <span class="mcp-badge mis">{{ d.st_pq_not_preferred }}</span>
+              {% elif r.status == 'classical' %}
+                <span class="mcp-badge cls">{{ d.st_classical }}</span>
+              {% elif r.status == 'tls12' %}
+                <span class="mcp-badge t12">{{ d.st_tls12 }}</span>
+              {% else %}
+                <span class="mcp-badge unr">{{ d.st_unreachable }}</span>
+              {% endif %}
             </td>
-            <td style="white-space:nowrap;">
+            <td class="c-tls mcp-tls" dir="ltr">
+              {% if r.tls_version %}{{ r.tls_version }} · <code>{{ r.group or '?' }}</code>{% if r.pq_supported_group %}<div class="muted small" style="white-space:normal;">supports {{ r.pq_supported_group }}</div>{% endif %}{% else %}—{% endif %}
+            </td>
+            <td class="c-act mcp-act">
               <a href="{{ url_for('site.index', domain=r.host, lang=lang_code) }}">{{ d.btn_scan }}</a> ·
               <a href="{{ url_for('site.badge_verify', domain=r.host, lang=lang_code) }}">{{ d.btn_verify }}</a>
             </td>
@@ -126,8 +175,7 @@
     if (!btn) return;
     active = btn.getAttribute('data-st') || 'all';
     bar.querySelectorAll('.mcp-flt').forEach(function (b) {
-      b.style.background = (b === btn) ? 'rgba(85,229,244,.18)' : 'transparent';
-      b.style.color = (b === btn) ? '#f5f7ff' : '#cbd5e1';
+      b.classList.toggle('active', b === btn);
     });
     apply();
   });
