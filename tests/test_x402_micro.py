@@ -65,6 +65,10 @@ class X402MicroTests(unittest.TestCase):
         # 2) Unpaid valid request returns 402 with $0.10 (100000 units) Base USDC challenge + bazaar extension
         r402 = self.client.post("/api/v1/x402/batch-scan", json={"domains": ["cloudflare.com", "github.com"]})
         self.assertEqual(r402.status_code, 402)
+        self.assertEqual(r402.headers.get("Access-Control-Allow-Origin"), "*")
+        body402 = r402.get_json()
+        self.assertEqual(body402["x402Version"], 2)
+        self.assertEqual(body402["accepts"][0]["amount"], "100000")
         ch = json.loads(base64.b64decode(r402.headers["PAYMENT-REQUIRED"]).decode())
         self.assertEqual(ch["accepts"][0]["amount"], "100000")
         self.assertEqual(ch["accepts"][0]["network"], "eip155:8453")
@@ -116,6 +120,16 @@ class X402MicroTests(unittest.TestCase):
         self.assertEqual(body["domain"], "cloudflare.com")
         self.assertEqual(body["cbom"]["bomFormat"], "CycloneDX")
         self.assertIn("signed_receipt", body)
+
+    def test_openapi_json_discovery_for_x402scan(self):
+        r = self.client.get("/openapi.json")
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.headers.get("Access-Control-Allow-Origin"), "*")
+        spec = r.get_json()
+        self.assertEqual(spec["openapi"], "3.1.0")
+        self.assertIn("@", spec["info"]["contact"]["email"])
+        for path in ("/api/v1/x402/batch-scan", "/api/v1/x402/cbom", "/api/v1/agent/sector/banks", "/api/v1/attestation"):
+            self.assertIn(path, spec["paths"])
 
 
 if __name__ == "__main__":

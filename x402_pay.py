@@ -79,10 +79,19 @@ def paywall(conn, price_usd, description, deliver, mime="application/json", disc
             challenge["extensions"] = {"bazaar": discovery}
         if error:
             challenge["error"] = error
-        resp = jsonify(error="payment_required", currency="USDC", network="Base", amount_usd=str(price_usd))
+        body = {
+            **challenge,
+            "error": error or "payment_required",
+            "currency": "USDC",
+            "network": "Base",
+            "amount_usd": str(price_usd),
+        }
+        resp = jsonify(body)
         resp.status_code = 402
         resp.headers["PAYMENT-REQUIRED"] = base64.b64encode(json.dumps(challenge, separators=(",", ":")).encode()).decode()
         resp.headers["Cache-Control"] = "no-store"
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["Access-Control-Expose-Headers"] = "PAYMENT-REQUIRED, PAYMENT-RESPONSE"
         return resp
 
     signed = request.headers.get("PAYMENT-SIGNATURE", "")

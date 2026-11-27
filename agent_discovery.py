@@ -470,13 +470,12 @@ def register(bp, services):
    'facilitator':x402_pay.FACILITATOR,
    'enabled':bool(pay_to),
    'resources':[
-    f'POST {b}/api/v1/x402/batch-scan',
-    f'GET {b}/api/v1/x402/cbom',
-    f'GET {b}/api/v1/agent/sector/banks',
-    f'GET {b}/api/v1/agent/sector/governments',
-    f'GET {b}/api/v1/agent/sector/cyber-agencies',
-    f'GET {b}/api/v1/attestation',
-    f'POST {b}/api/v1/agent/report/{{scan_id}}',
+    f'{b}/api/v1/x402/batch-scan',
+    f'{b}/api/v1/x402/cbom',
+    f'{b}/api/v1/agent/sector/banks',
+    f'{b}/api/v1/agent/sector/governments',
+    f'{b}/api/v1/agent/sector/cyber-agencies',
+    f'{b}/api/v1/attestation',
    ],
    'endpoints':[
     {
@@ -565,6 +564,120 @@ def register(bp, services):
   response.headers['Access-Control-Allow-Origin']='*'
   response.headers['Link']=f'<{b}/.well-known/x402>; rel="canonical"'
   return response
+
+ @bp.get('/openapi.json')
+ def openapi_json():
+  """OpenAPI 3.1 JSON discovery document (required by x402scan.com and agent discovery indexers)."""
+  b=base().rstrip('/')
+  pay_to=x402_pay.receiver() or ''
+  sector_price=sector_price_usd()
+  att_price=x402_attestation.PRICE_USD
+
+  def pay_ext(price_usd,desc):
+   return {
+    'x-payment-info':{
+     'protocols':['x402'],
+     'pricingMode':'fixed',
+     'price':str(price_usd),
+     'currency':'USDC',
+     'network':x402_pay.NETWORK,
+     'asset':x402_pay.ASSET,
+     'payTo':pay_to,
+     'description':desc,
+    }
+   }
+
+  spec={
+   'openapi':'3.1.0',
+   'info':{
+    'title':'Quantum Aether Post-Quantum TLS & CBOM API',
+    'version':VERSION,
+    'description':'Post-quantum TLS (X25519MLKEM768 / ML-KEM, FIPS 203) scanner, hidden server-preference downgrade detector, Ed25519 JWS signed receipts, CycloneDX 1.6 CBOM, and Base USDC x402 micro-commerce API.',
+    'contact':{'name':'Quantum Aether Team','url':b,'email':'contact@mail.ather-quantum.com'},
+    'license':{'name':'MIT','url':'https://github.com/moncef00327-cloud/quantum-aether/blob/main/LICENSE'},
+   },
+   'servers':[{'url':b,'description':'Production'}],
+   'paths':{
+    '/api/v1/x402/batch-scan':{
+     'post':{
+      'operationId':'x402BatchScan',
+      'summary':'Batch PQ-TLS scan (up to 10 domains, $0.10 USDC on Base, no rate limit)',
+      'description':'Scan up to 10 public domains in parallel for X25519MLKEM768 readiness, hidden server-preference downgrades (KX_PQ_SUPPORTED_NOT_PREFERRED), and Ed25519 signed receipts.',
+      **pay_ext('0.10','Batch scan up to 10 public domains with Ed25519 signed receipts'),
+      'requestBody':{
+       'required':True,
+       'content':{'application/json':{'schema':{'type':'object','required':['domains'],'properties':{'domains':{'type':'array','minItems':1,'maxItems':10,'items':{'type':'string'},'example':['cloudflare.com','github.com']}}}}},
+      },
+      'responses':{
+       '200':{'description':'Batch scan results with Ed25519 JWS signed receipts'},
+       '402':{'description':'x402 v2 Base USDC payment required ($0.10 USDC)'},
+      },
+     }
+    },
+    '/api/v1/x402/cbom':{
+     'get':{
+      'operationId':'x402LiveCbom',
+      'summary':'Live PQ-TLS scan + CycloneDX 1.6 CBOM JSON + Ed25519 receipt ($0.25 USDC on Base)',
+      'description':'Runs a fresh full PQ-TLS scan and returns a CycloneDX 1.6 Cryptographic Bill of Materials (CBOM) JSON plus a signed Ed25519 JWS receipt.',
+      **pay_ext('0.25','Live full PQ-TLS scan + CycloneDX 1.6 CBOM JSON + Ed25519 receipt'),
+      'parameters':[{'name':'domain','in':'query','required':True,'schema':{'type':'string','example':'cloudflare.com'}}],
+      'responses':{
+       '200':{'description':'CycloneDX 1.6 CBOM JSON and signed receipt'},
+       '402':{'description':'x402 v2 Base USDC payment required ($0.25 USDC)'},
+      },
+     }
+    },
+    '/api/v1/agent/sector/banks':{
+     'get':{
+      'operationId':'x402SectorBanks',
+      'summary':'Weekly Banks PQ-TLS Adoption Snapshot ($0.50 USDC on Base)',
+      'description':'Read-only weekly post-quantum TLS adoption dataset for global banks.',
+      **pay_ext(sector_price,'Weekly post-quantum TLS adoption snapshot for banks'),
+      'responses':{
+       '200':{'description':'Sector snapshot JSON'},
+       '402':{'description':'x402 v2 Base USDC payment required ($0.50 USDC)'},
+      },
+     }
+    },
+    '/api/v1/attestation':{
+     'get':{
+      'operationId':'x402TlsAttestation',
+      'summary':'Auditor-Ready Signed PDF + CycloneDX 1.6 CBOM Bundle ($5.00 USDC on Base)',
+      'description':'Fresh live PQ-TLS measurement, printable Auditor PDF with SHA-256, CycloneDX 1.6 CBOM, fresh Ed25519 receipt, and bundle JWS.',
+      **pay_ext(att_price,'Auditor-ready signed PDF + CycloneDX 1.6 CBOM bundle'),
+      'parameters':[{'name':'domain','in':'query','required':True,'schema':{'type':'string','example':'cloudflare.com'}}],
+      'responses':{
+       '200':{'description':'Attestation bundle JSON with tokenized Auditor PDF URL'},
+       '402':{'description':'x402 v2 Base USDC payment required ($5.00 USDC)'},
+      },
+     }
+    },
+    '/api/v1/scan':{
+     'post':{
+      'operationId':'freeScanTls',
+      'summary':'Free live PQ-TLS scan + Ed25519 JWS signed receipt',
+      'security':[],
+      'requestBody':{
+       'required':True,
+       'content':{'application/json':{'schema':{'type':'object','required':['host'],'properties':{'host':{'type':'string','example':'cloudflare.com'},'port':{'type':'integer','default':443}}}}},
+      },
+      'responses':{'200':{'description':'Live scan result with Ed25519 signed receipt'}},
+     }
+    },
+    '/api/v1/mcp-index':{
+     'get':{
+      'operationId':'getMcpIndex',
+      'summary':'Live Remote MCP Server PQ-TLS Leaderboard (free open JSON)',
+      'security':[],
+      'responses':{'200':{'description':'Live PQ-TLS readiness snapshot of remote MCP servers from the Official MCP Registry'}},
+     }
+    },
+   },
+  }
+  resp=jsonify(spec)
+  resp.headers['Cache-Control']='public, max-age=300'
+  resp.headers['Access-Control-Allow-Origin']='*'
+  return resp
 
  @bp.get('/security-copilot.yaml')
  def security_copilot_manifest():
