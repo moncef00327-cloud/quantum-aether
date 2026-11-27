@@ -310,13 +310,15 @@ def build_a2a_pitch(summary: dict, host: str, obs: dict, *, date_iso: str | None
         f"Hello {name} — one-time A2A/MCP post-quantum TLS note from Quantum Aether ({OUR_CARD}).\n\n"
         f"{finding}\n\n"
         f"Options for {host}:\n"
-        f"1) Signed PDF + CycloneDX 1.6 CBOM Attestation ($5 USDC Base x402; HTTP 402 if unpaid): "
-        f"GET {SITE}/api/v1/attestation?domain={host} or MCP {SITE}/mcp tool get_tls_attestation. "
-        f"Free sample PDF: {SITE}/api/v1/attestation/sample.pdf\n"
-        f"2) IT-Dienstleister / MSP Pilot (290 EUR, up to 50 hostnames, German Ampel PDF + Ed25519 receipts + optional logo): "
-        f"{SITE}/partners?lang=de#msp-pilot\n"
-        f"3) Free A2A ({SITE}/a2a) & MCP ({SITE}/mcp) checks with Ed25519 receipts ({SITE}/.well-known/jwks.json), "
-        f"14-day free monitoring trial ({SITE}/monitoring?domain={host}#trial-form), and 30% recurring affiliate (register_agent_affiliate).\n\n"
+        f"1) Micro x402 on Base USDC (auto-spend ready, listed on x402scan.com): "
+        f"$0.10 batch-scan 10 domains (POST {SITE}/api/v1/x402/batch-scan, no rate limit), "
+        f"$0.25 live CycloneDX 1.6 CBOM (GET {SITE}/api/v1/x402/cbom?domain={host}), "
+        f"$5.00 signed Auditor PDF ({SITE}/api/v1/attestation?domain={host}; free sample {SITE}/api/v1/attestation/sample.pdf). "
+        f"Discovery: {SITE}/.well-known/x402\n"
+        f"2) 1-command Agent Skills & MCP (100/100 on mcptry, zero API key): "
+        f"npx skills add moncef00327-cloud/quantum-aether | MCP {SITE}/mcp | Live MCP Index {SITE}/mcp-index\n"
+        f"3) Free A2A ({SITE}/a2a) + Ed25519 receipts ({SITE}/.well-known/jwks.json), 30% recurring affiliate (register_agent_affiliate), "
+        f"and IT-Dienstleister MSP Pilot 290 EUR ({SITE}/partners?lang=de#msp-pilot).\n\n"
         f"One-time note. Reply 'stop' to suppress {host}."
     )
     data = {
@@ -324,28 +326,19 @@ def build_a2a_pitch(summary: dict, host: str, obs: dict, *, date_iso: str | None
         "agent_card": OUR_CARD,
         "a2a_endpoint": f"{SITE}/a2a",
         "mcp_endpoint": f"{SITE}/mcp",
+        "x402_discovery": f"{SITE}/.well-known/x402",
+        "x402scan_url": "https://www.x402scan.com/server/2b8f5869-118f-4389-ad32-20989ffee2ca",
+        "skills_install": "npx skills add moncef00327-cloud/quantum-aether",
         "jwks_url": f"{SITE}/.well-known/jwks.json",
         "observed_host": host,
         "observed_date": today,
         "observed_tls": tls_v,
         "observed_group": grp,
         "observed_kex_class": obs["kex_class"],
-        "free_sample_pdf": f"{SITE}/api/v1/attestation/sample.pdf",
-        "msp_pilot": {
-            "price_eur": "290",
-            "hostnames": 50,
-            "url_de": f"{SITE}/partners?lang=de#msp-pilot",
-        },
         "purchase_options": {
-            "autonomous_x402_attestation": {
-                "method": "GET",
-                "url": f"{SITE}/api/v1/attestation?domain={host}",
-                "mcp_server": f"{SITE}/mcp",
-                "mcp_tool": "get_tls_attestation",
-                "price_usd": "5.00",
-                "network": "eip155:8453",
-                "payment_authorization_required": True,
-            },
+            "x402_batch_scan_10_domains": {"method": "POST", "url": f"{SITE}/api/v1/x402/batch-scan", "price_usd": "0.10", "network": "eip155:8453"},
+            "x402_live_cbom": {"method": "GET", "url": f"{SITE}/api/v1/x402/cbom?domain={host}", "price_usd": "0.25", "network": "eip155:8453"},
+            "x402_auditor_pdf": {"method": "GET", "url": f"{SITE}/api/v1/attestation?domain={host}", "price_usd": "5.00", "network": "eip155:8453"},
             "monitoring_trial": f"{SITE}/monitoring?domain={host}#trial-form",
             "agent_affiliate_30pct": f"{SITE}/api/v1/agent/affiliate/register",
         },

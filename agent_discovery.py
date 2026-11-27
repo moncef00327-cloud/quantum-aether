@@ -609,7 +609,10 @@ def register(bp, services):
        'content':{'application/json':{'schema':{'type':'object','required':['domains'],'properties':{'domains':{'type':'array','minItems':1,'maxItems':10,'items':{'type':'string'},'example':['cloudflare.com','github.com']}}}}},
       },
       'responses':{
-       '200':{'description':'Batch scan results with Ed25519 JWS signed receipts'},
+       '200':{
+        'description':'Batch scan results with Ed25519 JWS signed receipts',
+        'content':{'application/json':{'schema':{'type':'object','properties':{'sku':{'type':'string'},'batch_id':{'type':'string'},'count':{'type':'integer'},'summary':{'type':'object'},'jwks_uri':{'type':'string'},'results':{'type':'array','items':{'type':'object'}}}}}},
+       },
        '402':{'description':'x402 v2 Base USDC payment required ($0.10 USDC)'},
       },
      }
@@ -622,7 +625,10 @@ def register(bp, services):
       **pay_ext('0.25','Live full PQ-TLS scan + CycloneDX 1.6 CBOM JSON + Ed25519 receipt'),
       'parameters':[{'name':'domain','in':'query','required':True,'schema':{'type':'string','example':'cloudflare.com'}}],
       'responses':{
-       '200':{'description':'CycloneDX 1.6 CBOM JSON and signed receipt'},
+       '200':{
+        'description':'CycloneDX 1.6 CBOM JSON and signed receipt',
+        'content':{'application/json':{'schema':{'type':'object','properties':{'sku':{'type':'string'},'domain':{'type':'string'},'scan':{'type':'object'},'cbom':{'type':'object'},'signed_receipt':{'type':'object'},'jwks_uri':{'type':'string'}}}}},
+       },
        '402':{'description':'x402 v2 Base USDC payment required ($0.25 USDC)'},
       },
      }
@@ -633,8 +639,12 @@ def register(bp, services):
       'summary':'Weekly European Banks PQ-TLS Adoption Snapshot ($0.50 USDC on Base)',
       'description':'Read-only weekly post-quantum TLS adoption dataset for European banks.',
       **pay_ext(sector_price,'Weekly post-quantum TLS adoption snapshot for European banks'),
+      'parameters':[{'name':'format','in':'query','required':False,'description':'Response format (json)','schema':{'type':'string','enum':['json'],'default':'json'}}],
       'responses':{
-       '200':{'description':'Sector snapshot JSON'},
+       '200':{
+        'description':'Sector snapshot JSON',
+        'content':{'application/json':{'schema':{'type':'object','properties':{'sector':{'type':'string'},'week':{'type':'string'},'total':{'type':'integer'},'pq_count':{'type':'integer'},'domains':{'type':'array','items':{'type':'object'}}}}}},
+       },
        '402':{'description':'x402 v2 Base USDC payment required ($0.50 USDC)'},
       },
      }
@@ -647,7 +657,10 @@ def register(bp, services):
       **pay_ext(att_price,'Auditor-ready signed PDF + CycloneDX 1.6 CBOM bundle'),
       'parameters':[{'name':'domain','in':'query','required':True,'schema':{'type':'string','example':'cloudflare.com'}}],
       'responses':{
-       '200':{'description':'Attestation bundle JSON with tokenized Auditor PDF URL'},
+       '200':{
+        'description':'Attestation bundle JSON with tokenized Auditor PDF URL',
+        'content':{'application/json':{'schema':{'type':'object','properties':{'type':{'type':'string'},'att_id':{'type':'string'},'domain':{'type':'string'},'scan':{'type':'object'},'cbom':{'type':'object'},'signed_receipt':{'type':'object'},'auditor_pdf':{'type':'object'},'integrity':{'type':'object'}}}}},
+       },
        '402':{'description':'x402 v2 Base USDC payment required ($5.00 USDC)'},
       },
      }

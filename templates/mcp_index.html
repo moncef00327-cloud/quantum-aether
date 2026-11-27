@@ -28,6 +28,8 @@ table.mcp-table th{font-size:.82rem;letter-spacing:.02em;color:#b7c8dc;white-spa
 .mcp-tls code{white-space:nowrap}
 .mcp-act{white-space:nowrap;font-size:.86rem}
 .mcp-act a{white-space:nowrap}
+.mcp-copy-btn{margin-inline-start:6px;padding:3px 8px;border-radius:999px;border:1px solid rgba(85,229,244,.38);background:rgba(85,229,244,.12);color:#bae6fd;cursor:pointer;font-size:.76rem;font-weight:600;white-space:nowrap}
+.mcp-copy-btn:hover{background:rgba(85,229,244,.22);color:#fff}
 @media (max-width:760px){
   .mcp-search{max-width:none;width:100%}
   .mcp-table-wrap{overflow:visible}
@@ -136,6 +138,9 @@ table.mcp-table th{font-size:.82rem;letter-spacing:.02em;color:#b7c8dc;white-spa
             <td class="c-act mcp-act">
               <a href="{{ url_for('site.index', domain=r.host, lang=lang_code) }}">{{ d.btn_scan }}</a> ·
               <a href="{{ url_for('site.badge_verify', domain=r.host, lang=lang_code) }}">{{ d.btn_verify }}</a>
+              {% if r.status != 'unreachable' %}
+              <button type="button" class="mcp-copy-btn" data-host="{{ r.host }}" data-copied="{{ d.btn_copied }}" data-label="{{ d.btn_copy_badge }}">{{ d.btn_copy_badge }}</button>
+              {% endif %}
             </td>
           </tr>
         {% endfor %}
@@ -180,6 +185,22 @@ table.mcp-table th{font-size:.82rem;letter-spacing:.02em;color:#b7c8dc;white-spa
     apply();
   });
   if (search) search.addEventListener('input', apply);
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.mcp-copy-btn');
+    if (!btn) return;
+    var host = btn.getAttribute('data-host') || '';
+    if (!host) return;
+    var md = '[![Post-Quantum TLS Status](https://ather-quantum.com/badge/' + host + '.svg)](https://ather-quantum.com/verify/' + host + ')';
+    var ok = function () {
+      btn.textContent = btn.getAttribute('data-copied') || 'Copied ✓';
+      setTimeout(function () { btn.textContent = btn.getAttribute('data-label') || 'Copy README badge'; }, 1800);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(md).then(ok).catch(function () { window.prompt('Copy README badge:', md); });
+    } else {
+      window.prompt('Copy README badge:', md);
+    }
+  });
 })();
 </script>
 {% endblock %}
