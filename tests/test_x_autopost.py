@@ -19,6 +19,7 @@ class XAutopostTests(unittest.TestCase):
             self.assertIn("https://", t)
             seen.add(t)
         self.assertEqual(len(seen), 4)
+        self.assertTrue(any("/.well-known/x402" in t for t in seen), "x402 discovery URL must not be truncated")
 
     def test_oauth1_header_structure(self):
         creds = {

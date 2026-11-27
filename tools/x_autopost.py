@@ -144,15 +144,14 @@ def build_daily_tweet(summary: dict, day: dt.date | None = None) -> str:
             f"Remote MCP (100/100 on mcptry): https://ather-quantum.com/mcp #OpenClaw #MCP"
         ),
         (
-            f"Autonomous #Base USDC #x402 endpoints live on x402scan (6/6 verified):\n"
-            f"• $0.10 batch-scan (10 domains, Ed25519 receipts, no rate limit)\n"
+            f"Autonomous #Base USDC #x402 endpoints live on x402scan (6/6):\n"
+            f"• $0.10 batch-scan (10 domains, Ed25519 receipts)\n"
             f"• $0.25 live CycloneDX 1.6 CBOM JSON\n\n"
             f"{X402SCAN_URL}\n"
-            f"Discovery: https://ather-quantum.com/.well-known/x402"
+            f"https://ather-quantum.com/.well-known/x402"
         ),
     ]
-    tweet = variants[d.toordinal() % len(variants)]
-    return tweet[:280]
+    return variants[d.toordinal() % len(variants)]
 
 
 def _pct(s: str) -> str:
