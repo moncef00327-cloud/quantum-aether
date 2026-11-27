@@ -38,6 +38,8 @@
   {% endif %}
 </section>
 
+{% with box_id='adoption-top-scan', box_src='adoption_top' %}{% include "_scan_box.html" %}{% endwith %}
+
 {% if not s.changes %}
 <section class="card"><p class="notice">{{ t.adoption_first_week }}</p></section>
 {% endif %}

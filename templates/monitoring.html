@@ -12,6 +12,18 @@
   {{ trial_cta('trial-form', prefill=domain, title='', sub=t.trial_fold_line, source='monitoring', show_title=false) }}
 </section>
 
+{% set pdom = domain or 'example.com' %}
+<section class="card">
+  <h2>{{ t.mon_preview_title }}</h2>
+  <p>{{ t.mon_preview_sub }}</p>
+  <table class="data" dir="ltr">
+    <tr><th>Domain</th><th>Grade</th><th>Post-quantum</th><th>Cert expiry</th></tr>
+    <tr><td>{{ pdom }}</td><td><span class="ok">A</span></td><td><span class="ok">X25519MLKEM768</span></td><td>74d</td></tr>
+    <tr><td>api.{{ pdom }}</td><td><span class="warn">B</span></td><td><span class="warn">X25519 (classical)</span></td><td>41d</td></tr>
+    <tr><td>mail.{{ pdom }}</td><td><span class="warn">B</span></td><td><span class="warn">X25519 (classical)</span></td><td>12d ⚠</td></tr>
+  </table>
+</section>
+
 <section class="card">
   <p class="lead">{{ t.mon_sub }}</p>
   <ul class="ticks">{% for item in t.mon_features %}<li>{{ item }}</li>{% endfor %}</ul>
@@ -57,18 +69,6 @@
   {% endcall %}
   </details>
   <p class="muted small"><a href="{{ url_for('site.agency_page', lang=lang) }}" data-ev="agency_cta">{{ t.mon_one_time_alt }}</a></p>
-</section>
-
-{% set pdom = domain or 'example.com' %}
-<section class="card">
-  <h2>{{ t.mon_preview_title }}</h2>
-  <p>{{ t.mon_preview_sub }}</p>
-  <table class="data" dir="ltr">
-    <tr><th>Domain</th><th>Grade</th><th>Post-quantum</th><th>Cert expiry</th></tr>
-    <tr><td>{{ pdom }}</td><td><span class="ok">A</span></td><td><span class="ok">X25519MLKEM768</span></td><td>74d</td></tr>
-    <tr><td>api.{{ pdom }}</td><td><span class="warn">B</span></td><td><span class="warn">X25519 (classical)</span></td><td>41d</td></tr>
-    <tr><td>mail.{{ pdom }}</td><td><span class="warn">B</span></td><td><span class="warn">X25519 (classical)</span></td><td>12d ⚠</td></tr>
-  </table>
 </section>
 
 <section class="card" id="login">

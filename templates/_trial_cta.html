@@ -38,6 +38,11 @@
       <span>{{ t.trial_consent }} (<a href="{{ url_for('site.legal_page', slug='agb', lang=legal_lang) }}" target="_blank">{{ t.legal_terms }}</a> · <a href="{{ url_for('site.legal_page', slug='datenschutz', lang=legal_lang) }}" target="_blank">{{ t.legal_privacy }}</a>)</span></label></p>
     <div class="scan-row trial-submit"><button type="submit" data-ev="trial_start" data-ev-alt="trial_cta_clicked" style="width:100%">{{ t.trial_button_nocard }}</button></div>
     <p class="muted small">{{ t.trial_cta_fine }} {{ t.trial_after }} <bdi dir="ltr" data-trial-price>{{ price_label }}</bdi> {{ t.mon_per_month }}.</p>
+    <p class="muted small" style="margin-top:6px;">
+      {{ 'تريد المعاينة أولاً بدون بريد؟' if lang == 'ar' else ('Erst ansehen ohne E-Mail?' if lang == 'de' else 'Want to preview first without email?') }}
+      <a href="{{ url_for('site.sample_report', lang=lang) }}">{{ 'نموذج تقرير التدقيق ↗' if lang == 'ar' else ('Beispielbericht ansehen ↗' if lang == 'de' else 'Sample audit report ↗') }}</a>
+      · <a href="{{ url_for('site.partners_page', lang=lang) }}">{{ 'برنامج MSP Pilot (50 نطاقاً · 290 €) ↗' if lang == 'ar' else ('MSP-Pilot (50 Hosts · 290 €) ↗' if lang == 'de' else 'MSP Pilot (50 hosts · 290 €) ↗') }}</a>
+    </p>
   </form>
 </section>
 {% endmacro %}
