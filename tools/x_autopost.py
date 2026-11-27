@@ -371,43 +371,42 @@ def replies_today_count(conn: sqlite3.Connection, day: str) -> int:
 def build_mention_reply(username: str, text: str) -> str | None:
     raw = text or ""
     low = raw.lower()
-    handle = f"@{username.lstrip('@')}"
     if any(w in low for w in ("stop", "unsubscribe", "spam", "scam", "airdrop", "giveaway", "crypto pump", "dm me for promo")):
         return None
     if any(w in low for w in ("receipt", "jwks", "signed", "verify", "stale", "badge", "timestamp")):
         reply = (
-            f"{handle} Every scan issues an Ed25519 signed JWS receipt (iat/exp, negotiated group, cert SPKI hash) "
-            f"verifiable offline via JWKS:\n\n"
-            f"https://ather-quantum.com/.well-known/jwks.json\n"
-            f"https://ather-quantum.com/agents #AIAgents #MCP #PQC"
+            "Every scan issues an Ed25519 signed JWS receipt (iat/exp, negotiated group, cert SPKI hash) "
+            "verifiable offline via JWKS:\n\n"
+            "https://ather-quantum.com/.well-known/jwks.json\n"
+            "https://ather-quantum.com/agents #AIAgents #MCP #PQC"
         )
     elif any(w in low for w in ("x402", "usdc", "wallet", "pay", "batch", "cbom", "base")):
         reply = (
-            f"{handle} Any agent with a Base USDC wallet can call our x402 endpoints directly "
-            f"($0.10 10-domain batch-scan / $0.25 live CBOM):\n\n"
-            f"https://ather-quantum.com/.well-known/x402\n"
-            f"npx skills add moncef00327-cloud/quantum-aether #x402 #AIAgents"
+            "Any agent with a Base USDC wallet can call our x402 endpoints directly "
+            "($0.10 10-domain batch-scan / $0.25 live CBOM):\n\n"
+            "https://ather-quantum.com/.well-known/x402\n"
+            "npx skills add moncef00327-cloud/quantum-aether #x402 #AIAgents"
         )
     elif any(w in low for w in ("mcp", "skill", "claude", "cursor", "openclaw", "codex", "agent")):
         reply = (
-            f"{handle} Connect our free remote MCP server (100/100 on mcptry) or install our agent skills:\n\n"
-            f"npx skills add moncef00327-cloud/quantum-aether\n"
-            f"https://ather-quantum.com/agents #MCP #AIAgents #PQC"
+            "Connect our free remote MCP server (100/100 on mcptry) or install our agent skills:\n\n"
+            "npx skills add moncef00327-cloud/quantum-aether\n"
+            "https://ather-quantum.com/agents #MCP #AIAgents #PQC"
         )
     elif any(w in raw for w in ("关注", "亮眼", "不错", "厉害", "支持")) or any(
         w in low for w in ("follow", "followed", "impressive", "awesome", "great work", "cool", "nice")
     ):
         zh = " 感谢关注！" if any("\u4e00" <= ch <= "\u9fff" for ch in raw) else ""
         reply = (
-            f"{handle} Thanks for the follow!{zh} We track live post-quantum TLS (X25519MLKEM768) across "
+            f"Thanks for the follow!{zh} We track live post-quantum TLS (X25519MLKEM768) across "
             f"Official Registry MCP servers daily—try a free scan anytime:\n\n"
             f"https://ather-quantum.com/mcp-index #AIAgents #MCP #PQC"
         )
     else:
         reply = (
-            f"{handle} You can test any domain live for real X25519MLKEM768 negotiation + Ed25519 signed receipt "
-            f"(free, zero API key):\n\n"
-            f"https://ather-quantum.com/mcp-index #PQC #AIAgents #MCP"
+            "You can test any domain live for real X25519MLKEM768 negotiation + Ed25519 signed receipt "
+            "(free, zero API key):\n\n"
+            "https://ather-quantum.com/mcp-index #PQC #AIAgents #MCP"
         )
     return reply if len(reply) <= 280 else reply[:280]
 

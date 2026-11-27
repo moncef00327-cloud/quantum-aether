@@ -45,6 +45,7 @@ class XAutopostTests(unittest.TestCase):
         self.assertIsNotNone(r3)
         self.assertLessEqual(len(r3), 280)
         self.assertIn("感谢关注", r3)
+        self.assertFalse(r3.startswith("@"), "X reply_to prepends @username automatically")
 
         self.assertIsNone(xa.build_mention_reply("spammer", "free airdrop giveaway"))
 
