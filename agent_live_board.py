@@ -481,7 +481,8 @@ def collect_snapshot(conn: sqlite3.Connection, data_dir: str, *, base_url: str =
 
     for ts, sender, subj in _safe_fetchall(
         conn,
-        "SELECT received_at, sender, subject FROM inbound_mail ORDER BY received_at DESC LIMIT 10",
+        "SELECT COALESCE(received_at, created_at), from_addr, subject FROM inbound_mail "
+        "WHERE COALESCE(is_test, 0) = 0 ORDER BY id DESC LIMIT 10",
     ):
         events.append({
             "ts": ts or "",
