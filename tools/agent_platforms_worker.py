@@ -403,10 +403,10 @@ def run_agentboard(conn: sqlite3.Connection, http=_http_json, *, dry_run: bool =
 
 def _reply_to_moltbook_comments(conn: sqlite3.Connection, api_key: str, my_name: str, http, *, dry_run: bool = False) -> int:
     """Flint_spark pattern: never leave commenters on read on our own Moltbook posts (up to 3 replies per heartbeat)."""
-    st, pdoc = http("GET", f"{MOLTBOOK_BASE}/posts?author={urllib.parse.quote(my_name)}&limit=10", token=api_key)
-    if st != 200:
+    st, pdoc = http("GET", f"{MOLTBOOK_BASE}/agents/profile?name={urllib.parse.quote(my_name)}", token=api_key)
+    if st != 200 or not isinstance(pdoc, dict):
         return 0
-    posts = pdoc.get("posts") if isinstance(pdoc, dict) else (pdoc if isinstance(pdoc, list) else [])
+    posts = pdoc.get("recentPosts") or pdoc.get("posts") or []
     replied = 0
     for p in posts:
         if replied >= 3 or not isinstance(p, dict):
