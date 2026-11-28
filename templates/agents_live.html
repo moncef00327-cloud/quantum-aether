@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <title>غرفة عمليات الوكلاء الحية · Quantum Aether</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='agents-live.css') }}?v=2">
+  <link rel="stylesheet" href="{{ url_for('static', filename='agents-live.css') }}?v=3">
 </head>
 <body>
 {% set k = snap.kpis %}
@@ -99,11 +99,11 @@
           <tbody id="mcp-tools-body">
             {% for t in snap.mcp_tools %}
             <tr data-tier="{{ t.tier }}">
-              <td dir="ltr" class="mono">{{ t.name }}</td>
-              <td>{{ t.title }}</td>
-              <td><span class="tag {{ 'x402' if t.tier == 'x402' else ('msp' if t.tier == 'commerce' else 'mcp') }}">{{ t.price_label }}</span></td>
-              <td>{{ 'قراءة فقط' if t.read_only else 'تنفيذ حي' }}</td>
-              <td dir="ltr" class="mono num">{{ t.calls_24h }}</td>
+              <td data-label="الأداة" dir="ltr" class="mono cell-primary">{{ t.name }}</td>
+              <td data-label="الوظيفة" class="cell-desc">{{ t.title }}</td>
+              <td data-label="التصنيف"><span class="tag {{ 'x402' if t.tier == 'x402' else ('msp' if t.tier == 'commerce' else 'mcp') }}">{{ t.price_label }}</span></td>
+              <td data-label="الوضع">{{ 'قراءة فقط' if t.read_only else 'تنفيذ حي' }}</td>
+              <td data-label="استدعاءات 24س" dir="ltr" class="mono num">{{ t.calls_24h }}</td>
             </tr>
             {% endfor %}
           </tbody>
@@ -153,12 +153,12 @@
           <tbody id="ucp-catalog-body">
             {% for item in snap.ucp_catalog %}
             <tr data-cat="{{ item.category }}">
-              <td dir="ltr" class="mono">{{ item.id }}</td>
-              <td>{{ item.title }}</td>
-              <td dir="ltr" class="mono num">{{ item.price }} {{ item.currency }}</td>
-              <td dir="ltr" class="mono">{{ item.mcp_tool or '—' }}</td>
-              <td dir="ltr">{{ item.payment_methods | join(', ') }}</td>
-              <td><a href="{{ item.checkout_url }}" target="_blank" rel="noopener">فتح ↗</a></td>
+              <td data-label="SKU" dir="ltr" class="mono cell-primary">{{ item.id }}</td>
+              <td data-label="المنتج" class="cell-desc">{{ item.title }}</td>
+              <td data-label="السعر" dir="ltr" class="mono num">{{ item.price }} {{ item.currency }}</td>
+              <td data-label="أداة MCP" dir="ltr" class="mono">{{ item.mcp_tool or '—' }}</td>
+              <td data-label="الدفع" dir="ltr">{{ item.payment_methods | join(', ') }}</td>
+              <td data-label="رابط"><a href="{{ item.checkout_url }}" target="_blank" rel="noopener">فتح ↗</a></td>
             </tr>
             {% endfor %}
           </tbody>
@@ -267,6 +267,6 @@
     </section>
   </main>
 </div>
-<script src="{{ url_for('static', filename='agents-live.js') }}?v=2" defer></script>
+<script src="{{ url_for('static', filename='agents-live.js') }}?v=3" defer></script>
 </body>
 </html>

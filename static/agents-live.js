@@ -80,11 +80,11 @@
       mcpToolsBody.innerHTML = tools.map(function (t) {
         var cls = t.tier === "x402" ? "x402" : (t.tier === "commerce" ? "msp" : "mcp");
         return '<tr data-tier="' + esc(t.tier) + '">' +
-          '<td dir="ltr" class="mono">' + esc(t.name) + '</td>' +
-          '<td>' + esc(t.title) + '</td>' +
-          '<td><span class="tag ' + cls + '">' + esc(t.price_label) + '</span></td>' +
-          '<td>' + (t.read_only ? "قراءة فقط" : "تنفيذ حي") + '</td>' +
-          '<td dir="ltr" class="mono num">' + esc(t.calls_24h) + '</td></tr>';
+          '<td data-label="الأداة" dir="ltr" class="mono cell-primary">' + esc(t.name) + '</td>' +
+          '<td data-label="الوظيفة" class="cell-desc">' + esc(t.title) + '</td>' +
+          '<td data-label="التصنيف"><span class="tag ' + cls + '">' + esc(t.price_label) + '</span></td>' +
+          '<td data-label="الوضع">' + (t.read_only ? "قراءة فقط" : "تنفيذ حي") + '</td>' +
+          '<td data-label="استدعاءات 24س" dir="ltr" class="mono num">' + esc(t.calls_24h) + '</td></tr>';
       }).join("");
     }
 
@@ -92,12 +92,12 @@
       var items = data.ucp_catalog.filter(function (it) { return activeCat === "all" || it.category === activeCat; });
       ucpCatalogBody.innerHTML = items.map(function (it) {
         return '<tr data-cat="' + esc(it.category) + '">' +
-          '<td dir="ltr" class="mono">' + esc(it.id) + '</td>' +
-          '<td>' + esc(it.title) + '</td>' +
-          '<td dir="ltr" class="mono num">' + esc(it.price) + ' ' + esc(it.currency) + '</td>' +
-          '<td dir="ltr" class="mono">' + esc(it.mcp_tool || "—") + '</td>' +
-          '<td dir="ltr">' + esc((it.payment_methods || []).join(", ")) + '</td>' +
-          '<td><a href="' + esc(it.checkout_url) + '" target="_blank" rel="noopener">فتح ↗</a></td></tr>';
+          '<td data-label="SKU" dir="ltr" class="mono cell-primary">' + esc(it.id) + '</td>' +
+          '<td data-label="المنتج" class="cell-desc">' + esc(it.title) + '</td>' +
+          '<td data-label="السعر" dir="ltr" class="mono num">' + esc(it.price) + ' ' + esc(it.currency) + '</td>' +
+          '<td data-label="أداة MCP" dir="ltr" class="mono">' + esc(it.mcp_tool || "—") + '</td>' +
+          '<td data-label="الدفع" dir="ltr">' + esc((it.payment_methods || []).join(", ")) + '</td>' +
+          '<td data-label="رابط"><a href="' + esc(it.checkout_url) + '" target="_blank" rel="noopener">فتح ↗</a></td></tr>';
       }).join("");
     }
 
