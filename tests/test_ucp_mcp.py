@@ -54,14 +54,18 @@ class UcpAndMcpHubTests(unittest.TestCase):
             self.assertEqual(doc["ucp"]["version"], ucp_commerce.UCP_VERSION)
             services = doc["ucp"]["services"]["dev.ucp.shopping"]
             mcp_srv = next(s for s in services if s["transport"] == "mcp")
-            self.assertTrue(mcp_srv["preferred"])
-            self.assertEqual(mcp_srv["endpoint"], "https://ather-quantum.com/mcp")
-            self.assertIn("dev.ucp.shopping.catalog", doc["ucp"]["capabilities"])
+            self.assertEqual(mcp_srv["endpoint"], "https://ather-quantum.com/ucp/mcp")
+            self.assertNotIn("preferred", mcp_srv)
+            self.assertIn("dev.ucp.shopping.catalog.search", doc["ucp"]["capabilities"])
+            self.assertIn("dev.ucp.shopping.catalog.lookup", doc["ucp"]["capabilities"])
             self.assertIn("dev.ucp.shopping.checkout", doc["ucp"]["capabilities"])
-            self.assertEqual(doc["merchant"]["jwks_uri"], "https://ather-quantum.com/.well-known/jwks.json")
+            self.assertNotIn("dev.ucp.shopping.catalog", doc["ucp"]["capabilities"])
+            self.assertTrue(doc["keys"])
 
         cat = self.client.get("/api/v1/ucp/catalog")
         self.assertEqual(cat.status_code, 200)
+        self.assertTrue(cat.json["deprecated"])
+        self.assertIn("replacement_endpoints", cat.json)
         skus = {i["id"]: i for i in cat.json["items"]}
         self.assertEqual(skus["qa-batch-scan-10"]["price"], "0.10")
         self.assertEqual(skus["qa-batch-scan-10"]["mcp_tool"], "batch_scan_tls")
@@ -69,20 +73,27 @@ class UcpAndMcpHubTests(unittest.TestCase):
         self.assertEqual(skus["qa-live-cbom"]["mcp_tool"], "get_live_cbom")
         self.assertEqual(skus["qa-msp-pilot"]["price"], "290.00")
 
-        chk = self.client.post("/api/v1/ucp/checkout-sessions", json={"sku": "qa-batch-scan-10", "domain": "cloudflare.com"})
+        chk = self.client.post(
+            "/api/v1/ucp/checkout-sessions",
+            json={"line_items": [{"item": {"id": "qa-batch-scan-10"}, "quantity": 1}]},
+        )
         self.assertEqual(chk.status_code, 201)
-        self.assertEqual(chk.json["status"], "ready_for_complete")
-        self.assertEqual(chk.json["mcp_execution"]["tool"], "batch_scan_tls")
-        self.assertEqual(chk.json["totals"]["total"], "0.10")
+        self.assertEqual(chk.json["status"], "incomplete")
+        self.assertEqual(chk.json["currency"], "USD")
+        self.assertEqual(next(t["amount"] for t in chk.json["totals"] if t["type"] == "total"), 10)
 
         chk_mon = self.client.post(
             "/api/v1/ucp/checkout-sessions",
             json={"line_items": [{"item": {"id": "qa-monitoring-starter"}, "quantity": 1}], "domain": "example.com"},
         )
         self.assertEqual(chk_mon.status_code, 201)
+        self.assertEqual(chk_mon.json["status"], "requires_escalation")
         self.assertIn("/monitoring?domain=example.com#trial-form", chk_mon.json["continue_url"])
 
-        bad = self.client.post("/api/v1/ucp/checkout-sessions", json={"sku": "does-not-exist"})
+        bad = self.client.post(
+            "/api/v1/ucp/checkout-sessions",
+            json={"line_items": [{"item": {"id": "does-not-exist"}, "quantity": 1}]},
+        )
         self.assertEqual(bad.status_code, 400)
         self.scanner.assert_not_called()
 
