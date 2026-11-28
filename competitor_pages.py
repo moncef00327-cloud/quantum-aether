@@ -15,7 +15,7 @@ PAGES = {
         "slug": "censys",
         "competitor": "Censys",
         "en": {
-            "title": "Quantum Aether vs Censys — Post-Quantum TLS, Signed Receipts & MCP Layer",
+            "title": "Quantum Aether vs Censys: PQC TLS, Ed25519 & MCP",
             "meta": "Censys maps internet-wide attack surfaces. Quantum Aether adds browser-order X25519MLKEM768 downgrade detection, offline-verifiable Ed25519 TLS receipts, remote MCP/x402, and German NIS2/BSI MSP reporting.",
             "kicker": "Comparison · Post-Quantum TLS & Agent Security Layer",
             "h1": "Censys maps the internet. Quantum Aether verifies Post-Quantum TLS & AI-agent trust.",
@@ -35,7 +35,7 @@ PAGES = {
             ],
         },
         "de": {
-            "title": "Quantum Aether vs. Censys — Post-Quanten-TLS, signierte Belege & NIS2-Ebene",
+            "title": "Quantum Aether vs. Censys: PQC-TLS & NIS2",
             "meta": "Censys kartiert Angriffsflächen im Internet. Quantum Aether ergänzt gezielt Post-Quanten-TLS (X25519MLKEM768), signierte Ed25519-Prüfbelege, Remote-MCP und deutsche NIS2-/BSI-Berichte ab 29 €/Monat.",
             "kicker": "Vergleich · Post-Quanten-TLS & DACH-Compliance",
             "h1": "Censys kartiert das Internet. Quantum Aether beweist Post-Quanten-TLS für NIS2 & KI-Agenten.",
@@ -55,7 +55,7 @@ PAGES = {
             ],
         },
         "ar": {
-            "title": "مقارنة Quantum Aether مع Censys — طبقة Post-Quantum TLS والإيصالات الموقّعة وMCP",
+            "title": "Quantum Aether مقابل Censys: PQC TLS وMCP",
             "meta": "يركّز Censys على مسح أصول الإنترنت العامة، بينما يضيف Quantum Aether فحص X25519MLKEM768 بترتيب المتصفح، إيصالات Ed25519 الموقّعة، خادم MCP، وتقارير NIS2 بأسعار تبدأ من 29 € شهرياً.",
             "kicker": "مقارنة تقنية · طبقة التشفير المقاوم للكم والوكلاء",
             "h1": "Censys لمسح الإنترنت التقليدي. Quantum Aether لإثبات Post-Quantum TLS وثقة الوكلاء.",
@@ -79,7 +79,7 @@ PAGES = {
         "slug": "securitytrails",
         "competitor": "SecurityTrails",
         "en": {
-            "title": "Quantum Aether vs SecurityTrails — Post-Quantum TLS, Ed25519 Receipts & MCP",
+            "title": "Quantum Aether vs SecurityTrails: Live PQC TLS & MCP",
             "meta": "Compare Quantum Aether and SecurityTrails: move beyond historical DNS records with live X25519MLKEM768 handshake monitoring, signed Ed25519 receipts, remote MCP, and European NIS2 compliance starting at 29 €/mo.",
             "kicker": "Comparison · Live PQ-TLS Monitoring vs Historical DNS",
             "h1": "SecurityTrails tracks DNS history. Quantum Aether proves live Post-Quantum TLS & agent security.",
@@ -99,7 +99,7 @@ PAGES = {
             ],
         },
         "de": {
-            "title": "Quantum Aether vs. SecurityTrails — Live-Post-Quanten-TLS, Ed25519 & MCP",
+            "title": "Quantum Aether vs. SecurityTrails: PQC-TLS & MCP",
             "meta": "Vergleich Quantum Aether vs. SecurityTrails: Live-Prüfung auf X25519MLKEM768, signierte Ed25519-Prüfbelege, CycloneDX-1.6-CBOM, Remote-MCP und deutsches NIS2-Monitoring ab 29 €/Monat.",
             "kicker": "Vergleich · Live-PQ-TLS-Monitoring vs. DNS-Historie",
             "h1": "SecurityTrails zeigt DNS-Historie. Quantum Aether beweist Live-Post-Quanten-TLS & NIS2-Readiness.",
@@ -119,7 +119,7 @@ PAGES = {
             ],
         },
         "ar": {
-            "title": "مقارنة Quantum Aether مع SecurityTrails — فحص Post-Quantum TLS الحي وإيصالات Ed25519",
+            "title": "Quantum Aether مقابل SecurityTrails: PQC TLS",
             "meta": "قارن بين Quantum Aether وSecurityTrails: فحص حيّ لـ X25519MLKEM768، إيصالات Ed25519 الموقّعة، تقارير CycloneDX 1.6 CBOM، وخادم MCP ومراقبة يومية تبدأ من 29 €/شهر.",
             "kicker": "مقارنة تقنية · مراقبة PQ-TLS الحية مقابل سجل DNS التاريخي",
             "h1": "SecurityTrails لسجل DNS التاريخي. Quantum Aether لإثبات Post-Quantum TLS الحي والوكلاء.",

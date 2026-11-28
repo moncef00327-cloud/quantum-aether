@@ -14,7 +14,7 @@ ENDPOINT = "site.mcp_index_page"
 
 T = {
     "en": {
-        "title": "MCP Server Post-Quantum TLS Index — Live Remote MCP Leaderboard",
+        "title": "MCP Server Post-Quantum TLS Index · Quantum Aether",
         "meta": "Live post-quantum TLS readiness index of {measured} remote HTTPS MCP servers from the Official MCP Registry: {pq_pct}% negotiate X25519MLKEM768.",
         "kicker": "Reverse MCP Security Radar · Official MCP Registry",
         "h1": "Which remote MCP servers protect AI agent traffic with post-quantum TLS?",
@@ -53,7 +53,7 @@ T = {
         "empty": "Index snapshot is being generated. Check back in a moment.",
     },
     "ar": {
-        "title": "مؤشر أمان خوادم MCP لما بعد الكم — ترتيب حي لخوادم MCP البعيدة",
+        "title": "مؤشر أمان خوادم MCP لما بعد الكم · Quantum Aether",
         "meta": "مؤشر حي لجاهزية التشفير المقاوم للكم لـ {measured} خادم MCP بعيد من السجل الرسمي: {pq_pct}% منها تفاوض X25519MLKEM768.",
         "kicker": "رادار أمان خوادم MCP العكسي · السجل الرسمي للـ MCP",
         "h1": "أيّ خوادم MCP البعيدة تحمي حركة الوكلاء بتشفير TLS مقاوم للكم؟",
@@ -92,7 +92,7 @@ T = {
         "empty": "جارٍ توليد لقطة المؤشر الآن. أعد المحاولة بعد لحظات.",
     },
     "de": {
-        "title": "MCP-Server Post-Quanten-TLS-Index — Live-Rangliste öffentlicher MCP-Endpunkte",
+        "title": "MCP-Server Post-Quanten-TLS-Index · Quantum Aether",
         "meta": "Live-Index der Post-Quanten-TLS-Readiness von {measured} Remote-MCP-Servern aus dem offiziellen MCP-Register: {pq_pct}% verhandeln X25519MLKEM768.",
         "kicker": "Reverse MCP Security Radar · Offizielles MCP-Register",
         "h1": "Welche Remote-MCP-Server schützen KI-Agenten-Daten mit Post-Quanten-TLS?",

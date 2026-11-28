@@ -50,4 +50,12 @@
   {% endfor %}
 </section>
 {% endif %}
+<section class="card">
+  <p class="small muted">
+    {{ 'مقارنات وفهارس ذات صلة:' if lang == 'ar' else ('Verwandte Vergleiche & Indizes:' if lang == 'de' else 'Related comparisons & indexes:') }}
+    <a href="{{ url_for('site.vs_censys_page', lang=lang) }}">Quantum Aether vs Censys</a> ·
+    <a href="{{ url_for('site.vs_securitytrails_page', lang=lang) }}">Quantum Aether vs SecurityTrails</a> ·
+    <a href="{{ url_for('site.mcp_index_page', lang=lang) }}">{{ 'مؤشر أمان خوادم MCP' if lang == 'ar' else ('MCP-Server PQC-TLS-Index' if lang == 'de' else 'MCP Server Post-Quantum TLS Index') }}</a>
+  </p>
+</section>
 {% endblock %}

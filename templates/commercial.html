@@ -56,5 +56,11 @@
     <li><a href="{{ url_for('site.agents_page', lang='ar' if lang == 'ar' else 'en') }}#attestation">{{ 'حزمة إثبات TLS للمورّدين عبر API/MCP (PDF موقّع للمدقّق + CycloneDX 1.6 CBOM، x402)' if lang == 'ar' else ('Vendor TLS Attestation API/MCP (signiertes Prüfer-PDF + CycloneDX 1.6 CBOM, x402)' if lang == 'de' else 'Vendor TLS Attestation API/MCP (auditor PDF + CycloneDX 1.6 CBOM, x402)') }}</a> · <bdi dir="ltr">5.00 USDC</bdi> · <a href="/api/v1/attestation/sample.pdf" target="_blank" rel="noopener">{{ 'نموذج PDF ↗' if lang == 'ar' else ('Beispiel-PDF ↗' if lang == 'de' else 'Sample PDF ↗') }}</a></li>
     <li>{{ commercial.report }} · <bdi>{{ price }} {{ currency }}</bdi> · <a href="{{ url_for('site.index', lang=lang) }}">{{ commercial.scan }}</a></li>
   </ul>
+  <p class="small muted" style="margin-top:10px;margin-bottom:0;">
+    {{ 'مقارنات تقنية:' if lang == 'ar' else ('Technische Vergleiche:' if lang == 'de' else 'Technical comparisons:') }}
+    <a href="{{ url_for('site.vs_censys_page', lang=lang) }}">Quantum Aether vs Censys</a> ·
+    <a href="{{ url_for('site.vs_securitytrails_page', lang=lang) }}">Quantum Aether vs SecurityTrails</a> ·
+    <a href="{{ url_for('site.mcp_index_page', lang=lang) }}">{{ 'مؤشر خوادم MCP' if lang == 'ar' else ('MCP-Server-Index' if lang == 'de' else 'MCP Security Index') }}</a>
+  </p>
 </section>
 {% endblock %}

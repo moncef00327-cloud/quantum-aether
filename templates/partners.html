@@ -124,5 +124,10 @@
   <p>Building an AI agent or MCP workflow? Self-register via the MCP tool <code>register_agent_affiliate</code> or <code>POST /api/v1/agent/affiliate/register</code> to receive an instant <code>?ref=CODE</code> link (same terms: 30% of monitoring for 12 months / 20% one-time, monthly manual owner payout).</p>
   <p><a href="{{ url_for('site.agents_page', lang='en') }}#signed-receipts-and-affiliate">Agent registration guide &amp; prompt recipe ↗</a></p>
   {% endif %}
+  <p class="small muted" style="margin-top:10px;margin-bottom:0;">
+    <a href="{{ url_for('site.vs_censys_page', lang=lang) }}">Quantum Aether vs Censys</a> ·
+    <a href="{{ url_for('site.vs_securitytrails_page', lang=lang) }}">Quantum Aether vs SecurityTrails</a> ·
+    <a href="{{ url_for('site.mcp_index_page', lang=lang) }}">{{ 'مؤشر خوادم MCP' if lang == 'ar' else ('MCP-Server-Index' if lang == 'de' else 'MCP Security Index') }}</a>
+  </p>
 </section>
 {% endblock %}
