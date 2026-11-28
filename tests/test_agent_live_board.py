@@ -37,8 +37,12 @@ class AgentLiveBoardTests(unittest.TestCase):
         self.assertIn("noindex", r.headers.get("X-Robots-Tag", ""))
         self.assertIn("no-store", r.headers.get("Cache-Control", ""))
         html = r.get_data(as_text=True)
-        self.assertIn("/admin/agents-live/feed", html)
+        self.assertIn("agents-live.css", html)
+        self.assertIn("agents-live.js", html)
+        self.assertNotIn("<style>", html, "must use external CSS to pass strict CSP")
         self.assertNotIn("api_secret", html)
+        self.assertEqual(self.client.get("/static/agents-live.css").status_code, 200)
+        self.assertEqual(self.client.get("/static/agents-live.js").status_code, 200)
 
         # Follow-up JSON poll works via cookie alone (no Basic header needed)
         rf = self.client.get("/admin/agents-live/feed")
