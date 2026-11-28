@@ -2,7 +2,7 @@
 {% block title %}{{ t.admin_title }} · {{ t.brand }}{% endblock %}
 {% block head %}
 <meta name="robots" content="noindex, nofollow">
-<link rel="stylesheet" href="{{ url_for('static', filename='admin-ui.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='admin-ui.css', v=2) }}">
 {% endblock %}
 {% block content %}
 <div class="adm-shell">
@@ -65,10 +65,10 @@
       <section class="adm-card">
         <h2>📅 {{ t.adm_daily }}</h2>
         <div class="adm-scroll"><table class="adm-table" dir="ltr">
-          <thead><tr><th>{{ t.date }}</th><th>{{ t.adm_visitors }}</th><th>{{ t.adm_views }}</th><th>{{ t.total_scans }}</th></tr></thead>
+          <thead><tr><th>{{ t.date }}</th><th class="num">{{ t.adm_visitors }}</th><th class="num">{{ t.adm_views }}</th><th class="num">{{ t.total_scans }}</th></tr></thead>
           <tbody>
           {% for d in traffic.daily %}
-            <tr><td>{{ d.day }}</td><td><strong>{{ d.visitors }}</strong></td><td>{{ d.views }}</td><td>{{ scans_daily.get(d.day, 0) }}</td></tr>
+            <tr><td class="date-col">{{ d.day }}</td><td class="num"><strong>{{ d.visitors }}</strong></td><td class="num">{{ d.views }}</td><td class="num">{{ scans_daily.get(d.day, 0) }}</td></tr>
           {% else %}
             <tr><td colspan="4">—</td></tr>
           {% endfor %}
@@ -79,7 +79,7 @@
       <section class="adm-card">
         <h2>🌐 {{ t.adm_sources }}</h2>
         <div class="adm-scroll"><table class="adm-table" dir="ltr">
-          <thead><tr><th>{{ t.adm_source }}</th><th>{{ t.adm_visitors }}</th></tr></thead>
+          <thead><tr><th>{{ t.adm_source }}</th><th class="num">{{ t.adm_visitors }}</th></tr></thead>
           <tbody>
           {% for r in traffic.referrers %}
             <tr><td>{{ r.referrer }}</td><td>{{ r.visitors }}</td></tr>
@@ -93,7 +93,7 @@
         <div class="adm-scroll"><table class="adm-table" dir="ltr">
           <tbody>
           {% for p in traffic.pages %}
-            <tr><td>{{ p.path }}</td><td>{{ p.views }}</td></tr>
+            <tr><td>{{ p.path }}</td><td class="num">{{ p.views }}</td></tr>
           {% else %}
             <tr><td>—</td></tr>
           {% endfor %}
@@ -104,14 +104,14 @@
 
     <section class="adm-card">
       <h2>🔍 {{ t.scans_title }}</h2>
-      <div class="adm-scroll"><table class="adm-table">
-        <thead><tr><th>{{ t.date }}</th><th>{{ t.domain }}</th><th>{{ t.grade }}</th></tr></thead>
+      <div class="adm-scroll"><table class="adm-table" dir="ltr">
+        <thead><tr><th>{{ t.date }}</th><th>{{ t.domain }}</th><th class="num">{{ t.grade }}</th></tr></thead>
         <tbody>
         {% for s in scans %}
           <tr>
-            <td dir="ltr">{{ s.created_at }}</td>
-            <td dir="ltr"><a href="{{ url_for('site.scan_page', scan_id=s.id, lang=lang) }}">{{ s.domain }}</a></td>
-            <td><span class="grade-chip grade-{{ s.grade }}">{{ s.grade }}</span>{% if s.is_test %} <span class="muted small">{{ t.adm_test }}</span>{% endif %}</td>
+            <td class="date-col">{{ s.created_at[:16] }}</td>
+            <td><a href="{{ url_for('site.scan_page', scan_id=s.id, lang=lang) }}">{{ s.domain }}</a></td>
+            <td class="num"><span class="grade-chip grade-{{ s.grade }}">{{ s.grade }}</span>{% if s.is_test %} <span class="muted small">{{ t.adm_test }}</span>{% endif %}</td>
           </tr>
         {% endfor %}
         </tbody>
@@ -166,7 +166,7 @@
       <h2>🏢 مدفوعات التدقيق المؤسسي (Organization audit payments)</h2>
       {% if audit_msg %}<p class="notice" role="status">Audit action: {{ audit_msg }}</p>{% endif %}
       {% if audit_orders %}
-      <div class="adm-scroll"><table class="adm-table">
+      <div class="adm-scroll"><table class="adm-table adm-table-wide">
         <thead><tr><th>Invoice / date</th><th>Organization</th><th>Buyer</th><th>Domain</th><th>Payment</th><th>Audit</th><th>Action</th></tr></thead>
         <tbody>{% for o in audit_orders %}
           <tr>
@@ -330,7 +330,7 @@
       <h2>📈 الواقع مقابل المحاكاة (Reality vs Simulation)</h2>
       {% if card.verdict %}<p><strong>أقرب سيناريو: {{ card.scenarios[card.verdict].label_ar }} ({{ card.scenarios[card.verdict].label }})</strong> · صافي 12 شهراً المتوقّع: ${{ card.scenarios[card.verdict].net_12m }}</p>{% endif %}
       {% if card.conversion_warning %}<p class="error">⚠ {{ card.conversion_warning }}</p>{% endif %}
-      <div class="adm-scroll"><table class="adm-table" dir="ltr">
+      <div class="adm-scroll"><table class="adm-table adm-table-wide" dir="ltr">
         <thead><tr><th>Week from</th><th>Visitors</th><th>Expected (pess / real / opt)</th><th>Scans</th><th>Exp. scans</th><th>Reports</th><th>New subs</th><th>Closest</th></tr></thead>
         <tbody>
         {% for w in card.weeks|reverse %}
