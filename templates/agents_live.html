@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <title>غرفة عمليات الوكلاء الحية · Quantum Aether</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='agents-live.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='agents-live.css') }}?v=2">
 </head>
 <body>
 {% set k = snap.kpis %}
@@ -19,7 +19,7 @@
   <header class="topbar">
     <div class="brand">
       <span class="dot" id="live-dot"></span>
-      <span>غرفة عمليات الوكلاء الحية — Quantum Aether</span>
+      <span>غرفة عمليات الوكلاء والبروتوكولات الحية — Quantum Aether</span>
     </div>
     <div class="controls">
       <span id="server-ts" dir="ltr">{{ snap.server_time_utc }}</span>
@@ -31,28 +31,192 @@
   </header>
 
   <section class="kpis" id="kpi-strip">
-    <div class="kpi"><div class="kpi-label">الوكلاء النشطون 24/7</div><div class="kpi-val">{{ k.active_agents }}</div><div class="kpi-sub">{{ 'الخادم: متصل 🟢' if snap.app_active else 'الخادم: متوقف 🔴' }}</div></div>
+    <div class="kpi"><div class="kpi-label">الوكلاء والبروتوكولات النشطة 24/7</div><div class="kpi-val">{{ k.active_agents }}</div><div class="kpi-sub">مجدول: {{ k.active_timers }} · بروتوكولات حية: {{ k.live_protocols }}</div></div>
+    <div class="kpi"><div class="kpi-label">مركز MCP الرئيسي (v1.8)</div><div class="kpi-val">{{ k.mcp_tools_total }} أداة</div><div class="kpi-sub">استدعاءات 24س: {{ k.mcp_calls_24h }} · موارد: {{ k.mcp_resources_total }} · قوالب: {{ k.mcp_prompts_total }}</div></div>
+    <div class="kpi"><div class="kpi-label">تجارة UCP و x402</div><div class="kpi-val">{{ k.ucp_skus_total }} SKUs</div><div class="kpi-sub">أدوات x402 بـ MCP: {{ k.mcp_x402_tools }} · طلبات UCP 24س: {{ k.ucp_calls_24h }}</div></div>
+    <div class="kpi"><div class="kpi-label">A2UI v0.8 (Flutter) و A2A</div><div class="kpi-val">{{ k.a2a_ok }}/{{ k.a2a_total }}</div><div class="kpi-sub">A2UI 24س: {{ k.a2ui_calls_24h }} · MCP Index: {{ idx.get('measured', 0) }} ({{ idx.get('pq_pct', 0) }}% PQ)</div></div>
     <div class="kpi"><div class="kpi-label">الزوار البشر اليوم</div><div class="kpi-val">{{ k.human_today }}</div><div class="kpi-sub">مشاهدات: {{ k.human_pvs_today }} · أمس: {{ k.human_yesterday }}</div></div>
-    <div class="kpi"><div class="kpi-label">نشاط X · Moltbook · AB</div><div class="kpi-val">{{ x_posts + x_replies + mb_act + ab_act }}</div><div class="kpi-sub">X: {{ x_posts }} نشر/{{ x_replies }} رد · MB: {{ mb_act }} · AB: {{ ab_act }}</div></div>
-    <div class="kpi"><div class="kpi-label">مؤشر MCP واستدعاءاته</div><div class="kpi-val">{{ k.mcp_calls_24h }}</div><div class="kpi-sub">آخر 24س · مقاس: {{ idx.get('measured', 0) }} ({{ idx.get('pq_pct', 0) }}% PQ)</div></div>
-    <div class="kpi"><div class="kpi-label">A2A و MSP Pilot</div><div class="kpi-val">{{ k.a2a_ok }}/{{ k.a2a_total }}</div><div class="kpi-sub">A2A 200 OK · رسائل MSP (14ي): {{ k.msp_sent_14d }}</div></div>
-    <div class="kpi"><div class="kpi-label">الإيرادات والتجارب</div><div class="kpi-val">{{ k.paid_orders }} + {{ k.x402_paid }}</div><div class="kpi-sub">مدفوع + x402 · تجارب نشطة: {{ k.active_trials }}</div></div>
+    <div class="kpi"><div class="kpi-label">نشاط X · Moltbook · AB</div><div class="kpi-val">{{ x_posts + x_replies + mb_act + ab_act }}</div><div class="kpi-sub">X: {{ x_posts }}/{{ x_replies }} · MB: {{ mb_act }} · AB: {{ ab_act }}</div></div>
+    <div class="kpi"><div class="kpi-label">فحوصات وإيصالات Ed25519</div><div class="kpi-val">{{ k.scans_24h }}</div><div class="kpi-sub">إيصالات موقّعة 24س: {{ k.receipts_24h }}</div></div>
+    <div class="kpi"><div class="kpi-label">الإيرادات والتجارب و MSP</div><div class="kpi-val">{{ k.paid_orders }} + {{ k.x402_paid }}</div><div class="kpi-sub">تجارب: {{ k.active_trials }} · MSP (14ي): {{ k.msp_sent_14d }}</div></div>
+  </section>
+
+  <!-- Dedicated Interactive Lists Deck: Protocols · MCP Hub · UCP Catalog · A2UI Flutter -->
+  <section class="panel deck-panel">
+    <div class="deck-head">
+      <h2>🧭 قوائم الوكلاء والبروتوكولات والمنتجات</h2>
+      <div class="deck-tabs" id="deck-tabs">
+        <button type="button" class="tab-btn active" data-tab="protocols">البروتوكولات الحية ({{ snap.protocols | length }})</button>
+        <button type="button" class="tab-btn" data-tab="mcp">أدوات MCP ({{ snap.mcp_tools | length }})</button>
+        <button type="button" class="tab-btn" data-tab="ucp">كتالوج UCP و x402 ({{ snap.ucp_catalog | length }})</button>
+        <button type="button" class="tab-btn" data-tab="a2ui">بطاقات A2UI · Flutter</button>
+      </div>
+    </div>
+
+    <!-- Tab 1: Live Protocols Registry (7 always-on protocol agents) -->
+    <div class="tab-pane" id="pane-protocols" data-pane="protocols">
+      <div class="cards-grid" id="proto-list">
+        {% for p in snap.protocols %}
+        <article class="item-card">
+          <div class="item-top">
+            <span class="tag {{ p.id }}">{{ p.badge }}</span>
+            <span class="{{ 'st-ok' if p.state == 'active' else 'st-pause' }}">{{ '● نشط 24/7' if p.state == 'active' else '⏸ متوقف' }}</span>
+          </div>
+          <div class="item-title">{{ p.name }}</div>
+          <div class="item-desc">{{ p.role }}</div>
+          <div class="item-meta">{{ p.detail }}</div>
+          <div class="item-foot">
+            <span class="metric-chip">24س: {{ p.calls_24h }}</span>
+            <div class="item-links">
+              <a href="{{ p.endpoint }}" target="_blank" rel="noopener">فحص JSON ↗</a>
+              {% if p.secondary_url %}<a href="{{ p.secondary_url }}" target="_blank" rel="noopener">{{ p.secondary_label }} ↗</a>{% endif %}
+            </div>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Tab 2: MCP Hub (18 Tools + 10 Resources/Templates + 5 Prompts) -->
+    <div class="tab-pane is-hidden" id="pane-mcp" data-pane="mcp">
+      <div class="pills" id="mcp-tier-pills">
+        <button type="button" class="pill active" data-tier="all">كل الأدوات ({{ snap.mcp_tools | length }})</button>
+        <button type="button" class="pill" data-tier="free">مجانية / /mcp/free ({{ k.mcp_free_tools }})</button>
+        <button type="button" class="pill" data-tier="x402">مدفوعة x402 ({{ k.mcp_x402_tools }})</button>
+        <button type="button" class="pill" data-tier="commerce">شركاء وطلبات</button>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>الأداة (MCP Tool)</th>
+              <th>الوظيفة</th>
+              <th>التصنيف / السعر</th>
+              <th>الوضع</th>
+              <th>استدعاءات 24س</th>
+            </tr>
+          </thead>
+          <tbody id="mcp-tools-body">
+            {% for t in snap.mcp_tools %}
+            <tr data-tier="{{ t.tier }}">
+              <td dir="ltr" class="mono">{{ t.name }}</td>
+              <td>{{ t.title }}</td>
+              <td><span class="tag {{ 'x402' if t.tier == 'x402' else ('msp' if t.tier == 'commerce' else 'mcp') }}">{{ t.price_label }}</span></td>
+              <td>{{ 'قراءة فقط' if t.read_only else 'تنفيذ حي' }}</td>
+              <td dir="ltr" class="mono num">{{ t.calls_24h }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="sub-lists">
+        <div class="sub-box">
+          <h3>📦 الموارد والقوالب ({{ snap.mcp_resources | length }})</h3>
+          <ul class="mini-list" id="mcp-res-list">
+            {% for r in snap.mcp_resources %}
+            <li><span dir="ltr" class="mono">{{ r.uri }}</span> — {{ r.name }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+        <div class="sub-box">
+          <h3>✨ قوالب التوجيه Prompts ({{ snap.mcp_prompts | length }})</h3>
+          <ul class="mini-list" id="mcp-prompt-list">
+            {% for pr in snap.mcp_prompts %}
+            <li><span dir="ltr" class="mono">{{ pr.name }}</span> — {{ pr.title }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 3: UCP + x402 Product Catalog (9 SKUs) -->
+    <div class="tab-pane is-hidden" id="pane-ucp" data-pane="ucp">
+      <div class="pills" id="ucp-cat-pills">
+        <button type="button" class="pill active" data-cat="all">كل المنتجات ({{ snap.ucp_catalog | length }})</button>
+        <button type="button" class="pill" data-cat="micro_x402">x402 Micro</button>
+        <button type="button" class="pill" data-cat="reports">تقارير وشهادات</button>
+        <button type="button" class="pill" data-cat="subscriptions">اشتراكات مراقبة</button>
+        <button type="button" class="pill" data-cat="enterprise">MSP ومؤسسات</button>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>SKU</th>
+              <th>المنتج / الخدمة</th>
+              <th>السعر</th>
+              <th>أداة MCP</th>
+              <th>قنوات الدفع</th>
+              <th>رابط</th>
+            </tr>
+          </thead>
+          <tbody id="ucp-catalog-body">
+            {% for item in snap.ucp_catalog %}
+            <tr data-cat="{{ item.category }}">
+              <td dir="ltr" class="mono">{{ item.id }}</td>
+              <td>{{ item.title }}</td>
+              <td dir="ltr" class="mono num">{{ item.price }} {{ item.currency }}</td>
+              <td dir="ltr" class="mono">{{ item.mcp_tool or '—' }}</td>
+              <td dir="ltr">{{ item.payment_methods | join(', ') }}</td>
+              <td><a href="{{ item.checkout_url }}" target="_blank" rel="noopener">فتح ↗</a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab 4: A2UI v0.8 (Flutter GenUI) Live Preview List -->
+    <div class="tab-pane is-hidden" id="pane-a2ui" data-pane="a2ui">
+      <div class="a2ui-banner">
+        <div>
+          <div class="item-title">امتداد A2UI v{{ snap.a2ui.version }} جاهز لتطبيقات Flutter GenUI وعملاء A2A</div>
+          <div class="item-meta" dir="ltr">{{ snap.a2ui.extension_uri }} · MIME: {{ snap.a2ui.mime_type }} · MCP: {{ snap.a2ui.mcp_tool }}</div>
+        </div>
+        <div class="item-links">
+          <a class="btn sec" href="/.well-known/agent-card.json" target="_blank" rel="noopener">Agent Card ↗</a>
+          <a class="btn" href="/api/v1/a2ui/evidence/cloudflare.com?lang=ar" target="_blank" rel="noopener">معاينة بطاقة حيّة ↗</a>
+        </div>
+      </div>
+      <div class="cards-grid" id="a2ui-list">
+        {% for d in snap.a2ui.sample_domains %}
+        <article class="item-card">
+          <div class="item-top">
+            <span class="tag a2ui">A2UI v0.8</span>
+            <span class="st-ok">● جاهز للعرض</span>
+          </div>
+          <div class="item-title" dir="ltr">{{ d.domain }}</div>
+          <div class="item-desc">surfaceUpdate · dataModelUpdate · beginRendering</div>
+          <div class="item-foot">
+            <div class="item-links">
+              <a href="{{ d.json_ar }}" target="_blank" rel="noopener">JSON عربي ↗</a>
+              <a href="{{ d.json_en }}" target="_blank" rel="noopener">EN ↗</a>
+              <a href="{{ d.jsonl }}" target="_blank" rel="noopener">JSONL ↗</a>
+            </div>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+    </div>
   </section>
 
   <main class="grid">
     <section class="panel">
       <h2>
-        <span>⚡ التدفق اللحظي للنشاط (النشر · الردود · الفحوصات · B2B)</span>
+        <span>⚡ التدفق اللحظي للنشاط (النشر · الردود · MCP · UCP · A2UI · B2B)</span>
         <span id="ev-count" class="panel-count">{{ snap.events | length }} حدث</span>
       </h2>
       <div class="pills" id="filter-pills">
         <button type="button" class="pill active" data-ch="all">الكل</button>
+        <button type="button" class="pill" data-ch="mcp">MCP</button>
+        <button type="button" class="pill" data-ch="ucp">UCP</button>
+        <button type="button" class="pill" data-ch="a2ui">A2UI</button>
+        <button type="button" class="pill" data-ch="a2a">A2A</button>
+        <button type="button" class="pill" data-ch="acp">ACP</button>
         <button type="button" class="pill" data-ch="x">X</button>
         <button type="button" class="pill" data-ch="moltbook">Moltbook</button>
         <button type="button" class="pill" data-ch="agentboard">Agentboard</button>
-        <button type="button" class="pill" data-ch="a2a">A2A</button>
         <button type="button" class="pill" data-ch="msp">MSP B2B</button>
-        <button type="button" class="pill" data-ch="mcp">MCP</button>
         <button type="button" class="pill" data-ch="scan">فحوصات</button>
         <button type="button" class="pill" data-ch="mail">بريد وارد</button>
       </div>
@@ -77,9 +241,16 @@
         <span>🤖 أسطول الوكلاء المجدولين (24/7)</span>
         <span id="tm-count" class="panel-count">{{ snap.timers | length }} مؤقّت</span>
       </h2>
+      <div class="pills" id="timer-group-pills">
+        <button type="button" class="pill active" data-grp="all">الكل</button>
+        <button type="button" class="pill" data-grp="التسويق">التسويق</button>
+        <button type="button" class="pill" data-grp="المبيعات B2B">المبيعات B2B</button>
+        <button type="button" class="pill" data-grp="الأبحاث">الأبحاث</button>
+        <button type="button" class="pill" data-grp="العمليات">العمليات</button>
+      </div>
       <div class="timers" id="timer-list">
         {% for t in snap.timers %}
-        <div class="tm">
+        <div class="tm" data-grp="{{ t.group }}">
           <div>
             <div class="tm-name">{{ t.label }}</div>
             <div class="tm-sub">{{ t.group }} · <span dir="ltr">{{ t.unit }}</span></div>
@@ -96,6 +267,6 @@
     </section>
   </main>
 </div>
-<script src="{{ url_for('static', filename='agents-live.js') }}" defer></script>
+<script src="{{ url_for('static', filename='agents-live.js') }}?v=2" defer></script>
 </body>
 </html>

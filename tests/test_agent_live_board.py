@@ -40,9 +40,18 @@ class AgentLiveBoardTests(unittest.TestCase):
         self.assertIn("agents-live.css", html)
         self.assertIn("agents-live.js", html)
         self.assertNotIn("<style>", html, "must use external CSS to pass strict CSP")
+        self.assertNotIn("style=", html, "must avoid inline styles for strict CSP")
         self.assertNotIn("api_secret", html)
+        self.assertIn("batch_scan_tls", html)
+        self.assertIn("qa-batch-scan-10", html)
+        self.assertIn("A2UI v0.8", html)
+        self.assertIn("/.well-known/ucp", html)
         self.assertEqual(self.client.get("/static/agents-live.css").status_code, 200)
         self.assertEqual(self.client.get("/static/agents-live.js").status_code, 200)
+
+        # Trigger live UCP & A2UI requests so they appear in the feed
+        self.assertEqual(self.client.get("/.well-known/ucp").status_code, 200)
+        self.assertEqual(self.client.get("/api/v1/a2ui/evidence/example.com?lang=ar").status_code, 200)
 
         # Follow-up JSON poll works via cookie alone (no Basic header needed)
         rf = self.client.get("/admin/agents-live/feed")
@@ -53,6 +62,16 @@ class AgentLiveBoardTests(unittest.TestCase):
         self.assertIn("events", doc)
         self.assertIn("timers", doc)
         self.assertIn("active_agents", doc["kpis"])
+        self.assertGreaterEqual(doc["kpis"]["live_protocols"], 7)
+        self.assertEqual(doc["kpis"]["mcp_tools_total"], 18)
+        self.assertEqual(doc["kpis"]["ucp_skus_total"], 9)
+        self.assertEqual(len(doc["protocols"]), 7)
+        self.assertEqual(len(doc["mcp_tools"]), 18)
+        self.assertEqual(len(doc["ucp_catalog"]), 9)
+        self.assertEqual(doc["a2ui"]["version"], "0.8")
+        channels = {e["channel"] for e in doc["events"]}
+        self.assertIn("ucp", channels)
+        self.assertIn("a2ui", channels)
 
 
 if __name__ == "__main__":

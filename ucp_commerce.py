@@ -18,6 +18,7 @@ from urllib.parse import quote
 
 from flask import current_app, jsonify, request
 
+import agent_audit
 import x402_attestation
 import x402_micro
 import x402_pay
@@ -316,10 +317,16 @@ def ucp_profile(base: str, cfg) -> dict:
 def register(bp, services):
     base = services["base"]
 
+    def _audit(action, dom="", status="ok"):
+        fn = services.get("audit")
+        if fn:
+            fn("ucp", action, agent_audit.client_label(request.headers), dom or "", status)
+
     @bp.get("/.well-known/ucp")
     @bp.get("/.well-known/ucp.json")
     def well_known_ucp():
         b = base().rstrip("/")
+        _audit("profile", "", "ok")
         resp = jsonify(ucp_profile(b, current_app.config))
         resp.headers["Access-Control-Allow-Origin"] = "*"
         resp.headers["Cache-Control"] = "public, max-age=300"
@@ -329,6 +336,7 @@ def register(bp, services):
     @bp.get("/api/v1/ucp/catalog")
     def ucp_catalog():
         cat = (request.args.get("category") or "all").strip().lower()
+        _audit("catalog", cat, "ok")
         resp = jsonify(catalog_payload(base(), current_app.config, category=cat))
         resp.headers["Access-Control-Allow-Origin"] = "*"
         resp.headers["Cache-Control"] = "public, max-age=300"
@@ -413,6 +421,7 @@ def register(bp, services):
             "free_alternative": item.get("free_alternative"),
             "note": "No funds have been charged. Complete via MCP/x402 with explicit spend authorization or open continue_url.",
         }
+        _audit("checkout_session", sku, "ok")
         resp = jsonify(session)
         resp.status_code = 201
         resp.headers["Access-Control-Allow-Origin"] = "*"

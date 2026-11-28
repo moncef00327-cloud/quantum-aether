@@ -676,6 +676,9 @@ def register(bp, services, version):
             ev["receipt_jws"] = sign(signed_receipts.build_evidence_claims(ev, kind="tls-evidence"))
             ev["jwks_url"] = f"{b}/.well-known/jwks.json"
         messages = a2ui_cards.tls_result_messages(dom, ev, base=b, lang=lang)
+        audit_fn = services.get("audit")
+        if audit_fn:
+            audit_fn("a2ui", "evidence_card", agent_audit.client_label(request.headers), dom, "ok")
         fmt = (request.args.get("format") or "").strip().lower()
         if fmt == "jsonl" or a2ui_cards.A2UI_MIME in (request.headers.get("Accept") or "").lower():
             body = "\n".join(json.dumps(m, ensure_ascii=False) for m in messages) + "\n"
