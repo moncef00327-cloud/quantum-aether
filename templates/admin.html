@@ -1,372 +1,413 @@
-{% extends "base.html" %}
-{% block title %}{{ t.admin_title }} · {{ t.brand }}{% endblock %}
-{% block head %}
-<meta name="robots" content="noindex, nofollow">
-<link rel="stylesheet" href="{{ url_for('static', filename='admin-ui.css', v=2) }}">
-{% endblock %}
-{% block content %}
+<!doctype html>
+<html lang="{{ lang or 'ar' }}" dir="{{ 'rtl' if (lang or 'ar') == 'ar' else 'ltr' }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>{{ t.admin_title }} · {{ t.brand }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='admin-ui.css', v=3) }}">
+</head>
+<body>
 <div class="adm-shell">
 
   <header class="adm-hero">
     <div>
-      <h1>{{ t.admin_title }} — مركز التحكم الرئيسي</h1>
+      <div class="adm-brand-row">
+        <h1>{{ t.admin_title }} — Quantum Aether</h1>
+        <span class="adm-badge-live"><span class="adm-dot" id="adm-live-dot"></span> <span id="adm-countdown">تحديث خلال 15ث</span></span>
+      </div>
       <p class="adm-hero-sub">{{ t.adm_window }} · {{ t.adm_bots }}: {{ traffic.bots }} · {{ t.adm_self_excluded }}</p>
     </div>
-    <div class="adm-hero-actions">
-      <a class="adm-live-btn" href="/admin/agents-live"><span class="adm-dot"></span> غرفة الوكلاء الحية (لحظة بلحظة) ↗</a>
+    <div class="adm-controls">
+      <span class="adm-ts" id="adm-sync-ts"></span>
+      <button type="button" class="adm-btn primary" id="adm-btn-refresh">تحديث الآن</button>
+      <button type="button" class="adm-btn" id="adm-btn-toggle">إيقاف التحديث</button>
+      <a class="adm-btn live" href="/admin/agents-live">🛰️ غرفة الوكلاء الحية ↗</a>
+      <a class="adm-btn" href="/?lang={{ lang or 'ar' }}">الموقع ↗</a>
     </div>
   </header>
 
-  <section class="adm-kpis">
-    <div class="adm-kpi">
-      <div class="adm-kpi-lbl">{{ t.adm_visitors }} (14 يوم)</div>
-      <div class="adm-kpi-val">{{ traffic.funnel.visitors }}</div>
-      <div class="adm-kpi-sub">{{ t.adm_scanners }}: {{ traffic.funnel.scan_pages }} · {{ t.adm_pricing_views }}: {{ traffic.funnel.monitoring_page }}</div>
+  <nav class="adm-tabs-wrap" aria-label="أقسام لوحة التحكم">
+    <div class="adm-tabs" id="adm-tabs" role="tablist">
+      <button type="button" class="adm-tab is-active" data-tab="overview" role="tab" aria-selected="true">📊 الزيارات والفحوصات</button>
+      <button type="button" class="adm-tab" data-tab="sales" role="tab" aria-selected="false">💰 المبيعات والعملاء</button>
+      <button type="button" class="adm-tab" data-tab="funnel" role="tab" aria-selected="false">🎯 قمع التحويل</button>
+      <button type="button" class="adm-tab" data-tab="agents" role="tab" aria-selected="false">🤖 الوكلاء والبريد</button>
+      <button type="button" class="adm-tab" data-tab="sim" role="tab" aria-selected="false">📈 المحاكاة والأخطاء</button>
+      <button type="button" class="adm-tab" data-tab="all" role="tab" aria-selected="false">📋 عرض الكل</button>
     </div>
-    <div class="adm-kpi">
-      <div class="adm-kpi-lbl">{{ t.total_scans }}</div>
-      <div class="adm-kpi-val">{{ stats.scans }}</div>
-      <div class="adm-kpi-sub">فحوصات مكتملة: {{ events.result }} · عروض: {{ conversion_funnel.control.offer_impression + conversion_funnel.treatment.offer_impression }}</div>
-    </div>
-    <div class="adm-kpi">
-      <div class="adm-kpi-lbl">{{ t.paid_orders }} / {{ t.revenue }}</div>
-      <div class="adm-kpi-val is-ok">{% for cur, amount in stats.revenue.items() %}{{ amount }} {{ cur }}{% else %}0{% endfor %}</div>
-      <div class="adm-kpi-sub">{{ t.paid_orders }}: {{ stats.paid_orders }} · {{ t.adm_incomplete }}: {{ stats.incomplete_orders }}</div>
-    </div>
-    <div class="adm-kpi">
-      <div class="adm-kpi-lbl">{{ t.admin_subs_active }} · {{ t.admin_mrr }}</div>
-      <div class="adm-kpi-val is-ok">${{ subs.mrr }}</div>
-      <div class="adm-kpi-sub">{{ t.admin_subs_active }}: {{ subs.active_total }} · {{ t.admin_trials }}: {{ subs.trials }} ({{ t.admin_trials_ended }}: {{ subs.trials_ended }}) · {{ t.admin_churned }}: {{ subs.churned }}</div>
-    </div>
-    <div class="adm-kpi">
-      <div class="adm-kpi-lbl">وكلاء MCP / A2A ({{ agent_calls.days }} يوم)</div>
-      <div class="adm-kpi-val">{{ agent_calls.total }}</div>
-      <div class="adm-kpi-sub">مصافحات initialize: {{ agent_calls.init_total }}</div>
-    </div>
-    <div class="adm-kpi">
-      <div class="adm-kpi-lbl">البريد الوارد و ProofLab</div>
-      <div class="adm-kpi-val">{{ inbound_mail | length }}</div>
-      <div class="adm-kpi-sub">ردود بريدية · ProofLab: {{ prooflab_stats.total }} · تنبيهات مجانية: {{ free_alert_counts.get("ACTIVE", 0) }}</div>
-    </div>
-  </section>
-
-  <nav class="adm-tabs" id="adm-tabs" role="tablist">
-    <button type="button" class="adm-tab is-active" data-tab="overview" role="tab" aria-selected="true">📊 الزيارات والفحوصات</button>
-    <button type="button" class="adm-tab" data-tab="sales" role="tab" aria-selected="false">💰 المبيعات والعملاء</button>
-    <button type="button" class="adm-tab" data-tab="funnel" role="tab" aria-selected="false">🎯 قمع التحويل</button>
-    <button type="button" class="adm-tab" data-tab="agents" role="tab" aria-selected="false">🤖 الوكلاء والبريد</button>
-    <button type="button" class="adm-tab" data-tab="sim" role="tab" aria-selected="false">📈 المحاكاة والأخطاء</button>
-    <button type="button" class="adm-tab" data-tab="all" role="tab" aria-selected="false">📋 عرض الكل</button>
   </nav>
 
-  {# ==================== TAB 1: OVERVIEW & TRAFFIC ==================== #}
-  <div class="adm-panel" data-panel="overview">
-    <div class="adm-grid-2">
-      <section class="adm-card">
-        <h2>📅 {{ t.adm_daily }}</h2>
-        <div class="adm-scroll"><table class="adm-table" dir="ltr">
-          <thead><tr><th>{{ t.date }}</th><th class="num">{{ t.adm_visitors }}</th><th class="num">{{ t.adm_views }}</th><th class="num">{{ t.total_scans }}</th></tr></thead>
-          <tbody>
-          {% for d in traffic.daily %}
-            <tr><td class="date-col">{{ d.day }}</td><td class="num"><strong>{{ d.visitors }}</strong></td><td class="num">{{ d.views }}</td><td class="num">{{ scans_daily.get(d.day, 0) }}</td></tr>
-          {% else %}
-            <tr><td colspan="4">—</td></tr>
-          {% endfor %}
-          </tbody>
-        </table></div>
-      </section>
+  <div id="adm-live-root" class="adm-panel">
+
+    <section class="adm-kpis">
+      <div class="adm-kpi c-cyan">
+        <div class="adm-kpi-lbl">{{ t.adm_visitors }} (14 يوم)</div>
+        <div class="adm-kpi-val">{{ traffic.funnel.visitors }}</div>
+        <div class="adm-kpi-sub">{{ t.adm_scanners }}: {{ traffic.funnel.scan_pages }} · {{ t.adm_pricing_views }}: {{ traffic.funnel.monitoring_page }}</div>
+      </div>
+      <div class="adm-kpi c-sky">
+        <div class="adm-kpi-lbl">{{ t.total_scans }}</div>
+        <div class="adm-kpi-val">{{ stats.scans }}</div>
+        <div class="adm-kpi-sub">نتائج معروضة: {{ events.result }} · عروض: {{ conversion_funnel.control.offer_impression + conversion_funnel.treatment.offer_impression }}</div>
+      </div>
+      <div class="adm-kpi c-emerald">
+        <div class="adm-kpi-lbl">{{ t.paid_orders }} / {{ t.revenue }}</div>
+        <div class="adm-kpi-val is-ok">{% for cur, amount in stats.revenue.items() %}{{ amount }} {{ cur }}{% else %}0{% endfor %}</div>
+        <div class="adm-kpi-sub">{{ t.paid_orders }}: {{ stats.paid_orders }} · {{ t.adm_incomplete }}: {{ stats.incomplete_orders }}</div>
+      </div>
+      <div class="adm-kpi c-emerald">
+        <div class="adm-kpi-lbl">{{ t.admin_subs_active }} · {{ t.admin_mrr }}</div>
+        <div class="adm-kpi-val is-ok">${{ subs.mrr }}</div>
+        <div class="adm-kpi-sub">{{ t.admin_subs_active }}: {{ subs.active_total }} · {{ t.admin_trials }}: {{ subs.trials }} ({{ t.admin_trials_ended }}: {{ subs.trials_ended }}) · {{ t.admin_churned }}: {{ subs.churned }}</div>
+      </div>
+      <div class="adm-kpi c-violet">
+        <div class="adm-kpi-lbl">وكلاء MCP / A2A ({{ agent_calls.days }} يوم)</div>
+        <div class="adm-kpi-val">{{ agent_calls.total }}</div>
+        <div class="adm-kpi-sub">مصافحات initialize: {{ agent_calls.init_total }}</div>
+      </div>
+      <div class="adm-kpi c-amber">
+        <div class="adm-kpi-lbl">البريد الوارد و ProofLab</div>
+        <div class="adm-kpi-val">{{ inbound_mail | length }}</div>
+        <div class="adm-kpi-sub">ردود بريدية · ProofLab: {{ prooflab_stats.total }} · تنبيهات: {{ free_alert_counts.get("ACTIVE", 0) }}</div>
+      </div>
+    </section>
+
+    {# ==================== TAB 1: OVERVIEW & TRAFFIC ==================== #}
+    <div class="adm-panel" data-panel="overview">
+      <div class="adm-grid-2">
+        <section class="adm-card">
+          <div class="adm-card-head">
+            <h2>📅 {{ t.adm_daily }}</h2>
+            <span class="adm-hint">آخر 14 يوماً (بشر فقط)</span>
+          </div>
+          {% set max_vis = (traffic.daily | map(attribute='visitors') | list | max) if traffic.daily else 1 %}
+          {% set max_vis = max_vis if max_vis > 0 else 1 %}
+          <div class="adm-scroll"><table class="adm-table">
+            <thead><tr><th>{{ t.date }}</th><th class="num">{{ t.adm_visitors }}</th><th class="num">{{ t.adm_views }}</th><th class="num">{{ t.total_scans }}</th></tr></thead>
+            <tbody>
+            {% for d in traffic.daily %}
+              {% set pct_bucket = (((d.visitors * 10) // max_vis) * 10) %}
+              {% if d.visitors > 0 and pct_bucket == 0 %}{% set pct_bucket = 10 %}{% endif %}
+              <tr>
+                <td class="date-col">{{ d.day }}</td>
+                <td class="num"><div class="adm-bar-cell"><span class="adm-bar-track"><span class="adm-bar-fill adm-w-{{ pct_bucket }}"></span></span><strong>{{ d.visitors }}</strong></div></td>
+                <td class="num">{{ d.views }}</td>
+                <td class="num">{{ scans_daily.get(d.day, 0) }}</td>
+              </tr>
+            {% else %}
+              <tr><td colspan="4">—</td></tr>
+            {% endfor %}
+            </tbody>
+          </table></div>
+        </section>
+
+        <section class="adm-card">
+          <div class="adm-card-head">
+            <h2>🌐 {{ t.adm_sources }}</h2>
+            <span class="adm-hint">مصادر الزيارات البشرية</span>
+          </div>
+          <div class="adm-scroll"><table class="adm-table">
+            <thead><tr><th>{{ t.adm_source }}</th><th class="num">{{ t.adm_visitors }}</th></tr></thead>
+            <tbody>
+            {% for r in traffic.referrers %}
+              <tr><td>{{ r.referrer }}</td><td>{{ r.visitors }}</td></tr>
+            {% else %}
+              <tr><td colspan="2">—</td></tr>
+            {% endfor %}
+            </tbody>
+          </table></div>
+
+          <h3>📄 {{ t.adm_pages }}</h3>
+          <div class="adm-scroll"><table class="adm-table">
+            <tbody>
+            {% for p in traffic.pages %}
+              <tr><td>{{ p.path }}</td><td class="num">{{ p.views }}</td></tr>
+            {% else %}
+              <tr><td>—</td></tr>
+            {% endfor %}
+            </tbody>
+          </table></div>
+        </section>
+      </div>
 
       <section class="adm-card">
-        <h2>🌐 {{ t.adm_sources }}</h2>
-        <div class="adm-scroll"><table class="adm-table" dir="ltr">
-          <thead><tr><th>{{ t.adm_source }}</th><th class="num">{{ t.adm_visitors }}</th></tr></thead>
+        <div class="adm-card-head">
+          <h2>🔍 {{ t.scans_title }}</h2>
+          <span class="adm-hint">أحدث الفحوصات المسجّلة</span>
+        </div>
+        <div class="adm-scroll"><table class="adm-table">
+          <thead><tr><th>{{ t.date }}</th><th>{{ t.domain }}</th><th class="num">{{ t.grade }}</th></tr></thead>
           <tbody>
-          {% for r in traffic.referrers %}
-            <tr><td>{{ r.referrer }}</td><td>{{ r.visitors }}</td></tr>
-          {% else %}
-            <tr><td colspan="2">—</td></tr>
-          {% endfor %}
-          </tbody>
-        </table></div>
-
-        <h3>📄 {{ t.adm_pages }}</h3>
-        <div class="adm-scroll"><table class="adm-table" dir="ltr">
-          <tbody>
-          {% for p in traffic.pages %}
-            <tr><td>{{ p.path }}</td><td class="num">{{ p.views }}</td></tr>
-          {% else %}
-            <tr><td>—</td></tr>
+          {% for s in scans %}
+            <tr>
+              <td class="date-col">{{ s.created_at[:16] }}</td>
+              <td><a href="{{ url_for('site.scan_page', scan_id=s.id, lang=lang) }}">{{ s.domain }}</a></td>
+              <td class="num"><span class="grade-chip grade-{{ s.grade }}">{{ s.grade }}</span>{% if s.is_test %} <span class="adm-hint">{{ t.adm_test }}</span>{% endif %}</td>
+            </tr>
           {% endfor %}
           </tbody>
         </table></div>
       </section>
     </div>
 
-    <section class="adm-card">
-      <h2>🔍 {{ t.scans_title }}</h2>
-      <div class="adm-scroll"><table class="adm-table" dir="ltr">
-        <thead><tr><th>{{ t.date }}</th><th>{{ t.domain }}</th><th class="num">{{ t.grade }}</th></tr></thead>
-        <tbody>
-        {% for s in scans %}
-          <tr>
-            <td class="date-col">{{ s.created_at[:16] }}</td>
-            <td><a href="{{ url_for('site.scan_page', scan_id=s.id, lang=lang) }}">{{ s.domain }}</a></td>
-            <td class="num"><span class="grade-chip grade-{{ s.grade }}">{{ s.grade }}</span>{% if s.is_test %} <span class="muted small">{{ t.adm_test }}</span>{% endif %}</td>
-          </tr>
-        {% endfor %}
-        </tbody>
-      </table></div>
-    </section>
-  </div>
+    {# ==================== TAB 2: SALES, ACCOUNTS & BILLING ==================== #}
+    <div class="adm-panel" data-panel="sales">
+      <section class="adm-card">
+        <h2>🛡️ {{ t.admin_subs_title }}</h2>
+        <p class="adm-note" dir="ltr">{% for plan, n in subs.active.items() %}{{ plan }}: {{ n }} · {% endfor %}Active: {{ subs.active_total }} · Trials: {{ subs.trials }} · MRR: ${{ subs.mrr }}</p>
+        {% if accounts %}
+        <div class="adm-scroll"><table class="adm-table adm-table-wide">
+          <thead><tr><th>{{ t.date }}</th><th>Email</th><th>{{ t.dash_plan }}</th><th>{{ t.dash_status }}</th><th class="num">{{ t.dash_domains_title }}</th></tr></thead>
+          <tbody>
+          {% for a in accounts %}
+            <tr>
+              <td class="date-col">{{ a.created_at }}</td>
+              <td>{{ a.email }}</td>
+              <td>{{ a.plan }}</td>
+              <td class="{{ 'adm-pill-ok' if a.status == 'ACTIVE' else 'adm-pill-warn' }}">{{ a.status }}</td>
+              <td class="num">{{ a.domains }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table></div>
+        {% else %}<p class="adm-note">لا توجد حسابات مراقبة مسجّلة بعد.</p>{% endif %}
+      </section>
 
-  {# ==================== TAB 2: SALES, ACCOUNTS & BILLING ==================== #}
-  <div class="adm-panel" data-panel="sales">
-    <section class="adm-card">
-      <h2>🛡️ {{ t.admin_subs_title }}</h2>
-      <p class="adm-note" dir="ltr">{% for plan, n in subs.active.items() %}{{ plan }}: {{ n }} · {% endfor %}Active: {{ subs.active_total }} · Trials: {{ subs.trials }} · MRR: ${{ subs.mrr }}</p>
-      {% if accounts %}
-      <div class="adm-scroll"><table class="adm-table">
-        <thead><tr><th>{{ t.date }}</th><th>Email</th><th>{{ t.dash_plan }}</th><th>{{ t.dash_status }}</th><th>{{ t.dash_domains_title }}</th></tr></thead>
-        <tbody>
-        {% for a in accounts %}
-          <tr>
-            <td dir="ltr">{{ a.created_at }}</td>
-            <td dir="ltr">{{ a.email }}</td>
-            <td>{{ a.plan }}</td>
-            <td class="{{ 'adm-pill-ok' if a.status == 'ACTIVE' else 'adm-pill-warn' }}">{{ a.status }}</td>
-            <td>{{ a.domains }}</td>
-          </tr>
-        {% endfor %}
-        </tbody>
-      </table></div>
-      {% else %}<p class="adm-note">لا توجد حسابات مراقبة مسجّلة بعد.</p>{% endif %}
-    </section>
+      <section class="adm-card">
+        <h2>💳 {{ t.orders_title }} ($49)</h2>
+        <div class="adm-scroll"><table class="adm-table adm-table-wide">
+          <thead><tr><th>{{ t.date }}</th><th>{{ t.domain }}</th><th>Order ID</th><th class="num">{{ t.amount }}</th><th>{{ t.status }}</th></tr></thead>
+          <tbody>
+          {% for o in orders %}
+            <tr>
+              <td class="date-col">{{ o.created_at }}</td>
+              <td>{{ o.domain }}</td>
+              <td><code>{{ o.order_id }}</code></td>
+              <td class="num">{{ o.amount }} {{ o.currency }}</td>
+              <td class="{{ 'adm-pill-ok' if o.status == 'COMPLETED' else 'adm-pill-warn' }}">{{ t.adm_order_status.get(o.display_status, o.display_status) }}{% if o.is_test %} <span class="adm-hint">{{ t.adm_test }}</span>{% endif %}</td>
+            </tr>
+          {% else %}
+            <tr><td colspan="5">لا توجد طلبات بعد.</td></tr>
+          {% endfor %}
+          </tbody>
+        </table></div>
+      </section>
 
-    <section class="adm-card">
-      <h2>💳 {{ t.orders_title }} ($49)</h2>
-      <div class="adm-scroll"><table class="adm-table">
-        <thead><tr><th>{{ t.date }}</th><th>{{ t.domain }}</th><th>Order ID</th><th>{{ t.amount }}</th><th>{{ t.status }}</th></tr></thead>
-        <tbody>
-        {% for o in orders %}
-          <tr>
-            <td dir="ltr">{{ o.created_at }}</td>
-            <td dir="ltr">{{ o.domain }}</td>
-            <td dir="ltr"><code>{{ o.order_id }}</code></td>
-            <td dir="ltr">{{ o.amount }} {{ o.currency }}</td>
-            <td class="{{ 'adm-pill-ok' if o.status == 'COMPLETED' else 'adm-pill-warn' }}">{{ t.adm_order_status.get(o.display_status, o.display_status) }}{% if o.is_test %} <span class="muted small">{{ t.adm_test }}</span>{% endif %}</td>
-          </tr>
-        {% else %}
-          <tr><td colspan="5">لا توجد طلبات بعد.</td></tr>
-        {% endfor %}
-        </tbody>
-      </table></div>
-    </section>
+      <section class="adm-card" id="audit-orders">
+        <div class="adm-card-head">
+          <h2>🏢 مدفوعات التدقيق المؤسسي (Organization audit payments)</h2>
+          <span class="adm-hint">اسحب الجدول أفقياً لعرض كل الأعمدة ⇄</span>
+        </div>
+        {% if audit_msg %}<p class="adm-notice" role="status">Audit action: {{ audit_msg }}</p>{% endif %}
+        {% if audit_orders %}
+        <div class="adm-scroll"><table class="adm-table adm-table-wide">
+          <thead><tr><th>Invoice / date</th><th>Organization</th><th>Buyer</th><th>Domain</th><th>Payment</th><th>Audit</th><th>Action</th></tr></thead>
+          <tbody>{% for o in audit_orders %}
+            <tr>
+              <td class="date-col">{{ o.invoice_number or '—' }}<br><span class="adm-hint">{{ o.created_at }}</span></td>
+              <td>{{ o.org }}</td>
+              <td>{{ o.name }}<br>{{ o.email }}</td>
+              <td>{{ o.domain }}</td>
+              <td class="{{ 'adm-pill-ok' if o.status == 'COMPLETED' else 'adm-pill-warn' }}">{{ o.status }} · {{ o.amount }} {{ o.currency }}{% if o.is_test %} · TEST{% endif %}{% if o.paypal_env != 'live' %} · {{ o.paypal_env }}{% endif %}{% if o.refund_id %}<br><span class="adm-hint">Refund {{ o.refund_id }}</span>{% endif %}</td>
+              <td>{{ o.audit_status }}<br><span class="adm-hint">Invoice email: {{ 'sent' if o.customer_email_sent else 'pending' }} · Report email: {{ 'sent' if o.report_email_sent else 'pending' }}</span></td>
+              <td>{% if o.invoice_number %}<a href="{{ url_for('site.admin_audit_invoice', audit_id=o.id) }}">Invoice PDF</a>{% endif %}
+                {% if o.report_path %} · <a href="{{ url_for('site.admin_audit_report', audit_id=o.id) }}">Report PDF</a>{% endif %}
+                {% if o.status == 'COMPLETED' and (not o.customer_email_sent or (o.audit_status == 'DONE' and not o.report_email_sent)) %}
+                <form class="adm-action-form" method="post" action="{{ url_for('site.admin_retry_audit_delivery', audit_id=o.id) }}">
+                  <button type="submit">Retry emails</button>
+                </form>{% endif %}
+                {% if o.status in ('COMPLETED', 'REFUND_PENDING') and o.audit_status == 'ACCESS_ISSUE' %}
+                <form class="adm-action-form" method="post" action="{{ url_for('site.admin_refund_audit', audit_id=o.id) }}">
+                  <label class="adm-hint"><input type="checkbox" name="confirm" value="yes" required> Domain unreachable — refund in full</label>
+                  <button type="submit">Refund {{ o.amount }} {{ o.currency }} via PayPal</button>
+                </form>{% endif %}</td>
+            </tr>
+          {% endfor %}</tbody>
+        </table></div>
+        {% else %}<p class="adm-note">No audit purchases yet.</p>{% endif %}
+      </section>
 
-    <section class="adm-card" dir="ltr" id="audit-orders">
-      <h2>🏢 مدفوعات التدقيق المؤسسي (Organization audit payments)</h2>
-      {% if audit_msg %}<p class="notice" role="status">Audit action: {{ audit_msg }}</p>{% endif %}
-      {% if audit_orders %}
-      <div class="adm-scroll"><table class="adm-table adm-table-wide">
-        <thead><tr><th>Invoice / date</th><th>Organization</th><th>Buyer</th><th>Domain</th><th>Payment</th><th>Audit</th><th>Action</th></tr></thead>
-        <tbody>{% for o in audit_orders %}
-          <tr>
-            <td>{{ o.invoice_number or '—' }}<br><span class="muted small">{{ o.created_at }}</span></td>
-            <td>{{ o.org }}</td>
-            <td dir="ltr">{{ o.name }}<br>{{ o.email }}</td>
-            <td dir="ltr">{{ o.domain }}</td>
-            <td class="{{ 'adm-pill-ok' if o.status == 'COMPLETED' else 'adm-pill-warn' }}">{{ o.status }} · {{ o.amount }} {{ o.currency }}{% if o.is_test %} · TEST{% endif %}{% if o.paypal_env != 'live' %} · {{ o.paypal_env }}{% endif %}{% if o.refund_id %}<br><span class="muted small">Refund {{ o.refund_id }}</span>{% endif %}</td>
-            <td>{{ o.audit_status }}<br><span class="muted small">Invoice email: {{ 'sent' if o.customer_email_sent else 'pending' }} · Report email: {{ 'sent' if o.report_email_sent else 'pending' }}</span></td>
-            <td>{% if o.invoice_number %}<a href="{{ url_for('site.admin_audit_invoice', audit_id=o.id) }}">Invoice PDF</a>{% endif %}
-              {% if o.report_path %} · <a href="{{ url_for('site.admin_audit_report', audit_id=o.id) }}">Report PDF</a>{% endif %}
-              {% if o.status == 'COMPLETED' and (not o.customer_email_sent or (o.audit_status == 'DONE' and not o.report_email_sent)) %}
-              <form class="adm-action-form" method="post" action="{{ url_for('site.admin_retry_audit_delivery', audit_id=o.id) }}">
-                <button type="submit">Retry emails</button>
-              </form>{% endif %}
-              {% if o.status in ('COMPLETED', 'REFUND_PENDING') and o.audit_status == 'ACCESS_ISSUE' %}
-              <form class="adm-action-form" method="post" action="{{ url_for('site.admin_refund_audit', audit_id=o.id) }}">
-                <label class="small"><input type="checkbox" name="confirm" value="yes" required> Domain unreachable — refund in full</label>
-                <button type="submit">Refund {{ o.amount }} {{ o.currency }} via PayPal</button>
-              </form>{% endif %}</td>
-          </tr>
-        {% endfor %}</tbody>
-      </table></div>
-      {% else %}<p class="adm-note">No audit purchases yet.</p>{% endif %}
-    </section>
+      <section class="adm-card" id="billing-records">
+        <h2>🧾 فواتير الشركات والباقات (Company billing)</h2>
+        {% if billing_records %}
+        <div class="adm-scroll"><table class="adm-table adm-table-wide">
+          <thead><tr><th>Kind / date</th><th>Company</th><th>Buyer</th><th>Domain</th><th class="num">Amount</th><th>Invoice</th></tr></thead>
+          <tbody>{% for r in billing_records %}
+            <tr>
+              <td class="date-col">{{ r.kind }}{% if r.plan %} · {{ r.plan }}{% endif %}<br><span class="adm-hint">{{ r.created_at }}</span></td>
+              <td>{{ r.org }}</td>
+              <td>{{ r.name }}<br>{{ r.email }}</td>
+              <td>{{ r.domain }}</td>
+              <td class="num">{{ r.amount }} {{ r.currency }}{% if r.kind == 'subscription' %}/month{% endif %}{% if r.is_test %} · TEST{% endif %}{% if r.paypal_env != 'live' %} · {{ r.paypal_env }}{% endif %}{% if r.plan_id %}<br><span class="adm-hint">{{ r.plan_id }}</span>{% endif %}</td>
+              <td>{% if r.invoice_number and r.invoice_path %}<a href="{{ url_for('site.admin_billing_invoice', record_id=r.id) }}">{{ r.invoice_number }}</a>{% elif r.kind == 'pack' %}not paid{% else %}PayPal receipt{% endif %}</td>
+            </tr>
+          {% endfor %}</tbody>
+        </table></div>
+        {% else %}<p class="adm-note">No company orders yet.</p>{% endif %}
+      </section>
+    </div>
 
-    <section class="adm-card" dir="ltr" id="billing-records">
-      <h2>🧾 فواتير الشركات والباقات (Company billing)</h2>
-      {% if billing_records %}
-      <div class="adm-scroll"><table class="adm-table">
-        <thead><tr><th>Kind / date</th><th>Company</th><th>Buyer</th><th>Domain</th><th>Amount</th><th>Invoice</th></tr></thead>
-        <tbody>{% for r in billing_records %}
-          <tr>
-            <td>{{ r.kind }}{% if r.plan %} · {{ r.plan }}{% endif %}<br><span class="muted small">{{ r.created_at }}</span></td>
-            <td>{{ r.org }}</td>
-            <td dir="ltr">{{ r.name }}<br>{{ r.email }}</td>
-            <td dir="ltr">{{ r.domain }}</td>
-            <td>{{ r.amount }} {{ r.currency }}{% if r.kind == 'subscription' %}/month{% endif %}{% if r.is_test %} · TEST{% endif %}{% if r.paypal_env != 'live' %} · {{ r.paypal_env }}{% endif %}{% if r.plan_id %}<br><span class="muted small">{{ r.plan_id }}</span>{% endif %}</td>
-            <td>{% if r.invoice_number and r.invoice_path %}<a href="{{ url_for('site.admin_billing_invoice', record_id=r.id) }}">{{ r.invoice_number }}</a>{% elif r.kind == 'pack' %}not paid{% else %}PayPal receipt{% endif %}</td>
-          </tr>
-        {% endfor %}</tbody>
-      </table></div>
-      {% else %}<p class="adm-note">No company orders yet.</p>{% endif %}
-    </section>
-  </div>
+    {# ==================== TAB 3: CONVERSION FUNNEL ==================== #}
+    <div class="adm-panel" data-panel="funnel">
+      <section class="adm-card">
+        <h2>🎯 قمع التحويل داخل الموقع (آخر 14 يوماً)</h2>
+        <div class="adm-funnel-grid">
+          <div class="adm-mini"><div class="adm-mini-k">ركّز على خانة الفحص</div><div class="adm-mini-v">{{ events.focus }}</div></div>
+          <div class="adm-mini"><div class="adm-mini-k">كتب نطاقاً</div><div class="adm-mini-v">{{ events.type }}</div></div>
+          <div class="adm-mini"><div class="adm-mini-k">ضغط مثالاً</div><div class="adm-mini-v">{{ events.example }}</div></div>
+          <div class="adm-mini"><div class="adm-mini-k">أرسل فحصاً</div><div class="adm-mini-v">{{ events.submit }}</div></div>
+          <div class="adm-mini"><div class="adm-mini-k">رأى النتيجة</div><div class="adm-mini-v">{{ events.result }}</div></div>
+          <div class="adm-mini"><div class="adm-mini-k">خطأ فحص</div><div class="adm-mini-v">{{ events.error }}</div></div>
+          <div class="adm-mini"><div class="adm-mini-k">زر المراقبة</div><div class="adm-mini-v">{{ events.monitoring_cta }}</div></div>
+          <div class="adm-mini"><div class="adm-mini-k">معاينة التقرير</div><div class="adm-mini-v">{{ events.sample_report }}</div></div>
+          <div class="adm-mini"><div class="adm-mini-k">نقرات الشراء</div><div class="adm-mini-v">{{ events.buy_click }}</div></div>
+          <div class="adm-mini"><div class="adm-mini-k">طلب تجربة</div><div class="adm-mini-v">{{ events.trial_start }}</div></div>
+          <div class="adm-mini"><div class="adm-mini-k">تجربة مُنشأة</div><div class="adm-mini-v">{{ events.trial_created }}</div></div>
+          <div class="adm-mini"><div class="adm-mini-k">مرفوض بالمتصفح</div><div class="adm-mini-v">{{ events.trial_invalid }}</div></div>
+          <div class="adm-mini"><div class="adm-mini-k">بدء دفع التقرير</div><div class="adm-mini-v">{{ events.checkout_start }}</div></div>
+          <div class="adm-mini"><div class="adm-mini-k">دفع مكتمل</div><div class="adm-mini-v">{{ events.purchase_complete }}</div></div>
+          <div class="adm-mini"><div class="adm-mini-k">بدء اشتراك</div><div class="adm-mini-v">{{ events.subscription_start }}</div></div>
+          <div class="adm-mini"><div class="adm-mini-k">اشتراك مفعّل</div><div class="adm-mini-v">{{ events.subscription_active }}</div></div>
+          <div class="adm-mini"><div class="adm-mini-k">باقة وكالات (بدء/دفع)</div><div class="adm-mini-v">{{ events.agency_start }} / {{ events.agency_paid }}</div></div>
+          <div class="adm-mini"><div class="adm-mini-k">مشاركة / نسخ شارة</div><div class="adm-mini-v">{{ events.share }} / {{ events.badge_copy }}</div></div>
+        </div>
+        <p class="adm-note">أيام زوار فريدين (بدون البوتات وزيارات المدير). بدء التتبع: 2026-11-04.</p>
 
-  {# ==================== TAB 3: CONVERSION FUNNEL ==================== #}
-  <div class="adm-panel" data-panel="funnel">
-    <section class="adm-card">
-      <h2>🎯 قمع التحويل داخل الموقع (آخر 14 يوماً)</h2>
-      <div class="adm-funnel-grid">
-        <div class="adm-mini"><div class="adm-mini-k">ركّز على خانة الفحص</div><div class="adm-mini-v">{{ events.focus }}</div></div>
-        <div class="adm-mini"><div class="adm-mini-k">كتب نطاقاً</div><div class="adm-mini-v">{{ events.type }}</div></div>
-        <div class="adm-mini"><div class="adm-mini-k">ضغط مثالاً</div><div class="adm-mini-v">{{ events.example }}</div></div>
-        <div class="adm-mini"><div class="adm-mini-k">أرسل فحصاً</div><div class="adm-mini-v">{{ events.submit }}</div></div>
-        <div class="adm-mini"><div class="adm-mini-k">رأى النتيجة</div><div class="adm-mini-v">{{ events.result }}</div></div>
-        <div class="adm-mini"><div class="adm-mini-k">خطأ فحص</div><div class="adm-mini-v">{{ events.error }}</div></div>
-        <div class="adm-mini"><div class="adm-mini-k">زر المراقبة</div><div class="adm-mini-v">{{ events.monitoring_cta }}</div></div>
-        <div class="adm-mini"><div class="adm-mini-k">معاينة التقرير</div><div class="adm-mini-v">{{ events.sample_report }}</div></div>
-        <div class="adm-mini"><div class="adm-mini-k">نقرات الشراء</div><div class="adm-mini-v">{{ events.buy_click }}</div></div>
-        <div class="adm-mini"><div class="adm-mini-k">طلب تجربة</div><div class="adm-mini-v">{{ events.trial_start }}</div></div>
-        <div class="adm-mini"><div class="adm-mini-k">تجربة مُنشأة</div><div class="adm-mini-v">{{ events.trial_created }}</div></div>
-        <div class="adm-mini"><div class="adm-mini-k">نموذج مرفوض بالمتصفح</div><div class="adm-mini-v">{{ events.trial_invalid }}</div></div>
-        <div class="adm-mini"><div class="adm-mini-k">بدء دفع التقرير</div><div class="adm-mini-v">{{ events.checkout_start }}</div></div>
-        <div class="adm-mini"><div class="adm-mini-k">دفع مكتمل</div><div class="adm-mini-v">{{ events.purchase_complete }}</div></div>
-        <div class="adm-mini"><div class="adm-mini-k">بدء اشتراك</div><div class="adm-mini-v">{{ events.subscription_start }}</div></div>
-        <div class="adm-mini"><div class="adm-mini-k">اشتراك مفعّل</div><div class="adm-mini-v">{{ events.subscription_active }}</div></div>
-        <div class="adm-mini"><div class="adm-mini-k">باقة وكالات (بدء/دفع)</div><div class="adm-mini-v">{{ events.agency_start }} / {{ events.agency_paid }}</div></div>
-        <div class="adm-mini"><div class="adm-mini-k">مشاركة / نسخ شارة</div><div class="adm-mini-v">{{ events.share }} / {{ events.badge_copy }}</div></div>
-      </div>
-      <p class="adm-note">أيام زوار فريدين (بدون البوتات وزيارات المدير). بدء التتبع: 2026-11-04.</p>
+        <h3>🧪 تجربة عرض صفحة النتيجة (آخر 28 يوماً)</h3>
+        <div class="adm-scroll"><table class="adm-table">
+          <thead><tr><th>Variant</th><th class="num">Offer views</th><th class="num">Trial CTA</th><th class="num">Trial created</th><th class="num">Paid sub</th></tr></thead>
+          <tbody>
+          {% for arm in ("control", "treatment") %}
+            <tr><td>{{ arm }}</td><td class="num">{{ conversion_funnel[arm].offer_impression }}</td><td class="num">{{ conversion_funnel[arm].trial_cta_clicked }}</td><td class="num">{{ conversion_funnel[arm].signup_completed }}</td><td class="num">{{ conversion_funnel[arm].subscription_completed }}</td></tr>
+          {% endfor %}
+          </tbody>
+        </table></div>
 
-      <h3>🧪 تجربة عرض صفحة النتيجة (آخر 28 يوماً)</h3>
-      <div class="adm-scroll"><table class="adm-table" dir="ltr">
-        <thead><tr><th>Variant</th><th>Offer views</th><th>Trial CTA</th><th>Trial created</th><th>Paid subscription</th></tr></thead>
-        <tbody>
-        {% for arm in ("control", "treatment") %}
-          <tr><td>{{ arm }}</td><td>{{ conversion_funnel[arm].offer_impression }}</td><td>{{ conversion_funnel[arm].trial_cta_clicked }}</td><td>{{ conversion_funnel[arm].signup_completed }}</td><td>{{ conversion_funnel[arm].subscription_completed }}</td></tr>
-        {% endfor %}
-        </tbody>
-      </table></div>
+        {% if trial_reasons %}
+        <h3>⚠️ لماذا توقّفت نماذج التجربة (آخر 14 يوماً)</h3>
+        <div class="adm-scroll"><table class="adm-table adm-table-wide">
+          <thead><tr><th>event</th><th>source</th><th>reason</th><th class="num">visitor-days</th><th>last</th></tr></thead>
+          <tbody>
+          {% for r in trial_reasons %}
+            <tr><td>{{ 'blocked in browser' if r.event == 'trial_invalid' else 'rejected by server' }}</td><td><code>{{ r.source }}</code></td><td><code>{{ r.reason }}</code></td><td class="num">{{ r.n }}</td><td class="date-col">{{ r.last }}</td></tr>
+          {% endfor %}
+          </tbody>
+        </table></div>
+        {% endif %}
 
-      {% if trial_reasons %}
-      <h3>⚠️ لماذا توقّفت نماذج التجربة (آخر 14 يوماً)</h3>
-      <div class="adm-scroll"><table class="adm-table" dir="ltr">
-        <thead><tr><th>event</th><th>source</th><th>reason</th><th>visitor-days</th><th>last</th></tr></thead>
-        <tbody>
-        {% for r in trial_reasons %}
-          <tr><td>{{ 'blocked in browser' if r.event == 'trial_invalid' else 'rejected by server' }}</td><td><code>{{ r.source }}</code></td><td><code>{{ r.reason }}</code></td><td>{{ r.n }}</td><td>{{ r.last }}</td></tr>
-        {% endfor %}
-        </tbody>
-      </table></div>
+        <h3>📍 الفحوصات والمبيعات حسب المصدر (آخر 30 يوماً)</h3>
+        <div class="adm-scroll"><table class="adm-table">
+          <thead><tr><th>Source</th><th class="num">Scans</th><th class="num">Sales</th></tr></thead>
+          <tbody>
+          {% for row in by_source %}
+            <tr><td>{{ row.source }}</td><td class="num">{{ row.scans }}</td><td class="num">{{ row.sales }}</td></tr>
+          {% else %}
+            <tr><td colspan="3">No real scans yet.</td></tr>
+          {% endfor %}
+          </tbody>
+        </table></div>
+      </section>
+    </div>
+
+    {# ==================== TAB 4: AGENTS, INBOUND MAIL & PROOFLAB ==================== #}
+    <div class="adm-panel" data-panel="agents">
+      <section class="adm-card">
+        <h2>📩 الردود البريدية الواردة (reply@ / outreach@)</h2>
+        {% if inbound_mail %}
+        <div class="adm-scroll"><table class="adm-table adm-table-wide">
+          <thead><tr><th>received (UTC)</th><th>from</th><th>to</th><th>subject</th></tr></thead>
+          <tbody>
+          {% for m in inbound_mail %}
+            <tr><td class="date-col">{{ m.received_at }}</td><td>{{ m.from_addr }}</td><td>{{ m.to_addr }}</td><td>{{ m.subject }}</td></tr>
+          {% endfor %}
+          </tbody>
+        </table></div>
+        <p class="adm-note">لقراءة النص الكامل: Resend Dashboard → Emails → Receiving.</p>
+        {% else %}<p class="adm-note">لا توجد ردود بريدية مخزّنة بعد.</p>{% endif %}
+      </section>
+
+      <section class="adm-card">
+        <div class="adm-card-head">
+          <h2>🤖 سجل استدعاءات الوكلاء (MCP / A2A / ACP · آخر {{ agent_calls.days }} يوم)</h2>
+          <a class="adm-btn live" href="/admin/agents-live">فتح البث الحي للوكلاء ↗</a>
+        </div>
+        <p class="adm-note">استدعاءات الأدوات الفعلية: <strong>{{ agent_calls.total }}</strong>{% for proto, cnt in agent_calls.by_protocol.items() %} · {{ proto|upper }}: {{ cnt }}{% endfor %} · مصافحات MCP <code>initialize</code>: <strong>{{ agent_calls.init_total }}</strong></p>
+        {% if agent_calls.rows %}
+        <div class="adm-scroll"><table class="adm-table adm-table-wide">
+          <thead><tr><th>Protocol</th><th>Action</th><th>Client</th><th>Status</th><th class="num">Calls</th><th>Last (UTC)</th></tr></thead>
+          <tbody>
+          {% for r in agent_calls.rows %}
+            <tr><td><code>{{ r.protocol }}</code></td><td><code>{{ r.action }}</code></td><td>{{ r.client_name }}</td><td><code>{{ r.status }}</code></td><td class="num">{{ r.n }}</td><td class="date-col">{{ r.last_ts }}</td></tr>
+          {% endfor %}
+          </tbody>
+        </table></div>
+        {% endif %}
+      </section>
+
+      <section class="adm-card" dir="ltr">
+        <h2>🔬 ProofLab waitlist</h2>
+        <p class="adm-note">Real signups: <strong>{{ prooflab_stats.total }}</strong>{% for k, v in prooflab_stats.by_stack.items() %} · {{ k }}: {{ v }}{% endfor %} · page views (14d): {{ events.prooflab_view }} · signups (14d): {{ events.prooflab_submit }} · test rows: {{ prooflab_stats.tests }}</p>
+        {% if prooflab_stats.recent %}
+        <div class="adm-scroll"><table class="adm-table adm-table-wide">
+          <thead><tr><th>email</th><th>company</th><th>stack</th><th>lang</th><th>at (UTC)</th></tr></thead>
+          <tbody>
+          {% for r in prooflab_stats.recent %}
+            <tr><td>{{ r.email }}</td><td>{{ r.company }}</td><td>{{ r.stack }}</td><td>{{ r.lang }}</td><td class="date-col">{{ r.created_at }}</td></tr>
+          {% endfor %}
+          </tbody>
+        </table></div>
+        {% endif %}
+        <p class="adm-note">Free change alerts: {{ free_alert_counts.get("ACTIVE", 0) }} active · {{ free_alert_counts.get("PENDING", 0) }} awaiting confirmation</p>
+      </section>
+    </div>
+
+    {# ==================== TAB 5: SIMULATION & ERRORS ==================== #}
+    <div class="adm-panel" data-panel="sim">
+      <section class="adm-card">
+        <div class="adm-card-head">
+          <h2>📈 الواقع مقابل المحاكاة (Reality vs Simulation)</h2>
+          <span class="adm-hint">اسحب الجدول أفقياً لعرض كل الأعمدة ⇄</span>
+        </div>
+        {% if card.verdict %}<p><strong>أقرب سيناريو: {{ card.scenarios[card.verdict].label_ar }} ({{ card.scenarios[card.verdict].label }})</strong> · صافي 12 شهراً المتوقّع: ${{ card.scenarios[card.verdict].net_12m }}</p>{% endif %}
+        {% if card.conversion_warning %}<p class="adm-err">⚠ {{ card.conversion_warning }}</p>{% endif %}
+        <div class="adm-scroll"><table class="adm-table adm-table-wide">
+          <thead><tr><th>Week from</th><th class="num">Visitors</th><th>Expected (pess / real / opt)</th><th class="num">Scans</th><th class="num">Exp. scans</th><th class="num">Reports</th><th class="num">New subs</th><th>Closest</th></tr></thead>
+          <tbody>
+          {% for w in card.weeks|reverse %}
+            <tr>
+              <td class="date-col">{{ w.start }}{% if w.partial_days < 7 %} ({{ w.partial_days }}d){% endif %}</td>
+              <td class="num"><strong>{{ w.visitors }}</strong></td>
+              <td>{{ "%.0f"|format(w.expected.pessimistic.visitors) }} / {{ "%.0f"|format(w.expected.realistic.visitors) }} / {{ "%.0f"|format(w.expected.optimistic.visitors) }}</td>
+              <td class="num">{{ w.scans }}</td>
+              <td class="num">{{ "%.1f"|format(w.expected.realistic.scans) }}</td>
+              <td class="num">{{ w.reports }}</td>
+              <td class="num">{{ w.subs }}</td>
+              <td>{{ card.scenarios[w.closest].label }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table></div>
+        <p class="adm-note" dir="ltr">Since launch: {{ card.totals.visitors }} visitors · {{ card.totals.scans }} scans · {{ card.totals.reports }} reports (${{ "%.2f"|format(card.totals.revenue) }}{% for cur, amt in (card.totals.revenue_by_currency or {}).items()|sort if cur != 'USD' %} + {{ "%.2f"|format(amt) }} {{ cur }}{% endfor %}) · MRR €{{ "%.2f"|format(card.mrr) }} · cash cost €{{ "%.2f"|format(card.cost_so_far) }} · break-even = {{ card.breakeven_subs }} Starter sub{{ '' if card.breakeven_subs == 1 else 's' }}.</p>
+      </section>
+
+      {% if scan_errors %}
+      <section class="adm-card">
+        <h2>⚠️ أخطاء الفحص (آخر 14 يوماً)</h2>
+        <div class="adm-scroll"><table class="adm-table">
+          <thead><tr><th>error</th><th class="num">visitor-days</th><th>last</th></tr></thead>
+          <tbody>
+          {% for row in scan_errors %}
+            <tr><td><code>{{ row[0] }}</code></td><td class="num">{{ row[1] }}</td><td class="date-col">{{ row[2] }}</td></tr>
+          {% endfor %}
+          </tbody>
+        </table></div>
+      </section>
       {% endif %}
+    </div>
 
-      <h3>📍 الفحوصات والمبيعات حسب المصدر (آخر 30 يوماً)</h3>
-      <div class="adm-scroll"><table class="adm-table" dir="ltr">
-        <thead><tr><th>Source</th><th>Scans</th><th>Sales</th></tr></thead>
-        <tbody>
-        {% for row in by_source %}
-          <tr><td>{{ row.source }}</td><td>{{ row.scans }}</td><td>{{ row.sales }}</td></tr>
-        {% else %}
-          <tr><td colspan="3">No real scans yet.</td></tr>
-        {% endfor %}
-        </tbody>
-      </table></div>
-    </section>
   </div>
-
-  {# ==================== TAB 4: AGENTS, INBOUND MAIL & PROOFLAB ==================== #}
-  <div class="adm-panel" data-panel="agents">
-    <section class="adm-card">
-      <h2>📩 الردود البريدية الواردة (reply@ / outreach@)</h2>
-      {% if inbound_mail %}
-      <div class="adm-scroll"><table class="adm-table" dir="ltr">
-        <thead><tr><th>received (UTC)</th><th>from</th><th>to</th><th>subject</th></tr></thead>
-        <tbody>
-        {% for m in inbound_mail %}
-          <tr><td>{{ m.received_at }}</td><td>{{ m.from_addr }}</td><td>{{ m.to_addr }}</td><td>{{ m.subject }}</td></tr>
-        {% endfor %}
-        </tbody>
-      </table></div>
-      <p class="adm-note">لقراءة النص الكامل: Resend Dashboard → Emails → Receiving.</p>
-      {% else %}<p class="adm-note">لا توجد ردود بريدية مخزّنة بعد.</p>{% endif %}
-    </section>
-
-    <section class="adm-card">
-      <h2>🤖 سجل استدعاءات الوكلاء (MCP / A2A / ACP · آخر {{ agent_calls.days }} يوم)</h2>
-      <p class="adm-note">استدعاءات الأدوات الفعلية: <strong>{{ agent_calls.total }}</strong>{% for proto, cnt in agent_calls.by_protocol.items() %} · {{ proto|upper }}: {{ cnt }}{% endfor %} · مصافحات MCP <code>initialize</code>: <strong>{{ agent_calls.init_total }}</strong></p>
-      {% if agent_calls.rows %}
-      <div class="adm-scroll"><table class="adm-table" dir="ltr">
-        <thead><tr><th>Protocol</th><th>Action</th><th>Client</th><th>Status</th><th>Calls</th><th>Last (UTC)</th></tr></thead>
-        <tbody>
-        {% for r in agent_calls.rows %}
-          <tr><td><code>{{ r.protocol }}</code></td><td><code>{{ r.action }}</code></td><td>{{ r.client_name }}</td><td><code>{{ r.status }}</code></td><td>{{ r.n }}</td><td>{{ r.last_ts }}</td></tr>
-        {% endfor %}
-        </tbody>
-      </table></div>
-      {% endif %}
-    </section>
-
-    <section class="adm-card" dir="ltr">
-      <h2>🔬 ProofLab waitlist</h2>
-      <p>Real signups: <strong>{{ prooflab_stats.total }}</strong>{% for k, v in prooflab_stats.by_stack.items() %} · {{ k }}: {{ v }}{% endfor %} · page views (14d): {{ events.prooflab_view }} · signups (14d): {{ events.prooflab_submit }} · test rows: {{ prooflab_stats.tests }}</p>
-      {% if prooflab_stats.recent %}
-      <div class="adm-scroll"><table class="adm-table">
-        <thead><tr><th>email</th><th>company</th><th>stack</th><th>lang</th><th>at (UTC)</th></tr></thead>
-        <tbody>
-        {% for r in prooflab_stats.recent %}
-          <tr><td>{{ r.email }}</td><td>{{ r.company }}</td><td>{{ r.stack }}</td><td>{{ r.lang }}</td><td>{{ r.created_at }}</td></tr>
-        {% endfor %}
-        </tbody>
-      </table></div>
-      {% endif %}
-      <p class="adm-note">Free change alerts: {{ free_alert_counts.get("ACTIVE", 0) }} active · {{ free_alert_counts.get("PENDING", 0) }} awaiting confirmation</p>
-    </section>
-  </div>
-
-  {# ==================== TAB 5: SIMULATION & ERRORS ==================== #}
-  <div class="adm-panel" data-panel="sim">
-    <section class="adm-card">
-      <h2>📈 الواقع مقابل المحاكاة (Reality vs Simulation)</h2>
-      {% if card.verdict %}<p><strong>أقرب سيناريو: {{ card.scenarios[card.verdict].label_ar }} ({{ card.scenarios[card.verdict].label }})</strong> · صافي 12 شهراً المتوقّع: ${{ card.scenarios[card.verdict].net_12m }}</p>{% endif %}
-      {% if card.conversion_warning %}<p class="error">⚠ {{ card.conversion_warning }}</p>{% endif %}
-      <div class="adm-scroll"><table class="adm-table adm-table-wide" dir="ltr">
-        <thead><tr><th>Week from</th><th>Visitors</th><th>Expected (pess / real / opt)</th><th>Scans</th><th>Exp. scans</th><th>Reports</th><th>New subs</th><th>Closest</th></tr></thead>
-        <tbody>
-        {% for w in card.weeks|reverse %}
-          <tr>
-            <td>{{ w.start }}{% if w.partial_days < 7 %} ({{ w.partial_days }}d){% endif %}</td>
-            <td>{{ w.visitors }}</td>
-            <td>{{ "%.0f"|format(w.expected.pessimistic.visitors) }} / {{ "%.0f"|format(w.expected.realistic.visitors) }} / {{ "%.0f"|format(w.expected.optimistic.visitors) }}</td>
-            <td>{{ w.scans }}</td>
-            <td>{{ "%.1f"|format(w.expected.realistic.scans) }}</td>
-            <td>{{ w.reports }}</td>
-            <td>{{ w.subs }}</td>
-            <td>{{ card.scenarios[w.closest].label }}</td>
-          </tr>
-        {% endfor %}
-        </tbody>
-      </table></div>
-      <p class="adm-note" dir="ltr">Since launch: {{ card.totals.visitors }} visitors · {{ card.totals.scans }} scans · {{ card.totals.reports }} reports (${{ "%.2f"|format(card.totals.revenue) }}{% for cur, amt in (card.totals.revenue_by_currency or {}).items()|sort if cur != 'USD' %} + {{ "%.2f"|format(amt) }} {{ cur }}{% endfor %}) · MRR €{{ "%.2f"|format(card.mrr) }} · cash cost €{{ "%.2f"|format(card.cost_so_far) }} · break-even = {{ card.breakeven_subs }} Starter sub{{ '' if card.breakeven_subs == 1 else 's' }}.</p>
-    </section>
-
-    {% if scan_errors %}
-    <section class="adm-card">
-      <h2>⚠️ أخطاء الفحص (آخر 14 يوماً)</h2>
-      <div class="adm-scroll"><table class="adm-table" dir="ltr">
-        <thead><tr><th>error</th><th>visitor-days</th><th>last</th></tr></thead>
-        <tbody>
-        {% for row in scan_errors %}
-          <tr><td><code>{{ row[0] }}</code></td><td>{{ row[1] }}</td><td>{{ row[2] }}</td></tr>
-        {% endfor %}
-        </tbody>
-      </table></div>
-    </section>
-    {% endif %}
-  </div>
-
 </div>
-{% endblock %}
-{% block scripts %}
-<script src="{{ url_for('static', filename='admin-ui.js') }}" defer></script>
-{% endblock %}
+<script src="{{ url_for('static', filename='admin-ui.js', v=3) }}" defer></script>
+</body>
+</html>
