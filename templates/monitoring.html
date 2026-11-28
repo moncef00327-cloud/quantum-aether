@@ -9,6 +9,11 @@
 {% block content %}
 <section class="hero trial-fold" id="trial">
   <h1>{{ t.mon_title }}</h1>
+  {# Value-first funnel: a free, no-signup scan is the first action; the email trial is step 2, after the result.
+     Fixes the pre-scan email wall that rejected most /monitoring trial attempts (empty_email). #}
+  <p class="lead">{{ 'شاهد نتيجتك الحقيقية أولاً — فحص فوري مجاني بلا تسجيل، وتصلك إيصالات موقّعة يمكن التحقق منها بلا اتصال (دليل حقيقي، لا استبيان).' if lang == 'ar' else ('Sehen Sie zuerst Ihr echtes Ergebnis — sofortiger Scan, kostenlos, ohne Anmeldung. Mit signierten, offline prüfbaren Nachweisen (echter Beleg, kein Fragebogen).' if lang == 'de' else 'See your real result first — instant scan, free, no signup. Every scan returns a signed, offline-verifiable receipt (real evidence, not a questionnaire).') }}</p>
+  {% with box_src = 'monitoring_scan', box_id = 'mon-domain-box' %}{% include "_scan_box.html" %}{% endwith %}
+  <p class="qa-trial-step-cue" style="text-align:center;margin:1.2rem 0 .2rem">{{ 'ثم حوّل أي نتيجة إلى مراقبة يومية — 14 يوماً مجاناً:' if lang == 'ar' else ('Dann jedes Ergebnis in tägliche Überwachung umwandeln — 14 Tage kostenlos:' if lang == 'de' else 'Then turn any result into daily monitoring — 14 days free:') }}</p>
   {{ trial_cta('trial-form', prefill=domain, title='', sub=t.trial_fold_line, source='monitoring', show_title=false) }}
 </section>
 

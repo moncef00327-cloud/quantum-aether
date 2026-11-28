@@ -26,8 +26,14 @@
   <p class="eyebrow">{{ commercial.business if section == 'business' else commercial.pricing }}</p>
   <h1>{{ commercial.title if section == 'business' else commercial.pricing_heading }}</h1>
   <p class="lead">{{ commercial.lead if section == 'business' else commercial.pricing_lead }}</p>
-  <div class="commercial-actions"><a class="button-link" href="#trial" data-ev="trial_cta">{{ t.trial_button }}</a><a href="{{ url_for('site.sample_report', lang=lang if lang != 'de' else 'en') }}">{{ commercial.sample }} ↗</a></div>
+  <div class="commercial-actions"><a class="button-link" href="#pricing-scan" data-ev="scan_cta">{{ t.scan_button }}</a><a href="{{ url_for('site.sample_report', lang=lang if lang != 'de' else 'en') }}">{{ commercial.sample }} ↗</a></div>
 </section>
+{# Value-first funnel: free no-signup scan first (signed, verifiable evidence); the email trial is step 2. #}
+<section class="hero" id="pricing-scan">
+  <p class="lead">{{ 'افحص نطاقك مجاناً بلا تسجيل — وتصلك إيصالات موقّعة يمكن التحقق منها بلا اتصال (دليل حقيقي، لا استبيان).' if lang == 'ar' else ('Scannen Sie Ihre Domain kostenlos, ohne Anmeldung — mit signierten, offline prüfbaren Nachweisen (echter Beleg, kein Fragebogen).' if lang == 'de' else 'Scan your domain free, no signup — with signed, offline-verifiable receipts (real evidence, not a questionnaire).') }}</p>
+  {% with box_src = 'pricing_scan', box_id = 'pricing-domain-box' %}{% include "_scan_box.html" %}{% endwith %}
+</section>
+<p class="qa-trial-step-cue" style="text-align:center;margin:1.2rem 0 .2rem">{{ 'ثم حوّل أي نتيجة إلى مراقبة يومية — 14 يوماً مجاناً:' if lang == 'ar' else ('Dann jedes Ergebnis in tägliche Überwachung umwandeln — 14 Tage kostenlos:' if lang == 'de' else 'Then turn any result into daily monitoring — 14 days free:') }}</p>
 {{ trial_cta('trial', source=('business' if 'business' in request.path else 'pricing')) }}
 <section class="commercial-grid plan-grid" aria-label="{{ commercial.pricing }}">
   <article class="card"><span class="tag">{{ commercial.free }}</span><h2><bdi>0 {{ sub_currency }}</bdi></h2><p>{{ commercial.free_desc }}</p><a class="button-link" href="{{ url_for('site.index', lang=lang) }}">{{ commercial.scan }}</a></article>
