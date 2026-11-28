@@ -4332,7 +4332,7 @@ EOF
     return Response(script, mimetype="text/x-shellscript")
 
 
-OG_VERSION = "2"  # 2: new domain ather-quantum.com in the footer (v1 images said ather-quatum.cloud); غيّره حين يتغير تصميم الصورة فتُبنى من جديد
+OG_VERSION = "3"  # 3: brand redesign — real shield+A logo (was a React-looking atom) + brand violet palette; غيّره حين يتغير تصميم الصورة فتُبنى من جديد
 
 
 def _og_response(key, build):

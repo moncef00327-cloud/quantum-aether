@@ -16,7 +16,8 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FONT_BOLD = os.path.join(BASE_DIR, "data", "fonts", "DejaVuSans-Bold.ttf")
 FONT_REGULAR = os.path.join(BASE_DIR, "data", "fonts", "DejaVuSans.ttf")
 W, H = 1200, 630
-BG, CARD, LINE, TEXT, MUTED, ACCENT = "#0f172a", "#1e293b", "#334155", "#f8fafc", "#94a3b8", "#38bdf8"
+# Brand palette matches the site theme and favicon.svg (deep violet + lavender accent), not generic slate-blue.
+BG, CARD, LINE, TEXT, MUTED, ACCENT = "#191426", "#261e39", "#3b2d57", "#f6f1fe", "#a797c9", "#c68efa"
 GRADE_COLORS = {"A": "#4ade80", "B": "#f59e0b", "C": "#f87171", "F": "#ef4444"}
 
 
@@ -38,21 +39,25 @@ def _fit(draw, text, path, size, max_width):
     return _font(path, size)
 
 
+def _logo(draw, ox, oy, size=84):
+    """The real Quantum Aether mark from favicon.svg: a shield with an 'A' monogram, in brand violet.
+    (Replaces the old three-orbit atom, which read as the React logo.)"""
+    s = size / 64.0
+    def P(px, py):
+        return (ox + px * s, oy + py * s)
+    draw.rounded_rectangle([ox, oy, ox + size, oy + size], radius=size * 0.22, fill="#20172e", outline=LINE, width=2)
+    shield = [P(32, 7), P(53, 14.5), P(53, 31), P(43.5, 46), P(32, 56.5), P(20.5, 46), P(11, 31), P(11, 14.5)]
+    draw.polygon(shield, fill=CARD)
+    draw.line(shield + [shield[0]], fill=ACCENT, width=max(2, round(3.2 * s)), joint="curve")
+    aw = max(3, round(5 * s))
+    draw.line([P(22, 45), P(32, 18), P(42, 45)], fill=ACCENT, width=aw, joint="curve")   # the A's legs
+    draw.line([P(25.5, 36), P(38.5, 36)], fill=ACCENT, width=aw)                          # the A's crossbar
+
+
 def _frame(draw):
-    draw.rectangle([0, 0, W, 10], fill=ACCENT)
-    # شعار بسيط: ثلاث مدارات + نواة (كما في favicon)
-    cx, cy = 92, 92
-    for angle in (0, 60, 120):
-        import math
-        pts = []
-        for t in range(0, 361, 4):
-            r = math.radians(t)
-            x, y = 34 * math.cos(r), 13 * math.sin(r)
-            a = math.radians(angle)
-            pts.append((cx + x * math.cos(a) - y * math.sin(a), cy + x * math.sin(a) + y * math.cos(a)))
-        draw.line(pts, fill=ACCENT, width=4)
-    draw.ellipse([cx - 7, cy - 7, cx + 7, cy + 7], fill="#4ade80")
-    draw.text((146, 68), "Quantum Aether", font=_font(FONT_BOLD, 40), fill=TEXT)
+    draw.rectangle([0, 0, W, 8], fill=ACCENT)
+    _logo(draw, 56, 52, 84)
+    draw.text((166, 72), "Quantum Aether", font=_font(FONT_BOLD, 40), fill=TEXT)
     draw.text((60, H - 70), "ather-quantum.com", font=_font(FONT_REGULAR, 30), fill=MUTED)
 
 
@@ -177,7 +182,7 @@ def render_report(pct, measured, week):
     draw.text((60, 365), f"Weekly research · {week}", font=_font(FONT_REGULAR, 30), fill=MUTED)
     draw.ellipse([900, 170, 1140, 410], fill=CARD, outline=ACCENT, width=12)
     big = f"{pct}%"
-    font = _font(FONT_BOLD, 78)
+    font = _fit(draw, big, FONT_BOLD, 78, 196)  # keep the value inside the circle (e.g. "61.2%")
     box = draw.textbbox((0, 0), big, font=font)
     draw.text((1020 - (box[2] - box[0]) / 2 - box[0], 290 - (box[3] - box[1]) / 2 - box[1]),
               big, font=font, fill=ACCENT)
