@@ -5231,6 +5231,10 @@ import competitor_pages  # noqa: E402  Factual comparison pages (/vs-censys, /vs
 competitor_pages.register(bp, {"lang": current_lang, "base": public_base,
                                "de_pages": DE_PAGES, "de_endpoints": i18n.DE_ENDPOINTS})
 
+import agent_live_board  # noqa: E402  Owner-only Real-Time Agent Operations Dashboard (/admin/agents-live, 2026-11-28)
+agent_live_board.register(bp, {"db": db, "is_admin_visitor": is_admin_visitor,
+                               "admin_cookie_name": ADMIN_COOKIE, "admin_cookie_value": admin_cookie_value})
+
 app = create_app()
 
 if __name__ == "__main__":

@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>غرفة عمليات الوكلاء الحية · Quantum Aether</title>
+  <style>
+    :root{--bg:#060c18;--card:rgba(13,25,46,.82);--border:rgba(148,187,255,.22);--text:#eef4ff;--muted:#9cb2cf;--cyan:#5eead4;--blue:#60a5fa;--amber:#fbbf24;--red:#f87171;--green:#34d399}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:radial-gradient(circle at top right,#0f2344 0%,#060c18 55%);color:var(--text);line-height:1.5}
+    .wrap{max-width:1180px;margin:0 auto;padding:18px 14px 48px}
+    .topbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:14px 16px;border-radius:16px;background:var(--card);border:1px solid var(--border);margin-bottom:14px}
+    .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.08rem}
+    .dot{width:11px;height:11px;border-radius:50%;background:var(--green);box-shadow:0 0 12px var(--green);animation:pulse 1.8s infinite}
+    @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.85)}}
+    .controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:.84rem;color:var(--muted)}
+    .btn{padding:6px 12px;border-radius:999px;border:1px solid rgba(94,234,212,.4);background:rgba(94,234,212,.12);color:#e6fffa;cursor:pointer;font:inherit;font-weight:600;text-decoration:none}
+    .btn:hover{background:rgba(94,234,212,.22)}
+    .btn.sec{border-color:var(--border);background:rgba(148,163,184,.1);color:var(--text)}
+    .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:14px}
+    .kpi{padding:14px;border-radius:14px;background:var(--card);border:1px solid var(--border)}
+    .kpi-label{font-size:.8rem;color:var(--muted)}
+    .kpi-val{font-size:1.55rem;font-weight:800;margin:2px 0;color:var(--cyan);direction:ltr;text-align:right}
+    .kpi-sub{font-size:.78rem;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:1.35fr 1fr;gap:14px}
+    @media (max-width:880px){.grid{grid-template-columns:1fr}}
+    .panel{padding:16px;border-radius:16px;background:var(--card);border:1px solid var(--border)}
+    .panel h2{margin:0 0 10px;font-size:1.02rem;display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .pills{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+    .pill{padding:4px 10px;border-radius:999px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font:inherit;font-size:.78rem}
+    .pill.active{background:rgba(96,165,250,.22);border-color:var(--blue);color:#fff;font-weight:700}
+    .feed{display:flex;flex-direction:column;gap:8px;max-height:660px;overflow-y:auto;padding-inline-end:2px}
+    .ev{padding:10px 12px;border-radius:12px;background:rgba(8,16,32,.72);border:1px solid rgba(148,187,255,.15);display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:start}
+    .tag{padding:2px 8px;border-radius:999px;font-size:.72rem;font-weight:800;letter-spacing:.03em;white-space:nowrap}
+    .tag.x{background:rgba(96,165,250,.22);color:#93c5fd;border:1px solid rgba(96,165,250,.45)}
+    .tag.moltbook{background:rgba(248,113,113,.2);color:#fca5a5;border:1px solid rgba(248,113,113,.45)}
+    .tag.agentboard{background:rgba(167,139,250,.2);color:#ddd6fe;border:1px solid rgba(167,139,250,.45)}
+    .tag.a2a{background:rgba(52,211,153,.2);color:#6ee7b7;border:1px solid rgba(52,211,153,.45)}
+    .tag.msp{background:rgba(251,191,36,.2);color:#fde68a;border:1px solid rgba(251,191,36,.45)}
+    .tag.mcp{background:rgba(94,234,212,.18);color:#5eead4;border:1px solid rgba(94,234,212,.4)}
+    .tag.scan{background:rgba(148,163,184,.2);color:#e2e8f0;border:1px solid rgba(148,163,184,.4)}
+    .tag.mail{background:rgba(244,114,182,.22);color:#fbcfe8;border:1px solid rgba(244,114,182,.45)}
+    .ev-title{font-weight:700;font-size:.88rem;color:#fff}
+    .ev-detail{font-size:.8rem;color:var(--muted);word-break:break-word;margin-top:2px}
+    .ev-meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:.74rem;color:#7f97b7;margin-top:4px;direction:ltr;justify-content:flex-end}
+    .ev-meta a{color:var(--cyan);text-decoration:none}
+    .timers{display:flex;flex-direction:column;gap:7px;max-height:660px;overflow-y:auto}
+    .tm{padding:9px 11px;border-radius:11px;background:rgba(8,16,32,.72);border:1px solid rgba(148,187,255,.14);display:flex;justify-content:space-between;align-items:center;gap:8px}
+    .tm-name{font-weight:700;font-size:.86rem}
+    .tm-sub{font-size:.74rem;color:var(--muted)}
+    .tm-right{text-align:left;direction:ltr;white-space:nowrap;font-size:.76rem}
+    .st-ok{color:var(--green);font-weight:700}
+    .st-pause{color:var(--amber);font-weight:700}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header class="topbar">
+    <div class="brand">
+      <span class="dot" id="live-dot"></span>
+      <span>غرفة عمليات الوكلاء الحية — Quantum Aether</span>
+    </div>
+    <div class="controls">
+      <span id="server-ts" dir="ltr">{{ snap.server_time_utc }}</span>
+      <span id="countdown">تحديث خلال 15ث</span>
+      <button type="button" class="btn" id="btn-refresh">تحديث الآن</button>
+      <button type="button" class="btn sec" id="btn-toggle">إيقاف التحديث</button>
+      <a class="btn sec" href="/admin">لوحة الإدارة ↗</a>
+    </div>
+  </header>
+
+  <section class="kpis" id="kpi-strip"></section>
+
+  <main class="grid">
+    <section class="panel">
+      <h2>
+        <span>⚡ التدفق اللحظي للنشاط (النشر · الردود · الفحوصات · B2B)</span>
+        <span id="ev-count" style="font-size:.8rem;color:var(--muted)"></span>
+      </h2>
+      <div class="pills" id="filter-pills">
+        <button class="pill active" data-ch="all">الكل</button>
+        <button class="pill" data-ch="x">X</button>
+        <button class="pill" data-ch="moltbook">Moltbook</button>
+        <button class="pill" data-ch="agentboard">Agentboard</button>
+        <button class="pill" data-ch="a2a">A2A</button>
+        <button class="pill" data-ch="msp">MSP B2B</button>
+        <button class="pill" data-ch="mcp">MCP</button>
+        <button class="pill" data-ch="scan">فحوصات</button>
+        <button class="pill" data-ch="mail">بريد وارد</button>
+      </div>
+      <div class="feed" id="event-feed"></div>
+    </section>
+
+    <section class="panel">
+      <h2>
+        <span>🤖 أسطول الوكلاء المجدولين (24/7)</span>
+        <span id="tm-count" style="font-size:.8rem;color:var(--muted)"></span>
+      </h2>
+      <div class="timers" id="timer-list"></div>
+    </section>
+  </main>
+</div>
+
+<script>
+(function(){
+  var data = {{ snap | tojson }};
+  var activeCh = "all";
+  var autoOn = true;
+  var secLeft = 15;
+
+  function esc(s){
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+
+  function render(){
+    var k = data.kpis || {};
+    var pc = k.platform_counts || {};
+    var xPosts = ((pc.x||{}).daily_post||0) + ((pc.x||{}).manual_post||0);
+    var xReplies = (pc.x||{}).mention_reply || 0;
+    var mbAct = ((pc.moltbook||{}).daily_digest||0) + ((pc.moltbook||{}).intro||0) + ((pc.moltbook||{}).comment_reply||0);
+    var abAct = ((pc.agentboard||{}).daily_digest||0) + ((pc.agentboard||{}).reply||0);
+    var idx = k.mcp_index || {};
+
+    document.getElementById("server-ts").textContent = data.server_time_utc || "";
+    document.getElementById("kpi-strip").innerHTML = [
+      {l:"الوكلاء النشطون 24/7", v:k.active_agents, s:(data.app_active ? "الخادم: متصل 🟢" : "الخادم: متوقف 🔴")},
+      {l:"الزوار البشر اليوم", v:k.human_today, s:"مشاهدات: " + (k.human_pvs_today||0) + " · أمس: " + (k.human_yesterday||0)},
+      {l:"نشاط X · Moltbook · AB", v:(xPosts + xReplies + mbAct + abAct), s:"X: " + xPosts + " نشر/" + xReplies + " رد · MB: " + mbAct + " · AB: " + abAct},
+      {l:"مؤشر MCP واستدعاءاته", v:(k.mcp_calls_24h||0), s:"آخر 24س · مقاس: " + (idx.measured||0) + " (" + (idx.pq_pct||0) + "% PQ)"},
+      {l:"A2A و MSP Pilot", v:(k.a2a_ok||0) + "/" + (k.a2a_total||0), s:"A2A 200 OK · رسائل MSP (14ي): " + (k.msp_sent_14d||0)},
+      {l:"الإيرادات والتجارب", v:(k.paid_orders||0) + " + " + (k.x402_paid||0), s:"مدفوع + x402 · تجارب نشطة: " + (k.active_trials||0)}
+    ].map(function(c){
+      return '<div class="kpi"><div class="kpi-label">'+esc(c.l)+'</div><div class="kpi-val">'+esc(c.v)+'</div><div class="kpi-sub">'+esc(c.s)+'</div></div>';
+    }).join("");
+
+    var evs = (data.events || []).filter(function(e){ return activeCh === "all" || e.channel === activeCh; });
+    document.getElementById("ev-count").textContent = evs.length + " حدث";
+    document.getElementById("event-feed").innerHTML = evs.length ? evs.map(function(e){
+      var lnk = e.url ? '<a href="'+esc(e.url)+'" target="_blank" rel="noopener">فتح ↗</a>' : '';
+      return '<div class="ev">' +
+        '<span class="tag '+esc(e.channel)+'">'+esc(e.badge)+'</span>' +
+        '<div><div class="ev-title">'+esc(e.title)+'</div>' +
+        '<div class="ev-detail">'+esc(e.detail)+'</div>' +
+        '<div class="ev-meta"><span>'+esc(e.ts)+'</span>'+lnk+'</div></div></div>';
+    }).join("") : '<div class="ev-detail">لا توجد أحداث في هذا الفلتر بعد.</div>';
+
+    var tms = data.timers || [];
+    document.getElementById("tm-count").textContent = tms.length + " مؤقّت";
+    document.getElementById("timer-list").innerHTML = tms.length ? tms.map(function(t){
+      var stCls = t.state === "paused" ? "st-pause" : "st-ok";
+      var stTxt = t.state === "paused" ? "⏸ متوقّف" : "● شغّال";
+      return '<div class="tm"><div><div class="tm-name">'+esc(t.label)+'</div>' +
+        '<div class="tm-sub">'+esc(t.group)+' · <span dir="ltr">'+esc(t.unit)+'</span></div></div>' +
+        '<div class="tm-right"><div class="'+stCls+'">'+stTxt+' · '+esc(t.left)+'</div>' +
+        '<div class="tm-sub">آخر تشغيل: '+esc(t.passed)+'</div></div></div>';
+    }).join("") : '<div class="ev-detail">بيانات systemd غير متاحة في بيئة الاختبار.</div>';
+  }
+
+  function refresh(){
+    fetch("/admin/agents-live/feed", {credentials:"same-origin", cache:"no-store"})
+      .then(function(r){ if(!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+      .then(function(d){ data = d; secLeft = 15; render(); })
+      .catch(function(){ document.getElementById("countdown").textContent = "تعذّر التحديث — إعادة المحاولة..."; });
+  }
+
+  document.getElementById("filter-pills").addEventListener("click", function(e){
+    var b = e.target.closest(".pill");
+    if(!b) return;
+    activeCh = b.getAttribute("data-ch") || "all";
+    document.querySelectorAll("#filter-pills .pill").forEach(function(p){ p.classList.toggle("active", p === b); });
+    render();
+  });
+  document.getElementById("btn-refresh").addEventListener("click", refresh);
+  document.getElementById("btn-toggle").addEventListener("click", function(){
+    autoOn = !autoOn;
+    this.textContent = autoOn ? "إيقاف التحديث" : "استئناف التحديث";
+    document.getElementById("live-dot").style.opacity = autoOn ? "1" : "0.25";
+  });
+
+  render();
+  setInterval(function(){
+    if(!autoOn) return;
+    secLeft -= 1;
+    if(secLeft <= 0){ refresh(); }
+    else { document.getElementById("countdown").textContent = "تحديث خلال " + secLeft + "ث"; }
+  }, 1000);
+})();
+</script>
+</body>
+</html>
