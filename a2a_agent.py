@@ -20,6 +20,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from flask import current_app, jsonify, request
 from werkzeug.exceptions import HTTPException
 
+import a2ui_cards
 import agent_audit
 import badge_evidence
 import config_gen
@@ -50,7 +51,7 @@ MSP_PILOT_WORDS = re.compile(r"\b(msp|pilot|it[- ]?dienstleister|white[- ]?label
 QA_CONFIG_WORDS = re.compile(r"\b(nginx|apache|haproxy|caddy|cloudfront|cloudflare|node\.?js|golang|openssl|config(?:ure|uration)?|konfigur\w*)\b|" + AR_PREFIX + r"(?:اعداد(?:ات)?|تفعيل|كيف\s+افعل|اصلاح)", re.I)
 QA_DEADLINE_WORDS = re.compile(r"\b(bsi|tr-?02102|nis2|dora|nist|cnsa|ncsc|sama|deadline\w*|compliance|roadmap|frist\w*|richtlinie)\b|" + AR_PREFIX + r"(?:مواعيد|موعد|امتثال|قانون|معايير|تنظيم\w*)", re.I)
 QA_RECEIPT_WORDS = re.compile(r"\b(receipt\w*|jws|jwks|ed25519|offline\s+verif\w*|signatur\w*)\b|" + AR_PREFIX + r"(?:ايصال(?:ات)?|توقيع|تحقق)", re.I)
-QA_MCP_WORDS = re.compile(r"\b(mcp|a2a|acp|cursor|claude|vs\s*code|vscode|api\b|openapi|llms\.txt)\b|" + AR_PREFIX + r"(?:وكيل|وكلاء|واجهه\s+برمج|برمج(?:ي|ه)|ربط)", re.I)
+QA_MCP_WORDS = re.compile(r"\b(mcp|a2a|a2ui|acp|cursor|claude|vs\s*code|vscode|api\b|openapi|llms\.txt)\b|" + AR_PREFIX + r"(?:وكيل|وكلاء|واجهه\s+برمج|برمج(?:ي|ه)|ربط)", re.I)
 QA_PRICING_WORDS = re.compile(r"\b(pricing|prices?|plans?|cost|subscri\w*|billing|monitoring|trial|starter|business|audit|490|29\s*€|99\s*€|preise?|pakete?|kosten|überwachung|testphase|abo\w*)\b|" + AR_PREFIX + r"(?:سعر|اسعار|تسعير|باق(?:ه|ات)|اشتراك(?:ات)?|اشترك|مراقب(?:ه|ات)|تجرب(?:ه|ات)|تكلف(?:ه|ات)|دفع|مجان(?:ي|ا)|خط(?:ه|ط))", re.I)
 QA_CONTACT_WORDS = re.compile(r"\b(contact|support|email|help\s*desk|talk\s+to\s+human|kontakt|hilfe)\b|" + AR_PREFIX + r"(?:تواصل|اتصال|دعم|مساعده|بريد|ايميل)", re.I)
 QA_CONCEPT_WORDS = re.compile(r"\b(what\s+is|how\s+does|explain|hndl|harvest\s+now|ml-?kem|kyber|post[- ]?quantum|was\s+ist|wie\s+funktioniert|erklär\w*)\b|" + AR_PREFIX + r"(?:ما\s+هو|ما\s+هي|كيف\s+يعمل|ما\s+بعد\s+الكم|تشفير\s+كم\w*)", re.I)
@@ -136,6 +137,8 @@ def services_offer(base, domain=None, scan_id=None, price_usd="49", sector_price
         },
         "mcp_endpoint": f"{base}/mcp",
         "acp_agents": f"{base}/acp/agents",
+        "a2ui_extension": a2ui_cards.A2UI_EXTENSION_URI,
+        "a2ui_evidence_url": f"{base}/api/v1/a2ui/evidence/{domain or '{domain}'}",
         "jwks_url": f"{base}/.well-known/jwks.json",
         "llms_txt": f"{base}/llms.txt",
         "terms": f"{base}/agb?lang=en",
@@ -169,9 +172,27 @@ def card(base, version):
         "acpAgentsUrl": base + "/acp/agents",
         "supportsAuthenticatedExtendedCard": False,
         "securitySchemes": {},
-        "capabilities": {"streaming": False, "pushNotifications": False, "stateTransitionHistory": False},
+        "capabilities": {
+            "streaming": False,
+            "pushNotifications": False,
+            "stateTransitionHistory": False,
+            "extensions": [
+                {
+                    "uri": a2ui_cards.A2UI_EXTENSION_URI,
+                    "description": (
+                        "Renders interactive post-quantum TLS cards (grade, X25519MLKEM768 status, "
+                        "Ed25519 receipt verification & action buttons) using A2UI v0.8 declarative components."
+                    ),
+                    "required": False,
+                    "params": {
+                        "supportedCatalogIds": [a2ui_cards.A2UI_CATALOG_ID],
+                        "acceptsInlineCatalogs": False,
+                    },
+                }
+            ],
+        },
         "defaultInputModes": ["text/plain", "application/json"],
-        "defaultOutputModes": ["application/json", "text/plain"],
+        "defaultOutputModes": ["application/json", "text/plain", a2ui_cards.A2UI_MIME],
         "skills": [
             {"id": "tls-evidence", "name": "Read post-quantum TLS evidence",
              "description": "Stored evidence for one domain: observation state, negotiated key-exchange group, grade, "
@@ -456,10 +477,12 @@ def _qa_answer(joined: str, base: str, lang: str, offer: dict, domain: str | Non
     }
 
 
-def _message(text, data, context_id=None):
+def _message(text, data, context_id=None, extra_parts=None):
     parts = [{"kind": "text", "text": text}]
     if data is not None:
         parts.append({"kind": "data", "data": data})
+    if extra_parts:
+        parts.extend(extra_parts)
     msg = {"kind": "message", "role": "agent", "messageId": str(uuid.uuid4()), "parts": parts}
     if context_id:
         msg["contextId"] = context_id
@@ -632,6 +655,46 @@ def register(bp, services, version):
     bp.add_url_rule("/.well-known/agent-card.json", "a2a_agent_card", well_known)
     bp.add_url_rule("/.well-known/agent.json", "a2a_agent_card_legacy", well_known)
 
+    @bp.route("/api/v1/a2ui/evidence/<path:raw_domain>", methods=["GET", "OPTIONS"])
+    def a2ui_evidence_endpoint(raw_domain):
+        if request.method == "OPTIONS":
+            resp = current_app.make_response(("", 204))
+            resp.headers.update({"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET, OPTIONS",
+                                 "Access-Control-Allow-Headers": "Content-Type, Accept, X-A2A-Extensions"})
+            return resp
+        try:
+            dom = quantum_vuln_scanner.normalize_domain(raw_domain)
+        except quantum_vuln_scanner.ScanError as exc:
+            return jsonify(error=exc.code, message=str(exc)), 400
+        lang = (request.args.get("lang") or "en").strip().lower()
+        if lang not in ("ar", "de", "en"):
+            lang = "en"
+        b = base()
+        ev = dict(badge_evidence.for_domain(services["db"](), dom), verification_url=f"{b}/verify/{dom}")
+        sign = services.get("sign")
+        if sign:
+            ev["receipt_jws"] = sign(signed_receipts.build_evidence_claims(ev, kind="tls-evidence"))
+            ev["jwks_url"] = f"{b}/.well-known/jwks.json"
+        messages = a2ui_cards.tls_result_messages(dom, ev, base=b, lang=lang)
+        fmt = (request.args.get("format") or "").strip().lower()
+        if fmt == "jsonl" or a2ui_cards.A2UI_MIME in (request.headers.get("Accept") or "").lower():
+            body = "\n".join(json.dumps(m, ensure_ascii=False) for m in messages) + "\n"
+            resp = current_app.make_response((body, 200))
+            resp.headers["Content-Type"] = f"{a2ui_cards.A2UI_MIME}; charset=utf-8"
+        else:
+            resp = jsonify(
+                a2uiVersion=a2ui_cards.A2UI_VERSION,
+                extensionUri=a2ui_cards.A2UI_EXTENSION_URI,
+                catalogId=a2ui_cards.A2UI_CATALOG_ID,
+                mimeType=a2ui_cards.A2UI_MIME,
+                domain=dom,
+                lang=lang,
+                messages=messages,
+            )
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["Cache-Control"] = "public, max-age=300"
+        return resp
+
     def err(code, message, rid=None, status=200, data=None):
         e = {"code": code, "message": message}
         if data is not None:
@@ -643,7 +706,7 @@ def register(bp, services, version):
         if request.method == "OPTIONS":
             resp = current_app.make_response(("", 204))
             resp.headers.update({"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-                                 "Access-Control-Allow-Headers": "Content-Type"})
+                                 "Access-Control-Allow-Headers": "Content-Type, X-A2A-Extensions"})
             return resp
         if request.method == "GET":
             b = base()
@@ -701,8 +764,19 @@ def register(bp, services, version):
         price_usd = str(current_app.config["PRICE"])
         sector_price_usd = str(current_app.config.get("X402_SECTOR_PRICE") or "0.50")
 
-        def _reply(text_msg, data_obj):
-            agent_msg = _message(text_msg, data_obj, ctx)
+        wants_a2ui = a2ui_cards.client_wants_a2ui(request.headers, params, message, req_data)
+
+        def _reply(text_msg, data_obj, *, a2ui_domain=None):
+            extra_parts = None
+            if wants_a2ui:
+                if a2ui_domain and isinstance(data_obj, dict) and not data_obj.get("error"):
+                    ui_msgs = a2ui_cards.tls_result_messages(a2ui_domain, data_obj, base=b, lang=lang)
+                elif a2ui_domain and isinstance(data_obj, dict) and isinstance(data_obj.get("stored_evidence"), dict):
+                    ui_msgs = a2ui_cards.tls_result_messages(a2ui_domain, data_obj["stored_evidence"], base=b, lang=lang)
+                else:
+                    ui_msgs = a2ui_cards.info_card_messages(skill, text_msg, data_obj if isinstance(data_obj, dict) else {}, lang=lang)
+                extra_parts = a2ui_cards.create_a2ui_parts(ui_msgs)
+            agent_msg = _message(text_msg, data_obj, ctx, extra_parts=extra_parts)
             conn = services["db"]()
             _store_completed_task(conn, agent_msg["messageId"], ctx, message, agent_msg)
             if req_task_id and req_task_id != agent_msg["messageId"]:
@@ -868,6 +942,7 @@ def register(bp, services, version):
                 _audit(skill, domain, "rate_limited")
                 return _reply(
                     "Scan rate limit reached; returning the latest stored evidence instead (no new probe was made).",
-                    {"error": "rate_limited", "retry_after_seconds": 3600, "stored_evidence": stored})
+                    {"error": "rate_limited", "retry_after_seconds": 3600, "stored_evidence": stored},
+                    a2ui_domain=domain)
             raise
-        return _reply(text, data)
+        return _reply(text, data, a2ui_domain=domain)

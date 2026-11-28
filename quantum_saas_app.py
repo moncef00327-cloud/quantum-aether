@@ -274,7 +274,7 @@ def _redirect_untranslated_german(response):
 
     Only rewrite successful responses so 404/410 (excluded hosts, typo URLs) stay as-is.
     """
-    if request.method not in ("GET", "HEAD"):
+    if request.method not in ("GET", "HEAD") or request.path.startswith("/api/"):
         return response
     if request.args.get("lang") != "de":
         return response
