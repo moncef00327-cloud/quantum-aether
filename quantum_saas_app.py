@@ -4423,6 +4423,7 @@ def robots():
             f"# API Catalog (RFC 9727): {public_base()}/.well-known/api-catalog\n"
             f"# Declarative Agent Flows: {public_base()}/.well-known/agents.json\n"
             f"# x402 Discovery (Base USDC): {public_base()}/.well-known/x402\n"
+            f"# UCP Universal Commerce Profile: {public_base()}/.well-known/ucp\n"
             f"# OpenAPI: {public_base()}/openapi.yaml\n"
             f"# Content feed (Atom): {public_base()}/feed.xml\n")
     return Response(body, mimetype="text/plain")
@@ -5020,6 +5021,7 @@ def _security_headers(response):
             f'<{b}/.well-known/mcp/server-card.json>; rel="mcp-server-card"; type="application/json"',
             f'<{b}/.well-known/agents.json>; rel="agents-json"; type="application/json"',
             f'<{b}/.well-known/agent-card.json>; rel="agent-card"; type="application/json"',
+            f'<{b}/.well-known/ucp>; rel="ucp-profile"; type="application/json"',
             f'<{b}/acp/agents>; rel="acp-agents"; type="application/json"',
             f'<{b}/.well-known/mcp.json>; rel="mcp-server"; type="application/json"',
             f'<{b}/.well-known/jwks.json>; rel="jwks"; type="application/json"',

@@ -83,19 +83,19 @@ class AgentDiscoveryTests(unittest.TestCase):
 
  def test_tools_are_discoverable_and_read_only_calls_never_scan(self):
   tools=self.rpc('tools/list').json['result']['tools']
-  expected={'scan_tls','get_tls_evidence','exposure_window','get_methodology','get_example_result','get_service_info','generate_pq_config','get_full_report','get_sector_snapshot','get_tls_attestation',
+  expected={'scan_tls','get_tls_evidence','exposure_window','get_methodology','get_example_result','get_service_info','generate_pq_config','get_mcp_security_index','get_commerce_catalog','get_a2ui_card','batch_scan_tls','get_live_cbom','get_full_report','get_sector_snapshot','get_tls_attestation',
             'create_full_report_order','verify_full_report_payment','register_agent_affiliate'}
   self.assertEqual({t['name'] for t in tools},expected)
   paid=next(t for t in tools if t['name']=='get_full_report')['description']
   self.assertIn('x402',paid);self.assertIn('$'+str(self.app.config['PRICE'])+' USDC',paid);self.assertNotIn('{price}',paid)
   read_only=[t for t in tools if t.get('annotations',{}).get('readOnlyHint') is True]
   self.assertEqual({t['name'] for t in read_only},
-                   {'get_tls_evidence','exposure_window','get_methodology','get_example_result','get_service_info','generate_pq_config','get_sector_snapshot'})
+                   {'get_tls_evidence','exposure_window','get_methodology','get_example_result','get_service_info','generate_pq_config','get_mcp_security_index','get_commerce_catalog','get_a2ui_card','get_sector_snapshot'})
   self.assertEqual({t['name'] for t in tools if not t.get('annotations',{}).get('readOnlyHint')},
-                   {'scan_tls','get_full_report','get_tls_attestation','create_full_report_order','verify_full_report_payment','register_agent_affiliate'})
+                   {'scan_tls','batch_scan_tls','get_live_cbom','get_full_report','get_tls_attestation','create_full_report_order','verify_full_report_payment','register_agent_affiliate'})
   for tool in read_only:
    if tool['name']=='get_sector_snapshot':continue  # paid read-only: returns an x402 challenge (tests/test_x402_sector.py)
-   if tool['name'] in ('get_tls_evidence','exposure_window'):arguments={'domain':'example.com'}
+   if tool['name'] in ('get_tls_evidence','exposure_window','get_a2ui_card'):arguments={'domain':'example.com'}
    elif tool['name']=='generate_pq_config':arguments={'server':'nginx'}
    else:arguments={}
    response=self.rpc('tools/call',{'name':tool['name'],'arguments':arguments})
@@ -315,7 +315,7 @@ class AgentDiscoveryTests(unittest.TestCase):
 
   plist=self.rpc('prompts/list').json['result']['prompts']
   pnames={p['name'] for p in plist}
-  self.assertEqual(pnames,{'audit_domain_pqc','generate_pqc_remediation','msp_pilot_assessment','verify_tls_receipt'})
+  self.assertEqual(pnames,{'audit_domain_pqc','generate_pqc_remediation','msp_pilot_assessment','verify_tls_receipt','batch_pqc_triage'})
   p1=self.rpc('prompts/get',{'name':'audit_domain_pqc','arguments':{'domain':'example.com','framework':'BSI TR-02102-2'}}).json['result']
   self.assertIn('example.com',p1['messages'][0]['content']['text'])
   self.assertIn('generate_pq_config',p1['messages'][0]['content']['text'])
