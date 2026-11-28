@@ -29,6 +29,23 @@ class XAutopostTests(unittest.TestCase):
             self.assertNotIn("ather-quantum.com/mcp ", t, "use browser-friendly /agents instead of POST-only /mcp")
             self.assertNotIn("ather-quantum.com/api/v1/scan ", t, "avoid 400 bare /api/v1/scan link")
 
+    def test_algorithm_optimized_post_pairs_zero_links_in_main_and_max_two_hashtags(self):
+        summary = {"measured": 152, "pq_hybrid": 120, "pq_pct": 78.9, "classical": 28, "tls12": 4}
+        upg = {"week": "2026-W48", "domain": "manageengine.com", "old_grade": "C", "new_grade": "A", "old_grp": "x25519", "new_grp": "X25519MLKEM768"}
+        seen = set()
+        for day_off in range(2):
+            day = dt.date(2026, 11, 28) + dt.timedelta(days=day_off)
+            for slot in range(3):
+                main_t, reply_t, topic = xa.build_daily_post_pair(summary, day, slot=slot, upgrade=upg)
+                self.assertLessEqual(len(main_t), 280, f"main len={len(main_t)}")
+                self.assertLessEqual(len(reply_t), 280, f"reply len={len(reply_t)}")
+                self.assertEqual(xa.extract_urls(main_t), [], "main tweet must have zero outbound links for max X reach")
+                self.assertTrue(xa.extract_urls(reply_t), "self-reply must carry the live link")
+                self.assertLessEqual(main_t.count("#"), 2, "avoid X hashtag-stuffing penalty (max 2 hashtags)")
+                self.assertTrue(topic)
+                seen.add(main_t)
+        self.assertEqual(len(seen), 6)
+
     def test_extract_urls(self):
         urls = xa.extract_urls("Check https://ather-quantum.com/mcp-index and https://ather-quantum.com/agents.")
         self.assertEqual(urls, ["https://ather-quantum.com/mcp-index", "https://ather-quantum.com/agents"])

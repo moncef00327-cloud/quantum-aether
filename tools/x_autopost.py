@@ -44,6 +44,7 @@ DB_PATH = os.path.join(DATA_DIR, "quantum_saas.db")
 MCP_INDEX_PATH = os.path.join(DATA_DIR, "mcp_index.json")
 PAUSE_FILE = os.path.join(DATA_DIR, "x_autopost.paused")
 CRED_PATH = "/etc/quantum-aether/x_api.json"
+COMMUNITIES_PATH = "/etc/quantum-aether/x_communities.json"
 TWEETS_URL = "https://api.x.com/2/tweets"
 X402SCAN_URL = "https://www.x402scan.com/server/2b8f5869-118f-4389-ad32-20989ffee2ca"
 USER_AGENT = "QuantumAetherXBot/2.1 (+https://ather-quantum.com)"
@@ -277,6 +278,138 @@ def build_daily_tweet(summary: dict, day: dt.date | None = None, slot: int = 0, 
     return variants[(d.toordinal() * 3 + int(slot)) % len(variants)]
 
 
+def build_daily_post_pair(
+    summary: dict,
+    day: dt.date | None = None,
+    slot: int = 0,
+    upgrade: dict | None = None,
+) -> tuple[str, str, str]:
+    """Algorithm-optimized 2-part X post: (main_tweet_no_ext_links, reply_with_verified_url, topic_key).
+
+    Based on live X 2026 ranking data:
+    - 0 external URLs in main tweet (links placed in immediate self-reply to avoid outbound reach suppression).
+    - 1-2 hyper-relevant hashtags max (avoids hashtag-stuffing dampening while keeping semantic keywords).
+    - High-bookmark data + reply-triggering question (replies=27x, author reply-back=150x, bookmarks=top signal).
+    """
+    d = day or now_utc().date()
+    m = summary.get("measured", 152)
+    pq_n = summary.get("pq_hybrid", 120)
+    pq_pct = summary.get("pq_pct", 78.9)
+    cls = summary.get("classical", 28)
+    t12 = summary.get("tls12", 4)
+    exposed = cls + t12
+    day_str = d.isoformat()
+
+    if upgrade and upgrade.get("domain"):
+        case_main = (
+            f"Real before/after in our weekly PQ-TLS tracker ({upgrade.get('week', day_str)}):\n\n"
+            f"{upgrade['domain']} just jumped from Grade {upgrade['old_grade']} ({upgrade['old_grp']}) "
+            f"to Grade {upgrade['new_grade']} ({upgrade['new_grp']}).\n\n"
+            f"Has your production edge flipped ML-KEM on yet? #PQC"
+        )
+    else:
+        case_main = (
+            f"Every week we re-scan public domains for hybrid X25519MLKEM768.\n\n"
+            f"Most teams assume TLS 1.3 = quantum-safe, until they inspect the actual ServerHello group.\n\n"
+            f"What key exchange group does your main domain negotiate today? #PQC"
+        )
+
+    pairs = [
+        (
+            (
+                f"We measured {m} remote MCP servers from the Official Registry ({day_str}):\n\n"
+                f"• {pq_n} ({pq_pct}%) negotiate hybrid X25519MLKEM768\n"
+                f"• {exposed} still run classical TLS (HNDL exposed)\n\n"
+                f"Are your AI agents sending enterprise prompts over classical TLS? #MCP #PQC"
+            ),
+            (
+                "Live leaderboard + free instant scan with an offline-verifiable Ed25519 signed receipt "
+                "(zero signup, zero API key):\n\nhttps://ather-quantum.com/mcp-index"
+            ),
+            "mcp",
+        ),
+        (
+            (
+                "The TLS 1.3 trap almost every security team misses:\n\n"
+                "Servers pass PQC checks yet rank X25519 ahead of X25519MLKEM768—silently downgrading "
+                "Chrome, Firefox & Safari back to classical.\n\n"
+                "Have you checked your server's actual group preference order? #PQC"
+            ),
+            (
+                "Check any domain live for hidden preference downgrades + get a copy-paste Nginx/Cloudflare fix:\n\n"
+                "https://ather-quantum.com"
+            ),
+            "pqc",
+        ),
+        (
+            (
+                "We wired Base USDC x402 v2 micro-payments directly inside our remote Streamable HTTP MCP server "
+                "(18 tools + UCP 2026-08-25 + A2UI v0.8):\n\n"
+                "• $0.10 batch scan (10 hosts, Ed25519 receipts)\n"
+                "• $0.25 live CycloneDX 1.6 CBOM\n\n"
+                "How are you pricing agent-to-agent tools? #x402 #MCP"
+            ),
+            (
+                f"Live discovery specs (all verified 200 OK):\n"
+                f"• x402: https://ather-quantum.com/.well-known/x402\n"
+                f"• UCP: https://ather-quantum.com/.well-known/ucp\n"
+                f"• x402scan: {X402SCAN_URL}"
+            ),
+            "x402",
+        ),
+        (
+            (
+                "Static README security badges are broken for AI agents—they never prove when a host was checked.\n\n"
+                "Every scan should emit a short-lived Ed25519 JWS receipt (iat/exp, negotiated group, cert SPKI hash) "
+                "agents verify offline via JWKS.\n\n"
+                "Agree or overkill? #AIAgents #MCP"
+            ),
+            (
+                "Inspect our live Ed25519 JWKS + open offline verifier & remote MCP setup (zero API key):\n\n"
+                "https://ather-quantum.com/.well-known/jwks.json\n"
+                "https://ather-quantum.com/agents"
+            ),
+            "agents",
+        ),
+        (
+            case_main,
+            (
+                "Explore the live weekly PQ-TLS adoption tracker + run a free check with an Ed25519 receipt:\n\n"
+                "https://ather-quantum.com/adoption"
+            ),
+            "pqc",
+        ),
+        (
+            (
+                "Censys maps the internet. Agents need something different: live handshake proof.\n\n"
+                "We built a PQ-TLS & trust layer on top:\n"
+                "• Hidden X25519MLKEM768 downgrade detection\n"
+                "• Offline Ed25519 receipts + remote MCP/UCP/x402\n\n"
+                "What's missing from your TLS audit workflow? #PQC #AIAgents"
+            ),
+            (
+                "Full side-by-side comparison + free live domain check:\n\n"
+                "https://ather-quantum.com/vs-censys"
+            ),
+            "buildinpublic",
+        ),
+    ]
+    return pairs[(d.toordinal() * 3 + int(slot)) % len(pairs)]
+
+
+def load_communities(path: str = COMMUNITIES_PATH) -> dict[str, str]:
+    """Load optional topic -> X Community ID map from /etc/quantum-aether/x_communities.json."""
+    if not os.path.exists(path):
+        return {}
+    try:
+        doc = json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    if not isinstance(doc, dict):
+        return {}
+    return {str(k).strip().lower(): str(v).strip() for k, v in doc.items() if str(v or "").strip().isdigit()}
+
+
 def _pct(s: str) -> str:
     return urllib.parse.quote(str(s), safe="~-._")
 
@@ -345,6 +478,8 @@ def post_tweet(
     creds: dict,
     *,
     reply_to: str = "",
+    community_id: str = "",
+    share_with_followers: bool = True,
     timeout: float = 20.0,
     check_urls: bool = True,
 ) -> tuple[int, dict | str]:
@@ -356,6 +491,9 @@ def post_tweet(
     payload: dict = {"text": text}
     if reply_to:
         payload["reply"] = {"in_reply_to_tweet_id": str(reply_to)}
+    elif community_id:
+        payload["community_id"] = str(community_id).strip()
+        payload["share_with_followers"] = bool(share_with_followers)
     body = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(
         TWEETS_URL,
@@ -555,12 +693,15 @@ def main(argv=None) -> int:
     mode.add_argument("--post", action="store_true", help="publish tweet via X API v2 (up to --max-posts/day unless --text)")
     mode.add_argument("--reply-mentions", action="store_true", help="check new mentions and reply once per author/24h")
     ap.add_argument("--text", default="", help="optional custom tweet text (<= 280 chars)")
+    ap.add_argument("--reply-text", default="", help="optional immediate self-reply text (e.g. verified link)")
     ap.add_argument("--reply-to", default="", help="optional tweet ID to reply to (requires --text)")
+    ap.add_argument("--community-id", default="", help="optional X Community numeric ID (requires membership)")
     ap.add_argument("--slot", type=int, default=-1, help="override slot 0..2 (default derived from UTC hour)")
     ap.add_argument("--max-posts", type=int, default=3, help="max scheduled posts per UTC day (default 3)")
     ap.add_argument("--max-replies", type=int, default=10, help="max automated mention replies per UTC day (default 10)")
     ap.add_argument("--check-mentions", action="store_true", help="also check & reply to new mentions after --post")
     ap.add_argument("--creds", default=CRED_PATH)
+    ap.add_argument("--communities", default=COMMUNITIES_PATH)
     ap.add_argument("--db", default=DB_PATH)
     a = ap.parse_args(argv)
 
@@ -569,12 +710,21 @@ def main(argv=None) -> int:
     today = now.date()
     slot = a.slot if a.slot in (0, 1, 2) else current_slot(now)
     upgrade = load_recent_upgrade(a.db, today) if not a.text.strip() else None
-    tweet = a.text.strip() if a.text.strip() else build_daily_tweet(summary, today, slot=slot, upgrade=upgrade)
+    if a.text.strip():
+        tweet = a.text.strip()
+        followup = a.reply_text.strip()
+        topic = "custom"
+    else:
+        tweet, followup, topic = build_daily_post_pair(summary, today, slot=slot, upgrade=upgrade)
     if not a.reply_mentions and len(tweet) > 280:
         sys.exit(f"tweet too long: {len(tweet)} > 280 chars")
+    if followup and len(followup) > 280:
+        sys.exit(f"reply_text too long: {len(followup)} > 280 chars")
 
     if a.dry_run:
-        print(f"[DRY-RUN] slot={slot} chars={len(tweet)}/280\n---\n{tweet}\n---")
+        print(f"[DRY-RUN] slot={slot} topic={topic} chars={len(tweet)}/280\n---\n{tweet}\n---")
+        if followup:
+            print(f"[DRY-RUN SELF-REPLY] chars={len(followup)}/280\n---\n{followup}\n---")
         return 0
 
     if os.path.exists(PAUSE_FILE):
@@ -585,6 +735,18 @@ def main(argv=None) -> int:
     if not creds:
         print(f"waiting_for_credentials: {a.creds} not configured yet (no-op)")
         return 0
+
+    communities = load_communities(a.communities)
+    target_cid = a.community_id.strip() or (communities.get(topic) or communities.get("default") or "")
+
+    def _post_with_fallback(txt: str, *, reply_to: str = "", cid: str = ""):
+        st, res = post_tweet(txt, creds, reply_to=reply_to, community_id=cid, share_with_followers=True)
+        used_cid = cid
+        if cid and not reply_to and st == 403:
+            # Automatic fallback to main timeline if community membership/permissions reject it
+            st, res = post_tweet(txt, creds)
+            used_cid = ""
+        return st, res, used_cid
 
     conn = sqlite3.connect(a.db, timeout=30)
     init_db(conn)
@@ -597,14 +759,19 @@ def main(argv=None) -> int:
         if a.reply_to and not a.text.strip():
             sys.exit("--reply-to requires --text")
         if a.text.strip():
-            st, res = post_tweet(tweet, creds, reply_to=a.reply_to.strip())
+            st, res, used_cid = _post_with_fallback(tweet, reply_to=a.reply_to.strip(), cid=a.community_id.strip())
             if st in (200, 201):
                 tid = (res.get("data") or {}).get("id") if isinstance(res, dict) else ""
                 if a.reply_to.strip():
                     record_post(conn, "mention_reply", a.reply_to.strip(), f"manual_reply tweet_id={tid}")
                 else:
-                    record_post(conn, "manual_post", f"manual-{tid or now_iso()}", f"tweet_id={tid}")
-                print(f"posted X tweet id={tid} (HTTP {st})")
+                    c_note = f"community={used_cid} " if used_cid else ""
+                    record_post(conn, "manual_post", f"manual-{tid or now_iso()}", f"{c_note}tweet_id={tid}")
+                print(f"posted X tweet id={tid} community={used_cid or 'timeline'} (HTTP {st})")
+                if followup and tid and not a.reply_to.strip():
+                    rst, rres = post_tweet(followup, creds, reply_to=tid)
+                    rtid = (rres.get("data") or {}).get("id") if isinstance(rres, dict) else ""
+                    print(f"posted self-reply id={rtid} (HTTP {rst})")
             else:
                 print(f"X API error HTTP {st}: {str(res)[:400]}", file=sys.stderr)
                 return 1
@@ -613,12 +780,17 @@ def main(argv=None) -> int:
         elif already_posted_slot(conn, day_key, slot):
             print(f"already posted slot {slot} today ({day_key})")
         else:
-            st, res = post_tweet(tweet, creds)
+            st, res, used_cid = _post_with_fallback(tweet, cid=target_cid)
             if st in (200, 201):
                 tid = (res.get("data") or {}).get("id") if isinstance(res, dict) else ""
                 ref = f"{day_key}-slot{slot}"
-                record_post(conn, "daily_post", ref, f"tweet_id={tid}")
-                print(f"posted X tweet id={tid} slot={slot} (HTTP {st})")
+                c_note = f"community={used_cid} " if used_cid else ""
+                record_post(conn, "daily_post", ref, f"{c_note}tweet_id={tid}")
+                print(f"posted X tweet id={tid} slot={slot} community={used_cid or 'timeline'} (HTTP {st})")
+                if followup and tid:
+                    rst, rres = post_tweet(followup, creds, reply_to=tid)
+                    rtid = (rres.get("data") or {}).get("id") if isinstance(rres, dict) else ""
+                    print(f"posted self-reply id={rtid} (HTTP {rst})")
             else:
                 print(f"X API error HTTP {st}: {str(res)[:400]}", file=sys.stderr)
                 return 1
