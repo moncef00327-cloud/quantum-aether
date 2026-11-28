@@ -864,8 +864,9 @@ def register(bp, services):
    'partner_affiliate':m['pricing']['partner_affiliate'],
    'x402':m['pricing']['x402'],
    'ucp_profile':b+'/.well-known/ucp',
+   'ucp_mcp_endpoint':b+'/ucp/mcp',
    'a2ui_extension':a2ui_cards.A2UI_EXTENSION_URI,
-   'documentation':{'human':b+'/agents?lang=en','openapi':b+'/openapi.yaml','llms':b+'/llms.txt','a2a_agent_card':b+'/.well-known/agent-card.json','ucp_profile':b+'/.well-known/ucp','acp_agents':b+'/acp/agents','jwks_uri':b+'/.well-known/jwks.json'},
+   'documentation':{'human':b+'/agents?lang=en','openapi':b+'/openapi.yaml','llms':b+'/llms.txt','a2a_agent_card':b+'/.well-known/agent-card.json','ucp_profile':b+'/.well-known/ucp','ucp_mcp':b+'/ucp/mcp','acp_agents':b+'/acp/agents','jwks_uri':b+'/.well-known/jwks.json'},
   })
   resp.headers['Access-Control-Allow-Origin']='*'
   resp.headers['Cache-Control']='public, max-age=300'
@@ -907,7 +908,7 @@ def register(bp, services):
      'service-desc':[{'href':b+'/acp/agents','type':'application/json'}],
     },
     {
-     'anchor':b+'/api/v1/ucp/catalog',
+     'anchor':b+'/ucp/mcp',
      'service-desc':[{'href':b+'/.well-known/ucp','type':'application/json'}],
      'service-doc':[{'href':b+'/agents?lang=en','type':'text/html'}],
     },
@@ -969,6 +970,7 @@ def register(bp, services):
     'a2a':b+'/.well-known/agent-card.json',
     'a2ui':a2ui_cards.A2UI_EXTENSION_URI,
     'ucp':b+'/.well-known/ucp',
+    'ucp_mcp':b+'/ucp/mcp',
     'acp':b+'/acp/agents',
     'x402':b+'/.well-known/x402',
     'jwks':b+'/.well-known/jwks.json',
@@ -989,7 +991,7 @@ def register(bp, services):
    'auth':{'type':'none'},'api':{'type':'openapi','url':b+'/openapi.yaml','is_user_authenticated':False},
    'mcp':{'type':'streamable-http','url':b+'/mcp','server_card':b+'/.well-known/mcp/server-card.json'},
    'a2a':{'agent_card':b+'/.well-known/agent-card.json','endpoint':b+'/a2a','a2ui_extension':a2ui_cards.A2UI_EXTENSION_URI},
-   'ucp':{'profile':b+'/.well-known/ucp','catalog':b+'/api/v1/ucp/catalog'},
+   'ucp':{'profile':b+'/.well-known/ucp','mcp':b+'/ucp/mcp','rest':b+'/api/v1/ucp'},
    'acp':{'agents':b+'/acp/agents','runs':b+'/acp/runs'},
    'partner_affiliate':{'register_url':b+'/api/v1/agent/affiliate/register','mcp_tool':'register_agent_affiliate','monitoring_commission_pct':30,'one_time_commission_pct':20,'payout_schedule':'monthly_manual_by_owner','terms_url':b+'/partners?lang=en'},
    'jwks_uri':b+'/.well-known/jwks.json',
