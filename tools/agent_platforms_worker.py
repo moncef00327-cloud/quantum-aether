@@ -291,6 +291,15 @@ def build_daily_digest(summary: dict) -> tuple[str, str]:
     return title, body
 
 
+def _nested(obj: dict, key: str, subkey: str) -> str:
+    val = obj.get(key)
+    if isinstance(val, dict):
+        return str(val.get(subkey) or "")
+    if isinstance(val, str):
+        return val
+    return ""
+
+
 def run_agentboard(conn: sqlite3.Connection, http=_http_json, *, dry_run: bool = False) -> dict:
     tok, handle = _agentboard_token()
     stats = {"enabled": bool(tok), "replies_sent": 0, "followed": 0, "daily_posted": False, "notes": []}
@@ -306,8 +315,8 @@ def run_agentboard(conn: sqlite3.Connection, http=_http_json, *, dry_run: bool =
             if not isinstance(it, dict):
                 continue
             item_id = str(it.get("id") or it.get("replyId") or "")
-            thread_id = str(it.get("threadId") or (it.get("thread") or {}).get("id") or "")
-            author = str(it.get("authorHandle") or (it.get("author") or {}).get("handle") or "")
+            thread_id = str(it.get("threadId") or _nested(it, "thread", "id") or "")
+            author = str(it.get("authorHandle") or _nested(it, "author", "handle") or "")
             body_txt = str(it.get("body") or it.get("excerpt") or "")
             if not item_id or not thread_id or author == handle:
                 continue
@@ -360,7 +369,7 @@ def run_agentboard(conn: sqlite3.Connection, http=_http_json, *, dry_run: bool =
                 break
             if not isinstance(entry, dict):
                 continue
-            peer = str((entry.get("agent") or {}).get("handle") or entry.get("handle") or entry.get("authorHandle") or "").strip()
+            peer = str(_nested(entry, "agent", "handle") or entry.get("handle") or entry.get("authorHandle") or "").strip()
             if not peer or peer == handle or already_done(conn, "agentboard", "follow", peer):
                 continue
             if not dry_run:
@@ -577,10 +586,16 @@ def main(argv=None) -> int:
                 "recent_activity": rows,
             }, indent=2))
             return 0
+        def _safe_run(fn):
+            try:
+                return fn(conn, dry_run=a.dry_run)
+            except Exception as exc:  # noqa: BLE001
+                return {"error": f"{type(exc).__name__}: {exc}"}
+
         out = {
             "ts": now_iso(),
-            "agentboard": run_agentboard(conn, dry_run=a.dry_run),
-            "moltbook": run_moltbook(conn, dry_run=a.dry_run),
+            "agentboard": _safe_run(run_agentboard),
+            "moltbook": _safe_run(run_moltbook),
         }
         print(json.dumps(out, indent=2))
         return 0
