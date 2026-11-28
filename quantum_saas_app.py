@@ -375,6 +375,7 @@ def _inject():
             "seo_title": lambda text: seo_meta.title(text, request.path, lang),
             "seo_description": seo_meta.description,
             "sx": scan_experience.COPY[lang],
+            "why_now": deadlines.why_now(lang),
             "audit_cta": audit.COPY[lang]["cta"], "conversion_variant": conversion_variant(),
             "domain_discoverable": lambda domain: not search_indexing.is_excluded(domain)}
 
@@ -536,7 +537,7 @@ def is_api_request():
     return request.path.startswith("/api/")
 
 
-SCAN_SOURCES = {"home", "example", "site", "scanbox", "compare", "api", "mcp", "deadlines", "pack", "site_own", "adoption_top", "mcp_index", "vs_censys", "vs_securitytrails"}
+SCAN_SOURCES = {"home", "example", "site", "scanbox", "compare", "api", "mcp", "deadlines", "pack", "site_own", "adoption_top", "mcp_index", "vs_censys", "vs_securitytrails", "monitoring_scan", "pricing_scan"}
 
 
 def _recent_scan(conn, raw_domain, seconds):

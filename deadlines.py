@@ -18,6 +18,33 @@ TIMELINE = [
 # المعالم القادمة (السنة، المفتاح)
 MILESTONES = [("2026", "m2026"), ("2028", "m2028"), ("2030", "m2030"), ("2031", "m2031"), ("2033", "m2033"), ("2035", "m2035")]
 
+# Compact "why now" strip for conversion pages (/monitoring, /pricing, /business via _why_now.html).
+# Same canonical dates as TIMELINE/MILESTONES above — keep them in sync here so the strip never
+# contradicts /deadlines, which it links to as the sourced reference.
+WHY_NOW = [
+    ("2024", {
+        "en": "NIST publishes the first post-quantum standards (FIPS 203 / ML-KEM).",
+        "de": "NIST veröffentlicht die ersten Post-Quantum-Standards (FIPS 203 / ML-KEM).",
+        "ar": "تنشر NIST أول معايير ما بعد الكم (FIPS 203 / ML-KEM).",
+    }),
+    ("2026", {
+        "en": "EU: every member state begins its transition; a cryptographic inventory is expected.",
+        "de": "EU: Jeder Mitgliedstaat beginnt den Übergang; ein Krypto-Inventar wird erwartet.",
+        "ar": "الاتحاد الأوروبي: كل دولة تبدأ انتقالها، مع جرد تشفيري متوقَّع.",
+    }),
+    ("2030", {
+        "en": "EU & UK: high-priority systems should be migrated.",
+        "de": "EU & UK: Systeme mit hoher Priorität sollen migriert sein.",
+        "ar": "الاتحاد الأوروبي والمملكة المتحدة: ترحيل الأنظمة عالية الأولوية.",
+    }),
+]
+
+
+def why_now(lang):
+    """(year, note) pairs for the compact conversion-page timeline, in the visitor's language."""
+    lang = lang if lang in ("en", "de", "ar") else "en"
+    return [(year, notes.get(lang, notes["en"])) for year, notes in WHY_NOW]
+
 TEXT = {
     "en": {
         "title": "Post-quantum deadlines: NIST, CNSA 2.0, EU and UK",

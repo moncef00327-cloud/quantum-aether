@@ -28,8 +28,9 @@
   <p class="lead">{{ commercial.lead if section == 'business' else commercial.pricing_lead }}</p>
   <div class="commercial-actions"><a class="button-link" href="#pricing-scan" data-ev="scan_cta">{{ t.scan_button }}</a><a href="{{ url_for('site.sample_report', lang=lang if lang != 'de' else 'en') }}">{{ commercial.sample }} ↗</a></div>
 </section>
-{# Value-first funnel: free no-signup scan first (signed, verifiable evidence); the email trial is step 2. #}
-<section class="hero" id="pricing-scan">
+{# Value-first funnel: free no-signup scan first (signed, verifiable evidence); the email trial is step 2.
+   Plain card (not .hero) so it doesn't stack a second bordered hero divider under commercial-hero. #}
+<section class="card" id="pricing-scan">
   <p class="lead">{{ 'افحص نطاقك مجاناً بلا تسجيل — وتصلك إيصالات موقّعة يمكن التحقق منها بلا اتصال (دليل حقيقي، لا استبيان).' if lang == 'ar' else ('Scannen Sie Ihre Domain kostenlos, ohne Anmeldung — mit signierten, offline prüfbaren Nachweisen (echter Beleg, kein Fragebogen).' if lang == 'de' else 'Scan your domain free, no signup — with signed, offline-verifiable receipts (real evidence, not a questionnaire).') }}</p>
   {% with box_src = 'pricing_scan', box_id = 'pricing-domain-box' %}{% include "_scan_box.html" %}{% endwith %}
 </section>

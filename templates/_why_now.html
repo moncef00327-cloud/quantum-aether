@@ -14,18 +14,12 @@
   </style>
   <h2 id="qa-whynow-h">{{ 'لماذا الآن — التواريخ التي تهمّ' if lang == 'ar' else ('Warum jetzt — die entscheidenden Termine' if lang == 'de' else 'Why now — the dates that matter') }}</h2>
   <ol class="qa-whynow-track">
+    {% for year, note in why_now %}
     <li>
-      <span class="yr" dir="ltr">2024</span>
-      <span class="yr-note">{{ 'تنشر NIST أول معايير ما بعد الكم (FIPS 203 / ML-KEM).' if lang == 'ar' else ('NIST veröffentlicht die ersten Post-Quantum-Standards (FIPS 203 / ML-KEM).' if lang == 'de' else 'NIST publishes the first post-quantum standards (FIPS 203 / ML-KEM).') }}</span>
+      <span class="yr" dir="ltr">{{ year }}</span>
+      <span class="yr-note">{{ note }}</span>
     </li>
-    <li>
-      <span class="yr" dir="ltr">2026</span>
-      <span class="yr-note">{{ 'الاتحاد الأوروبي: كل دولة تبدأ انتقالها، مع جرد تشفيري متوقَّع.' if lang == 'ar' else ('EU: Jeder Mitgliedstaat beginnt den Übergang; ein Krypto-Inventar wird erwartet.' if lang == 'de' else 'EU: every member state begins its transition; a cryptographic inventory is expected.') }}</span>
-    </li>
-    <li>
-      <span class="yr" dir="ltr">2030</span>
-      <span class="yr-note">{{ 'الاتحاد الأوروبي والمملكة المتحدة: ترحيل الأنظمة عالية الأولوية.' if lang == 'ar' else ('EU & UK: Systeme mit hoher Priorität sollen migriert sein.' if lang == 'de' else 'EU & UK: high-priority systems should be migrated.') }}</span>
-    </li>
+    {% endfor %}
   </ol>
   <p class="qa-whynow-more"><a href="{{ url_for('site.deadlines_page', lang=lang) }}">{{ 'التسلسل الزمني الكامل مع المصادر الرسمية ←' if lang == 'ar' else ('Vollständige Zeitleiste mit offiziellen Quellen →' if lang == 'de' else 'Full timeline with official sources →') }}</a></p>
 </section>
