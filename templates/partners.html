@@ -8,6 +8,11 @@
 .pt-big{font-size:2rem;font-weight:700;margin:.2rem 0}
 </style>{% endblock %}
 {% block content %}
+{# Value-first MSP door: scan a client domain free and see the signed evidence before the pitch. #}
+<section class="card" id="msp-scan">
+  <p class="lead">{{ 'افحص نطاق أحد عملائك مجاناً وشاهد الإيصال الموقّع الذي ستسلّمه له — دليل قابل للتحقق لـ NIS2/DORA، لا استبيان.' if lang == 'ar' else ('Scannen Sie kostenlos die Domain eines Kunden und sehen Sie den signierten Prüfbeleg, den Sie ihm übergeben — prüfbarer NIS2/DORA-Nachweis, kein Fragebogen.' if lang == 'de' else 'Scan a client domain free and see the signed receipt you would hand them — verifiable NIS2/DORA evidence, not a questionnaire.') }}</p>
+  {% with box_src = 'msp_scan', box_id = 'msp-domain-box' %}{% include "_scan_box.html" %}{% endwith %}
+</section>
 <section class="card highlight" id="msp-pilot" data-ev-impression="msp_pilot_impression">
   {% if lang == 'de' %}
   <h2>Pilot für IT-Dienstleister (AT / DE) – 3 Partnerplätze · 290 €</h2>
@@ -57,6 +62,7 @@
   <p class="muted small">Or email us directly at <a data-ev="msp_pilot_cta" href="mailto:reply@mail.ather-quantum.com?subject=MSP%20Pilot%20(50%20Hostnames)" dir="ltr">reply@mail.ather-quantum.com</a> · <a data-ev="msp_pilot_cta" href="#pilot-apply">or request it here ↓</a></p>
   {% endif %}
 </section>
+{% include "_why_now.html" %}
 <section class="card" id="pilot-apply">
   <h2>{{ d.pilot.form_title }}</h2>
   <p class="muted small">{{ d.pilot.intro }}</p>

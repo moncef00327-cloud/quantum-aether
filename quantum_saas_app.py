@@ -537,7 +537,7 @@ def is_api_request():
     return request.path.startswith("/api/")
 
 
-SCAN_SOURCES = {"home", "example", "site", "scanbox", "compare", "api", "mcp", "deadlines", "pack", "site_own", "adoption_top", "mcp_index", "vs_censys", "vs_securitytrails", "monitoring_scan", "pricing_scan"}
+SCAN_SOURCES = {"home", "example", "site", "scanbox", "compare", "api", "mcp", "deadlines", "pack", "site_own", "adoption_top", "mcp_index", "vs_censys", "vs_securitytrails", "monitoring_scan", "pricing_scan", "msp_scan"}
 
 
 def _recent_scan(conn, raw_domain, seconds):
