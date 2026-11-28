@@ -34,6 +34,8 @@
   <ul class="ticks">{% for item in t.mon_features %}<li>{{ item }}</li>{% endfor %}</ul>
 </section>
 
+{% include "_why_now.html" %}
+
 <section class="card">
   <h2>{{ 'حدود الباقات والبيانات' if lang == 'ar' else ('Plan- und Datengrenzen' if lang == 'de' else 'Plan and data limits') }}</h2>
   <table class="data">

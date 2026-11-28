@@ -1,0 +1,31 @@
+{# "Why now" strip: surfaces the existing /deadlines regulatory timeline on the conversion pages.
+   Factual EU/NIST dates (see deadlines.py); full official sources live on /deadlines, linked below.
+   Typographic only — no emoji, no icon spam (UI framework rule #4). Theme-aware, high-contrast (#1). #}
+<section class="qa-whynow" aria-labelledby="qa-whynow-h">
+  <style>
+    .qa-whynow{margin:2rem 0;padding:1.4rem 1.2rem;border:1px solid rgba(148,163,184,.28);border-radius:16px;background:rgba(15,12,28,.45)}
+    .qa-whynow h2{margin:0 0 1rem;font-size:1.15rem;line-height:1.3}
+    .qa-whynow-track{list-style:none;margin:0;padding:0;display:grid;gap:14px;grid-template-columns:repeat(3,1fr)}
+    .qa-whynow-track li{margin:0;padding:0 0 0 14px;border-inline-start:2px solid rgba(103,232,249,.55)}
+    .qa-whynow .yr{display:block;font-weight:800;font-size:1.05rem;color:#67e8f9;font-variant-numeric:tabular-nums}
+    .qa-whynow .yr-note{display:block;margin-top:4px;font-size:.92rem;line-height:1.45;color:#cbd5e1}
+    .qa-whynow-more{margin:1rem 0 0;font-size:.92rem}
+    @media (max-width:640px){.qa-whynow-track{grid-template-columns:1fr}}
+  </style>
+  <h2 id="qa-whynow-h">{{ 'لماذا الآن — التواريخ التي تهمّ' if lang == 'ar' else ('Warum jetzt — die entscheidenden Termine' if lang == 'de' else 'Why now — the dates that matter') }}</h2>
+  <ol class="qa-whynow-track">
+    <li>
+      <span class="yr" dir="ltr">2024</span>
+      <span class="yr-note">{{ 'تنشر NIST أول معايير ما بعد الكم (FIPS 203 / ML-KEM).' if lang == 'ar' else ('NIST veröffentlicht die ersten Post-Quantum-Standards (FIPS 203 / ML-KEM).' if lang == 'de' else 'NIST publishes the first post-quantum standards (FIPS 203 / ML-KEM).') }}</span>
+    </li>
+    <li>
+      <span class="yr" dir="ltr">2026</span>
+      <span class="yr-note">{{ 'الاتحاد الأوروبي: كل دولة تبدأ انتقالها، مع جرد تشفيري متوقَّع.' if lang == 'ar' else ('EU: Jeder Mitgliedstaat beginnt den Übergang; ein Krypto-Inventar wird erwartet.' if lang == 'de' else 'EU: every member state begins its transition; a cryptographic inventory is expected.') }}</span>
+    </li>
+    <li>
+      <span class="yr" dir="ltr">2030</span>
+      <span class="yr-note">{{ 'الاتحاد الأوروبي والمملكة المتحدة: ترحيل الأنظمة عالية الأولوية.' if lang == 'ar' else ('EU & UK: Systeme mit hoher Priorität sollen migriert sein.' if lang == 'de' else 'EU & UK: high-priority systems should be migrated.') }}</span>
+    </li>
+  </ol>
+  <p class="qa-whynow-more"><a href="{{ url_for('site.deadlines_page', lang=lang) }}">{{ 'التسلسل الزمني الكامل مع المصادر الرسمية ←' if lang == 'ar' else ('Vollständige Zeitleiste mit offiziellen Quellen →' if lang == 'de' else 'Full timeline with official sources →') }}</a></p>
+</section>

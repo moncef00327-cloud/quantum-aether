@@ -35,6 +35,7 @@
 </section>
 <p class="qa-trial-step-cue" style="text-align:center;margin:1.2rem 0 .2rem">{{ 'ثم حوّل أي نتيجة إلى مراقبة يومية — 14 يوماً مجاناً:' if lang == 'ar' else ('Dann jedes Ergebnis in tägliche Überwachung umwandeln — 14 Tage kostenlos:' if lang == 'de' else 'Then turn any result into daily monitoring — 14 days free:') }}</p>
 {{ trial_cta('trial', source=('business' if 'business' in request.path else 'pricing')) }}
+{% include "_why_now.html" %}
 <section class="commercial-grid plan-grid" aria-label="{{ commercial.pricing }}">
   <article class="card"><span class="tag">{{ commercial.free }}</span><h2><bdi>0 {{ sub_currency }}</bdi></h2><p>{{ commercial.free_desc }}</p><a class="button-link" href="{{ url_for('site.index', lang=lang) }}">{{ commercial.scan }}</a></article>
   {% for name, plan in plans.items() %}
